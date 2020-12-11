@@ -2,6 +2,7 @@ package com.github.jomof.kane
 
 import kotlin.reflect.KProperty
 import com.github.jomof.kane.Expr.*
+import java.awt.image.DataBufferDouble
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -58,9 +59,10 @@ sealed class Expr {
         override fun toString() = render()
     }
 
-    class Plus(val elements : List<Expr>) : Expr() {
+    data class Plus(val left : Expr, val right : Expr) : Expr() {
         override val columns = 1
         override val rows = 1
+        override fun toString() = render()
     }
 
     class Times(val left : Expr, val right : Expr) : Expr() {
@@ -68,9 +70,16 @@ sealed class Expr {
         override val rows = left.rows
     }
 
-    class Logistic(val expr : Expr) : Expr() {
+    data class Logistic(val expr : Expr) : Expr() {
         override val columns = expr.columns
         override val rows = expr.rows
+        override fun toString() = render()
+    }
+
+    data class LogisticPrime(val expr : Expr) : Expr() {
+        override val columns = expr.columns
+        override val rows = expr.rows
+        override fun toString() = render()
     }
 
     class Power(val expr : Expr, val power : Double) : Expr() {
@@ -139,9 +148,10 @@ sealed class Expr {
         override val rows = 1
     }
 
-    class NamedHole(val name : String, val column : Int, val row : Int) : Expr() {
+    data class NamedHole(val name : String, val column : Int, val row : Int) : Expr() {
         override val columns = 1
         override val rows = 1
+        override fun toString() = render()
     }
 }
 
@@ -149,14 +159,16 @@ sealed class Expr {
 fun Expr.nameCells(name : String, column : Int = 0, row : Int = 0) : Expr {
     fun Expr.name() = nameCells(name, column, row)
     return when(this) {
-        is Expr.DataFrame -> DataFrame(columns, rows) {
+        is DataFrame -> DataFrame(columns, rows) {
             this[it.column, it.row].nameCells(name, it.column, it.row)
         }
         is Named -> this
+        is NamedCell -> this
+        is NamedHole -> this
         is Times -> left.name() * right.name()
         is Minus -> left.name() - right.name()
         is Divide -> left.name() / right.name()
-        is Plus -> Plus(elements.map { it.name() })
+        is Plus -> left.name() + right.name()
         is AppendRow -> AppendRow(top.name(), bottom.name())
         is Summation -> summation(expr.name())
         is Differential -> d(expr.name())
@@ -171,9 +183,56 @@ fun Expr.nameCells(name : String, column : Int = 0, row : Int = 0) : Expr {
     }
 }
 
+fun Expr.differentiate(wrt : Expr) : Expr {
+    return when(this) {
+        is Plus -> left.differentiate(wrt) + right.differentiate(wrt)
+        is DataFrame -> map { it.differentiate(wrt) }
+        is Times -> left * right.differentiate(wrt) + left.differentiate(wrt) * right
+        is Minus -> left.differentiate(wrt) - right.differentiate(wrt)
+        is Power -> power * pow(expr, power - 1.0) * expr.differentiate(wrt)
+        is Logistic -> LogisticPrime(expr) * expr.differentiate(wrt)
+        is NamedHole -> {
+            if (this == wrt) Constant(1.0)
+            else Constant(0.0)
+        }
+        is Constant -> Constant(0.0)
+        else ->
+            error("$javaClass")
+    }
+}
+
+fun Expr.unbox() : Expr = run {
+    if (this is DataFrame && scalar) this[0,0]
+    else this
+}
+
+fun Expr.getAllTimesElements() : List<Expr> {
+    return when(this) {
+        is Times -> left.getAllTimesElements() + right.getAllTimesElements()
+        else -> listOf(this)
+    }
+}
+
+fun Expr.getAllPlusElements() : List<Expr> {
+    return when(this) {
+        is Plus -> left.getAllPlusElements() + right.getAllPlusElements()
+        else -> listOf(this)
+    }
+}
+
+fun List<Expr>.sum() = run {
+    val result = fold(Constant(0.0) as Expr) { sum, element -> sum + element}
+    result
+}
+
+fun List<Expr>.product() = run {
+    val result = fold(Constant(1.0) as Expr) { product, element -> product * element}
+    result
+}
+
 fun Expr.reduce(outer : Expr? = null) : Expr {
     val outer = outer ?: this
-    fun Expr.reduce() = reduce(outer)
+    fun Expr.reduce() = reduce(outer).unbox()
     return when(this) {
         is Constant -> this
         is Hole -> this
@@ -189,22 +248,40 @@ fun Expr.reduce(outer : Expr? = null) : Expr {
             if (rows == 1 && columns == 1) get(0,0).reduce()
             else DataFrame(columns, rows) { get(it.column, it.row).reduce() }
         }
+        is LogisticPrime -> expr.reduce().map { LogisticPrime(it.reduce()) }
         is Logistic -> expr.reduce().map { logistic(it.reduce()) }
         is Divide -> {
             val left = left.reduce()
             val right = right.reduce()
-            DataFrame(right.columns, right.rows) { left / right[it.column, it.row] }
+            if (left is Differential && right is Differential) {
+                val differentiated = left.expr.differentiate(right.expr)
+                differentiated.reduce()
+            } else {
+                DataFrame(right.columns, right.rows) { (left / right[it.column, it.row]).reduce() }
+            }
         }
         is Power -> {
             val reduced = expr.reduce()
-            DataFrame(columns, rows) { pow(reduced[it.column, it.row], power) }
+            if (power == 1.0) expr.reduce()
+            else DataFrame(columns, rows) { pow(reduced[it.column, it.row], power) }.unbox()
         }
-        is Differential -> expr.reduce().map { d(it.reduce()) }
-        is Summation -> Plus(expr.flatten()).reduce()
+        is Differential -> {
+            val reduced = expr.reduce()
+            reduced.map { d(it.reduce()) }
+        }
+        is Summation -> {
+            val result = expr.reduce().flatten().sum().reduce()
+            result
+
+        }
         is Minus -> run {
             val leftReduced = left.reduce()
             val rightReduced = right.reduce()
-            DataFrame(left.columns, left.rows) { leftReduced[it.column, it.row] - rightReduced[it.column, it.row] }
+            if (leftReduced is Constant && rightReduced is Constant) {
+                Constant(leftReduced.value - rightReduced.value)
+            } else {
+                DataFrame(left.columns, left.rows) { leftReduced[it.column, it.row] - rightReduced[it.column, it.row] }.unbox()
+            }
         }
         is AppendRow -> {
             val top = top.reduce()
@@ -215,44 +292,47 @@ fun Expr.reduce(outer : Expr? = null) : Expr {
             }
         }
         is Plus -> {
-            val reduced = elements.map { it.reduce() }
-            val (constants, variants) = reduced.partition { it is Constant }
-            return if (constants.isEmpty()) {
-                Plus(variants)
-            } else {
-                var current = Constant(1.0)
-                constants
-                    .filterIsInstance<Constant>()
-                    .forEach { constant ->
-                        current = Constant(current.value * constant.value, current.format ?: constant.format )
-                    }
-                Plus(listOf(current) + variants)
+            val allPlus = (left.reduce() + right.reduce()).getAllPlusElements().map { it.unbox() }.sortedBy { it.order() }
+            if (allPlus.size == 1) allPlus[0].reduce()
+            else {
+                val (left, right) = allPlus
+                val remainder = allPlus.drop(2).fold(Constant(0.0) as Expr) { sum, element -> sum + element }
+                val result = when {
+                    left.scalar && right.scalar -> left + right
+                    left.scalar && right is DataFrame -> right.map { left + it }
+                    else ->
+                        error("")
+                } + remainder
+                result
             }
         }
         is Transpose -> {
             val expr = expr.reduce()
             DataFrame(columns = expr.rows, rows = expr.columns) { expr[it.row, it.column] }
         }
-
         is Times -> {
-            val left = left.reduce()
-            val right = right.reduce()
-            return when {
-                left is Constant && right is Constant -> Constant(left.value * right.value, left.format ?: right.format)
-                left is Constant && left.value == 1.0 -> right.reduce()
-                right is Constant && right.value == 1.0 -> left.reduce()
-                left.scalar && right.scalar -> left * right
-                left.scalar -> right.map { left[0,0] * it.reduce() }.reduce()
-                right.scalar -> left.map { right[0,0] * it.reduce() }.reduce()
-                else -> {
-                    DataFrame(columns = right.columns, rows = left.rows) { cell ->
-                        Plus((0 until left.columns).map {
-                            val leftElement = left[it, cell.row]
-                            val rightElement = right[cell.column, it]
-                            (leftElement * rightElement).reduce()
-                        })
+            val allTimes = (left.reduce() * right.reduce()).getAllTimesElements().map { it.unbox() }.sortedBy { it.order() }
+            if (allTimes.size == 1) allTimes[0]
+            else {
+                val (left, right) = allTimes
+                val remainder = allTimes.drop(2).product()
+                val result = when {
+                    left.scalar && right.scalar -> left * right
+                    left.scalar && right is DataFrame -> right.map { left * it }
+                    left is DataFrame && right is DataFrame -> {
+                        val result = DataFrame(columns = right.columns, rows = left.rows) { cell ->
+                            (0 until left.columns).map {
+                                val leftElement = left[it, cell.row]
+                                val rightElement = right[cell.column, it]
+                                (leftElement * rightElement).reduce()
+                            }.sum()
+                        }
+                        result
                     }
-                }
+                    else ->
+                        error("")
+                } * remainder
+                result
             }
         }
     }
@@ -273,13 +353,35 @@ fun logistic(expr : Expr) = Logistic(expr)
 fun pow(expr : Expr, power : Double) = Power(expr, power)
 fun summation(expr : Expr) = Summation(expr)
 
-operator fun Double.plus(right : Expr) = Plus(listOf(Constant(this), right))
-operator fun Expr.plus(right : Double) = Plus(listOf(this, Constant(right)))
-operator fun Expr.plus(right : Expr) = Plus(listOf(this, right))
+fun Expr.order() : Int {
+    return when(this) {
+        is Constant -> 0
+        else -> 1
+    }
+}
+
+operator fun Double.plus(right : Expr) = Constant(this) + right
+operator fun Expr.plus(right : Double) = this + Constant(right)
+operator fun Expr.plus(expr : Expr) = run {
+    val (left, right) = listOf(this, expr).sortedBy { it.order() }
+    when {
+        left is Constant && right is Constant -> Constant(left.value + right.value)
+        left is Constant && left.value == 0.0 -> right
+        else -> Plus(left, right)
+    }
+}
 operator fun Expr.minus(right : Expr) = Minus(this, right)
-operator fun Expr.times(right : Expr) = Times(this, right)
-operator fun Double.times(right : Expr) = Times(Constant(this), right)
-operator fun Expr.times(right : Double) = Times(this, Constant(right))
+operator fun Expr.times(expr : Expr) = run {
+    val (left, right) = listOf(this, expr).sortedBy { it.order() }
+    when {
+        left is Constant && right is Constant -> Constant(left.value * right.value)
+        left is Constant && left.value == 1.0 -> right
+        left is Constant && left.value == 0.0 -> left
+        else -> Times(left, right)
+    }
+}
+operator fun Double.times(right : Expr) = Constant(this) * right
+operator fun Expr.times(right : Double) = this * Constant(right)
 operator fun Expr.div(right : Expr) = Divide(this, right)
 infix fun Expr.appendrow(value : Double) = AppendRow(this, Constant(value))
 fun Expr.addColumn(value : (Coordinate) -> Any) = addColumns(1, value)
@@ -300,7 +402,10 @@ data class Coordinate(val column : Int, val row : Int) {
     val above : Expr get() = get(column, row = row - 1)
     val below : Expr get() = get(column, row = row + 1)
 }
-fun Expr.map(mapping : (Expr) -> Expr) = DataFrame(columns, rows) { mapping(this[it.column, it.row]) }
+fun Expr.map(mapping : (Expr) -> Expr) = run {
+    if (columns == 1 && rows == 1) mapping(this)
+    else DataFrame(columns, rows) { mapping(this[it.column, it.row]) }
+}
 fun d(expr : Expr) = Differential(expr)
 val Expr.scalar get() = columns == 1 && rows == 1
 
@@ -316,10 +421,33 @@ fun Expr.flatten() : List<Expr> {
 
 fun dollars(value : Double) = Constant(value, Format(precision = 2, prefix = "$"))
 
+fun Expr.precedence() = when(this) {
+        is Constant,
+        is NamedCell,
+        is NamedHole -> 0
+        is Times -> 1
+        is Divide -> 2
+        is Plus -> 3
+        is Minus -> 4
+        else -> 99
+    }
+
 fun Expr.render(outer : Expr? = null) : String {
-    return if(outer == null) reduce().render(this) else {
-        fun Expr.render() = render(outer)
-        when (this) {
+    if (outer == null) return render(this)
+    else if (this is Named && this != outer) return data.render()
+    else {
+        val thiz = this
+        fun Expr.render() = run {
+            val parentPrecedence = thiz.precedence()
+            val precedence = precedence()
+            val result = render(outer)
+            if (parentPrecedence < precedence && this !is Named)
+                "($result)"
+            else
+                result
+
+        }
+        return when (this) {
             is Summation -> "∑(${expr.render()})"
             is Power -> "(${expr.render()})^$power"
             is Divide -> "${left.render()}/${right.render()}"
@@ -331,8 +459,8 @@ fun Expr.render(outer : Expr? = null) : String {
                 if (outer is Named && outer.name == name) "0.0"
                 else "$name[$column,$row]"
             is Named -> {
-                when (columns) {
-                    1 -> "$name = ${data.render()}"
+                when {
+                    columns == 1 -> "$name = ${data.render()}"
                     else -> "$name\n-----\n${data.render()}"
                 }
             }
@@ -362,9 +490,10 @@ fun Expr.render(outer : Expr? = null) : String {
                 }
             }
             is Times -> "${left.render()}*${right.render()}"
-            is Minus -> "(${left.render()}-${right.render()})"
-            is Plus -> "(" + elements.joinToString(" + ") { it.render() } + ")"
+            is Minus -> "${left.render()}-${right.render()}"
+            is Plus -> "${left.render()}+${right.render()}"
             is Logistic -> "logit(${expr.render()})"
+            is LogisticPrime -> "logit'(${expr.render()})"
             is Differential -> "d(${expr.render()})"
             is Constant ->
                 if (format == null) "$value"
@@ -372,6 +501,7 @@ fun Expr.render(outer : Expr? = null) : String {
             is NamedCell ->
                 if (outer is Named && outer.name == name) rowColName(column, row)
                 else "$name:" + rowColName(column, row)
+            is Hole -> "0.0"
             else ->
                 error("$javaClass")
         }
@@ -382,10 +512,15 @@ fun rowColName(column:Int, row:Int) = "[$column,$row]"
 
 fun Expr.renderStructure() : String {
     return when(this) {
+        is Differential -> "Differential(${expr.renderStructure()})"
         is Constant -> "Constant($value)"
+        is Plus -> "Plus(${left.renderStructure()}, ${right.renderStructure()})"
         is Minus -> "Minus(${left.renderStructure()}, ${right.renderStructure()})"
         is Cell -> "Cell($column, $row)"
+        is Power -> "Power(${expr.renderStructure()}, $power)"
+        is Logistic -> "Logistic(${expr.renderStructure()})"
         is Times -> "Times(${left.renderStructure()}, ${right.renderStructure()})"
+        is Divide -> "Divide(${left.renderStructure()}, ${right.renderStructure()})"
         is Named -> "Named($name,${data.renderStructure()}"
         is NamedHole -> "NamedHole($name,$column,$row)}"
         is DataFrame -> "DataFrame($columns,$rows,${elements.joinToString(",") { it.renderStructure() }})"
