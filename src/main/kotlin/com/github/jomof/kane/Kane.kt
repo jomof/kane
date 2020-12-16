@@ -765,6 +765,7 @@ class ExprTable(val exprs : Map<Expr, Int>) {
         val empty = ExprTable(mapOf())
     }
 }
+
 operator fun ExprTable.plus(value : ExprTable) = run {
     val map = exprs.toMutableMap()
     for((key, count) in value.exprs) {

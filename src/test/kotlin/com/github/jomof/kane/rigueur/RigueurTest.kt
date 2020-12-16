@@ -20,9 +20,9 @@ class RigueurTest {
         val w1 by matrixVariable<Double>(w0.rows + 1, 2)
         val output by logit(w1 * (h1 stack 1.0))
         val target by matrixVariable<Double>(output.columns, output.rows)
-        val error by summation(learningRate * pow(target - output, 2.0))
-        val gradientW0 by d(error) / d(w0)
-        val gradientW1 by d(error) / d(w1)
+        val error by summation(0.5 * pow(target - output, 2.0))
+        val gradientW0 by differentiate(d(error) / d(w0))
+        val gradientW1 by differentiate(d(error) / d(w1))
 //        println(learningRate)
 //        println(input)
 //        println(w0)
@@ -33,14 +33,15 @@ class RigueurTest {
 //        println(error)
 //        println(gradientW0)
 //        println(gradientW1)
-        val i : Matrix<Double> = differentiate(instantiateVariables(gradientW0))
-        for(column in 0 until i.columns) {
-            for(row in 0 until i.rows) {
-                println(instantiateVariables(i[column, row]))
-            }
-
-        }
-          println(instantiateVariables(gradientW0))
+        val x = instantiateVariables(output)
+        val tab = instantiateVariables(tableauOf(
+            output,
+            error,
+            gradientW0,
+            gradientW1
+        )).extractCommonSubExpressions()
+        println(tab.render())
+ //         println(instantiateVariables(gradientW0))
 //        println(instantiateMatrixElements(gradientW1))
 //        val common by listOf(output, gradientW0, gradientW1).decompose()
 //        println()
@@ -154,6 +155,9 @@ class RigueurTest {
         val df3dy by d(f3) / d(y)
         df3dy.assertString("df3dy=d(logit(m[0,0]*m[0,1]))/d(m[0,1])")
         differentiate(df3dy).assertString("df3dy'=logit(m[0,0]*m[0,1])*(1-logit(m[0,0]*m[0,1]))*m[0,0]")
+
+//        val xyz by d(f3) / d(m)
+//        differentiate(xyz).assertString("")
     }
 
     @Test
@@ -387,7 +391,6 @@ class RigueurTest {
                 }
             }
         }
-
     }
 }
 

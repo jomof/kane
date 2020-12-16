@@ -59,8 +59,6 @@ internal class KaneTest {
         expr2.assertStructure("Plus(Plus(NamedHole(\"a\",0,0), NamedHole(\"b\",0,0)), NamedHole(\"c\",0,0))")
     }
 
-
-
     @Test
     fun college() {
         val growth = 1.1
