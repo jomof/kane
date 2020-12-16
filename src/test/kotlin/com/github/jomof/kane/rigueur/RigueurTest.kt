@@ -399,6 +399,20 @@ class RigueurTest {
     }
 
     @Test
+    fun `test extract common sub expressions case 62950920`() {
+        val learningRate = 0.1
+        val input by matrixVariable<Double>(1, 2)
+        val w0 by matrixVariable<Double>(input.rows + 1, 2)
+        val h1 by logit(w0 * (input stack 1.0))
+        val w1 by matrixVariable<Double>(w0.rows + 1, 2)
+        val output by logit(w1 * (h1 stack 1.0))
+        val target by matrixVariable<Double>(output.columns, output.rows)
+        val error by summation(learningRate * pow(target - output, 2.0))
+        val gradientW0 by d(error) / d(w0)
+        gradientW0.extractCommonSubExpressions()
+    }
+
+    @Test
     fun `generate new tests`() {
         val x2: Scalar<Double> by pow(variable<Double>(), 1.0)
         val x3: Scalar<Double> by pow(variable<Double>(), variable<Double>())
@@ -441,10 +455,35 @@ class RigueurTest {
         fun identifierOf(structure : String) = structure.substringAfter("val ").substringBefore(" ")
         for(expr in all) {
             expr.toString()
+            expr.countSubExpressions()
+
             val structure = expr.renderStructure()
             val id = identifierOf(structure)
             assert(expr == expr)
             if (expr.type == Double::class) {
+                if (expr is Named) {
+                    try {
+                        expr.extractCommonSubExpressions()
+                    } catch (e : Exception) {
+                        val sb = StringBuilder()
+                        expr.renderStructure()
+                        sb.append("@Test\n")
+                        sb.append("fun `test extract common sub expressions case ${structure.hashCode().absoluteValue}`() {\n")
+                        sb.append("    $structure\n")
+                        sb.append("    $id.extractCommonSubExpressions().assertString(\"\")\n")
+                        sb.append("}\n")
+                        println(sb)
+                        throw e
+                    }
+                }
+                if (expr is Matrix) {
+                    val named by (expr as Matrix<Double>)
+                    named.extractCommonSubExpressions()
+                }
+                if (expr is Scalar) {
+                    val named by (expr as Scalar<Double>)
+                    named.extractCommonSubExpressions()
+                }
                 val v = variable<Double>()
                 val replaced = (expr as Expr<Double>).replace(v, v)
                 if (replaced != expr) {

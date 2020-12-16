@@ -428,7 +428,7 @@ fun <E:Any> instantiateVariables(expr : Expr<E>) : Expr<E> {
     fun Scalar<E>.self() : Scalar<E> = instantiateVariables(this)
     fun Matrix<E>.self() : Matrix<E> = instantiateVariables(this)
     fun Named<E>.self() : Named<E> = instantiateVariables(this) as Named<E>
-    return when(expr) {
+    val result : Expr<E> = when(expr) {
         is NamedMatrixVariableElement -> expr
         is ScalarVariable -> expr
         is MatrixVariable -> expr
@@ -458,6 +458,7 @@ fun <E:Any> instantiateVariables(expr : Expr<E>) : Expr<E> {
         else ->
             error("${expr.javaClass}")
     }
+    return result
 }
 
 fun <E:Any> instantiateVariables(expr : Scalar<E>) = instantiateVariables(expr as Expr<E>) as Scalar<E>
@@ -568,6 +569,11 @@ fun <E:Any> Expr<E>.countSubExpressions() : Map<Scalar<E>, Int> {
         is UnaryScalar -> value.terminal()
         is BinaryScalar -> false
         is BinaryScalarMatrix -> false
+        is MatrixElement -> {
+            val result = matrix[column,row]
+            if (result == this) true
+            else result.terminal()
+        }
         else -> error("$javaClass")
     }
     val result = when(this) {
@@ -575,6 +581,7 @@ fun <E:Any> Expr<E>.countSubExpressions() : Map<Scalar<E>, Int> {
         is ConstantScalar -> emptyExprTable()
         is ScalarVariable -> emptyExprTable()
         is MatrixVariable -> emptyExprTable()
+        is MatrixElement -> emptyExprTable()
         is NamedMatrixVariableElement -> emptyExprTable()
         is NamedMatrix -> matrix.countSubExpressions()
         is Tableau -> members.fold(emptyExprTable()) { prior, current ->
@@ -619,12 +626,53 @@ fun <E:Any> Expr<E>.countSubExpressions() : Map<Scalar<E>, Int> {
     return result
 }
 
+fun <E:Any> Expr<E>.accumulateNamed(set : MutableSet<Named<E>> = mutableSetOf()) : Set<Named<E>> {
+    fun Expr<E>.self() = accumulateNamed(set)
+    when(this) {
+        is NamedMatrixVariableElement -> {}
+        is ScalarVariable -> {}
+        is ConstantScalar -> {}
+        is MatrixElement -> {
+            val result = matrix[column,row]
+            if (result != this) result.self()
+        }
+        is Tableau -> members.forEach { it.self() }
+        is NamedScalar -> {
+            when(scalar) {
+                is ScalarVariable -> {}
+                else -> {
+                    set += this
+                    scalar.self()
+                }
+            }
+        }
+        is NamedMatrix-> {
+            when(matrix) {
+                is MatrixVariable -> {}
+                else -> {
+                    set += this
+                    matrix.self()
+                }
+            }
+        }
+        is UnaryExpr -> value.self()
+        is BinaryExpr -> {
+            left.self()
+            right.self()
+        }
+        is Matrix -> elements.forEach { it.self() }
+        else -> error("$javaClass")
+    }
+    return set
+}
+
 fun <E:Any> Named<E>.extractCommonSubExpressions() = tableauOf(this).extractCommonSubExpressions()
 fun <E:Any> Tableau<E>.extractCommonSubExpressions(): Tableau<E> {
     val extracted = mutableListOf<Named<E>>()
+    //val all = (accumulateNamed() - members) + members // Put members at the end
     var tab = map {
         when(it) {
-            is NamedMatrix<E> -> it.copy(matrix = it.matrix.toDataMatrix())
+            is NamedMatrix<E> -> it.copy(matrix = it.matrix.toDataMatrix().map { element -> instantiateVariables(element) })
             is NamedScalar<E> -> it.copy(scalar = instantiateVariables(it))
             else -> it
         }
@@ -643,7 +691,7 @@ fun <E:Any> Tableau<E>.extractCommonSubExpressions(): Tableau<E> {
             tab = replaced
         } else {
             tab.replace(max, replacement)
-            assert(false)
+            error("Should have replaced")
         }
     }
 }
