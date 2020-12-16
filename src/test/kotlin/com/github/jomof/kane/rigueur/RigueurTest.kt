@@ -5,19 +5,120 @@ import kotlin.math.absoluteValue
 
 class RigueurTest {
 
-    private fun <T:Any> Expr<T>.assertString(expected : String) {
-        assert("$this" == expected) {
-            "actual:   $this\nexpected: $expected"
+    private fun Any.assertString(expected : String) {
+        val actual = toString().trim('\n')
+        val expectedTrimmed = expected.trim('\n')
+        assert(actual == expectedTrimmed) {
+            "actual:   $actual\nexpected: $expectedTrimmed"
         }
+    }
+
+    @Test
+    fun `data matrix basics`() {
+        val m1 by matrixOf(3,2,
+            1.0, 2.0, 3.0,
+            4.0, 5.0, 6.0)
+        m1.assertString("""
+            m1
+            ------
+            1|2|3
+            4|5|6
+        """.trimIndent())
+        val m2 by matrixVariable<Double>(3, 4).toDataMatrix()
+        m2.assertString("""
+            m2
+            ------
+            [0,0]|[1,0]|[2,0]
+            [0,1]|[1,1]|[2,1]
+            [0,2]|[1,2]|[2,2]
+            [0,3]|[1,3]|[2,3]
+        """.trimIndent())
+        val tableau = tableauOf(m1,m2)
+        tableau.assertString("""
+            m1
+            ------
+            1|2|3
+            4|5|6
+            
+            m2
+            ------
+            [0,0]|[1,0]|[2,0]
+            [0,1]|[1,1]|[2,1]
+            [0,2]|[1,2]|[2,2]
+            [0,3]|[1,3]|[2,3]
+        """.trimIndent())
+    }
+
+    @Test
+    fun `common sub expressions`() {
+        val a by variable<Double>()
+        val b by variable<Double>()
+        val m1 by matrixOf(3, 4) { a + b + a}
+        val m2 by matrixOf(3, 4) { b + a + b }
+        val count = m1.countSubExpressions()
+        count.assertString("{a+b=24, a+a=24, b+a=24}")
+        val subs = m1.extractCommonSubExpressions()
+        subs.assertString("""
+            c0=a+b
+            c1=c0+a
+            
+            m1
+            ------
+            c1|c1|c1
+            c1|c1|c1
+            c1|c1|c1
+            c1|c1|c1
+        """.trimIndent())
+        val stacked by m1 stack m2
+        println(stacked.countSubExpressions())
+        val subs2 = stacked.extractCommonSubExpressions()
+        subs2.assertString("""
+            c0=a+b
+            c1=c0+a
+            c2=c0+b
+            
+            stacked
+            ------
+            c1|c1|c1
+            c1|c1|c1
+            c1|c1|c1
+            c1|c1|c1
+            c2|c2|c2
+            c2|c2|c2
+            c2|c2|c2
+            c2|c2|c2
+        """.trimIndent())
+    }
+
+    @Test
+    fun `common sub expressions expand associative`() {
+        val a by variable<Double>()
+        val b by variable<Double>()
+        val m1 by matrixOf(1,1) { a + b }
+        val m2 by matrixOf(1,1) { b + a }
+        val stacked by m1 stack m2
+        println(stacked.countSubExpressions())
+        val subs2 = stacked.extractCommonSubExpressions()
+        subs2.assertString("""
+            c0=a+b
+
+            stacked
+            ------
+            c0
+            c0
+        """.trimIndent())
     }
 
     @Test
     fun mlp() {
         val learningRate = 0.1
-        val input by matrixVariable<Double>(1, 2)
-        val w0 by matrixVariable<Double>(input.rows + 1, 2)
+        val inputs = 1
+        val count0 = 1
+        val outputs = 1
+        val input by matrixVariable<Double>(1, inputs)
+        val w0 by matrixVariable<Double>(input.rows + 1, count0)
         val h1 by logit(w0 * (input stack 1.0))
-        val w1 by matrixVariable<Double>(w0.rows + 1, 2)
+        val w1 by matrixVariable<Double>(w0.rows + 1, outputs)
         val output by logit(w1 * (h1 stack 1.0))
         val target by matrixVariable<Double>(output.columns, output.rows)
         val error by summation(0.5 * pow(target - output, 2.0))
@@ -33,14 +134,13 @@ class RigueurTest {
 //        println(error)
 //        println(gradientW0)
 //        println(gradientW1)
-        val x = instantiateVariables(output)
-        val tab = instantiateVariables(tableauOf(
+        val tab = tableauOf(
             output,
             error,
             gradientW0,
             gradientW1
-        )).extractCommonSubExpressions()
-        println(tab.render())
+        ).extractCommonSubExpressions()
+        println(tab)
  //         println(instantiateVariables(gradientW0))
 //        println(instantiateMatrixElements(gradientW1))
 //        val common by listOf(output, gradientW0, gradientW1).decompose()
@@ -80,9 +180,9 @@ class RigueurTest {
     fun `variable rendering`() {
         variable<Double>().assertString("0")
         variable<Int>().assertString("0")
-        val a by variable(0.0)
+        val a by variable<Double>()
         a.assertString("a")
-        val b by variable(0.0)
+        val b by variable<Double>()
         (a + b).assertString("a+b")
         val c by a + b
         val x = c
@@ -118,7 +218,7 @@ class RigueurTest {
         val mult by m * n
         mult.assertString("mult=m*n")
         (m * n).assertString("m*n")
-        (m stack 1.0).assertString("m stack 1")
+        (m stack 1.0).assertString("m stack 1|1|1|1|1")
         (m stack m stack m).assertString("m stack m stack m")
         ((m stack m) stack m).assertString("m stack m stack m")
         (m stack (m stack m)).assertString("m stack m stack m")
@@ -200,7 +300,7 @@ class RigueurTest {
 
     @Test
     fun `test expand matrix elements case 208388574`() {
-        val x2 by pow(variable<Double>(0.0),1.0)
+        val x2 by pow(variable<Double>(),1.0)
         instantiateVariables(x2).assertString("x2=pow(0,1)")
     }
 
@@ -225,7 +325,7 @@ class RigueurTest {
 
     @Test
     fun `test expand matrix elements case 263083254`() {
-        val x4 by pow(matrixVariable<Double>(1,1),variable<Double>(0.0))
+        val x4 by pow(matrixVariable<Double>(1,1),variable<Double>())
         instantiateVariables(x4).assertString("x4=pow(matrix(1x1),0)")
     }
 
@@ -255,7 +355,7 @@ class RigueurTest {
 
     @Test
     fun `test differentiate case 263083254`() {
-        val x4 by pow(matrixVariable<Double>(1,1),variable<Double>(0.0))
+        val x4 by pow(matrixVariable<Double>(1,1),variable<Double>())
         differentiate(x4).assertString("x4'=pow([0,0],0)")
     }
 
@@ -286,6 +386,17 @@ class RigueurTest {
         differentiate(gradientW0)
     }
 
+    @Test
+    fun `expr replace identity 650393921`() {
+        val x16 by matrixVariable<Double>(1,1) stack 1.0
+        val v = variable<Double>()
+        val replaced = x16.replace(v,v)
+        assert(x16 == x16)
+        assert(replaced == replaced)
+        assert(x16 == replaced) {
+            "[$x16] != [$replaced]"
+        }
+    }
 
     @Test
     fun `generate new tests`() {
@@ -310,10 +421,10 @@ class RigueurTest {
         val x23: Matrix<Double> by matrixVariable<Double>(1,1) * variable<Double>()
         val x24: Matrix<Double> by logit(matrixVariable<Double>(1,1))
         val x25: Scalar<Double> by variable<Double>()
-        val x26: Scalar<Double> by variable(0.0)
-        val x27: Scalar<String> by variable("snake")
-        val x28: Scalar<Double> by variable(0.0) + variable(0.0)
-        val x29: Scalar<Double> by variable(0.0) * variable(0.0)
+        val x26: Scalar<Double> by variable<Double>()
+        val x27: Scalar<String> by variable<String>()
+        val x28: Scalar<Double> by variable<Double>() + variable<Double>()
+        val x29: Scalar<Double> by variable<Double>() * variable<Double>()
         val learningRate = 0.1
         val input by matrixVariable<Double>(1, 2)
         val w0 by matrixVariable<Double>(input.rows + 1, 2)
@@ -332,6 +443,28 @@ class RigueurTest {
             expr.toString()
             val structure = expr.renderStructure()
             val id = identifierOf(structure)
+            assert(expr == expr)
+            if (expr.type == Double::class) {
+                val v = variable<Double>()
+                val replaced = (expr as Expr<Double>).replace(v, v)
+                if (replaced != expr) {
+                    val sb = StringBuilder()
+                    sb.append("@Test\n")
+                    sb.append("fun `expr replace identity ${structure.hashCode().absoluteValue}`() {\n")
+                    sb.append("    $structure\n")
+                    sb.append("    val v = variable<Double>()\n")
+                    sb.append("    val replaced = $id.replace(v,v)\n")
+                    sb.append("    assert($id == $id)\n")
+                    sb.append("    assert(replaced == replaced)\n")
+                    sb.append("    assert($id == replaced) { \"[\$$id] != [\$replaced]\" }\n")
+                    sb.append("}\n")
+                    println(sb)
+                }
+            } else if (expr.type == String::class) {
+            } else {
+                assert(false)
+            }
+
             try {
                 instantiateVariables(expr)
             } catch (e : Exception) {

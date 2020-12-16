@@ -88,18 +88,18 @@ data class BinaryScalar<E:Any>(
     override val type = left.type
     override fun toString() = render()
 }
-data class FuncMatrix<E:Any>(
-    override val columns: Int,
-    override val rows: Int,
-    override val type: KClass<E>,
-    val render : String = "",
-    val func : (column:Int, row:Int) -> Scalar<E>) : Matrix<E> {
-    init {
-        func(0,0) // Fail early
-    }
-    override fun get(column: Int, row: Int) = func(column, row)
-    override fun toString() = render()
-}
+//data class FuncMatrix<E:Any>(
+//    override val columns: Int,
+//    override val rows: Int,
+//    override val type: KClass<E>,
+//    val render : String = "",
+//    val func : (column:Int, row:Int) -> Scalar<E>) : Matrix<E> {
+//    init {
+//        func(0,0) // Fail early
+//    }
+//    override fun get(column: Int, row: Int) = func(column, row)
+//    override fun toString() = render()
+//}
 data class BinaryScalarMatrix<E:Any>(
     override val op : BinaryOp,
     override val columns: Int,
@@ -145,8 +145,8 @@ data class BinaryMatrix<E:Any>(
     override fun toString() = render()
 }
 
-data class ScalarVariable<E:Any>(val default : E) : Scalar<E> {
-    override val type = default.javaClass.kotlin
+data class ScalarVariable<E:Any>(override val type: KClass<E>) : Scalar<E> {
+    //override val type = default.javaClass.kotlin
     override fun toString() = render()
 }
 data class MatrixVariable<E:Any>(
@@ -184,6 +184,21 @@ data class NamedMatrixVariableElement<E:Any>(
     val column : Int,
     val row : Int,
     override val type : KClass<E>) : Scalar<E> {
+    override fun toString() = render()
+}
+data class DataMatrix<E:Any>(
+    override val columns: Int,
+    override val rows: Int,
+    val elements: List<Scalar<E>>,
+    override val type: KClass<E> = elements[0].type
+) : Matrix<E> {
+    init {
+        assert(columns * rows == elements.size) {
+            "found ${elements.size} elements but needed ${rows * columns} for $columns by $rows matrix"
+        }
+    }
+    private fun coordinateToIndex(column: Int, row: Int) = row * columns + column
+    override fun get(column: Int, row: Int) = elements[coordinateToIndex(column, row)]
     override fun toString() = render()
 }
 
@@ -254,51 +269,47 @@ infix fun <E:Any> Matrix<E>.stack(right : Matrix<E>) = stackMatrix(this, right)
 // Summation
 fun <E:Any> summation(expr : Matrix<E>) : Scalar<E> = UnaryMatrixScalar(SUMMATION, expr)
 // Default
-inline fun <reified E:Any> defaultOf() =
-    when(E::class) {
+fun <E:Any> defaultOf(type : KClass<E>) =
+    when(type) {
         Double::class -> 0.0 as E
         Int::class -> 0 as E
         String::class -> "" as E
-        else -> error("${E::class.java}")
+        else ->
+            error("${type.java}")
     }
 // Variables
-inline fun <reified E:Any> matrixVariable(columns : Int, rows : Int) : Matrix<E> = MatrixVariable(defaultOf(), columns, rows, E::class)
-inline fun <reified E:Any> variable() : Scalar<E> = ScalarVariable(defaultOf())
-fun <E:Any> variable(default : E) : Scalar<E> = ScalarVariable(default)
+inline fun <reified E:Any> matrixVariable(columns : Int, rows : Int) : Matrix<E> = MatrixVariable(defaultOf(E::class), columns, rows, E::class)
+inline fun <reified E:Any> variable() : Scalar<E> = ScalarVariable(E::class)
+inline fun <reified E:Any> variable(type : KClass<E>) : Scalar<E> = ScalarVariable(type)
 // Tableau
 fun <E:Any> tableauOf(vararg elements : Named<E>) : Tableau<E> = Tableau(elements.toList(), elements[0].type)
+fun <E:Any> tableauOf(elements : List<Named<E>>) : Tableau<E> = Tableau(elements, elements[0].type)
+fun <E:Any> Tableau<E>.map(type : KClass<E>, action : (Named<E>) -> Named<E>) : Tableau<E> = Tableau(members.map(action), type)
+fun <E:Any> Tableau<E>.map(action : (Named<E>) -> Named<E>) : Tableau<E> = map(type, action)
 // Misc
 fun <E:Any> constant(value : Double, type : KClass<E>) : Scalar<E> = when {
     value.javaClass.kotlin == type -> ConstantScalar(value) as Scalar<E>
     else -> ConvertScalar(ConstantScalar(value), type)
 }
-fun <E:Any> Matrix<E>.foldCoordinates(action : (Scalar<E>?, Int, Int)->Scalar<E>) : Scalar<E>? {
-    var prior : Scalar<E>? = null
-    for(column in 0 until columns) {
-        for(row in 0 until rows) {
-            prior = action(prior, column, row)
-        }
-    }
-    return prior
-}
-val <E:Any> Matrix<E>.coordinates get() = sequence {
-    for(column in 0 until columns) {
-        for(row in 0 until rows) {
-            yield(column to row)
-        }
-    }
-}
-val <E:Any> Matrix<E>.elements get() = sequence {
-    for(column in 0 until columns) {
-        for(row in 0 until rows) {
-            yield(get(column, row))
-        }
-    }
-}
 fun <E:Any> repeated(columns : Int, rows : Int, value : E) : Matrix<E> =
     repeated(columns, rows, ConstantScalar(value))
 fun <E:Any> repeated(columns : Int, rows : Int, value : Scalar<E>) : Matrix<E> =
-    FuncMatrix(columns, rows, value.type, render = value.toString()) { _,_ -> value }
+    DataMatrix(columns, rows, (0 until columns * rows).map { value }, value.type)
+
+// Coordinates
+data class Coordinate(val column : Int, val row : Int)
+fun coordinatesOf(columns: Int, rows: Int) = sequence {
+    for(row in 0 until rows) {
+        for(column in 0 until columns) {
+            yield(Coordinate(column,row))
+        }
+    }
+}
+val <E:Any> Matrix<E>.coordinates get() = coordinatesOf(columns, rows)
+val <E:Any> Matrix<E>.elements get() = coordinates.map { coord -> get(coord.column, coord.row) }
+fun <E:Any,R:Any> Matrix<E>.foldCoordinates(initial: Scalar<R>?, action : (Scalar<R>?, Coordinate)->Scalar<R>) =
+    coordinates.fold(initial) { prior, coord -> action(prior, coord) }
+
 // Differentiation
 fun <E:Any, T : Scalar<E>> d(expr : T) : Scalar<E> = UnaryScalar(D, expr)
 fun <E:Any, T : Matrix<E>> d(expr : T) : Matrix<E> = UnaryMatrix(D, expr)
@@ -315,7 +326,7 @@ private fun <E:Any> diff(expr : Scalar<E>, variable : Scalar<E>) : Scalar<E> {
         expr is NamedScalar -> expr.copy(scalar = expr.scalar.self())
         expr is UnaryMatrixScalar -> when(expr.op) {
             SUMMATION -> {
-                expr.value.foldCoordinates { prior, column, row ->
+                expr.value.foldCoordinates(null) { prior, (column, row) ->
                     val result = expr.value[column, row].self()
                     if (prior == null) result
                     else prior + result
@@ -364,13 +375,14 @@ fun <E:Any> differentiate(expr : Expr<E>) : Expr<E> {
         is MatrixVariable -> expr
         is MatrixElement-> expr
         is NamedMatrix -> expr.copy(matrix = expr.matrix.self())
+        is DataMatrix -> expr.copy(elements = expr.elements.map { it.self() })
         is BinaryMatrixScalar<E> -> expr.copy(left = expr.left.self(), right = expr.right.self())
         is BinaryScalarMatrix<E> -> {
             if (expr.op == DIV &&
                 expr.left is UnaryScalar && expr.left.op == D &&
                 expr.right is UnaryMatrix && expr.right.op == D
             ) {
-                FuncMatrix(expr.right.columns, expr.right.rows, expr.type) { column, row ->
+                matrixOf(expr.right.columns, expr.right.rows) { (column, row) ->
                     diff(expr.left.value, expr.right.value[column, row])
                 }
             } else {
@@ -389,7 +401,6 @@ fun <E:Any> differentiate(expr : Expr<E>) : Expr<E> {
                 expr.copy(left = expr.left.self(), right = expr.right.self())
             }
         }
-        is FuncMatrix<E> -> expr.copy(func = {column, row -> expr[column, row].self() })
         is Tableau<E> -> expr.copy(members = expr.members.map { it.self() })
         else -> error("${expr.javaClass}")
     }
@@ -434,7 +445,7 @@ fun <E:Any> instantiateVariables(expr : Expr<E>) : Expr<E> {
             expr.matrix[expr.column, expr.row]
         is UnaryMatrixScalar -> when(expr.op) {
             SUMMATION -> {
-                expr.value.foldCoordinates { prior, column, row ->
+                expr.value.foldCoordinates(null) { prior, (column, row) ->
                     val current = instantiateVariables(expr.value, column, row)
                     if (prior == null) current
                     else prior + current
@@ -442,8 +453,8 @@ fun <E:Any> instantiateVariables(expr : Expr<E>) : Expr<E> {
             }
             else -> error("${expr.op}")
         }
-        is FuncMatrix -> expr.copy(func = { column, row ->  instantiateVariables(expr.func(column, row)) })
         is Tableau -> expr.copy(members = expr.members.map { it.self() })
+        is DataMatrix -> expr.map { it.self() }
         else ->
             error("${expr.javaClass}")
     }
@@ -452,17 +463,57 @@ fun <E:Any> instantiateVariables(expr : Expr<E>) : Expr<E> {
 fun <E:Any> instantiateVariables(expr : Scalar<E>) = instantiateVariables(expr as Expr<E>) as Scalar<E>
 fun <E:Any> instantiateVariables(expr : Matrix<E>) = instantiateVariables(expr as Expr<E>) as Matrix<E>
 fun <E:Any> instantiateVariables(expr : Tableau<E>) = instantiateVariables(expr as Expr<E>) as Tableau<E>
+//fun <E:Any> instantiateVariables(expr : Named<E>) = instantiateVariables(expr as Expr<E>) as Named<E>
+
+// Data matrix
+inline fun <reified E:Any> matrixOf(columns: Int, rows: Int, vararg elements : E) = DataMatrix(
+    columns,
+    rows,
+    elements.map { ConstantScalar(it) }.toList(),
+    E::class
+)
+fun <E:Any> matrixOf(columns: Int, rows: Int, action:(Coordinate)->Scalar<E>) :DataMatrix<E> =
+    DataMatrix(
+        columns,
+        rows,
+        coordinatesOf(columns, rows).map(action).toList()
+    )
+fun <E:Any> Matrix<E>.toDataMatrix() : Matrix<E> = DataMatrix(columns, rows, elements.toList(), type)
+fun <E:Any> Matrix<E>.map(action:(Scalar<E>)->Scalar<E>) = DataMatrix(columns, rows, elements.map(action).toList(), type)
+
 // Replace subexpressions
 fun <E:Any> Expr<E>.replace(find : Expr<E>, replace : Expr<E>) : Expr<E> {
-    if (this == find) return replace
+    if (this == find)
+        return replace
     fun Scalar<E>.self() = replace(find, replace) as Scalar<E>
     fun Matrix<E>.self() = replace(find, replace) as Matrix<E>
     fun Named<E>.self() = replace(find, replace) as Named<E>
-    return when(this) {
+    fun reduce(scalar : Scalar<E>) : Expr<E> {
+        if (scalar !is BinaryScalar) return scalar
+        fun self() =
+            scalar.copy(left = scalar.left.self(), right = scalar.right.self())
+        if (find !is BinaryScalar) return self()
+        if (replace !is Scalar) return self()
+        val associated : List<Scalar<E>> = scalar.expandAssociative()
+        if (associated.isEmpty()) return self()
+        val leftIndex = associated.indices.firstOrNull { associated[it] == find.left } ?: return self()
+        val rightIndex = associated.indices.lastOrNull { associated[it] == find.right } ?: return self()
+        if (leftIndex == rightIndex) return self()
+        val remainingTerminals = associated.indices
+            .filter { it != leftIndex && it != rightIndex }
+            .map { associated[it] }
+        assert(remainingTerminals.size == associated.size - 2)
+        val result = remainingTerminals.fold(replace) { prior, current ->  BinaryScalar(scalar.op, prior, current)}
+        return reduce(result)
+    }
+
+    val result = when(this) {
         is ConstantScalar -> this
+        is ScalarVariable -> this
         is MatrixVariable -> this
+        is MatrixElement -> this
         is NamedMatrixVariableElement -> this
-        is BinaryScalar -> copy(left = left.self(), right = right.self())
+        is BinaryScalar -> reduce(this)
         is BinaryMatrixScalar -> copy(left = left.self(), right = right.self())
         is BinaryScalarMatrix -> copy(left = left.self(), right = right.self())
         is UnaryScalar -> copy(value = value.self())
@@ -472,46 +523,57 @@ fun <E:Any> Expr<E>.replace(find : Expr<E>, replace : Expr<E>) : Expr<E> {
         is NamedMatrix -> copy(matrix = matrix.self())
         is UnaryMatrix -> copy(value = value.self())
         is BinaryMatrix -> copy(left = left.self(), right = right.self())
-        is FuncMatrix -> copy(func = { column, row -> this[column, row].self() })
+        is DataMatrix -> map { it.self() }
         else -> error("$javaClass")
     }
+    return result
 }
 
-fun <E:Any> Tableau<E>.replace(find : Expr<E>, replace : Expr<E>) = (this as Expr<E>).replace(find, replace) as Tableau<E>
+fun <E:Any> Tableau<E>.replace(find : Expr<E>, replace : Expr<E>) =
+    (this as Expr<E>).replace(find, replace) as Tableau<E>
 
 // Extract subexpressions
-private fun <E:Any> emptyExprTable() = mapOf<Expr<E>, Int>()
+private fun <E:Any> emptyExprTable() = mapOf<Scalar<E>, Int>()
 
-infix operator fun <E:Any> Map<Expr<E>,Int>.plus(right : Expr<E>) : Map<Expr<E>,Int> {
+infix operator fun <E:Any> Map<Scalar<E>,Int>.plus(right : Scalar<E>) : Map<Scalar<E>,Int> {
     val result = toMutableMap()
     result[right] = result.computeIfAbsent(right) { 0 } + 1
     return result
 }
 
-infix operator fun <E:Any> Map<Expr<E>,Int>.plus(right : Map.Entry<Expr<E>, Int>) : Map<Expr<E>,Int> {
+infix operator fun <E:Any> Map<Scalar<E>,Int>.plus(right : Map.Entry<Scalar<E>, Int>) : Map<Scalar<E>,Int> {
     val result = toMutableMap()
     result[right.key] = result.computeIfAbsent(right.key) { 0 } + right.value
     return result
 }
 
-infix operator fun <E:Any> Map<Expr<E>,Int>.plus(right : Map<Expr<E>,Int>) : Map<Expr<E>,Int> {
-    val result = right.entries.fold(this) { prior, entry -> prior + entry }
-    return result
+infix operator fun <E:Any> Map<Scalar<E>,Int>.plus(right : Map<Scalar<E>,Int>) : Map<Scalar<E>,Int> {
+    return right.entries.fold(this) { prior, entry -> prior + entry }
 }
 
-fun <E:Any> Expr<E>.countSubExpressions() : Map<Expr<E>, Int> {
-    fun Expr<E>.terminal() : Boolean = when(this) {
+private fun <E:Any> BinaryScalar<E>.expandAssociative() : List<Scalar<E>> {
+    if (!op.associative) return listOf()
+    val leftExpanded = if (left is BinaryScalar && left.op == op) left.expandAssociative() else listOf(left)
+    val rightExpanded = if (right is BinaryScalar && right.op == op) right.expandAssociative() else listOf(right)
+    return leftExpanded + rightExpanded
+}
+
+fun <E:Any> Expr<E>.countSubExpressions() : Map<Scalar<E>, Int> {
+    fun <E:Any> Expr<E>.terminal() : Boolean = when(this) {
         is NamedMatrixVariableElement -> true
         is ConstantScalar -> true
+        is ScalarVariable -> true
         is UnaryMatrixScalar -> false
         is NamedScalar -> scalar.terminal()
         is UnaryScalar -> value.terminal()
         is BinaryScalar -> false
+        is BinaryScalarMatrix -> false
         else -> error("$javaClass")
     }
-    return when(this) {
-        is NamedScalar -> emptyExprTable()
+    val result = when(this) {
+        is NamedScalar -> scalar.countSubExpressions()
         is ConstantScalar -> emptyExprTable()
+        is ScalarVariable -> emptyExprTable()
         is MatrixVariable -> emptyExprTable()
         is NamedMatrixVariableElement -> emptyExprTable()
         is NamedMatrix -> matrix.countSubExpressions()
@@ -520,9 +582,20 @@ fun <E:Any> Expr<E>.countSubExpressions() : Map<Expr<E>, Int> {
             result
         }
         is BinaryScalar -> {
-            val children = left.countSubExpressions() + right.countSubExpressions()
-            if (left.terminal() && right.terminal()) children + this
-            else children
+            val associated = expandAssociative()
+            if (associated.isEmpty()) {
+                val children = left.countSubExpressions() + right.countSubExpressions()
+                if (left.terminal() && right.terminal()) children + this
+                else children
+            } else {
+                val (terminal, non) = associated.partition { it.terminal() }
+                val countsOfTerminal = coordinatesOf(terminal.size, terminal.size).fold(emptyExprTable<E>()) { prior, (column, row) ->
+                    if (row != column) prior + BinaryScalar(op, terminal[row], terminal[column])
+                    else prior
+                }
+                val countsOfNon = non.fold(emptyExprTable<E>()) { prior, current -> prior + current.countSubExpressions() }
+                countsOfTerminal + countsOfNon
+            }
         }
         is Matrix -> {
             val result = elements.fold(emptyExprTable<E>()) { prior, current ->
@@ -533,7 +606,7 @@ fun <E:Any> Expr<E>.countSubExpressions() : Map<Expr<E>, Int> {
         }
         is UnaryExpr -> {
             val children = value.countSubExpressions()
-            if (value.terminal()) children + this
+            if (this is Scalar && value.terminal()) children + this
             else children
         }
         is BinaryExpr -> {
@@ -543,18 +616,35 @@ fun <E:Any> Expr<E>.countSubExpressions() : Map<Expr<E>, Int> {
         }
         else -> error("$javaClass")
     }
+    return result
 }
 
+fun <E:Any> Named<E>.extractCommonSubExpressions() = tableauOf(this).extractCommonSubExpressions()
 fun <E:Any> Tableau<E>.extractCommonSubExpressions(): Tableau<E> {
-    val extracted = mutableListOf<Expr<E>>()
-    var tab = this
+    val extracted = mutableListOf<Named<E>>()
+    var tab = map {
+        when(it) {
+            is NamedMatrix<E> -> it.copy(matrix = it.matrix.toDataMatrix())
+            is NamedScalar<E> -> it.copy(scalar = instantiateVariables(it))
+            else -> it
+        }
+    }
+    fun final() : Tableau<E> {
+        return tableauOf(extracted + tab.members)
+    }
     while(true) {
         val sub = tab.countSubExpressions()
-        if (sub.isEmpty()) return tab
-        val max = (sub.filter { it.value > 1 }.maxByOrNull { it.value } ?: return tab).key
-        val replacement = NamedMatrixVariableElement("common", 0, extracted.size, max.type)
-        extracted.add(max)
-        tab = tab.replace(max, replacement)
+        if (sub.isEmpty()) return final()
+        val max = (sub.filter { it.value > 1 }.maxByOrNull { it.value } ?: return final()).key
+        val replacement = NamedScalar("c${extracted.size}", ScalarVariable(type))
+        val replaced = tab.replace(max, replacement)
+        if (replaced!=tab) {
+            extracted.add(NamedScalar("c${extracted.size}", max))
+            tab = replaced
+        } else {
+            tab.replace(max, replacement)
+            assert(false)
+        }
     }
 }
 
@@ -587,7 +677,7 @@ fun Expr<Double>.reduceArithmeticDouble(entryPoint : Boolean = true) : Expr<Doub
                 else -> copy(matrix = matrix)
             }
         }
-        is Matrix -> FuncMatrix(columns, rows, type) { column, row -> this[column,row].self() }
+        is Matrix -> matrixOf(columns, rows) { (column, row) -> this[column,row].self() }
         is BinaryScalar -> {
             val left = left.self()
             val right = right.self()
@@ -634,7 +724,6 @@ fun Expr<Double>.reduceArithmeticDouble(entryPoint : Boolean = true) : Expr<Doub
             }
         }
         is UnaryScalar -> copy(value = value.self())
-        is FuncMatrix -> copy(func = { column, row -> this[column, row].self() })
         is NamedMatrixVariableElement -> this
         is Tableau -> copy(members = members.map { it.self() })
         else -> error("$javaClass")
@@ -705,7 +794,7 @@ fun UntypedExpr.render(entryPoint : Boolean = true) : String {
             else -> "${op.op}(${left.self()},${right.self()})"
         }
     return when(this) {
-        is ScalarVariable<*> -> renderScalarValue(default)
+        is ScalarVariable<*> -> renderScalarValue(defaultOf(type))
         is BinaryMatrix<*> -> binary(op, left, right)
         is BinaryScalar<*> -> binary(op, left, right)
         is BinaryMatrixScalar<*> -> binary(op, left, right)
@@ -723,7 +812,10 @@ fun UntypedExpr.render(entryPoint : Boolean = true) : String {
                 matrix is MatrixVariable -> name
                 !entryPoint -> matrix.self()
                 else ->
-                    "$name=" + matrix.self()
+                    when {
+                        matrix is DataMatrix && rows != 1 -> "\n$name\n------\n${matrix.self()}"
+                        else -> "$name=${matrix.self()}"
+                    }
             }
         }
         is MatrixElement<*> -> {
@@ -737,7 +829,6 @@ fun UntypedExpr.render(entryPoint : Boolean = true) : String {
                     }
                     element.self()
                 }
-                //else -> error("${matrix.javaClass}")
             }
         }
         is ConstantScalar<*> -> renderScalarValue(value)
@@ -747,25 +838,34 @@ fun UntypedExpr.render(entryPoint : Boolean = true) : String {
         is ConvertScalar<*,*> -> value.self()
         is MatrixVariable<*> -> "matrix(${columns}x${rows})"
         is NamedMatrixVariableElement<*> -> "$name[$column,$row]"
-        is FuncMatrix<*> -> {
-            if (render.isNotBlank()) render
-            else {
+        is Tableau<*> -> {
+            val sb = StringBuilder()
+            val sorted = members.sortedBy {
+                when(it) {
+                    is Scalar<*> -> 0
+                    else -> 1
+                }
+            }
+            sorted.forEach { sb.append("$it\n") }
+            "$sb".trimEnd('\n')
+        }
+        is DataMatrix<*> -> {
+            if (rows == 1) {
+                elements.joinToString("|") { it.self() }
+            } else {
                 val sb = StringBuilder()
-                for (column in 0 until columns) {
-                    for (row in 0 until rows) {
-                        val scalar = func(column, row)
+                sb.append("")
+                for (row in 0 until rows) {
+                    for (column in 0 until columns) {
+                        val scalar = this[column, row]
                         sb.append(scalar.self())
                         if (column != columns - 1) sb.append("|")
+
                     }
-                    if (column != columns - 1) sb.append("\n")
+                    if (row != rows - 1) sb.append("\n")
                 }
                 "$sb"
             }
-        }
-        is Tableau<*> -> {
-            val sb = StringBuilder()
-            members.forEach { sb.append("$it\n") }
-            "$sb"
         }
         else -> error("$javaClass")
     }
@@ -793,7 +893,7 @@ fun UntypedExpr.renderStructure(entryPoint : Boolean = true) : String {
     }
     return when(this) {
         is ConstantScalar<*> -> "$value"
-        is ScalarVariable<*> -> "variable<${type.simpleName}>($default)"
+        is ScalarVariable<*> -> "variable<${type.simpleName}>()"
         is MatrixVariable<*> -> "matrixVariable<${type.simpleName}>($columns,$rows)"
         is BinaryMatrix<*> -> binary(op, left, right)
         is BinaryScalar<*> -> binary(op, left, right)
@@ -820,7 +920,11 @@ fun UntypedExpr.renderStructure(entryPoint : Boolean = true) : String {
                 else -> matrix.self()
             }
         }
-        is FuncMatrix<*> -> "$this"
+        is DataMatrix<*> -> {
+            val sb = StringBuilder()
+            sb.append("matrixOf($columns,$rows,${elements.joinToString(",") { it.self() }})")
+            "$sb"
+        }
         else ->
             error("$javaClass")
     }
