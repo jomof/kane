@@ -50,13 +50,32 @@ class RigueurTest {
     }
 
     @Test
+    fun `common sub expressions ordering of associative`() {
+        val a by variable<Double>()
+        val b by variable<Double>()
+        val m1 by matrixOf(3, 4) { a + b + b + a}
+        val subs = m1.extractCommonSubExpressions()
+        subs.assertString("""
+            c0=a+b
+            c1=c0+c0
+            
+            m1
+            ------
+            c1|c1|c1
+            c1|c1|c1
+            c1|c1|c1
+            c1|c1|c1
+        """.trimIndent())
+
+    }
+
+    @Test
     fun `common sub expressions`() {
         val a by variable<Double>()
         val b by variable<Double>()
         val m1 by matrixOf(3, 4) { a + b + a}
         val m2 by matrixOf(3, 4) { b + a + b }
         val count = m1.countSubExpressions()
-        count.assertString("{a+b=24, a+a=24, b+a=24}")
         val subs = m1.extractCommonSubExpressions()
         subs.assertString("""
             c0=a+b
@@ -110,20 +129,59 @@ class RigueurTest {
     }
 
     @Test
+    fun `common sub expressions unary`() {
+        val a by variable<Double>()
+        val b by variable<Double>()
+        val m1 by matrixOf(1,3) { logit(a + b) + b + a }
+        println(m1.countSubExpressions())
+        val common = m1.extractCommonSubExpressions()
+        common.assertString("""
+            c0=b+a
+            c1=c0+logit(c0)
+            
+            m1
+            ------
+            c1
+            c1
+            c1
+        """.trimIndent())
+    }
+
+    @Test
+    fun mult() {
+        val m1 by matrixOf(10, 1) { constant(1.0) }
+        val m2 by matrixOf(1, 10) { constant(2.0) }
+        val m3 by m1 * m2
+        m3.assertString("m3=m1*m2")
+        assert(m3.rows == 1 && m3.columns == 1)
+        val e1 by m3[0,0]
+        println(e1)
+    }
+
+    @Test
+    fun `multiplication bug`() {
+        val input by matrixVariable<Double>(1, 1)
+        val w0 by matrixVariable<Double>(input.rows + 1, 1)
+        val h1 by logit(w0 * (input stack 1.0))
+        h1.toDataMatrix().assertString("h1=logit(w0[0,0]*input[0,0]+w0[1,0]*1)")
+    }
+
+    @Test
     fun mlp() {
         val learningRate = 0.1
-        val inputs = 1
-        val count0 = 1
-        val outputs = 1
-        val input by matrixVariable<Double>(1, inputs)
-        val w0 by matrixVariable<Double>(input.rows + 1, count0)
-        val h1 by logit(w0 * (input stack 1.0))
-        val w1 by matrixVariable<Double>(w0.rows + 1, outputs)
-        val output by logit(w1 * (h1 stack 1.0))
-        val target by matrixVariable<Double>(output.columns, output.rows)
-        val error by summation(0.5 * pow(target - output, 2.0))
-        val gradientW0 by differentiate(d(error) / d(w0))
-        val gradientW1 by differentiate(d(error) / d(w1))
+        for(count0 in 5 until 6) {
+            val inputs = 2
+            //val count0 = 20
+            val outputs = 2
+            val input by matrixVariable<Double>(1, inputs)
+            val w0 by matrixVariable<Double>(input.rows + 1, count0)
+            val h1 by logit(w0 * (input stack 1.0))
+            val w1 by matrixVariable<Double>(w0.rows + 1, outputs)
+            val output by logit(w1 * (h1 stack 1.0))
+            val target by matrixVariable<Double>(output.columns, output.rows)
+            val error by summation(0.5 * pow(target - output, 2.0))
+            val gradientW0 by differentiate(d(error) / d(w0))
+            val gradientW1 by differentiate(d(error) / d(w1))
 //        println(learningRate)
 //        println(input)
 //        println(w0)
@@ -134,18 +192,42 @@ class RigueurTest {
 //        println(error)
 //        println(gradientW0)
 //        println(gradientW1)
-        val tab = tableauOf(
-            output,
-            error,
-            gradientW0,
-            gradientW1
-        ).extractCommonSubExpressions()
-        println(tab)
- //         println(instantiateVariables(gradientW0))
+//        println(instantiateVariables(h1.toDataMatrix()))
+//        println(h1)
+//        println(h1.toDataMatrix())
+            //println(differentiate(d(h1[0,2])/d(w0[0,0])))
+//        println(error)
+//        println(gradientW1)
+            val tab = tableauOf(
+                output,
+                error,
+                gradientW0,
+                gradientW1
+            )
+            val common = tab.extractCommonSubExpressions()
+            val size = common.members.size
+            println(common)
+            println("$count0 => $size ${(size + 0.0) / count0}")
+            //         println(instantiateVariables(gradientW0))
 //        println(instantiateMatrixElements(gradientW1))
 //        val common by listOf(output, gradientW0, gradientW1).decompose()
 //        println()
 //        println(common)
+        }
+    }
+
+
+    @Test
+    fun `repro multiplication bug`() {
+        val input by matrixVariable<Double>(1, 1)
+        val w0 by matrixVariable<Double>(input.rows + 1, 3)
+        val h1 by logit(w0 * (input stack 1.0))
+        val w1 by matrixVariable<Double>(w0.rows + 1, 1)
+        val output by logit(w1 * (h1 stack 1.0))
+        val target by matrixVariable<Double>(output.columns, output.rows)
+        val error by summation(0.5 * pow(target - output, 2.0))
+        val gradientW0 by d(error) / d(w0)
+        differentiate(gradientW0)
     }
 
     @Test
@@ -165,8 +247,8 @@ class RigueurTest {
         val p by pow(m, 2.0)
         p.assertString("p=pow(m,2)")
         val pe by p[1,2]
-        instantiateVariables(pe).assertString("pe=pow(m[1,2],2)")
-        instantiateVariables(p[1,2]).assertString("pow(m[1,2],2)")
+        instantiateVariables(pe).assertString("pe=m[1,2]²")
+        instantiateVariables(p[1,2]).assertString("m[1,2]²")
         val column by matrixVariable<Double>(1,3)
         val s by 1.0 stack column
         s.assertString("s=1 stack column")
@@ -178,8 +260,8 @@ class RigueurTest {
 
     @Test
     fun `variable rendering`() {
-        variable<Double>().assertString("0")
-        variable<Int>().assertString("0")
+        variable<Double>().assertString("?")
+        variable<Int>().assertString("?")
         val a by variable<Double>()
         a.assertString("a")
         val b by variable<Double>()
@@ -225,28 +307,38 @@ class RigueurTest {
     }
 
     @Test
+    fun `matrix chain rule case 8668`() {
+        val m by matrixVariable<Double>(1, 2)
+        val x by m[0, 0]
+        val y by m[0, 1]
+        val f1 by pow(x, 2.0) + pow(y, 3.0)
+        val d1 by d(f1) / d(x)
+        differentiate(d1).assertString("d1'=2*m[0,0]")
+    }
+
+    @Test
     fun `matrix chain rule`() {
         val m by matrixVariable<Double>(1, 2)
         val x by m[0,0]
         val y by m[0,1]
         val f1 by pow(x, 2.0) + pow(y, 3.0)
-        f1.assertString("f1=pow(m[0,0],2)+pow(m[0,1],3)")
+        f1.assertString("f1=m[0,0]²+m[0,1]³")
         val d1 by d(f1) / d(x)
-        d1.assertString("d1=d(pow(m[0,0],2)+pow(m[0,1],3))/d(m[0,0])")
+        d1.assertString("d1=d(m[0,0]²+m[0,1]³)/d(m[0,0])")
         differentiate(d1).assertString("d1'=2*m[0,0]")
         val d2 by d(f1) / d(y)
-        d2.assertString("d2=d(pow(m[0,0],2)+pow(m[0,1],3))/d(m[0,1])")
-        differentiate(d2).assertString("d2'=3*pow(m[0,1],2)")
+        d2.assertString("d2=d(m[0,0]²+m[0,1]³)/d(m[0,1])")
+        differentiate(d2).assertString("d2'=3*m[0,1]²")
         val f2 by pow(x, 2.0) * pow(y, 3.0)
-        f2.assertString("f2=pow(m[0,0],2)*pow(m[0,1],3)")
+        f2.assertString("f2=m[0,0]²*m[0,1]³")
         val df2dx by d(f2) / d(x)
-        df2dx.assertString("df2dx=d(pow(m[0,0],2)*pow(m[0,1],3))/d(m[0,0])")
-        differentiate(df2dx).assertString("df2dx'=2*m[0,0]*pow(m[0,1],3)")
+        df2dx.assertString("df2dx=d(m[0,0]²*m[0,1]³)/d(m[0,0])")
+        differentiate(df2dx).assertString("df2dx'=2*m[0,0]*m[0,1]³")
         val df2dy by d(f2) / d(y)
-        df2dy.assertString("df2dy=d(pow(m[0,0],2)*pow(m[0,1],3))/d(m[0,1])")
-        differentiate(df2dy).assertString("df2dy'=pow(m[0,0],2)*3*pow(m[0,1],2)")
+        df2dy.assertString("df2dy=d(m[0,0]²*m[0,1]³)/d(m[0,1])")
+        differentiate(df2dy).assertString("df2dy'=3*m[0,0]²*m[0,1]²")
         val assigned by differentiate(df2dy)
-        assigned.assertString("assigned=pow(m[0,0],2)*3*pow(m[0,1],2)")
+        assigned.assertString("assigned=3*m[0,0]²*m[0,1]²")
         val f3 by logit(x * y)
         f3.assertString("f3=logit(m[0,0]*m[0,1])")
         val df3dx by d(f3) / d(x)
@@ -261,27 +353,48 @@ class RigueurTest {
     }
 
     @Test
+    fun `differentiate named`() {
+        val x by variable<Double>()
+        val y by x
+        instantiateVariables(y * y).renderStructure().assertString("val expr = x*x")
+        val z by y * y
+        z.renderStructure().assertString("val z by NamedScalar(\"y\", x)*NamedScalar(\"y\", x)")
+        instantiateVariables(z).renderStructure().assertString("val z by x*x")
+        differentiate(d(y * y) / d(x)).renderStructure().assertString("val expr = x+x")
+        differentiate(d(pow(y, 3.0)) / d(x)).renderStructure().assertString("val expr = 3.0*pow(x,2.0)")
+    }
+
+    @Test
+    fun `chain rule structure`() {
+        val x by variable<Double>()
+        val y by variable<Double>()
+        val f1 by pow(x, 2.0) + pow(y, 3.0)
+        val d1 by d(f1) / d(x)
+        differentiate(d1).renderStructure().assertString("val d1' by 2.0*x")
+    }
+
+    @Test
     fun `chain rule`() {
         val x by variable<Double>()
         val y by variable<Double>()
         val f1 by pow(x, 2.0) + pow(y, 3.0)
-        f1.assertString("f1=pow(x,2)+pow(y,3)")
+        f1.assertString("f1=x²+y³")
         val d1 by d(f1) / d(x)
-        d1.assertString("d1=d(pow(x,2)+pow(y,3))/d(x)")
+        d1.assertString("d1=d(x²+y³)/d(x)")
         differentiate(d1).assertString("d1'=2*x")
         val d2 by d(f1) / d(y)
-        d2.assertString("d2=d(pow(x,2)+pow(y,3))/d(y)")
-        differentiate(d2).assertString("d2'=3*pow(y,2)")
+        d2.assertString("d2=d(x²+y³)/d(y)")
+        differentiate(d2).assertString("d2'=3*y²")
         val f2 by pow(x, 2.0) * pow(y, 3.0)
-        f2.assertString("f2=pow(x,2)*pow(y,3)")
+        f2.assertString("f2=x²*y³")
         val df2dx by d(f2) / d(x)
-        df2dx.assertString("df2dx=d(pow(x,2)*pow(y,3))/d(x)")
-        differentiate(df2dx).assertString("df2dx'=2*x*pow(y,3)")
+        df2dx.assertString("df2dx=d(x²*y³)/d(x)")
+        differentiate(df2dx).assertString("df2dx'=2*x*y³")
         val df2dy by d(f2) / d(y)
-        df2dy.assertString("df2dy=d(pow(x,2)*pow(y,3))/d(y)")
-        differentiate(df2dy).assertString("df2dy'=pow(x,2)*3*pow(y,2)")
+        df2dy.assertString("df2dy=d(x²*y³)/d(y)")
+        differentiate(df2dy).assertString("df2dy'=3*x²*y²")
         val assigned by differentiate(df2dy)
-        assigned.assertString("assigned=pow(x,2)*3*pow(y,2)")
+        assigned.assertString("assigned=3*x²*y²")
         val f3 by logit(x * y)
         f3.assertString("f3=logit(x*y)")
         val df3dx by d(f3) / d(x)
@@ -301,7 +414,7 @@ class RigueurTest {
     @Test
     fun `test expand matrix elements case 208388574`() {
         val x2 by pow(variable<Double>(),1.0)
-        instantiateVariables(x2).assertString("x2=pow(0,1)")
+        instantiateVariables(x2).assertString("x2=?¹")
     }
 
     @Test
@@ -326,7 +439,7 @@ class RigueurTest {
     @Test
     fun `test expand matrix elements case 263083254`() {
         val x4 by pow(matrixVariable<Double>(1,1),variable<Double>())
-        instantiateVariables(x4).assertString("x4=pow(matrix(1x1),0)")
+        instantiateVariables(x4).assertString("x4=pow(matrix(1x1),?)")
     }
 
     @Test
@@ -356,20 +469,20 @@ class RigueurTest {
     @Test
     fun `test differentiate case 263083254`() {
         val x4 by pow(matrixVariable<Double>(1,1),variable<Double>())
-        differentiate(x4).assertString("x4'=pow([0,0],0)")
+        differentiate(x4).assertString("x4=pow([0,0],?)")
     }
 
     @Test
     fun `test differentiate case 1704765119`() {
         val x4: Matrix<Double> by pow(matrixVariable<Double>(1,1), variable<Double>())
         val x7 by x4[0,0]
-        differentiate(x7).assertString("x7'=pow([0,0],0)")
+        differentiate(x7).assertString("x7=pow([0,0],?)")
     }
 
     @Test
     fun `test differentiate case 2008884022`() {
         val x15 by matrixVariable<Double>(1,1)*matrixVariable<Double>(1,1)
-        differentiate(x15).assertString("x15'=[0,0]*[0,0]")
+        differentiate(x15).assertString("x15=[0,0]*[0,0]")
     }
 
     @Test
