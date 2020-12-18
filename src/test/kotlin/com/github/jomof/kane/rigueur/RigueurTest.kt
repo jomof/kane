@@ -491,8 +491,8 @@ class RigueurTest {
         ((a + a) - b).assertString("a+a-b")
         ((a - a) - b).assertString("a-a-b")
         (a - (a - b)).assertString("a-(a-b)")
-        val m : Matrix<Double> by matrixVariable<Double>(5, 2)
-        val n : Matrix<Double> by matrixVariable<Double>(3, 5)
+        val m : MatrixExpr<Double> by matrixVariable<Double>(5, 2)
+        val n : MatrixExpr<Double> by matrixVariable<Double>(3, 5)
         val s by matrixVariable<String>(4, 5)
         m.assertString("m")
         n.assertString("n")
@@ -555,27 +555,6 @@ class RigueurTest {
 
 //        val xyz by d(f3) / d(m)
 //        differentiate(xyz).assertString("")
-    }
-
-    @Test
-    fun `differentiate named`() {
-        val x by variable<Double>()
-        val y by x
-        instantiateVariables(y * y).renderStructure().assertString("val expr = x*x")
-        val z by y * y
-        z.renderStructure().assertString("val z by NamedScalar(\"y\", x)*NamedScalar(\"y\", x)")
-        instantiateVariables(z).renderStructure().assertString("val z by x*x")
-        differentiate(d(y * y) / d(x)).renderStructure().assertString("val expr = x+x")
-        differentiate(d(pow(y, 3.0)) / d(x)).renderStructure().assertString("val expr = 3.0*pow(x,2.0)")
-    }
-
-    @Test
-    fun `chain rule structure`() {
-        val x by variable<Double>()
-        val y by variable<Double>()
-        val f1 by pow(x, 2.0) + pow(y, 3.0)
-        val d1 by d(f1) / d(x)
-        differentiate(d1).renderStructure().assertString("val d1' by 2.0*x")
     }
 
     @Test
@@ -661,7 +640,7 @@ class RigueurTest {
 
     @Test
     fun `test expand matrix elements case 77198392`() {
-        val x16: Matrix<Double> by matrixVariable<Double>(1,1) stack 1.0
+        val x16: MatrixExpr<Double> by matrixVariable<Double>(1,1) stack 1.0
         instantiateVariables(x16).assertString("x16=matrix(1x1) stack 1")
     }
 
@@ -679,7 +658,7 @@ class RigueurTest {
 
     @Test
     fun `test differentiate case 1704765119`() {
-        val x4: Matrix<Double> by pow(matrixVariable<Double>(1,1), variable<Double>())
+        val x4: MatrixExpr<Double> by pow(matrixVariable<Double>(1,1), variable<Double>())
         val x7 by x4[0,0]
         differentiate(x7).assertString("x7=pow([0,0],?)")
     }
@@ -732,31 +711,31 @@ class RigueurTest {
 
     @Test
     fun `generate new tests`() {
-        val x2: Scalar<Double> by pow(variable<Double>(), 1.0)
-        val x3: Scalar<Double> by pow(variable<Double>(), variable<Double>())
-        val x4: Matrix<Double> by pow(matrixVariable<Double>(1,1), variable<Double>())
-        val x7: Scalar<Double> by x4[0, 0]
-        val x8: Scalar<Double> by logit(0.0)
-        val x9: Scalar<Double> by logit(variable<Double>())
-        val x10: Scalar<Double> by variable<Double>() * 1.0
-        val x11: Scalar<Double> by 1.0 * variable<Double>()
-        val x12: Scalar<Double> by variable<Double>() * variable<Double>()
-        val x13: Matrix<Double> by 1.0 * matrixVariable<Double>(1,1)
-        val x14: Matrix<Double> by matrixVariable<Double>(1,1) * 1.0
-        val x15: Matrix<Double> by matrixVariable<Double>(1,1) * matrixVariable<Double>(1,1)
-        val x16: Matrix<Double> by matrixVariable<Double>(1,1) stack 1.0
-        val x17: Matrix<Double> by 1.0 stack matrixVariable<Double>(1,1)
-        val x18: Matrix<Double> by matrixVariable<Double>(1,1) stack matrixVariable<Double>(1,1)
-        val x19: Matrix<Double> by matrixVariable<Double>(1,1) stack variable<Double>()
-        val x20: Matrix<Double> by variable<Double>() stack matrixVariable<Double>(1,1)
-        val x22: Matrix<Double> by variable<Double>() * matrixVariable<Double>(1,1)
-        val x23: Matrix<Double> by matrixVariable<Double>(1,1) * variable<Double>()
-        val x24: Matrix<Double> by logit(matrixVariable<Double>(1,1))
-        val x25: Scalar<Double> by variable<Double>()
-        val x26: Scalar<Double> by variable<Double>()
-        val x27: Scalar<String> by variable<String>()
-        val x28: Scalar<Double> by variable<Double>() + variable<Double>()
-        val x29: Scalar<Double> by variable<Double>() * variable<Double>()
+        val x2: ScalarExpr<Double> by pow(variable<Double>(), 1.0)
+        val x3: ScalarExpr<Double> by pow(variable<Double>(), variable<Double>())
+        val x4: MatrixExpr<Double> by pow(matrixVariable<Double>(1,1), variable<Double>())
+        val x7: ScalarExpr<Double> by x4[0, 0]
+        val x8: ScalarExpr<Double> by logit(0.0)
+        val x9: ScalarExpr<Double> by logit(variable<Double>())
+        val x10: ScalarExpr<Double> by variable<Double>() * 1.0
+        val x11: ScalarExpr<Double> by 1.0 * variable<Double>()
+        val x12: ScalarExpr<Double> by variable<Double>() * variable<Double>()
+        val x13: MatrixExpr<Double> by 1.0 * matrixVariable<Double>(1,1)
+        val x14: MatrixExpr<Double> by matrixVariable<Double>(1,1) * 1.0
+        val x15: MatrixExpr<Double> by matrixVariable<Double>(1,1) * matrixVariable<Double>(1,1)
+        val x16: MatrixExpr<Double> by matrixVariable<Double>(1,1) stack 1.0
+        val x17: MatrixExpr<Double> by 1.0 stack matrixVariable<Double>(1,1)
+        val x18: MatrixExpr<Double> by matrixVariable<Double>(1,1) stack matrixVariable<Double>(1,1)
+        val x19: MatrixExpr<Double> by matrixVariable<Double>(1,1) stack variable<Double>()
+        val x20: MatrixExpr<Double> by variable<Double>() stack matrixVariable<Double>(1,1)
+        val x22: MatrixExpr<Double> by variable<Double>() * matrixVariable<Double>(1,1)
+        val x23: MatrixExpr<Double> by matrixVariable<Double>(1,1) * variable<Double>()
+        val x24: MatrixExpr<Double> by logit(matrixVariable<Double>(1,1))
+        val x25: ScalarExpr<Double> by variable<Double>()
+        val x26: ScalarExpr<Double> by variable<Double>()
+        val x27: ScalarExpr<String> by variable<String>()
+        val x28: ScalarExpr<Double> by variable<Double>() + variable<Double>()
+        val x29: ScalarExpr<Double> by variable<Double>() * variable<Double>()
         val learningRate = 0.1
         val input by matrixVariable<Double>(1, 2)
         val w0 by matrixVariable<Double>(input.rows + 1, 2)
@@ -791,7 +770,7 @@ class RigueurTest {
             assert(expr == expr)
             expr.reduceArithmetic()
             if (expr.type == Double::class) {
-                if (expr is Named) {
+                if (expr is NamedExpr) {
                     try {
                         expr.extractCommonSubExpressions()
                     } catch (e : Exception) {
@@ -806,12 +785,12 @@ class RigueurTest {
                         throw e
                     }
                 }
-                if (expr is Matrix) {
-                    val named by (expr as Matrix<Double>)
+                if (expr is MatrixExpr) {
+                    val named by (expr as MatrixExpr<Double>)
                     named.extractCommonSubExpressions()
                 }
-                if (expr is Scalar) {
-                    val named by (expr as Scalar<Double>)
+                if (expr is ScalarExpr) {
+                    val named by (expr as ScalarExpr<Double>)
                     named.extractCommonSubExpressions()
                 }
                 val v = variable<Double>()
@@ -874,7 +853,7 @@ class RigueurTest {
                 throw e
             }
 
-            if(expr is Matrix) {
+            if(expr is MatrixExpr) {
                 for(column in 0 until expr.columns) {
                     for (row in 0 until expr.rows) {
                         try {
