@@ -42,6 +42,8 @@ data class UnaryOp(val op : String = "") {
 val D by UnaryOp()
 val SUMMATION by UnaryOp(op = "∑")
 val LOGIT by UnaryOp()
+val RAMP by UnaryOp() // From -1,-1 to 1,1
+val STEP by UnaryOp() // Derivative of RAMP 1 from -1 to 1 and zero elsewhere
 
 data class BinaryOp(
     val op : String = "",
@@ -229,6 +231,15 @@ data class Tableau<E:Any>(
     override fun toString() = render()
 }
 
+data class Slot<E:Any>(
+    val slot : Int,
+    val replaces : Scalar<E>
+) : Scalar<E> {
+    init { track() }
+    override val type = replaces.type
+    override fun toString() = render()
+}
+
 // Pow
 fun <E:Any, L : Scalar<E>, R : E> pow(left : L, right : R) = BinaryScalar(POW, left, ConstantScalar(right))
 fun <E:Any, L : Matrix<E>, R : E> pow(left : L, right : R) = BinaryMatrixScalar(POW, left.columns, left.rows, left, ConstantScalar(right))
@@ -238,6 +249,14 @@ fun <E:Any, L : Matrix<E>, R : Scalar<E>> pow(left : L, right : R) = BinaryMatri
 fun <E:Any, T : E> logit(value : T) : Scalar<E> = UnaryScalar(LOGIT, ConstantScalar(value))
 fun <E:Any, T : Scalar<E>> logit(expr : T) : Scalar<E> = UnaryScalar(LOGIT, expr)
 fun <E:Any, T : Matrix<E>> logit(expr : T) : Matrix<E> = UnaryMatrix(LOGIT, expr)
+// Ramp
+fun <E:Any, T : E> ramp(value : T) : Scalar<E> = UnaryScalar(RAMP, ConstantScalar(value))
+fun <E:Any, T : Scalar<E>> ramp(expr : T) : Scalar<E> = UnaryScalar(RAMP, expr)
+fun <E:Any, T : Matrix<E>> ramp(expr : T) : Matrix<E> = UnaryMatrix(RAMP, expr)
+// Step
+fun <E:Any, T : E> step(value : T) : Scalar<E> = UnaryScalar(STEP, ConstantScalar(value))
+fun <E:Any, T : Scalar<E>> step(expr : T) : Scalar<E> = UnaryScalar(STEP, expr)
+fun <E:Any, T : Matrix<E>> step(expr : T) : Matrix<E> = UnaryMatrix(STEP, expr)
 // Times
 operator fun <E:Any, L : Scalar<E>, R : E> L.times(right : R) = BinaryScalar(TIMES, this, ConstantScalar(right))
 operator fun <E:Any, L : Scalar<E>, R : Scalar<E>> L.times(right : R) = BinaryScalar(TIMES, this, right)
@@ -297,10 +316,11 @@ fun <E:Any> defaultOf(type : KClass<E>) =
         else ->
             error("${type.java}")
     }
+// Assign
+inline fun <reified E:Any> assign(assignment : Pair<Scalar<E>, ScalarVariable<E>>) = 0
 // Variables
 inline fun <reified E:Any> matrixVariable(columns : Int, rows : Int) : Matrix<E> = MatrixVariable(defaultOf(E::class), columns, rows, E::class)
 inline fun <reified E:Any> variable() : Scalar<E> = ScalarVariable(E::class)
-inline fun <reified E:Any> variable(type : KClass<E>) : Scalar<E> = ScalarVariable(type)
 // Tableau
 fun <E:Any> tableauOf(vararg elements : Named<E>) : Tableau<E> = Tableau(elements.toList(), elements[0].type)
 fun <E:Any> tableauOf(elements : List<Named<E>>) : Tableau<E> = Tableau(elements, elements[0].type)
@@ -343,6 +363,7 @@ private fun <E:Any> diff(expr : Scalar<E>, variable : Scalar<E>) : Scalar<E> {
         is MatrixVariableElement -> expr
         is UnaryScalar -> when(expr.op) {
             LOGIT -> logit(expr.value) * (constant(1.0, expr.type) - logit(expr.value)) * expr.value.self()
+            RAMP -> step(expr.value) * expr.value.self()
             else -> error("${expr.op}")
         }
         is NamedScalar -> expr.scalar.self()
@@ -626,6 +647,52 @@ fun <E:Any> Expr<E>.eval(map : MutableMap<String, E>) : Expr<E> {
 }
 
 fun <E:Any> Tableau<E>.eval(map : MutableMap<String, E>) = ((this as Expr<E>).eval(map) as Tableau).reduceArithmetic()
+
+// Layout memory
+data class MemoryLayout<E:Any>(private val slots : MutableMap<Expr<E>, Slot<E>> = mutableMapOf()) {
+    fun slotOf(expr : Scalar<E>) : Slot<E> = slots.computeIfAbsent(expr) { Slot(slots.size, expr) }
+}
+
+fun <E:Any> Expr<E>.replaceSlots(layout : MemoryLayout<E> = MemoryLayout()) : Expr<E> {
+    fun Expr<E>.self() = replaceSlots(layout)
+    fun Scalar<E>.self() = replaceSlots(layout) as Scalar<E>
+    fun Named<E>.self() = replaceSlots(layout) as Named<E>
+    return when (this) {
+        is ConstantScalar -> this
+        is BinaryScalar -> copy(left = left.self(), right = right.self())
+        is NamedScalar -> if (scalar is ScalarVariable) layout.slotOf(this) else copy(scalar = scalar.self())
+        is Tableau -> copy(children = children.map { it.self() })
+        else -> error("$javaClass")
+    }
+}
+
+fun <E:Any> Expr<E>.slots(map : MutableMap<Expr<E>, Int> = mutableMapOf()) : Map<Expr<E>, Int> {
+    fun Expr<E>.self() = slots(map)
+    when(this) {
+        is Slot -> map[replaces] = slot
+        is ParentExpr -> children.forEach { it.self() }
+    }
+    return map
+}
+
+fun <E:Any> Expr<E>.maxSlot() : Slot<E>? {
+    fun Expr<E>.self() = maxSlot()
+    return when(this) {
+        is Slot -> this
+        is ParentExpr -> {
+            children.drop(1).fold(children.first().self()) { prior, current ->
+                val currentSlot = current.self()
+                when {
+                    prior == null -> currentSlot
+                    currentSlot == null -> prior
+                    currentSlot.slot > prior.slot -> currentSlot
+                    else -> prior
+                }
+            }
+        }
+        else -> null
+    }
+}
 
 // Extract subexpressions
 private fun <E:Any> emptyExprTable() = mapOf<Scalar<E>, Int>()
@@ -1008,6 +1075,7 @@ fun UntypedExpr.render(entryPoint : Boolean = true) : String {
             else -> "${op.op}(${left.self()},${right.self()})"
         }
     return when(this) {
+        is Slot<*> -> "\$$slot"
         is ScalarVariable<*> -> "?"
         is BinaryMatrix<*> -> binary(op, left, right)
         is BinaryScalar<*> -> when {

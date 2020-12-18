@@ -1,6 +1,7 @@
 package com.github.jomof.kane.rigueur
 
 import org.junit.Test
+import java.util.*
 import kotlin.math.absoluteValue
 import kotlin.math.pow
 
@@ -157,13 +158,13 @@ class RigueurTest {
 
     @Test
     fun mult() {
-        val m1 by matrixOf(10, 1) { constant(1.0) }
-        val m2 by matrixOf(1, 10) { constant(2.0) }
+        val m1 by matrixOf(10, 1) { constant(it.column + 0.0) }
+        val m2 by matrixOf(1, 10) { constant(10.0 - it.row ) }
         val m3 by m1 * m2
         m3.assertString("m3=m1*m2")
         assert(m3.rows == 1 && m3.columns == 1)
         val e1 by m3[0,0]
-        println(e1)
+        e1.assertString("e1=0*10+1*9+2*8+3*7+4*6+5*5+6*4+7*3+8*2+9*1")
     }
 
     @Test
@@ -187,6 +188,99 @@ class RigueurTest {
 
     @Test
     fun `tiny linear regression`() {
+        val r by variable<Double>()
+        val x by variable<Double>()
+        val m by variable<Double>()
+        val b by variable<Double>()
+        val y by m * x + b
+        val target by variable<Double>()
+        val error by 0.5 * pow(target - y, 2.0)
+        val dm by -1.0 * r * differentiate(d(error)/d(m))
+        val db by -1.0 * r *differentiate(d(error)/d(b))
+        println(error)
+        println(dm)
+        println(db)
+        val tab = tableauOf(dm,db).extractCommonSubExpressions()
+        tab.assertString("""
+            c0=m*x
+            c1=c0+b
+            c2=target-c1
+            c3=r*c2
+            c4=c3*x
+            dm=c4
+            db=c3
+        """.trimIndent())
+        val map = mutableMapOf(
+            "r" to 0.001, // learning rate
+            "b" to 0.0,
+            "m" to 0.0,
+        )
+
+        (0 until 10000).forEach {
+            (-5 until 5).forEach { point ->
+                map["x"] = point.toDouble()
+                map["target"] = -500 * point.toDouble() + 0.2
+                tab.eval(map)
+                map["b"] = map.getValue("b") + map.getValue("db")
+                map["m"] = map.getValue("m") + map.getValue("dm")
+            }
+        }
+        map["m"]!!.assertNear(-500.0)
+        map["b"]!!.assertNear(0.2)
+        println(map)
+    }
+
+    @Test
+    fun `tiny linear regression with assign-back`() {
+        val r by variable<Double>()
+        val x by variable<Double>()
+        val m by variable<Double>()
+        val b by variable<Double>()
+        val y by m * x + b
+        val target by variable<Double>()
+        val error by 0.5 * pow(target - y, 2.0)
+        val dm by m - r * differentiate(d(error)/d(m))
+        val db by b - r *differentiate(d(error)/d(b))
+        //val am = assign(dm to m)
+        println(error)
+        println(dm)
+        println(db)
+        val tab = tableauOf(dm,db).extractCommonSubExpressions()
+        tab.assertString("""
+            c0=-1*r
+            c1=m*x
+            c2=c1+b
+            c3=target-c2
+            c4=c0*c3
+            c5=c4*x
+            c6=m-c5
+            c7=b-c4
+            dm=c6
+            db=c7
+        """.trimIndent())
+        val map = mutableMapOf(
+            "r" to 0.001, // learning rate
+            "b" to 0.0,
+            "m" to 0.0,
+        )
+
+        (0 until 10000).forEach {
+            (-5 until 5).forEach { point ->
+                map["x"] = point.toDouble()
+                map["target"] = -500 * point.toDouble() + 0.2
+                tab.eval(map)
+                map["b"] = map.getValue("db")
+                map["m"] = map.getValue("dm")
+            }
+        }
+        map["m"]!!.assertNear(-500.0)
+        map["b"]!!.assertNear(0.2)
+        println(map)
+    }
+
+    @Test
+    fun `tiny linear regression with bound holes`() {
+        val learningRate = 0.001
         val x by variable<Double>()
         val m by variable<Double>()
         val b by variable<Double>()
@@ -198,33 +292,58 @@ class RigueurTest {
         println(error)
         println(dm)
         println(db)
-        val tab = tableauOf(dm,db).extractCommonSubExpressions()
-        tab.assertString("""
-            c0=m*x
-            c1=c0+b
-            c2=target-c1
-            c3=-1*c2
-            c4=c3*x
-            dm=c4
-            db=c3
-        """.trimIndent())
-        val map = mutableMapOf(
-            "b" to 0.0,
-            "m" to 0.0,
+        val slotted = tableauOf(dm,db)
+            .extractCommonSubExpressions()
+            .replaceSlots()
+        println(slotted)
+        val maxSlot = slotted.maxSlot()!!
+        println(maxSlot)
+        val rand = Random()
+        val space = DoubleArray(maxSlot.slot + 1) { rand.nextGaussian() }
+        println(space.toList())
+        val slots = slotted.slots()
+        println(slots)
+
+//        val xslot = slots[x]!!
+//        val mslot = slots[m]!!
+//        val bslot = slots[b]!!
+//        val dbslot = slots[db]!!
+//        val dmslot = slots[dm]!!
+//        val targetSlot = slots[target]!!
+//        (0 until 10000).forEach {
+//            (-5 until 5).forEach { point ->
+//                space[xslot] = point.toDouble()
+//                space[targetSlot] = -500 * point.toDouble() + 0.2
+//                //tab.eval(map)
+//                space[bslot] -= learningRate * space[dbslot]
+//                space[mslot] -= learningRate * space[dmslot]
+//            }
+//        }
+    }
+
+    @Test
+    fun `learn xor with ramps`() {
+        val learningRate = 0.1
+        val inputs = 2
+        val count0 = 5
+        val outputs = 1
+        val input by matrixVariable<Double>(1, inputs)
+        val w0 by matrixVariable<Double>(input.rows + 1, count0)
+        val h1 by ramp(w0 * (input stack 1.0))
+        val w1 by matrixVariable<Double>(w0.rows + 1, outputs)
+        val output by ramp(w1 * (h1 stack 1.0))
+        val target by matrixVariable<Double>(output.columns, output.rows)
+        val error by summation(0.5 * pow(target - output, 2.0))
+        val gradientW0 by differentiate(d(error) / d(w0))
+        val gradientW1 by differentiate(d(error) / d(w1))
+        val tab = tableauOf(
+            output,
+            error,
+            gradientW0,
+            gradientW1
         )
-        val learningRate = 0.001
-        (0 until 10000).forEach {
-            (-5 until 5).forEach { point ->
-                map["x"] = point.toDouble()
-                map["target"] = -500 * point.toDouble() + 0.2
-                tab.eval(map)
-                map["b"] = map.getValue("b") - learningRate * map.getValue("db")
-                map["m"] = map.getValue("m") - learningRate * map.getValue("dm")
-            }
-        }
-        map["m"]!!.assertNear(-500.0)
-        map["b"]!!.assertNear(0.2)
-        println(map)
+        val common = tab.extractCommonSubExpressions()
+        println(common)
     }
 
     @Test
@@ -276,7 +395,6 @@ class RigueurTest {
 //        println(common)
         }
     }
-
 
     @Test
     fun `repro multiplication bug`() {
