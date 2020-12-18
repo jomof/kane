@@ -1,3 +1,4 @@
+@file:Suppress("UNCHECKED_CAST")
 package com.github.jomof.kane.rigueur
 
 import org.junit.Test
@@ -33,14 +34,15 @@ class RigueurTest {
             1|2|3
             4|5|6
         """.trimIndent())
-        val m2 by matrixVariable<Double>(3, 4).toDataMatrix()
+        val mvar2 by matrixVariable<Double>(3, 4)
+        val m2 by mvar2.toDataMatrix()
         m2.assertString("""
             m2
             ------
-            [0,0]|[1,0]|[2,0]
-            [0,1]|[1,1]|[2,1]
-            [0,2]|[1,2]|[2,2]
-            [0,3]|[1,3]|[2,3]
+            mvar2[0,0]|mvar2[1,0]|mvar2[2,0]
+            mvar2[0,1]|mvar2[1,1]|mvar2[2,1]
+            mvar2[0,2]|mvar2[1,2]|mvar2[2,2]
+            mvar2[0,3]|mvar2[1,3]|mvar2[2,3]
         """.trimIndent())
         val tableau = tableauOf(m1,m2)
         tableau.assertString("""
@@ -51,10 +53,10 @@ class RigueurTest {
             
             m2
             ------
-            [0,0]|[1,0]|[2,0]
-            [0,1]|[1,1]|[2,1]
-            [0,2]|[1,2]|[2,2]
-            [0,3]|[1,3]|[2,3]
+            mvar2[0,0]|mvar2[1,0]|mvar2[2,0]
+            mvar2[0,1]|mvar2[1,1]|mvar2[2,1]
+            mvar2[0,2]|mvar2[1,2]|mvar2[2,2]
+            mvar2[0,3]|mvar2[1,3]|mvar2[2,3]
         """.trimIndent())
     }
 
@@ -422,7 +424,7 @@ class RigueurTest {
         val m by matrixVariable<Double>(2,3)
         val e by m[1,1]
         e.assertString("e=m[1,1]")
-        (matrixVariable<Double>(2,3)).assertString("matrix(2x3)")
+        (matrixVariable<Double>(2,3)).assertString("matrixVariable(2x3)")
         val p by pow(m, 2.0)
         p.assertString("p=pow(m,2)")
         val pe by p[1,2]
@@ -590,18 +592,6 @@ class RigueurTest {
     }
 
     @Test
-    fun `test matrix element case 31504720`() {
-        val expr = matrixVariable<Double>(1,1)*matrixVariable<Double>(1,1)
-        instantiateVariables(expr[0,0]).assertString("[0,0]*[0,0]")
-    }
-
-    @Test
-    fun `test expand matrix elements case 208388574`() {
-        val x2 by pow(variable<Double>(),1.0)
-        instantiateVariables(x2).assertString("x2=?¹")
-    }
-
-    @Test
     fun `test expand matrix elements case 2119630920`() {
         val x8 by logit(0.0)
         instantiateVariables(x8).assertString("x8=logit(0)")
@@ -621,55 +611,6 @@ class RigueurTest {
     }
 
     @Test
-    fun `test expand matrix elements case 263083254`() {
-        val x4 by pow(matrixVariable<Double>(1,1),variable<Double>())
-        instantiateVariables(x4).assertString("x4=pow(matrix(1x1),?)")
-    }
-
-    @Test
-    fun `test expand matrix elements case 562689906`() {
-        val x13 by 1.0*matrixVariable<Double>(1,1)
-        instantiateVariables(x13).assertString("x13=1*matrix(1x1)")
-    }
-
-    @Test
-    fun `test expand matrix elements case 2008884022`() {
-        val x15 by matrixVariable<Double>(1,1)*matrixVariable<Double>(1,1)
-        instantiateVariables(x15).assertString("x15=matrix(1x1)*matrix(1x1)")
-    }
-
-    @Test
-    fun `test expand matrix elements case 77198392`() {
-        val x16: MatrixExpr<Double> by matrixVariable<Double>(1,1) stack 1.0
-        instantiateVariables(x16).assertString("x16=matrix(1x1) stack 1")
-    }
-
-    @Test
-    fun `test expand matrix elements case 588180263`() {
-        val x24 by logit(matrixVariable<Double>(1,1))
-        instantiateVariables(x24).assertString("x24=logit(matrix(1x1))")
-    }
-
-    @Test
-    fun `test differentiate case 263083254`() {
-        val x4 by pow(matrixVariable<Double>(1,1),variable<Double>())
-        differentiate(x4).assertString("x4=pow(matrix(1x1),?)")
-    }
-
-    @Test
-    fun `test differentiate case 1704765119`() {
-        val x4: MatrixExpr<Double> by pow(matrixVariable<Double>(1,1), variable<Double>())
-        val x7 by x4[0,0]
-        differentiate(x7).assertString("x7=pow([0,0],?)")
-    }
-
-    @Test
-    fun `test differentiate case 2008884022`() {
-        val x15 by matrixVariable<Double>(1,1)*matrixVariable<Double>(1,1)
-        differentiate(x15).assertString("x15=matrix(1x1)*matrix(1x1)")
-    }
-
-    @Test
     fun `test differentiate case 774036348`() {
         val learningRate = 0.1
         val input by matrixVariable<Double>(1, 2)
@@ -681,18 +622,6 @@ class RigueurTest {
         val error by summation(learningRate * pow(target - output, 2.0))
         val gradientW0 by d(error) / d(w0)
         differentiate(gradientW0)
-    }
-
-    @Test
-    fun `expr replace identity 650393921`() {
-        val x16 by matrixVariable<Double>(1,1) stack 1.0
-        val v = variable<Double>()
-        val replaced = x16.replace(v,v)
-        assert(x16 == x16)
-        assert(replaced == replaced)
-        assert(x16 == replaced) {
-            "[$x16] != [$replaced]"
-        }
     }
 
     @Test
@@ -711,31 +640,33 @@ class RigueurTest {
 
     @Test
     fun `generate new tests`() {
-        val x2: ScalarExpr<Double> by pow(variable<Double>(), 1.0)
-        val x3: ScalarExpr<Double> by pow(variable<Double>(), variable<Double>())
-        val x4: MatrixExpr<Double> by pow(matrixVariable<Double>(1,1), variable<Double>())
+        val v1 by variable<Double>()
+        val x1 by matrixVariable<Double>(1,1)
+        val x2: ScalarExpr<Double> by pow(v1, 1.0)
+        val x3: ScalarExpr<Double> by pow(v1, v1)
+        val x4: MatrixExpr<Double> by pow(x1, v1)
         val x7: ScalarExpr<Double> by x4[0, 0]
         val x8: ScalarExpr<Double> by logit(0.0)
-        val x9: ScalarExpr<Double> by logit(variable<Double>())
-        val x10: ScalarExpr<Double> by variable<Double>() * 1.0
-        val x11: ScalarExpr<Double> by 1.0 * variable<Double>()
-        val x12: ScalarExpr<Double> by variable<Double>() * variable<Double>()
-        val x13: MatrixExpr<Double> by 1.0 * matrixVariable<Double>(1,1)
-        val x14: MatrixExpr<Double> by matrixVariable<Double>(1,1) * 1.0
-        val x15: MatrixExpr<Double> by matrixVariable<Double>(1,1) * matrixVariable<Double>(1,1)
-        val x16: MatrixExpr<Double> by matrixVariable<Double>(1,1) stack 1.0
-        val x17: MatrixExpr<Double> by 1.0 stack matrixVariable<Double>(1,1)
-        val x18: MatrixExpr<Double> by matrixVariable<Double>(1,1) stack matrixVariable<Double>(1,1)
-        val x19: MatrixExpr<Double> by matrixVariable<Double>(1,1) stack variable<Double>()
-        val x20: MatrixExpr<Double> by variable<Double>() stack matrixVariable<Double>(1,1)
-        val x22: MatrixExpr<Double> by variable<Double>() * matrixVariable<Double>(1,1)
-        val x23: MatrixExpr<Double> by matrixVariable<Double>(1,1) * variable<Double>()
-        val x24: MatrixExpr<Double> by logit(matrixVariable<Double>(1,1))
+        val x9: ScalarExpr<Double> by logit(v1)
+        val x10: ScalarExpr<Double> by v1 * 1.0
+        val x11: ScalarExpr<Double> by 1.0 * v1
+        val x12: ScalarExpr<Double> by v1 * v1
+        val x13: MatrixExpr<Double> by 1.0 * x1
+        val x14: MatrixExpr<Double> by x1 * 1.0
+        val x15: MatrixExpr<Double> by x1 * x1
+        val x16: MatrixExpr<Double> by x1 stack 1.0
+        val x17: MatrixExpr<Double> by 1.0 stack x1
+        val x18: MatrixExpr<Double> by x1 stack x1
+        val x19: MatrixExpr<Double> by x1 stack v1
+        val x20: MatrixExpr<Double> by v1 stack x1
+        val x22: MatrixExpr<Double> by v1 * x1
+        val x23: MatrixExpr<Double> by x1 * v1
+        val x24: MatrixExpr<Double> by logit(x1)
         val x25: ScalarExpr<Double> by variable<Double>()
         val x26: ScalarExpr<Double> by variable<Double>()
         val x27: ScalarExpr<String> by variable<String>()
-        val x28: ScalarExpr<Double> by variable<Double>() + variable<Double>()
-        val x29: ScalarExpr<Double> by variable<Double>() * variable<Double>()
+        val x28: ScalarExpr<Double> by v1 + v1
+        val x29: ScalarExpr<Double> by v1 * v1
         val learningRate = 0.1
         val input by matrixVariable<Double>(1, 2)
         val w0 by matrixVariable<Double>(input.rows + 1, 2)
@@ -793,7 +724,7 @@ class RigueurTest {
                     val named by (expr as ScalarExpr<Double>)
                     named.extractCommonSubExpressions()
                 }
-                val v = variable<Double>()
+                val v by variable<Double>()
                 val replaced = (expr as Expr<Double>).replace(v, v)
                 if (replaced != expr) {
                     val sb = StringBuilder()
