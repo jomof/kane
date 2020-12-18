@@ -2,6 +2,7 @@ package com.github.jomof.kane.rigueur
 
 import org.junit.Test
 import kotlin.math.absoluteValue
+import kotlin.math.pow
 
 class RigueurTest {
 
@@ -10,6 +11,13 @@ class RigueurTest {
         val expectedTrimmed = expected.trim('\n')
         assert(actual == expectedTrimmed) {
             "actual:   $actual\nexpected: $expectedTrimmed"
+        }
+    }
+
+    private fun Double.assertNear(expected:Double) {
+        val diff = (this - expected).pow(2.0)
+        assert(diff < 0.00000001) {
+            "$this was not close enough to $expected"
         }
     }
 
@@ -167,9 +175,62 @@ class RigueurTest {
     }
 
     @Test
+    fun `repro tiny diff problem`() {
+        val x by variable<Double>()
+        val m by variable<Double>()
+        val b by variable<Double>()
+        val t by variable<Double>()
+        val error by 0.5 * pow(t - ((m * x) + b), 2.0)
+        val dm by differentiate(d(error)/d(m))
+        dm.assertString("dm=-1*(t-(m*x+b))*x")
+    }
+
+    @Test
+    fun `tiny linear regression`() {
+        val x by variable<Double>()
+        val m by variable<Double>()
+        val b by variable<Double>()
+        val y by m * x + b
+        val target by variable<Double>()
+        val error by 0.5 * pow(target - y, 2.0)
+        val dm by differentiate(d(error)/d(m))
+        val db by differentiate(d(error)/d(b))
+        println(error)
+        println(dm)
+        println(db)
+        val tab = tableauOf(dm,db).extractCommonSubExpressions()
+        tab.assertString("""
+            c0=m*x
+            c1=c0+b
+            c2=target-c1
+            c3=-1*c2
+            c4=c3*x
+            dm=c4
+            db=c3
+        """.trimIndent())
+        val map = mutableMapOf(
+            "b" to 0.0,
+            "m" to 0.0,
+        )
+        val learningRate = 0.001
+        (0 until 10000).forEach {
+            (-5 until 5).forEach { point ->
+                map["x"] = point.toDouble()
+                map["target"] = -500 * point.toDouble() + 0.2
+                tab.eval(map)
+                map["b"] = map.getValue("b") - learningRate * map.getValue("db")
+                map["m"] = map.getValue("m") - learningRate * map.getValue("dm")
+            }
+        }
+        map["m"]!!.assertNear(-500.0)
+        map["b"]!!.assertNear(0.2)
+        println(map)
+    }
+
+    @Test
     fun mlp() {
         val learningRate = 0.1
-        for(count0 in 5 until 6) {
+        for(count0 in 5 until 5) {
             val inputs = 2
             //val count0 = 20
             val outputs = 2
@@ -205,8 +266,8 @@ class RigueurTest {
                 gradientW1
             )
             val common = tab.extractCommonSubExpressions()
-            val size = common.members.size
-            println(common)
+            val size = common.children.size
+            //println(common)
             println("$count0 => $size ${(size + 0.0) / count0}")
             //         println(instantiateVariables(gradientW0))
 //        println(instantiateMatrixElements(gradientW1))
@@ -256,6 +317,32 @@ class RigueurTest {
         instantiateVariables(s[0,1]).assertString("column[0,0]")
         val a1 by s[0,0]
         instantiateVariables(a1).assertString("a1=1")
+    }
+
+    @Test
+    fun `requires parens`() {
+        fun check(parent : BinaryOp, child : BinaryOp, childIsRight: Boolean, expect : Boolean?) {
+            val result = binaryRequiresParents(parent, child, childIsRight)
+            assert(result == expect) {
+                binaryRequiresParents(parent, child, childIsRight)
+                "$result != $expect"
+            }
+        }
+        check(MINUS, PLUS, childIsRight = false, expect = false)
+        check(MINUS, PLUS, childIsRight = true, expect = true)
+        check(PLUS, PLUS, childIsRight = false, expect = false)
+        check(PLUS, PLUS, childIsRight = true, expect = false)
+        check(TIMES, TIMES, childIsRight = false, expect = false)
+        check(TIMES, TIMES, childIsRight = true, expect = false)
+        check(MINUS, MINUS, childIsRight = false, expect = false)
+        check(MINUS, MINUS, childIsRight = true, expect = true)
+        check(PLUS, MINUS, childIsRight = false, expect = true)
+        check(PLUS, MINUS, childIsRight = true, expect = true)
+        check(PLUS, TIMES, childIsRight = false, expect = false)
+        check(PLUS, TIMES, childIsRight = true, expect = false)
+        check(MINUS, TIMES, childIsRight = false, expect = false)
+        check(MINUS, TIMES, childIsRight = true, expect = false)
+
     }
 
     @Test
@@ -469,7 +556,7 @@ class RigueurTest {
     @Test
     fun `test differentiate case 263083254`() {
         val x4 by pow(matrixVariable<Double>(1,1),variable<Double>())
-        differentiate(x4).assertString("x4=pow([0,0],?)")
+        differentiate(x4).assertString("x4=pow(matrix(1x1),?)")
     }
 
     @Test
@@ -482,7 +569,7 @@ class RigueurTest {
     @Test
     fun `test differentiate case 2008884022`() {
         val x15 by matrixVariable<Double>(1,1)*matrixVariable<Double>(1,1)
-        differentiate(x15).assertString("x15=[0,0]*[0,0]")
+        differentiate(x15).assertString("x15=matrix(1x1)*matrix(1x1)")
     }
 
     @Test
@@ -562,9 +649,20 @@ class RigueurTest {
         val error by summation(learningRate * pow(target - output, 2.0))
         val gradientW0 by d(error) / d(w0)
         val gradientW1 by d(error) / d(w1)
+        val x by variable<Double>()
+        val q by variable<Double>()
+        val m by variable<Double>()
+        val b by variable<Double>()
+        val y by q * pow(x,2.0) + m * x + b
+        val polyTarget by variable<Double>()
+        val polyError = pow(y - polyTarget, 2.0)
+        val dq by differentiate(d(polyError)/d(q))
+        val dm by differentiate(d(polyError)/d(m))
+        val db by differentiate(d(polyError)/d(b))
         val all = listOf(x2, x3, x4, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18,
                          x19, x20, x22, x23, x24, x25, x26, x27, x28, x29,
-                         input, w0, h1, w1, output, target, error, gradientW0, gradientW1)
+                         input, w0, h1, w1, output, target, error, gradientW0, gradientW1,
+                         x, q, m, b, y, polyTarget, polyError, dq, dm, db)
         fun identifierOf(structure : String) = structure.substringAfter("val ").substringBefore(" ")
         for(expr in all) {
             expr.toString()
@@ -573,6 +671,7 @@ class RigueurTest {
             val structure = expr.renderStructure()
             val id = identifierOf(structure)
             assert(expr == expr)
+            expr.reduceArithmetic()
             if (expr.type == Double::class) {
                 if (expr is Named) {
                     try {
