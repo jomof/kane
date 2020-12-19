@@ -2,12 +2,10 @@
 package com.github.jomof.kane.rigueur
 
 import org.junit.Test
-import java.util.*
 import kotlin.math.absoluteValue
 import kotlin.math.pow
 
 class RigueurTest {
-
     private fun Any.assertString(expected : String) {
         val actual = toString().trim('\n')
         val expectedTrimmed = expected.trim('\n')
@@ -21,6 +19,11 @@ class RigueurTest {
         assert(diff < 0.00000001) {
             "$this was not close enough to $expected"
         }
+    }
+
+    @Test
+    fun `dont check in tracking enable`() {
+        errorIfTrackingEnabled()
     }
 
     @Test
@@ -166,7 +169,7 @@ class RigueurTest {
         m3.assertString("m3=m1*m2")
         assert(m3.rows == 1 && m3.columns == 1)
         val e1 by m3[0,0]
-        e1.assertString("e1=0*10+1*9+2*8+3*7+4*6+5*5+6*4+7*3+8*2+9*1")
+        e1.assertString("e1=165")
     }
 
     @Test
@@ -174,7 +177,7 @@ class RigueurTest {
         val input by matrixVariable<Double>(1, 1)
         val w0 by matrixVariable<Double>(input.rows + 1, 1)
         val h1 by logit(w0 * (input stack 1.0))
-        h1.toDataMatrix().assertString("h1=logit(w0[0,0]*input[0,0]+w0[1,0]*1)")
+        h1.toDataMatrix().assertString("h1=logit(input[0,0]*w0[0,0]+w0[1,0])")
     }
 
     @Test
@@ -185,7 +188,21 @@ class RigueurTest {
         val t by variable<Double>()
         val error by 0.5 * pow(t - ((m * x) + b), 2.0)
         val dm by differentiate(d(error)/d(m))
-        dm.assertString("dm=-1*(t-(m*x+b))*x")
+        dm.assertString("dm=-(t-(m*x+b))*x")
+    }
+
+    @Test
+    fun `render formulas`() {
+        val r by variable<Double>()
+        val x by variable<Double>()
+        val m by variable<Double>()
+        val b by variable<Double>()
+        val y by m * x + b
+        val target by variable<Double>()
+        val error by pow(target - y, 2.0)
+        val dm by -1.0 * r * differentiate(d(error)/d(m))
+        val db by -1.0 * r * differentiate(d(error)/d(b))
+        error.assertString("error=(target-m*x+b)²")
     }
 
     @Test
@@ -196,29 +213,20 @@ class RigueurTest {
         val b by variable<Double>()
         val y by m * x + b
         val target by variable<Double>()
-        val error by 0.5 * pow(target - y, 2.0)
+        val error by pow(target - y, 2.0)
         val dm by -1.0 * r * differentiate(d(error)/d(m))
-        val db by -1.0 * r *differentiate(d(error)/d(b))
+        val db by -1.0 * r * differentiate(d(error)/d(b))
         println(error)
         println(dm)
         println(db)
         val tab = tableauOf(dm,db).extractCommonSubExpressions()
-        tab.assertString("""
-            c0=m*x
-            c1=c0+b
-            c2=target-c1
-            c3=r*c2
-            c4=c3*x
-            dm=c4
-            db=c3
-        """.trimIndent())
         val map = mutableMapOf(
-            "r" to 0.001, // learning rate
+            "r" to 0.1, // learning rate
             "b" to 0.0,
             "m" to 0.0,
         )
 
-        (0 until 10000).forEach {
+        (0 until 50).forEach {
             (-5 until 5).forEach { point ->
                 map["x"] = point.toDouble()
                 map["target"] = -500 * point.toDouble() + 0.2
@@ -233,6 +241,17 @@ class RigueurTest {
     }
 
     @Test
+    fun `assign-back basics`() {
+        val r by variable<Double>()
+        val a1 by assign(r + 1.0 - 1.0 to r)
+        a1.assertString("r <- r+1-1")
+        instantiateVariables(a1).assertString("r <- r+1-1")
+        instantiateVariables(a1).assertString("r <- r+1-1")
+        instantiateVariables(a1).reduceArithmetic().assertString("r <- r")
+
+    }
+
+    @Test
     fun `tiny linear regression with assign-back`() {
         val r by variable<Double>()
         val x by variable<Double>()
@@ -243,36 +262,35 @@ class RigueurTest {
         val error by 0.5 * pow(target - y, 2.0)
         val dm by m - r * differentiate(d(error)/d(m))
         val db by b - r *differentiate(d(error)/d(b))
-        //val am = assign(dm to m)
+        val am by assign(dm to m)
+        val ab by assign(db to b)
         println(error)
         println(dm)
         println(db)
-        val tab = tableauOf(dm,db).extractCommonSubExpressions()
-        tab.assertString("""
-            c0=-1*r
-            c1=m*x
-            c2=c1+b
-            c3=target-c2
-            c4=c0*c3
-            c5=c4*x
-            c6=m-c5
-            c7=b-c4
-            dm=c6
-            db=c7
-        """.trimIndent())
+        val tab = tableauOf(am,ab).extractCommonSubExpressions()
+//        tab.assertString("""
+//            c0=-1*r
+//            c1=m*x
+//            c2=c1+b
+//            c3=target-c2
+//            c4=c0*c3
+//            c5=c4*x
+//            c6=m-c5
+//            c7=b-c4
+//            m <- c6
+//            b <- c7
+//        """.trimIndent())
         val map = mutableMapOf(
-            "r" to 0.001, // learning rate
+            "r" to 0.1, // learning rate
             "b" to 0.0,
             "m" to 0.0,
         )
 
-        (0 until 10000).forEach {
-            (-5 until 5).forEach { point ->
+        (0 until 50).forEach {
+            (-2 until 2).forEach { point ->
                 map["x"] = point.toDouble()
                 map["target"] = -500 * point.toDouble() + 0.2
                 tab.eval(map)
-                map["b"] = map.getValue("db")
-                map["m"] = map.getValue("dm")
             }
         }
         map["m"]!!.assertNear(-500.0)
@@ -281,53 +299,75 @@ class RigueurTest {
     }
 
     @Test
-    fun `tiny linear regression with bound holes`() {
-        val learningRate = 0.001
+    fun `tiny linear regression with assign-back backed by matrix`() {
+        val a by matrixVariable<Double>(1, 2)
+        val r by variable<Double>()
         val x by variable<Double>()
-        val m by variable<Double>()
-        val b by variable<Double>()
+        val m by a[0,0]
+        val b by a[0,1]
         val y by m * x + b
         val target by variable<Double>()
         val error by 0.5 * pow(target - y, 2.0)
-        val dm by differentiate(d(error)/d(m))
-        val db by differentiate(d(error)/d(b))
-        println(error)
-        println(dm)
-        println(db)
-        val slotted = tableauOf(dm,db)
-            .extractCommonSubExpressions()
-            .replaceSlots()
-        println(slotted)
-        val maxSlot = slotted.maxSlot()!!
-        println(maxSlot)
-        val rand = Random()
-        val space = DoubleArray(maxSlot.slot + 1) { rand.nextGaussian() }
-        println(space.toList())
-        val slots = slotted.slots()
-        println(slots)
+        val da by a - r * differentiate(d(error)/d(a))
+        val aa by assign(da to a)
+        val tab = tableauOf(aa).extractCommonSubExpressions()
+        val map = mutableMapOf(
+            "r" to 0.1, // learning rate
+            "a[0,0]" to 0.0,
+            "a[0,1]" to 0.0,
+        )
 
-//        val xslot = slots[x]!!
-//        val mslot = slots[m]!!
-//        val bslot = slots[b]!!
-//        val dbslot = slots[db]!!
-//        val dmslot = slots[dm]!!
-//        val targetSlot = slots[target]!!
-//        (0 until 10000).forEach {
-//            (-5 until 5).forEach { point ->
-//                space[xslot] = point.toDouble()
-//                space[targetSlot] = -500 * point.toDouble() + 0.2
-//                //tab.eval(map)
-//                space[bslot] -= learningRate * space[dbslot]
-//                space[mslot] -= learningRate * space[dmslot]
-//            }
-//        }
+        repeat(50) {
+            (-2 until 2).forEach { point ->
+                map["x"] = point.toDouble()
+                map["target"] = -500 * point.toDouble() + 0.2
+                tab.eval(map)
+            }
+        }
+        map["a[0,0]"]!!.assertNear(-500.0)
+        map["a[0,1]"]!!.assertNear(0.2)
+    }
+
+    @Test
+    fun `tiny linear regression with assign-back backed by matrix with bound holes`() {
+        val a by matrixVariable<Double>(1, 2)
+        val r by variable<Double>()
+        val x by variable<Double>()
+        val m by a[0,0]
+        val b by a[0,1]
+        val y by m * x + b
+        val target by variable<Double>()
+        val error by 0.5 * pow(target - y, 2.0)
+        val da by a - r * differentiate(d(error)/d(a))
+        val aa by assign(da to a)
+        val tab = tableauOf(aa).extractCommonSubExpressions()
+        println(tab)
+        val layout = tab.layoutMemory()
+        println("---")
+        println(layout)
+        val space = DoubleArray(layout.slotCount)
+        val xslot = layout.getIndex(x)
+        val rslot = layout.getIndex(r)
+        val targetSlot = layout.getIndex(target)
+        val mslot = layout.getIndex(m)
+        val bslot = layout.getIndex(b)
+        space[rslot] = 0.1
+        repeat(50) {
+            (-2 until 2).forEach { point ->
+                space[xslot] = point.toDouble()
+                space[targetSlot] = -500 * point.toDouble() + 0.2
+                layout.eval(space)
+            }
+        }
+        space[mslot].assertNear(-500.0)
+        space[bslot].assertNear(0.2)
     }
 
     @Test
     fun `learn xor with ramps`() {
         val learningRate = 0.1
         val inputs = 2
-        val count0 = 5
+        val count0 = 1
         val outputs = 1
         val input by matrixVariable<Double>(1, inputs)
         val w0 by matrixVariable<Double>(input.rows + 1, count0)
@@ -336,16 +376,31 @@ class RigueurTest {
         val output by ramp(w1 * (h1 stack 1.0))
         val target by matrixVariable<Double>(output.columns, output.rows)
         val error by summation(0.5 * pow(target - output, 2.0))
-        val gradientW0 by differentiate(d(error) / d(w0))
-        val gradientW1 by differentiate(d(error) / d(w1))
-        val tab = tableauOf(
-            output,
-            error,
-            gradientW0,
-            gradientW1
-        )
-        val common = tab.extractCommonSubExpressions()
-        println(common)
+        val dw0 by w0 - learningRate * differentiate(d(error) / d(w0))
+        val dw1 by w1 - learningRate * differentiate(d(error) / d(w1))
+        val aw0 by assign(dw0 to w0)
+        val aw1 by assign(dw1 to w1)
+        val tab = tableauOf(aw0,aw1).extractCommonSubExpressions()
+        println(tab)
+        val layout = tab.layoutMemory()
+        println("---")
+        println(layout)
+//        val space = DoubleArray(layout.slotCount)
+//        val xslot = layout.getIndex(x)
+//        val rslot = layout.getIndex(r)
+//        val targetSlot = layout.getIndex(target)
+//        val mslot = layout.getIndex(m)
+//        val bslot = layout.getIndex(b)
+//        space[rslot] = 0.1
+//        repeat(50) {
+//            (-2 until 2).forEach { point ->
+//                space[xslot] = point.toDouble()
+//                space[targetSlot] = -500 * point.toDouble() + 0.2
+//                layout.eval(space)
+//            }
+//        }
+//        space[mslot].assertNear(-500.0)
+//        space[bslot].assertNear(0.2)
     }
 
     @Test
@@ -448,6 +503,8 @@ class RigueurTest {
                 "$result != $expect"
             }
         }
+        check(POW, PLUS, childIsRight = false, expect = true)
+        check(POW, PLUS, childIsRight = true, expect = false)
         check(MINUS, PLUS, childIsRight = false, expect = false)
         check(MINUS, PLUS, childIsRight = true, expect = true)
         check(PLUS, PLUS, childIsRight = false, expect = false)
@@ -463,6 +520,13 @@ class RigueurTest {
         check(MINUS, TIMES, childIsRight = false, expect = false)
         check(MINUS, TIMES, childIsRight = true, expect = false)
 
+//
+//        check(POW, MINUS, childIsRight = false, expect = true)
+//        check(POW, MINUS, childIsRight = true, expect = false)
+//        check(POW, TIMES, childIsRight = false, expect = true)
+//        check(POW, TIMES, childIsRight = true, expect = false)
+//        check(POW, DIV, childIsRight = false, expect = true)
+//        check(POW, DIV, childIsRight = true, expect = false)
     }
 
     @Test
@@ -474,8 +538,8 @@ class RigueurTest {
         val b by variable<Double>()
         (a + b).assertString("a+b")
         val c by a + b
-        val x = c
         c.assertString("c=a+b")
+        (a * -1.0).assertString("a*(-1)")
         (a * b).assertString("a*b")
         (a - b).assertString("a-b")
         (a / b).assertString("a/b")
@@ -484,7 +548,7 @@ class RigueurTest {
         ((a - a) * b).assertString("(a-a)*b")
         (a - a * b).assertString("a-a*b")
         (a / a * b).assertString("(a/a)*b")
-        (a / (a * b)).assertString("a/a*b")
+        (a / (a * b)).assertString("a/(a*b)")
         ((a / a) * b).assertString("(a/a)*b")
         (a + a / b).assertString("a+a/b")
         ((a + a) / b).assertString("(a+a)/b")
@@ -511,6 +575,21 @@ class RigueurTest {
         (m stack m stack m).assertString("m stack m stack m")
         ((m stack m) stack m).assertString("m stack m stack m")
         (m stack (m stack m)).assertString("m stack m stack m")
+    }
+
+    @Test
+    fun `variable negation rendering`() {
+        val a by variable<Double>()
+        val b by variable<Double>()
+        (-b * -b * -a).reduceArithmetic().assertString("-a*b²")
+        (-b * -b).reduceArithmetic().assertString("b²")
+        (-b * -a * -b).reduceArithmetic().assertString("-a*b²")
+        (-a).assertString("-a")
+        (-(a + b)).assertString("-(a+b)")
+        (-(a * b)).assertString("-a*b")
+        (-1.0 * b).reduceArithmetic().assertString("-b")
+        (b * -1.0).reduceArithmetic().assertString("-b")
+
     }
 
     @Test
@@ -550,13 +629,10 @@ class RigueurTest {
         f3.assertString("f3=logit(m[0,0]*m[0,1])")
         val df3dx by d(f3) / d(x)
         df3dx.assertString("df3dx=d(logit(m[0,0]*m[0,1]))/d(m[0,0])")
-        differentiate(df3dx).assertString("df3dx'=logit(m[0,0]*m[0,1])*(1-logit(m[0,0]*m[0,1]))*m[0,1]")
+        differentiate(df3dx).assertString("df3dx'=(1-logit(m[0,0]*m[0,1]))*logit(m[0,0]*m[0,1])*m[0,1]")
         val df3dy by d(f3) / d(y)
         df3dy.assertString("df3dy=d(logit(m[0,0]*m[0,1]))/d(m[0,1])")
-        differentiate(df3dy).assertString("df3dy'=logit(m[0,0]*m[0,1])*(1-logit(m[0,0]*m[0,1]))*m[0,0]")
-
-//        val xyz by d(f3) / d(m)
-//        differentiate(xyz).assertString("")
+        differentiate(df3dy).assertString("df3dy'=(1-logit(m[0,0]*m[0,1]))*logit(m[0,0]*m[0,1])*m[0,0]")
     }
 
     @Test
@@ -566,29 +642,29 @@ class RigueurTest {
         val f1 by pow(x, 2.0) + pow(y, 3.0)
         f1.assertString("f1=x²+y³")
         val d1 by d(f1) / d(x)
-        d1.assertString("d1=d(x²+y³)/d(x)")
+        d1.assertString("d1=d(x²+y³)/dx")
         differentiate(d1).assertString("d1'=2*x")
         val d2 by d(f1) / d(y)
-        d2.assertString("d2=d(x²+y³)/d(y)")
+        d2.assertString("d2=d(x²+y³)/dy")
         differentiate(d2).assertString("d2'=3*y²")
         val f2 by pow(x, 2.0) * pow(y, 3.0)
         f2.assertString("f2=x²*y³")
         val df2dx by d(f2) / d(x)
-        df2dx.assertString("df2dx=d(x²*y³)/d(x)")
+        df2dx.assertString("df2dx=d(x²*y³)/dx")
         differentiate(df2dx).assertString("df2dx'=2*x*y³")
         val df2dy by d(f2) / d(y)
-        df2dy.assertString("df2dy=d(x²*y³)/d(y)")
+        df2dy.assertString("df2dy=d(x²*y³)/dy")
         differentiate(df2dy).assertString("df2dy'=3*x²*y²")
         val assigned by differentiate(df2dy)
         assigned.assertString("assigned=3*x²*y²")
         val f3 by logit(x * y)
         f3.assertString("f3=logit(x*y)")
         val df3dx by d(f3) / d(x)
-        df3dx.assertString("df3dx=d(logit(x*y))/d(x)")
-        differentiate(df3dx).assertString("df3dx'=logit(x*y)*(1-logit(x*y))*y")
+        df3dx.assertString("df3dx=d(logit(x*y))/dx")
+        differentiate(df3dx).assertString("df3dx'=(1-logit(x*y))*logit(x*y)*y")
         val df3dy by d(f3) / d(y)
-        df3dy.assertString("df3dy=d(logit(x*y))/d(y)")
-        differentiate(df3dy).assertString("df3dy'=logit(x*y)*(1-logit(x*y))*x")
+        df3dy.assertString("df3dy=d(logit(x*y))/dy")
+        differentiate(df3dy).assertString("df3dy'=(1-logit(x*y))*logit(x*y)*x")
     }
 
     @Test
@@ -638,8 +714,124 @@ class RigueurTest {
         gradientW0.extractCommonSubExpressions()
     }
 
+    // Try various things to see if we can make it crash
+    private fun spamExpression(expr : UntypedExpr) {
+        if (expr !is Expr<*>) return
+        fun identifierOf(structure : String) = structure.substringAfter("val ").substringBefore(" ")
+        expr.toString()
+        expr.countSubExpressions()
+
+        val structure = expr.renderStructure()
+        val id = identifierOf(structure)
+        assert(expr == expr)
+        expr.reduceArithmetic()
+        if (expr.type == Double::class) {
+            if (expr is NamedExpr<*>) {
+                try {
+                    expr.extractCommonSubExpressions()
+                } catch (e : Exception) {
+                    val sb = StringBuilder()
+                    expr.renderStructure()
+                    sb.append("@Test\n")
+                    sb.append("fun `test extract common sub expressions case ${structure.hashCode().absoluteValue}`() {\n")
+                    sb.append("    $structure\n")
+                    sb.append("    $id.extractCommonSubExpressions().assertString(\"\")\n")
+                    sb.append("}\n")
+                    println(sb)
+                    throw e
+                }
+                tableauOf(expr).layoutMemory()
+            }
+            if (expr is MatrixExpr<*>) {
+                val named by (expr as MatrixExpr<Double>)
+                named.extractCommonSubExpressions()
+            }
+            if (expr is ScalarExpr<*>) {
+                val named by (expr as ScalarExpr<Double>)
+                named.extractCommonSubExpressions()
+            }
+            val v by variable<Double>()
+            val replaced = (expr as Expr<Double>).replace(v, v)
+            if (replaced != expr) {
+                val sb = StringBuilder()
+                sb.append("@Test\n")
+                sb.append("fun `expr replace identity ${structure.hashCode().absoluteValue}`() {\n")
+                sb.append("    $structure\n")
+                sb.append("    val v = variable<Double>()\n")
+                sb.append("    val replaced = $id.replace(v,v)\n")
+                sb.append("    assert($id == $id)\n")
+                sb.append("    assert(replaced == replaced)\n")
+                sb.append("    assert($id == replaced) { \"[\$$id] != [\$replaced]\" }\n")
+                sb.append("}\n")
+                println(sb)
+            }
+        } else if (expr.type == String::class) {
+        } else {
+            assert(false)
+        }
+
+        try {
+            instantiateVariables(expr)
+        } catch (e : Exception) {
+            val sb = StringBuilder()
+            expr.renderStructure()
+            sb.append("@Test\n")
+            sb.append("fun `test instantiate variables case ${structure.hashCode().absoluteValue}`() {\n")
+            sb.append("    $structure\n")
+            sb.append("    instantiateVariables($id).assertString(\"\")\n")
+            sb.append("}\n")
+            println(sb)
+            throw e
+        }
+        try {
+            differentiate(expr)
+        } catch (e : Exception) {
+            val sb = StringBuilder()
+            expr.renderStructure()
+            sb.append("@Test\n")
+            sb.append("fun `test differentiate case ${structure.hashCode().absoluteValue}`() {\n")
+            sb.append("    $structure\n")
+            sb.append("    differentiate($id).assertString(\"\")\n")
+            sb.append("}\n")
+            println(sb)
+            throw e
+        }
+        try {
+            differentiate(expr).render()
+        } catch (e : Exception) {
+            val sb = StringBuilder()
+            expr.renderStructure()
+            sb.append("@Test\n")
+            sb.append("fun `test differentiate case ${structure.hashCode().absoluteValue}`() {\n")
+            sb.append("    $structure\n")
+            sb.append("    differentiate($id).assertString(\"\")\n")
+            sb.append("}\n")
+            println(sb)
+            throw e
+        }
+
+        if(expr is MatrixExpr<*>) {
+            for(column in 0 until expr.columns) {
+                for (row in 0 until expr.rows) {
+                    try {
+                        expr[column, row]
+                    } catch (e : Exception) {
+                        val sb = StringBuilder()
+                        sb.append("@Test\n")
+                        sb.append("fun `test matrix element case ${structure.hashCode().absoluteValue}`() {\n")
+                        sb.append("    $structure\n")
+                        sb.append("    $id[$column,$row].assertString(\"\")\n")
+                        sb.append("}\n")
+                        println(sb)
+                        throw e
+                    }
+                }
+            }
+        }
+    }
+
     @Test
-    fun `generate new tests`() {
+    fun `generate new tests`() = trackExprs().use {
         val v1 by variable<Double>()
         val x1 by matrixVariable<Double>(1,1)
         val x2: ScalarExpr<Double> by pow(v1, 1.0)
@@ -691,117 +883,19 @@ class RigueurTest {
                          x19, x20, x22, x23, x24, x25, x26, x27, x28, x29,
                          input, w0, h1, w1, output, target, error, gradientW0, gradientW1,
                          x, q, m, b, y, polyTarget, polyError, dq, dm, db)
-        fun identifierOf(structure : String) = structure.substringAfter("val ").substringBefore(" ")
-        for(expr in all) {
-            expr.toString()
-            expr.countSubExpressions()
 
-            val structure = expr.renderStructure()
-            val id = identifierOf(structure)
-            assert(expr == expr)
-            expr.reduceArithmetic()
-            if (expr.type == Double::class) {
-                if (expr is NamedExpr) {
-                    try {
-                        expr.extractCommonSubExpressions()
-                    } catch (e : Exception) {
-                        val sb = StringBuilder()
-                        expr.renderStructure()
-                        sb.append("@Test\n")
-                        sb.append("fun `test extract common sub expressions case ${structure.hashCode().absoluteValue}`() {\n")
-                        sb.append("    $structure\n")
-                        sb.append("    $id.extractCommonSubExpressions().assertString(\"\")\n")
-                        sb.append("}\n")
-                        println(sb)
-                        throw e
-                    }
-                }
-                if (expr is MatrixExpr) {
-                    val named by (expr as MatrixExpr<Double>)
-                    named.extractCommonSubExpressions()
-                }
-                if (expr is ScalarExpr) {
-                    val named by (expr as ScalarExpr<Double>)
-                    named.extractCommonSubExpressions()
-                }
-                val v by variable<Double>()
-                val replaced = (expr as Expr<Double>).replace(v, v)
-                if (replaced != expr) {
-                    val sb = StringBuilder()
-                    sb.append("@Test\n")
-                    sb.append("fun `expr replace identity ${structure.hashCode().absoluteValue}`() {\n")
-                    sb.append("    $structure\n")
-                    sb.append("    val v = variable<Double>()\n")
-                    sb.append("    val replaced = $id.replace(v,v)\n")
-                    sb.append("    assert($id == $id)\n")
-                    sb.append("    assert(replaced == replaced)\n")
-                    sb.append("    assert($id == replaced) { \"[\$$id] != [\$replaced]\" }\n")
-                    sb.append("}\n")
-                    println(sb)
-                }
-            } else if (expr.type == String::class) {
-            } else {
-                assert(false)
-            }
+        val next = mutableSetOf<UntypedExpr>()
+        val seen = mutableSetOf<UntypedExpr>()
+        next += all
+        next += getRecordedExprs()
 
-            try {
-                instantiateVariables(expr)
-            } catch (e : Exception) {
-                val sb = StringBuilder()
-                expr.renderStructure()
-                sb.append("@Test\n")
-                sb.append("fun `test instantiate variables case ${structure.hashCode().absoluteValue}`() {\n")
-                sb.append("    $structure\n")
-                sb.append("    instantiateVariables($id).assertString(\"\")\n")
-                sb.append("}\n")
-                println(sb)
-                throw e
+        while (next.isNotEmpty()) {
+            for (expr in next.toList()) {
+                spamExpression(expr)
+                seen += expr
             }
-            try {
-                differentiate(expr)
-            } catch (e : Exception) {
-                val sb = StringBuilder()
-                expr.renderStructure()
-                sb.append("@Test\n")
-                sb.append("fun `test differentiate case ${structure.hashCode().absoluteValue}`() {\n")
-                sb.append("    $structure\n")
-                sb.append("    differentiate($id).assertString(\"\")\n")
-                sb.append("}\n")
-                println(sb)
-                throw e
-            }
-            try {
-                differentiate(expr).render()
-            } catch (e : Exception) {
-                val sb = StringBuilder()
-                expr.renderStructure()
-                sb.append("@Test\n")
-                sb.append("fun `test differentiate case ${structure.hashCode().absoluteValue}`() {\n")
-                sb.append("    $structure\n")
-                sb.append("    differentiate($id).assertString(\"\")\n")
-                sb.append("}\n")
-                println(sb)
-                throw e
-            }
-
-            if(expr is MatrixExpr) {
-                for(column in 0 until expr.columns) {
-                    for (row in 0 until expr.rows) {
-                        try {
-                            expr[column, row]
-                        } catch (e : Exception) {
-                            val sb = StringBuilder()
-                            sb.append("@Test\n")
-                            sb.append("fun `test matrix element case ${structure.hashCode().absoluteValue}`() {\n")
-                            sb.append("    $structure\n")
-                            sb.append("    $id[$column,$row].assertString(\"\")\n")
-                            sb.append("}\n")
-                            println(sb)
-                            throw e
-                        }
-                    }
-                }
-            }
+            next += getRecordedExprs()
+            next -= seen
         }
     }
 }
