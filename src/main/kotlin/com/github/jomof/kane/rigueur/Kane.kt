@@ -403,7 +403,6 @@ inline fun <reified E:Any> variable() = ScalarVariable(E::class)
 // Tableau
 fun <E:Any> tableauOf(vararg elements : NamedExpr<E>) : Tableau<E> = Tableau(elements.toList())
 fun <E:Any> tableauOf(elements : List<NamedExpr<E>>) : Tableau<E> = Tableau(elements)
-fun <E:Any> Tableau<E>.map(action : (NamedExpr<E>) -> NamedExpr<E>) : Tableau<E> = Tableau(children.map(action))
 // Misc
 fun <E:Any> constant(value : E) : ScalarExpr<E> = ConstantScalar(value)
 fun <E:Any> constant(value : Double, type : KClass<E>) : ScalarExpr<E> = when {
@@ -569,14 +568,7 @@ fun <E:Any> instantiateVariables(expr : Expr<E>, entryPoint : Boolean = true) : 
         is BinaryMatrix -> expr.copy(left = expr.left.self(), right = expr.right.self())
         is BinaryScalarMatrix -> expr.copy(left = expr.left.self(), right = expr.right.self())
         is BinaryMatrixScalar -> expr.copy(left = expr.left.self(), right = expr.right.self())
-        is NamedScalar -> {
-            val scalar = expr.scalar.self()
-            when {
-                entryPoint -> NamedScalar(expr.name, scalar)
-                else -> scalar
-            }
-        }
-
+        is NamedScalar -> expr.copy(scalar = expr.scalar.self())
         is MatrixVariableElement ->
             expr.matrix[expr.column, expr.row]
         is UnaryMatrixScalar -> when(expr.op) {
@@ -590,8 +582,8 @@ fun <E:Any> instantiateVariables(expr : Expr<E>, entryPoint : Boolean = true) : 
             else -> error("${expr.op}")
         }
         is Tableau -> expr.copy(children = expr.children.map { it.self() })
-
         is NamedScalarAssign -> expr.copy(right = expr.right.self())
+        is NamedMatrixAssign -> expr.copy(right = expr.right.self())
         else ->
             error("${expr.javaClass}")
     }
@@ -972,22 +964,13 @@ fun <E:Any> Expr<E>.countSubExpressions(memo : ExprMap<E> = ExprMap()) : Map<Sca
     return memo.data
 }
 
-fun <E:Any> NamedExpr<E>.extractCommonSubExpressions() = tableauOf(this).extractCommonSubExpressions()
-fun <E:Any> Tableau<E>.extractCommonSubExpressions(): Tableau<E> {
-    val extracted = mutableListOf<NamedExpr<E>>()
-    var tab = map {
-        when(it) {
-            is NamedMatrixVariable -> it
-            is NamedScalarVariable -> it
-            is NamedMatrix<E> -> it.copy(matrix = instantiateVariables(it.matrix).reduceArithmetic())
-            is NamedScalar<E> -> it.copy(scalar = instantiateVariables(it).reduceArithmetic())
-            is NamedScalarAssign<E> -> it.copy(right = instantiateVariables(it.right).reduceArithmetic())
-            is NamedMatrixAssign<E> -> it.copy(right = instantiateVariables(it.right).reduceArithmetic())
-            else ->
-                error("${it.javaClass}")
-        }
-    }
+fun NamedExpr<Double>.extractCommonSubExpressions() = tableauOf(this).extractCommonSubExpressions()
+fun Tableau<Double>.extractCommonSubExpressions(): Tableau<Double> {
+    val extracted = mutableListOf<NamedExpr<Double>>()
+    val memo : MutableMap<Expr<Double>,Expr<Double>> = mutableMapOf()
+    var tab = instantiateVariables(this) as Tableau<Double>
     while(true) {
+        tab = tab.reduceArithmeticDouble(memo) as Tableau<Double>
         val sub = tab.countSubExpressions()
         if (sub.isEmpty()) break
         val maxCount = sub.maxOf { it.value }
@@ -1059,28 +1042,9 @@ private class TrackingScope : Closeable {
 fun trackExprs() : Closeable = TrackingScope()
 
 // Reduce arithmetic
-fun Expr<Double>.hasConstants() : Boolean {
-    when(this) {
-        is VariableExpr -> return false
-        is ConstantScalar -> return true
-        is MatrixVariableElement -> return false
-        is NamedScalarAssign -> return right.hasConstants()
-        is NamedMatrixAssign -> return right.hasConstants()
-        is ParentExpr -> {
-            for(child in children) {
-                if (child.hasConstants()) return true
-            }
-            return false
-        }
-        else -> error("$javaClass")
-    }
-}
-
 fun Expr<Double>.reduceArithmeticDouble(memo : MutableMap<Expr<Double>,Expr<Double>> = mutableMapOf()) : Expr<Double> {
     if (memo.contains(this))
         return memo.getValue(this)
-    record()
-
     fun ScalarExpr<Double>.self() = reduceArithmeticDouble(memo) as ScalarExpr<Double>
     fun MatrixExpr<Double>.self() = reduceArithmeticDouble(memo) as MatrixExpr<Double>
     fun NamedExpr<Double>.self() = reduceArithmeticDouble(memo) as NamedExpr<Double>
@@ -1090,7 +1054,6 @@ fun Expr<Double>.reduceArithmeticDouble(memo : MutableMap<Expr<Double>,Expr<Doub
         is UnaryMatrixScalar -> copy(value = value.self())
         is NamedScalar -> copy(scalar = scalar.self())
         is NamedMatrix -> copy(matrix = matrix.self())
-       // is MatrixExpr -> matrixOf(columns, rows) { (column, row) -> this[column,row].self() }
         is BinaryScalar -> {
             if (op == MINUS && right is ConstantScalar) BinaryScalar(PLUS, left, ConstantScalar(-right.value)).self()
             else if (op.associative) {
@@ -1153,6 +1116,8 @@ fun Expr<Double>.reduceArithmeticDouble(memo : MutableMap<Expr<Double>,Expr<Doub
                 val right = right.self()
                 val leftConst = left.tryFindConstant()
                 val rightConst = right.tryFindConstant()
+                val leftNegation = left.tryFindNegation()
+                val rightNegation = right.tryFindNegation()
                 when {
                     leftConst != null && rightConst != null -> when (op) {
                         MINUS -> ConstantScalar(leftConst - rightConst)
@@ -1181,6 +1146,11 @@ fun Expr<Double>.reduceArithmeticDouble(memo : MutableMap<Expr<Double>,Expr<Doub
                         DIV -> right
                         else -> error("$op")
                     }
+                    rightNegation != null -> when(op) {
+                        MINUS -> (left + rightNegation).self()
+                        DIV -> -(left / rightNegation).self()
+                        else -> error("$op")
+                    }
                     else -> copy(left = left, right = right)
                 }
             }
@@ -1202,6 +1172,7 @@ fun Expr<Double>.reduceArithmeticDouble(memo : MutableMap<Expr<Double>,Expr<Doub
         is DataMatrix -> map { it.self() }
         is NamedScalarVariable -> this
         is NamedMatrixVariable -> this
+        is Slot -> this
         else -> error("$javaClass")
     }
     memo[this] = result
@@ -1262,7 +1233,7 @@ fun binaryRequiresParents(parent : BinaryOp, child : BinaryOp, childIsRight: Boo
 }
 
 private fun requiresParens(parent : UntypedExpr, child : UntypedExpr, childIsRight : Boolean) : Boolean {
-    fun UntypedExpr.binop() = when(this) {
+    fun UntypedExpr.binop() : BinaryOp? = when(this) {
             is BinaryMatrixScalar<*> -> op
             is BinaryScalarMatrix<*> -> op
             is BinaryScalar<*> -> op
@@ -1292,15 +1263,15 @@ private fun renderScalarValue(value : Any) = run {
 }
 
 fun UntypedExpr.render(entryPoint : Boolean = true) : String {
-    record()
     val parent = this
     fun UntypedExpr.self(childIsRight : Boolean = false) =
         when {
             requiresParens(parent, this, childIsRight) -> "(${render(false)})"
             else -> render(false)
         }
-    fun binary(op : BinaryOp, left : UntypedExpr, right : UntypedExpr) =
+    fun binary(op : BinaryOp, left : UntypedExpr, right : UntypedExpr) : String =
         when  {
+            right is NamedScalar<*> -> binary(op, left, right.scalar)
             op.infix -> "${left.self()}${op.op}${right.self(true)}"
             else -> "${op.op}(${left.self()},${right.self()})"
         }
@@ -1435,7 +1406,7 @@ fun UntypedExpr.renderStructure(entryPoint : Boolean = true) : String {
             sb.append("matrixOf($columns,$rows,${elements.joinToString(",") { it.self() }})")
             "$sb"
         }
-        else ->
-            error("$javaClass")
+        is Tableau<*> -> "Tableau(...)"
+        else -> error("$javaClass")
     }
 }

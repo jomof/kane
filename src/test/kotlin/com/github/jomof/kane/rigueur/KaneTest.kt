@@ -5,7 +5,7 @@ import org.junit.Test
 import kotlin.math.absoluteValue
 import kotlin.math.pow
 
-class RigueurTest {
+class KaneTest {
     private fun Any.assertString(expected : String) {
         val actual = toString().trim('\n')
         val expectedTrimmed = expected.trim('\n')
@@ -71,7 +71,7 @@ class RigueurTest {
         val subs = m1.extractCommonSubExpressions()
         subs.assertString("""
             c0=a+b
-            c1=c0+c0
+            c1=2*c0
             
             m1
             ------
@@ -89,7 +89,6 @@ class RigueurTest {
         val b by variable<Double>()
         val m1 by matrixOf(3, 4) { a + b + a}
         val m2 by matrixOf(3, 4) { b + a + b }
-        val count = m1.countSubExpressions()
         val subs = m1.extractCommonSubExpressions()
         subs.assertString("""
             c0=a+b
@@ -202,7 +201,9 @@ class RigueurTest {
         val error by pow(target - y, 2.0)
         val dm by -1.0 * r * differentiate(d(error)/d(m))
         val db by -1.0 * r * differentiate(d(error)/d(b))
-        error.assertString("error=(target-m*x+b)²")
+        error.assertString("error=(target-(m*x+b))²")
+        dm.assertString("dm=2*r*(target-(m*x+b))*x")
+        db.assertString("db=2*r*(target-(m*x+b))")
     }
 
     @Test
@@ -366,7 +367,7 @@ class RigueurTest {
     @Test
     fun `learn xor with ramps`() {
         val learningRate = 0.1
-        val inputs = 2
+        val inputs = 1
         val count0 = 1
         val outputs = 1
         val input by matrixVariable<Double>(1, inputs)
@@ -381,9 +382,9 @@ class RigueurTest {
         val aw0 by assign(dw0 to w0)
         val aw1 by assign(dw1 to w1)
         val tab = tableauOf(aw0,aw1).extractCommonSubExpressions()
-        println(tab)
+       // println(tab)
         val layout = tab.layoutMemory()
-        println("---")
+//        println("---")
         println(layout)
 //        val space = DoubleArray(layout.slotCount)
 //        val xslot = layout.getIndex(x)
@@ -557,6 +558,7 @@ class RigueurTest {
         ((a + a) - b).assertString("a+a-b")
         ((a - a) - b).assertString("a-a-b")
         (a - (a - b)).assertString("a-(a-b)")
+        (a - -b).reduceArithmetic().assertString("a+b")
         val m : MatrixExpr<Double> by matrixVariable<Double>(5, 2)
         val n : MatrixExpr<Double> by matrixVariable<Double>(3, 5)
         val s by matrixVariable<String>(4, 5)
@@ -619,7 +621,7 @@ class RigueurTest {
         f2.assertString("f2=m[0,0]²*m[0,1]³")
         val df2dx by d(f2) / d(x)
         df2dx.assertString("df2dx=d(m[0,0]²*m[0,1]³)/d(m[0,0])")
-        differentiate(df2dx).assertString("df2dx'=2*m[0,0]*m[0,1]³")
+        differentiate(df2dx).assertString("df2dx'=2*m[0,1]³*m[0,0]")
         val df2dy by d(f2) / d(y)
         df2dy.assertString("df2dy=d(m[0,0]²*m[0,1]³)/d(m[0,1])")
         differentiate(df2dy).assertString("df2dy'=3*m[0,0]²*m[0,1]²")
@@ -728,7 +730,7 @@ class RigueurTest {
         if (expr.type == Double::class) {
             if (expr is NamedExpr<*>) {
                 try {
-                    expr.extractCommonSubExpressions()
+                    (expr as NamedExpr<Double>).extractCommonSubExpressions()
                 } catch (e : Exception) {
                     val sb = StringBuilder()
                     expr.renderStructure()
