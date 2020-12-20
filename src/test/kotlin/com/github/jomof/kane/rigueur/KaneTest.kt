@@ -2,6 +2,7 @@
 package com.github.jomof.kane.rigueur
 
 import org.junit.Test
+import java.util.*
 import kotlin.math.absoluteValue
 import kotlin.math.pow
 
@@ -14,9 +15,13 @@ class KaneTest {
         }
     }
 
-    private fun Double.assertNear(expected:Double) {
+    private fun Double.near(expected:Double) : Boolean {
         val diff = (this - expected).pow(2.0)
-        assert(diff < 0.00000001) {
+        return diff < 0.00000001
+    }
+
+    private fun Double.assertNear(expected:Double) {
+        assert(near(expected)) {
             "$this was not close enough to $expected"
         }
     }
@@ -365,43 +370,110 @@ class KaneTest {
     }
 
     @Test
-    fun `learn xor with ramps`() {
-        val learningRate = 0.1
-        val inputs = 1
-        val count0 = 1
+    fun `check ramps and steps`() {
+        assert(ramp(-5.0)==-1.0)
+        assert(ramp(5.0)==1.0)
+        assert(ramp(0.0)==0.0)
+        assert(step(-5.0)==0.0)
+        assert(step(5.0)==0.0)
+        assert(step(0.0)==1.0)
+    }
+
+    @Test
+    fun `follow logistic example`() {
+        // https://mattmazur.com/2015/03/17/a-step-by-step-backpropagation-example/
+        val i1 by variable(0.05)
+        val i2 by variable(0.1)
+        val b1 by variable(0.35)
+        val w1 by variable(0.15)
+        val w2 by variable(0.2)
+        val w3 by variable(0.25)
+        val w4 by variable(0.3)
+        val neth1 by w1 * i1 + w2 * i2 + b1
+        val outh1 by logit(neth1)
+        val h1 by variable(0.0)
+        val neth2 by w3 * i1 + w4 * i2 + b1
+        val outh2 by logit(neth2)
+        val h2 by variable(0.0)
+        val b2 by variable(0.6)
+        val w5 by variable(0.4)
+        val w6 by variable(0.45)
+        val w7 by variable(0.5)
+        val w8 by variable(0.55)
+        val neto1 by w5 * outh1 + w6 * outh2 + b2
+        val outo1 by logit(neto1)
+        val neto2 by w7 * outh1 + w8 * outh2 + b2
+        val outo2 by logit(neto2)
+
+        neth1.substituteInitial().assertString("neth1=0.05*0.15+0.1*0.2+0.35")
+        neth1.substituteInitial().reduceArithmetic().assertString("neth1=0.3775")
+        outh1.substituteInitial().assertString("outh1=logit(0.05*0.15+0.1*0.2+0.35)")
+        outh1.substituteInitial().reduceArithmetic().assertString("outh1=0.59327")
+    }
+
+    @Test
+    fun `learn xor with logistic`() {
+        val learningRate = 2.0
+        val inputs = 2
+        val count0 = 2
         val outputs = 1
         val input by matrixVariable<Double>(1, inputs)
+        val left by input[0,0]
+        val right by input[0,1]
         val w0 by matrixVariable<Double>(input.rows + 1, count0)
-        val h1 by ramp(w0 * (input stack 1.0))
+        val h1 by logit(w0 * (input stack 1.0))
         val w1 by matrixVariable<Double>(w0.rows + 1, outputs)
-        val output by ramp(w1 * (h1 stack 1.0))
+        val output by logit(w1 * (h1 stack 1.0))
         val target by matrixVariable<Double>(output.columns, output.rows)
         val error by summation(0.5 * pow(target - output, 2.0))
         val dw0 by w0 - learningRate * differentiate(d(error) / d(w0))
         val dw1 by w1 - learningRate * differentiate(d(error) / d(w1))
         val aw0 by assign(dw0 to w0)
         val aw1 by assign(dw1 to w1)
-        val tab = tableauOf(aw0,aw1).extractCommonSubExpressions()
-       // println(tab)
+        val answer by output[0,0]
+        val tab = tableauOf(error,answer,aw0,aw1).extractCommonSubExpressions()
         val layout = tab.layoutMemory()
-//        println("---")
         println(layout)
-//        val space = DoubleArray(layout.slotCount)
-//        val xslot = layout.getIndex(x)
-//        val rslot = layout.getIndex(r)
-//        val targetSlot = layout.getIndex(target)
-//        val mslot = layout.getIndex(m)
-//        val bslot = layout.getIndex(b)
-//        space[rslot] = 0.1
-//        repeat(50) {
-//            (-2 until 2).forEach { point ->
-//                space[xslot] = point.toDouble()
-//                space[targetSlot] = -500 * point.toDouble() + 0.2
-//                layout.eval(space)
-//            }
-//        }
-//        space[mslot].assertNear(-500.0)
-//        space[bslot].assertNear(0.2)
+        val random = Random()
+        val space = DoubleArray(layout.slotCount) { random.nextGaussian() / 10.0 }
+        val leftSlot = layout.getIndex(left)
+        val rightSlot = layout.getIndex(right)
+        val targetSlot = layout.getIndex(target[0,0])
+        val errorSlot = layout.slotCount - 2
+        val outSlot = layout.slotCount - 1
+        fun repr(value : Boolean) = if (value) 0.9 else 0.1
+        fun train(left : Boolean, right : Boolean, target : Boolean) : Double {
+            space[leftSlot] = repr(left)
+            space[rightSlot] = repr(right)
+            space[targetSlot] = repr(target)
+            layout.eval(space)
+            return space[outSlot]
+        }
+        repeat(100000) {
+            listOf(false, true).forEach { left ->
+                listOf(false, true).forEach { right ->
+                    val target = left != right
+                    val output = train(left, right, target)
+                    if (it % 100000 == 99999) {
+                        println("$left $right [${space[errorSlot]}] -> $output [$target=${space[targetSlot]}]")
+                    }
+                }
+            }
+            var done = true
+            listOf(false, true).forEach { left ->
+                listOf(false, true).forEach { right ->
+                    val target = left != right
+                    val output = train(left, right, target)
+                    if (!output.near(repr(target))) done = false
+                }
+            }
+            if (done) {
+                println("finished in $it iterations")
+                return
+            }
+        }
+        error("didn't finish")
+
     }
 
     @Test
@@ -670,12 +742,6 @@ class KaneTest {
     }
 
     @Test
-    fun `test expand matrix elements case 2119630920`() {
-        val x8 by logit(0.0)
-        instantiateVariables(x8).assertString("x8=logit(0)")
-    }
-
-    @Test
     fun `test expand matrix elements case 1741878727`() {
         val learningRate = 0.1
         val input by matrixVariable<Double>(1, 2)
@@ -767,9 +833,10 @@ class KaneTest {
                 sb.append("}\n")
                 println(sb)
             }
+        } else if (expr.type == Integer::class) {
         } else if (expr.type == String::class) {
         } else {
-            assert(false)
+            assert(false) { "${expr.type}"}
         }
 
         try {
@@ -840,7 +907,6 @@ class KaneTest {
         val x3: ScalarExpr<Double> by pow(v1, v1)
         val x4: MatrixExpr<Double> by pow(x1, v1)
         val x7: ScalarExpr<Double> by x4[0, 0]
-        val x8: ScalarExpr<Double> by logit(0.0)
         val x9: ScalarExpr<Double> by logit(v1)
         val x10: ScalarExpr<Double> by v1 * 1.0
         val x11: ScalarExpr<Double> by 1.0 * v1
@@ -881,7 +947,7 @@ class KaneTest {
         val dq by differentiate(d(polyError)/d(q))
         val dm by differentiate(d(polyError)/d(m))
         val db by differentiate(d(polyError)/d(b))
-        val all = listOf(x2, x3, x4, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18,
+        val all = listOf(x2, x3, x4, x7, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18,
                          x19, x20, x22, x23, x24, x25, x26, x27, x28, x29,
                          input, w0, h1, w1, output, target, error, gradientW0, gradientW1,
                          x, q, m, b, y, polyTarget, polyError, dq, dm, db)
