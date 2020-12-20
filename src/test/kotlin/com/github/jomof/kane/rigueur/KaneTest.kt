@@ -435,7 +435,7 @@ class KaneTest {
         val layout = tab.layoutMemory()
         println(layout)
         val random = Random()
-        val space = DoubleArray(layout.slotCount) { random.nextGaussian() / 10.0 }
+        val space = DoubleArray(layout.slotCount) { random.nextGaussian() }
         val leftSlot = layout.getIndex(left)
         val rightSlot = layout.getIndex(right)
         val targetSlot = layout.getIndex(target[0,0])
@@ -454,7 +454,7 @@ class KaneTest {
                 listOf(false, true).forEach { right ->
                     val target = left != right
                     val output = train(left, right, target)
-                    if (it % 100000 == 99999) {
+                    if (it % 1000 == 900) {
                         println("$left $right [${space[errorSlot]}] -> $output [$target=${space[targetSlot]}]")
                     }
                 }
