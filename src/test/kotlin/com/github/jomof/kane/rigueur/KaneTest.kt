@@ -3,6 +3,7 @@ package com.github.jomof.kane.rigueur
 
 import org.junit.Test
 import java.util.*
+import kotlin.math.abs
 import kotlin.math.absoluteValue
 import kotlin.math.pow
 
@@ -69,111 +70,11 @@ class KaneTest {
     }
 
     @Test
-    fun `common sub expressions ordering of associative`() {
-        val a by variable<Double>()
-        val b by variable<Double>()
-        val m1 by matrixOf(3, 4) { a + b + b + a}
-        val subs = m1.extractCommonSubExpressions()
-        subs.assertString("""
-            c0=a+b
-            c1=2*c0
-            
-            m1
-            ------
-            c1|c1|c1
-            c1|c1|c1
-            c1|c1|c1
-            c1|c1|c1
-        """.trimIndent())
-
-    }
-
-    @Test
-    fun `common sub expressions`() {
-        val a by variable<Double>()
-        val b by variable<Double>()
-        val m1 by matrixOf(3, 4) { a + b + a}
-        val m2 by matrixOf(3, 4) { b + a + b }
-        val subs = m1.extractCommonSubExpressions()
-        subs.assertString("""
-            c0=a+b
-            c1=c0+a
-            
-            m1
-            ------
-            c1|c1|c1
-            c1|c1|c1
-            c1|c1|c1
-            c1|c1|c1
-        """.trimIndent())
-        val stacked by m1 stack m2
-        println(stacked.countSubExpressions())
-        val subs2 = stacked.extractCommonSubExpressions()
-        subs2.assertString("""
-            c0=a+b
-            c1=c0+a
-            c2=c0+b
-            
-            stacked
-            ------
-            c1|c1|c1
-            c1|c1|c1
-            c1|c1|c1
-            c1|c1|c1
-            c2|c2|c2
-            c2|c2|c2
-            c2|c2|c2
-            c2|c2|c2
-        """.trimIndent())
-    }
-
-    @Test
-    fun `common sub expressions expand associative`() {
-        val a by variable<Double>()
-        val b by variable<Double>()
-        val m1 by matrixOf(1,1) { a + b }
-        val m2 by matrixOf(1,1) { b + a }
-        val stacked by m1 stack m2
-        println(stacked.countSubExpressions())
-        val subs2 = stacked.extractCommonSubExpressions()
-        subs2.assertString("""
-            c0=a+b
-
-            stacked
-            ------
-            c0
-            c0
-        """.trimIndent())
-    }
-
-    @Test
-    fun `common sub expressions unary`() {
-        val a by variable<Double>()
-        val b by variable<Double>()
-        val m1 by matrixOf(1,3) { logit(a + b) + b + a }
-        println(m1.countSubExpressions())
-        val common = m1.extractCommonSubExpressions()
-        common.assertString("""
-            c0=b+a
-            c1=c0+logit(c0)
-            
-            m1
-            ------
-            c1
-            c1
-            c1
-        """.trimIndent())
-    }
-
-    @Test
     fun mult() {
         val m1 by matrixOf(10, 1) { constant(it.column + 0.0) }
         val m2 by matrixOf(1, 10) { constant(10.0 - it.row ) }
         val m3 by m1 * m2
-        m3.assertString("m3=m1*m2")
-        assert(m3.rows == 1 && m3.columns == 1)
-        val e1 by m3[0,0]
-        e1.assertString("e1=165")
+        m3.assertString("m3=165")
     }
 
     @Test
@@ -212,6 +113,91 @@ class KaneTest {
     }
 
     @Test
+    fun `tiny relu regression`() {
+        val x by variable<Double>()
+        val m by variable(0.1)
+        val b by variable(0.2)
+        val y by relu(m * x + b)
+        val target by variable<Double>()
+        val error by pow(target - y, 2.0)
+        val dm by m - 0.1 * differentiate(d(error)/d(m))
+        val db by b - 0.1 * differentiate(d(error)/d(b))
+        val am by assign(dm to m)
+        val ab by assign(db to b)
+        val tab = tableauOf(am,ab,dm,db)
+        val map = mutableMapOf(
+            "b" to 0.0,
+            "m" to 0.0,
+        )
+
+        (0 until 100).forEach {
+            (-5 until 5).forEach { point ->
+                map["x"] = point.toDouble()
+                val target = relu(10.0 * point.toDouble() + 0.2)
+                map["target"] = target
+                tab.eval(map)
+                map["b"] = map.getValue("db")
+                map["m"] = map.getValue("dm")
+            }
+        }
+        map["m"]!!.assertNear(10.0)
+        map["b"]!!.assertNear(0.2)
+
+        val model = tab.linearize()
+        val space = model.allocateSpace()
+        println(model)
+        val xSlot = model.scalar(x)
+        val mSlot = model.scalar(m)
+        val bSlot = model.scalar(b)
+        val targetSlot = model.scalar(target)
+
+        for(i in 0 until 100) {
+            (-5 until 5).forEach { point ->
+                space[xSlot] = point.toDouble()
+                val target = relu(10.0 * point.toDouble() + 0.2)
+                space[targetSlot] = target
+                model.eval(space)
+            }
+        }
+
+        space[mSlot].assertNear(10.0)
+        space[bSlot].assertNear(0.2)
+    }
+
+    @Test
+    fun `tiny relu regression with matrix`() {
+        val s by matrixVariable<Double>(1,2)
+        val x by variable<Double>()
+        val m by s[0,0]
+        val b by s[0,1]
+        val y by relu(m * x + b)
+        val target by variable<Double>()
+        val error by pow(target - y, 2.0)
+        val ds by s - 0.1 * differentiate(d(error)/d(s))
+        val ass by assign(ds to s)
+        val tab = tableauOf(ass)
+        val model = tab.linearize()
+        val space = model.allocateSpace()
+        println(model)
+        val xSlot = model.scalar(x)
+        val mSlot = model.scalar(m)
+        val bSlot = model.scalar(b)
+        val targetSlot = model.scalar(target)
+
+        for(i in 0 until 100) {
+            (-5 until 5).forEach { point ->
+                space[xSlot] = point.toDouble()
+                val target = relu(10.0 * point.toDouble() + 0.2)
+                space[targetSlot] = target
+                model.eval(space)
+            }
+        }
+
+        space[mSlot].assertNear(10.0)
+        space[bSlot].assertNear(0.2)
+    }
+
+    @Test
     fun `tiny linear regression`() {
         val r by variable<Double>()
         val x by variable<Double>()
@@ -225,7 +211,7 @@ class KaneTest {
         println(error)
         println(dm)
         println(db)
-        val tab = tableauOf(dm,db).extractCommonSubExpressions()
+        val tab = tableauOf(dm,db)
         val map = mutableMapOf(
             "r" to 0.1, // learning rate
             "b" to 0.0,
@@ -253,85 +239,9 @@ class KaneTest {
         a1.assertString("r <- r+1-1")
         instantiateVariables(a1).assertString("r <- r+1-1")
         instantiateVariables(a1).assertString("r <- r+1-1")
+        val x = instantiateVariables(a1)
+        x.reduceArithmetic()
         instantiateVariables(a1).reduceArithmetic().assertString("r <- r")
-
-    }
-
-    @Test
-    fun `tiny linear regression with assign-back`() {
-        val r by variable<Double>()
-        val x by variable<Double>()
-        val m by variable<Double>()
-        val b by variable<Double>()
-        val y by m * x + b
-        val target by variable<Double>()
-        val error by 0.5 * pow(target - y, 2.0)
-        val dm by m - r * differentiate(d(error)/d(m))
-        val db by b - r *differentiate(d(error)/d(b))
-        val am by assign(dm to m)
-        val ab by assign(db to b)
-        println(error)
-        println(dm)
-        println(db)
-        val tab = tableauOf(am,ab).extractCommonSubExpressions()
-//        tab.assertString("""
-//            c0=-1*r
-//            c1=m*x
-//            c2=c1+b
-//            c3=target-c2
-//            c4=c0*c3
-//            c5=c4*x
-//            c6=m-c5
-//            c7=b-c4
-//            m <- c6
-//            b <- c7
-//        """.trimIndent())
-        val map = mutableMapOf(
-            "r" to 0.1, // learning rate
-            "b" to 0.0,
-            "m" to 0.0,
-        )
-
-        (0 until 50).forEach {
-            (-2 until 2).forEach { point ->
-                map["x"] = point.toDouble()
-                map["target"] = -500 * point.toDouble() + 0.2
-                tab.eval(map)
-            }
-        }
-        map["m"]!!.assertNear(-500.0)
-        map["b"]!!.assertNear(0.2)
-        println(map)
-    }
-
-    @Test
-    fun `tiny linear regression with assign-back backed by matrix`() {
-        val a by matrixVariable<Double>(1, 2)
-        val r by variable<Double>()
-        val x by variable<Double>()
-        val m by a[0,0]
-        val b by a[0,1]
-        val y by m * x + b
-        val target by variable<Double>()
-        val error by 0.5 * pow(target - y, 2.0)
-        val da by a - r * differentiate(d(error)/d(a))
-        val aa by assign(da to a)
-        val tab = tableauOf(aa).extractCommonSubExpressions()
-        val map = mutableMapOf(
-            "r" to 0.1, // learning rate
-            "a[0,0]" to 0.0,
-            "a[0,1]" to 0.0,
-        )
-
-        repeat(50) {
-            (-2 until 2).forEach { point ->
-                map["x"] = point.toDouble()
-                map["target"] = -500 * point.toDouble() + 0.2
-                tab.eval(map)
-            }
-        }
-        map["a[0,0]"]!!.assertNear(-500.0)
-        map["a[0,1]"]!!.assertNear(0.2)
     }
 
     @Test
@@ -346,17 +256,17 @@ class KaneTest {
         val error by 0.5 * pow(target - y, 2.0)
         val da by a - r * differentiate(d(error)/d(a))
         val aa by assign(da to a)
-        val tab = tableauOf(aa).extractCommonSubExpressions()
+        val tab = tableauOf(aa)
         println(tab)
-        val layout = tab.layoutMemory()
+        val layout = tab.linearize()
         println("---")
         println(layout)
-        val space = DoubleArray(layout.slotCount)
-        val xslot = layout.getIndex(x)
-        val rslot = layout.getIndex(r)
-        val targetSlot = layout.getIndex(target)
-        val mslot = layout.getIndex(m)
-        val bslot = layout.getIndex(b)
+        val space = layout.allocateSpace()
+        val xslot = layout.scalar(x)
+        val rslot = layout.scalar(r)
+        val targetSlot = layout.scalar(target)
+        val mslot = layout.scalar(m)
+        val bslot = layout.scalar(b)
         space[rslot] = 0.1
         repeat(50) {
             (-2 until 2).forEach { point ->
@@ -370,77 +280,220 @@ class KaneTest {
     }
 
     @Test
-    fun `check ramps and steps`() {
-        assert(ramp(-5.0)==-1.0)
-        assert(ramp(5.0)==1.0)
-        assert(ramp(0.0)==0.0)
+    fun `check relu and steps`() {
+        assert(relu(-5.0)==0.0)
+        assert(relu(5.0)==5.0)
+        assert(relu(0.0)==0.0)
         assert(step(-5.0)==0.0)
-        assert(step(5.0)==0.0)
+        assert(step(5.0)==1.0)
         assert(step(0.0)==1.0)
     }
 
     @Test
     fun `follow logistic example`() {
         // https://mattmazur.com/2015/03/17/a-step-by-step-backpropagation-example/
-        val i1 by variable(0.05)
-        val i2 by variable(0.1)
-        val b1 by variable(0.35)
-        val w1 by variable(0.15)
-        val w2 by variable(0.2)
-        val w3 by variable(0.25)
-        val w4 by variable(0.3)
-        val neth1 by w1 * i1 + w2 * i2 + b1
-        val outh1 by logit(neth1)
-        val h1 by variable(0.0)
-        val neth2 by w3 * i1 + w4 * i2 + b1
-        val outh2 by logit(neth2)
-        val h2 by variable(0.0)
-        val b2 by variable(0.6)
-        val w5 by variable(0.4)
-        val w6 by variable(0.45)
-        val w7 by variable(0.5)
-        val w8 by variable(0.55)
-        val neto1 by w5 * outh1 + w6 * outh2 + b2
-        val outo1 by logit(neto1)
-        val neto2 by w7 * outh1 + w8 * outh2 + b2
-        val outo2 by logit(neto2)
+        val r by variable(0.5) // Learning rate
+        val inputs by matrixVariable(1, 2, 0.05, 0.1)
+        val w0 by matrixVariable(2,2,
+            0.15, 0.2,
+            0.25, 0.3)
+        val w1 by matrixVariable(2,2,
+            0.4, 0.45,
+            0.5, 0.55)
+        val b0 by variable(0.35)
+        val b1 by variable(0.6)
+        val h by logit(w0 * inputs + b0)
+        val output by logit(w1 * h + b1)
+        val target by matrixVariable(1, 2, 0.01, 0.99)
+        val errors by 0.5 * pow(target-output, 2.0)
+        val error by summation(errors)
+        val db0 by b0 - r * differentiate(d(error)/d(b0))
+        val db1 by b1 - r * differentiate(d(error)/d(b1))
+        val dw0 by w0 - r * differentiate(d(error)/d(w0))
+        val dw1 by w1 - r * differentiate(d(error)/d(w1))
+        val h0 by h[0,0]
+        val h1 by h[0,1]
+        val o0 by output[0,0]
+        val o1 by output[0,1]
+        val e0 by errors[0,0]
+        val e1 by errors[0,1]
 
-        neth1.substituteInitial().assertString("neth1=0.05*0.15+0.1*0.2+0.35")
-        neth1.substituteInitial().reduceArithmetic().assertString("neth1=0.3775")
-        outh1.substituteInitial().assertString("outh1=logit(0.05*0.15+0.1*0.2+0.35)")
-        outh1.substituteInitial().reduceArithmetic().assertString("outh1=0.59327")
+        h0.substituteInitial().assertString("h0=logit(0.05*0.15+0.1*0.2+0.35)")
+        h0.substituteInitial().reduceArithmetic().assertString("h0=0.59327")
+        h1.substituteInitial().assertString("h1=logit(0.05*0.25+0.1*0.3+0.35)")
+        h1.substituteInitial().reduceArithmetic().assertString("h1=0.59688")
+
+        o0.substituteInitial().reduceArithmetic().assertString("o0=0.75137")
+        o1.substituteInitial().reduceArithmetic().assertString("o1=0.77293")
+
+        e0.substituteInitial().reduceArithmetic().assertString("e0=0.27481")
+        e1.substituteInitial().reduceArithmetic().assertString("e1=0.02356")
+
+        instantiateVariables(error).substituteInitial().reduceArithmetic().assertString("error=0.29837")
+        instantiateVariables(dw1).substituteInitial().reduceArithmetic().assertString("""
+            dw1
+            ------
+            0.35892|0.40867
+            0.5113|0.56137
+        """.trimIndent())
+        instantiateVariables(dw0).substituteInitial().reduceArithmetic().assertString("""
+            dw0
+            ------
+            0.14978|0.19956
+            0.24975|0.2995
+        """.trimIndent())
+
+        val layout = tableauOf(output, db0, db1, dw0, dw1).linearize()
+        println(layout)
     }
 
     @Test
-    fun `learn xor with logistic`() {
-        val learningRate = 2.0
+    fun `follow logistic example short`() {
+        // https://mattmazur.com/2015/03/17/a-step-by-step-backpropagation-example/
+        val inputs by matrixVariable(1, 2, 0.05f, 0.1f)
+        val w0 by matrixVariable(2,2,
+            0.15f, 0.2f,
+            0.25f, 0.3f)
+        val w1 by matrixVariable(2,2,
+            0.4f, 0.45f,
+            0.5f, 0.55f)
+        val b1 by variable(0.35f)
+        val b2 by variable(0.6f)
+        val h by logit(w0 * inputs + b1)
+        val output by logit(w1 * h + b2)
+        val target by matrixVariable(1, 2, 0.01f, 0.99f)
+        val errors by 0.5f * pow(target-output, 2.0f)
+        val error by summation(errors)
+        val learningRate = 0.5f
+        val dw1 by w1 - learningRate * differentiate(d(error)/d(w1))
+        val dw0 by w0 - learningRate * differentiate(d(error)/d(w0))
+        val h0 by h[0,0]
+        val h1 by h[0,1]
+        val o0 by output[0,0]
+        val o1 by output[0,1]
+        val e0 by errors[0,0]
+        val e1 by errors[0,1]
+
+        h0.substituteInitial().reduceArithmetic().assertString("h0=0.59327")
+        h1.substituteInitial().reduceArithmetic().assertString("h1=0.59688")
+
+        o0.substituteInitial().reduceArithmetic().assertString("o0=0.75137")
+        o1.substituteInitial().reduceArithmetic().assertString("o1=0.77293")
+
+        e0.substituteInitial().reduceArithmetic().assertString("e0=0.27481")
+        e1.substituteInitial().reduceArithmetic().assertString("e1=0.02356")
+
+        instantiateVariables(error).substituteInitial().reduceArithmetic().assertString("error=0.29837")
+        instantiateVariables(dw1).substituteInitial().reduceArithmetic().assertString("""
+            dw1
+            ------
+            0.35892|0.40867
+            0.5113|0.56137
+        """.trimIndent())
+        instantiateVariables(dw0).substituteInitial().reduceArithmetic().assertString("""
+            dw0
+            ------
+            0.14978|0.19956
+            0.24975|0.2995
+        """.trimIndent())
+    }
+
+    @Test
+    fun `learn xor with relu`() {
+        val learningRate = 0.2
         val inputs = 2
-        val count0 = 2
+        val count0 = 5
         val outputs = 1
-        val input by matrixVariable<Double>(1, inputs)
+        val input by matrixVariable<Double>(1, inputs, 0.01, 0.02)
         val left by input[0,0]
         val right by input[0,1]
-        val w0 by matrixVariable<Double>(input.rows + 1, count0)
-        val h1 by logit(w0 * (input stack 1.0))
-        val w1 by matrixVariable<Double>(w0.rows + 1, outputs)
-        val output by logit(w1 * (h1 stack 1.0))
-        val target by matrixVariable<Double>(output.columns, output.rows)
+        val w0 by matrixVariable<Double>(input.rows, count0)
+        val h1 by relu(w0 * input)
+        val w1 by matrixVariable<Double>(w0.rows, outputs)
+        val output by relu(w1 * h1)
+        val target by matrixVariable(output.columns, output.rows, 0.11)
         val error by summation(0.5 * pow(target - output, 2.0))
         val dw0 by w0 - learningRate * differentiate(d(error) / d(w0))
         val dw1 by w1 - learningRate * differentiate(d(error) / d(w1))
         val aw0 by assign(dw0 to w0)
         val aw1 by assign(dw1 to w1)
+        val targetElement by target[0,0]
         val answer by output[0,0]
-        val tab = tableauOf(error,answer,aw0,aw1).extractCommonSubExpressions()
-        val layout = tab.layoutMemory()
+        val tab = tableauOf(left,right,targetElement,error,answer,aw0,aw1)
+        val layout = tab.linearize()
         println(layout)
-        val random = Random()
-        val space = DoubleArray(layout.slotCount) { random.nextGaussian() }
-        val leftSlot = layout.getIndex(left)
-        val rightSlot = layout.getIndex(right)
-        val targetSlot = layout.getIndex(target[0,0])
-        val errorSlot = layout.slotCount - 2
-        val outSlot = layout.slotCount - 1
+        val random = Random(1)
+        val space = layout.allocateSpace { abs(random.nextGaussian() / 3.0) }
+        val leftSlot = layout.scalar(left)
+        val rightSlot = layout.scalar(right)
+        val targetSlot = layout.scalar(targetElement)
+        val errorSlot = layout.scalar(error)
+        val outSlot = layout.scalar(answer)
+        fun repr(value : Boolean) = if (value) 1.0 else 0.0
+        fun train(left : Boolean, right : Boolean, target : Boolean) : Double {
+            space[leftSlot] = repr(left)
+            space[rightSlot] = repr(right)
+            space[targetSlot] = repr(target)
+            layout.eval(space)
+            return space[outSlot]
+        }
+        repeat(100000) {
+            listOf(false, true).forEach { left ->
+                listOf(false, true).forEach { right ->
+                    val target = left != right
+                    val output = train(left, right, target)
+                    if (it % 1000 == 900) {
+                        println("$left $right [${space[errorSlot]}] -> $output [$target=${space[targetSlot]}]")
+                    }
+                }
+            }
+            var done = true
+            listOf(false, true).forEach { left ->
+                listOf(false, true).forEach { right ->
+                    val target = left != right
+                    val output = train(left, right, target)
+                    if (!output.near(repr(target))) done = false
+                }
+            }
+            if (done) {
+                println("finished in $it iterations")
+                return
+            }
+        }
+        error("didn't finish")
+    }
+
+    @Test
+    fun `learn xor with logistic`() {
+        val learningRate = 7.0
+        val inputs = 2
+        val count0 = 3
+        val outputs = 1
+        val input by matrixVariable<Double>(1, inputs, 0.01, 0.02)
+        val left by input[0,0]
+        val right by input[0,1]
+        val w0 by matrixVariable<Double>(input.rows, count0)
+        val h1 by logit(w0 * input)
+        val w1 by matrixVariable<Double>(w0.rows, outputs)
+        val output by logit(w1 * h1)
+        val target by matrixVariable(output.columns, output.rows, 0.11)
+        val error by summation(0.5 * pow(target - output, 2.0))
+        val dw0 by w0 - learningRate * differentiate(d(error) / d(w0))
+        val dw1 by w1 - learningRate * differentiate(d(error) / d(w1))
+        val aw0 by assign(dw0 to w0)
+        val aw1 by assign(dw1 to w1)
+        val targetElement by target[0,0]
+        val answer by output[0,0]
+        val tab = tableauOf(left,right,targetElement,error,answer,aw0,aw1)
+        val layout = tab.linearize()
+        println(layout)
+        val random = Random(1)
+        val space = layout.allocateSpace { abs(random.nextGaussian() / 3.0) }
+        val leftSlot = layout.scalar(left)
+        val rightSlot = layout.scalar(right)
+        val targetSlot = layout.scalar(targetElement)
+        val errorSlot = layout.scalar(error)
+        val outSlot = layout.scalar(answer)
         fun repr(value : Boolean) = if (value) 0.9 else 0.1
         fun train(left : Boolean, right : Boolean, target : Boolean) : Double {
             space[leftSlot] = repr(left)
@@ -473,57 +526,6 @@ class KaneTest {
             }
         }
         error("didn't finish")
-
-    }
-
-    @Test
-    fun mlp() {
-        val learningRate = 0.1
-        for(count0 in 5 until 5) {
-            val inputs = 2
-            //val count0 = 20
-            val outputs = 2
-            val input by matrixVariable<Double>(1, inputs)
-            val w0 by matrixVariable<Double>(input.rows + 1, count0)
-            val h1 by logit(w0 * (input stack 1.0))
-            val w1 by matrixVariable<Double>(w0.rows + 1, outputs)
-            val output by logit(w1 * (h1 stack 1.0))
-            val target by matrixVariable<Double>(output.columns, output.rows)
-            val error by summation(0.5 * pow(target - output, 2.0))
-            val gradientW0 by differentiate(d(error) / d(w0))
-            val gradientW1 by differentiate(d(error) / d(w1))
-//        println(learningRate)
-//        println(input)
-//        println(w0)
-//        println(h1)
-//        println(w1)
-//        println(output)
-//        println(target)
-//        println(error)
-//        println(gradientW0)
-//        println(gradientW1)
-//        println(instantiateVariables(h1.toDataMatrix()))
-//        println(h1)
-//        println(h1.toDataMatrix())
-            //println(differentiate(d(h1[0,2])/d(w0[0,0])))
-//        println(error)
-//        println(gradientW1)
-            val tab = tableauOf(
-                output,
-                error,
-                gradientW0,
-                gradientW1
-            )
-            val common = tab.extractCommonSubExpressions()
-            val size = common.children.size
-            //println(common)
-            println("$count0 => $size ${(size + 0.0) / count0}")
-            //         println(instantiateVariables(gradientW0))
-//        println(instantiateMatrixElements(gradientW1))
-//        val common by listOf(output, gradientW0, gradientW1).decompose()
-//        println()
-//        println(common)
-        }
     }
 
     @Test
@@ -612,7 +614,7 @@ class KaneTest {
         (a + b).assertString("a+b")
         val c by a + b
         c.assertString("c=a+b")
-        (a * -1.0).assertString("a*(-1)")
+        (a * -1.0).assertString("a*-1")
         (a * b).assertString("a*b")
         (a - b).assertString("a-b")
         (a / b).assertString("a/b")
@@ -768,73 +770,22 @@ class KaneTest {
         differentiate(gradientW0)
     }
 
-    @Test
-    fun `test extract common sub expressions case 62950920`() {
-        val learningRate = 0.1
-        val input by matrixVariable<Double>(1, 2)
-        val w0 by matrixVariable<Double>(input.rows + 1, 2)
-        val h1 by logit(w0 * (input stack 1.0))
-        val w1 by matrixVariable<Double>(w0.rows + 1, 2)
-        val output by logit(w1 * (h1 stack 1.0))
-        val target by matrixVariable<Double>(output.columns, output.rows)
-        val error by summation(learningRate * pow(target - output, 2.0))
-        val gradientW0 by d(error) / d(w0)
-        gradientW0.extractCommonSubExpressions()
-    }
 
     // Try various things to see if we can make it crash
     private fun spamExpression(expr : UntypedExpr) {
         if (expr !is Expr<*>) return
         fun identifierOf(structure : String) = structure.substringAfter("val ").substringBefore(" ")
         expr.toString()
-        expr.countSubExpressions()
 
         val structure = expr.renderStructure()
         val id = identifierOf(structure)
         assert(expr == expr)
         expr.reduceArithmetic()
-        if (expr.type == Double::class) {
+        if (expr.type == DoubleAlgebraicType) {
             if (expr is NamedExpr<*>) {
-                try {
-                    (expr as NamedExpr<Double>).extractCommonSubExpressions()
-                } catch (e : Exception) {
-                    val sb = StringBuilder()
-                    expr.renderStructure()
-                    sb.append("@Test\n")
-                    sb.append("fun `test extract common sub expressions case ${structure.hashCode().absoluteValue}`() {\n")
-                    sb.append("    $structure\n")
-                    sb.append("    $id.extractCommonSubExpressions().assertString(\"\")\n")
-                    sb.append("}\n")
-                    println(sb)
-                    throw e
-                }
-                tableauOf(expr).layoutMemory()
+                tableauOf(expr).linearize()
             }
-            if (expr is MatrixExpr<*>) {
-                val named by (expr as MatrixExpr<Double>)
-                named.extractCommonSubExpressions()
-            }
-            if (expr is ScalarExpr<*>) {
-                val named by (expr as ScalarExpr<Double>)
-                named.extractCommonSubExpressions()
-            }
-            val v by variable<Double>()
-            val replaced = (expr as Expr<Double>).replace(v, v)
-            if (replaced != expr) {
-                val sb = StringBuilder()
-                sb.append("@Test\n")
-                sb.append("fun `expr replace identity ${structure.hashCode().absoluteValue}`() {\n")
-                sb.append("    $structure\n")
-                sb.append("    val v = variable<Double>()\n")
-                sb.append("    val replaced = $id.replace(v,v)\n")
-                sb.append("    assert($id == $id)\n")
-                sb.append("    assert(replaced == replaced)\n")
-                sb.append("    assert($id == replaced) { \"[\$$id] != [\$replaced]\" }\n")
-                sb.append("}\n")
-                println(sb)
-            }
-        } else if (expr.type == Integer::class) {
-        } else if (expr.type == String::class) {
+        } else if (expr.type == StringAlgebraicType) {
         } else {
             assert(false) { "${expr.type}"}
         }
