@@ -18,7 +18,7 @@ class KaneTest {
 
     private fun Double.near(expected:Double) : Boolean {
         val diff = (this - expected).pow(2.0)
-        return diff < 0.00000001
+        return diff < 0.00001
     }
 
     private fun Double.assertNear(expected:Double) {
@@ -82,7 +82,7 @@ class KaneTest {
         val input by matrixVariable<Double>(1, 1)
         val w0 by matrixVariable<Double>(input.rows + 1, 1)
         val h1 by logit(w0 * (input stack 1.0))
-        h1.toDataMatrix().assertString("h1=logit(input[0,0]*w0[0,0]+w0[1,0])")
+        h1.toDataMatrix().assertString("h1=logit(w0[0,0]*input[0,0]+w0[1,0])")
     }
 
     @Test
@@ -146,22 +146,22 @@ class KaneTest {
         val model = tab.linearize()
         val space = model.allocateSpace()
         println(model)
-        val xSlot = model.scalar(x)
-        val mSlot = model.scalar(m)
-        val bSlot = model.scalar(b)
-        val targetSlot = model.scalar(target)
+        val xSlot = model.shape(x).ref(space)
+        val mSlot = model.shape(m).ref(space)
+        val bSlot = model.shape(b).ref(space)
+        val targetSlot = model.shape(target).ref(space)
 
         for(i in 0 until 100) {
             (-5 until 5).forEach { point ->
-                space[xSlot] = point.toDouble()
+                xSlot.set(point.toDouble())
                 val target = relu(10.0 * point.toDouble() + 0.2)
-                space[targetSlot] = target
+                targetSlot.set(target)
                 model.eval(space)
             }
         }
 
-        space[mSlot].assertNear(10.0)
-        space[bSlot].assertNear(0.2)
+        mSlot.value.assertNear(10.0)
+        bSlot.value.assertNear(0.2)
     }
 
     @Test
@@ -175,26 +175,26 @@ class KaneTest {
         val error by pow(target - y, 2.0)
         val ds by s - 0.1 * differentiate(d(error)/d(s))
         val ass by assign(ds to s)
-        val tab = tableauOf(ass)
+        val tab = tableauOf(m, b, ass)
         val model = tab.linearize()
         val space = model.allocateSpace()
         println(model)
-        val xSlot = model.scalar(x)
-        val mSlot = model.scalar(m)
-        val bSlot = model.scalar(b)
-        val targetSlot = model.scalar(target)
+        val xSlot = model.shape(x).ref(space)
+        val mSlot = model.shape(m).ref(space)
+        val bSlot = model.shape(b).ref(space)
+        val targetSlot = model.shape(target).ref(space)
 
         for(i in 0 until 100) {
             (-5 until 5).forEach { point ->
-                space[xSlot] = point.toDouble()
+                xSlot.set(point.toDouble())
                 val target = relu(10.0 * point.toDouble() + 0.2)
-                space[targetSlot] = target
+                targetSlot.set(target)
                 model.eval(space)
             }
         }
 
-        space[mSlot].assertNear(10.0)
-        space[bSlot].assertNear(0.2)
+        mSlot.value.assertNear(10.0)
+        bSlot.value.assertNear(0.2)
     }
 
     @Test
@@ -239,9 +239,7 @@ class KaneTest {
         a1.assertString("r <- r+1-1")
         instantiateVariables(a1).assertString("r <- r+1-1")
         instantiateVariables(a1).assertString("r <- r+1-1")
-        val x = instantiateVariables(a1)
-        x.reduceArithmetic()
-        instantiateVariables(a1).reduceArithmetic().assertString("r <- r")
+        instantiateVariables(a1).memoizeAndReduceArithmetic().assertString("r <- r")
     }
 
     @Test
@@ -256,34 +254,40 @@ class KaneTest {
         val error by 0.5 * pow(target - y, 2.0)
         val da by a - r * differentiate(d(error)/d(a))
         val aa by assign(da to a)
-        val tab = tableauOf(aa)
+        val tab = tableauOf(m,b,aa)
         println(tab)
         val layout = tab.linearize()
         println("---")
         println(layout)
         val space = layout.allocateSpace()
-        val xslot = layout.scalar(x)
-        val rslot = layout.scalar(r)
-        val targetSlot = layout.scalar(target)
-        val mslot = layout.scalar(m)
-        val bslot = layout.scalar(b)
-        space[rslot] = 0.1
+        val xslot = layout.shape(x).ref(space)
+        val rslot = layout.shape(r).ref(space)
+        val targetSlot = layout.shape(target).ref(space)
+        val mslot = layout.shape(m).ref(space)
+        val bslot = layout.shape(b).ref(space)
+        rslot.set(0.1)
         repeat(50) {
             (-2 until 2).forEach { point ->
-                space[xslot] = point.toDouble()
-                space[targetSlot] = -500 * point.toDouble() + 0.2
+                xslot.set(point.toDouble())
+                targetSlot.set(-500 * point.toDouble() + 0.2)
                 layout.eval(space)
             }
         }
-        space[mslot].assertNear(-500.0)
-        space[bslot].assertNear(0.2)
+        mslot.value.assertNear(-500.0)
+        bslot.value.assertNear(0.2)
     }
 
     @Test
     fun `check relu and steps`() {
+        assert(lrelu(-5.0)==-0.5)
+        assert(lrelu(5.0)==5.0)
+        assert(lrelu(0.0)==0.0)
         assert(relu(-5.0)==0.0)
         assert(relu(5.0)==5.0)
         assert(relu(0.0)==0.0)
+        assert(lstep(-5.0)==0.1)
+        assert(lstep(5.0)==1.0)
+        assert(lstep(0.0)==1.0)
         assert(step(-5.0)==0.0)
         assert(step(5.0)==1.0)
         assert(step(0.0)==1.0)
@@ -318,9 +322,9 @@ class KaneTest {
         val e0 by errors[0,0]
         val e1 by errors[0,1]
 
-        h0.substituteInitial().assertString("h0=logit(0.05*0.15+0.1*0.2+0.35)")
+        h0.substituteInitial().assertString("h0=logit(0.15*0.05+0.2*0.1+0.35)")
         h0.substituteInitial().reduceArithmetic().assertString("h0=0.59327")
-        h1.substituteInitial().assertString("h1=logit(0.05*0.25+0.1*0.3+0.35)")
+        h1.substituteInitial().assertString("h1=logit(0.25*0.05+0.3*0.1+0.35)")
         h1.substituteInitial().reduceArithmetic().assertString("h1=0.59688")
 
         o0.substituteInitial().reduceArithmetic().assertString("o0=0.75137")
@@ -330,7 +334,8 @@ class KaneTest {
         e1.substituteInitial().reduceArithmetic().assertString("e1=0.02356")
 
         instantiateVariables(error).substituteInitial().reduceArithmetic().assertString("error=0.29837")
-        instantiateVariables(dw1).substituteInitial().reduceArithmetic().assertString("""
+        val x = instantiateVariables(dw1).substituteInitial()
+        x.reduceArithmetic().assertString("""
             dw1
             ------
             0.35892|0.40867
@@ -400,18 +405,19 @@ class KaneTest {
 
     @Test
     fun `learn xor with relu`() {
-        val learningRate = 0.2
+        val random = Random(1)
+        val learningRate = 0.3
         val inputs = 2
-        val count0 = 5
+        val count0 = 3
         val outputs = 1
-        val input by matrixVariable<Double>(1, inputs, 0.01, 0.02)
+        val input by matrixVariable<Double>(1, inputs)
         val left by input[0,0]
         val right by input[0,1]
-        val w0 by matrixVariable<Double>(input.rows, count0)
-        val h1 by relu(w0 * input)
-        val w1 by matrixVariable<Double>(w0.rows, outputs)
-        val output by relu(w1 * h1)
-        val target by matrixVariable(output.columns, output.rows, 0.11)
+        val w0 by matrixVariable(input.rows, count0) { abs(random.nextGaussian()) / 3.0 }
+        val h1 by lrelu(w0 * input)
+        val w1 by matrixVariable(w0.rows, outputs) { abs(random.nextGaussian()) / 3.0 }
+        val output by lrelu(w1 * h1)
+        val target by matrixVariable<Double>(output.columns, output.rows)
         val error by summation(0.5 * pow(target - output, 2.0))
         val dw0 by w0 - learningRate * differentiate(d(error) / d(w0))
         val dw1 by w1 - learningRate * differentiate(d(error) / d(w1))
@@ -422,37 +428,38 @@ class KaneTest {
         val tab = tableauOf(left,right,targetElement,error,answer,aw0,aw1)
         val layout = tab.linearize()
         println(layout)
-        val random = Random(1)
-        val space = layout.allocateSpace { abs(random.nextGaussian() / 3.0) }
-        val leftSlot = layout.scalar(left)
-        val rightSlot = layout.scalar(right)
-        val targetSlot = layout.scalar(targetElement)
-        val errorSlot = layout.scalar(error)
-        val outSlot = layout.scalar(answer)
+        val space = layout.allocateSpace()
+        val leftSlot = layout.shape(left).ref(space)
+        val rightSlot = layout.shape(right).ref(space)
+        val targetSlot = layout.shape(targetElement).ref(space)
+        val errorSlot = layout.shape(error).ref(space)
+        val outSlot = layout.shape(answer).ref(space)
+        fun rev(value : Double) = value > 0.5
         fun repr(value : Boolean) = if (value) 1.0 else 0.0
         fun train(left : Boolean, right : Boolean, target : Boolean) : Double {
-            space[leftSlot] = repr(left)
-            space[rightSlot] = repr(right)
-            space[targetSlot] = repr(target)
+            leftSlot.set(repr(left))
+            rightSlot.set(repr(right))
+            targetSlot.set(repr(target))
             layout.eval(space)
-            return space[outSlot]
+            return outSlot.value
         }
         repeat(100000) {
-            listOf(false, true).forEach { left ->
-                listOf(false, true).forEach { right ->
-                    val target = left != right
-                    val output = train(left, right, target)
-                    if (it % 1000 == 900) {
-                        println("$left $right [${space[errorSlot]}] -> $output [$target=${space[targetSlot]}]")
-                    }
-                }
+            repeat(4) { r ->
+                val left = rev(abs(random.nextGaussian() / 1.5))
+                val right = rev(abs(random.nextGaussian() / 1.5))
+                val target = left != right
+                val output = train(left, right, target)
             }
+
             var done = true
             listOf(false, true).forEach { left ->
                 listOf(false, true).forEach { right ->
                     val target = left != right
                     val output = train(left, right, target)
                     if (!output.near(repr(target))) done = false
+                    if (!done && it % 1000 == 900) {
+                        println("$left $right [$errorSlot] -> $output [$target=$targetSlot]")
+                    }
                 }
             }
             if (done) {
@@ -464,19 +471,91 @@ class KaneTest {
     }
 
     @Test
+    fun `autoencode one hot`() {
+        val random = Random(1)
+        val learningRate by variable(1.0)
+        val inputs = 4
+        val count0 = 3
+        val count1 = 2
+        val count2 = 3
+        val outputs = 4
+        val input by matrixVariable(1, inputs) { 0.0 }
+        val w0 by matrixVariable(input.rows, count0) { abs(random.nextGaussian()) / 3.0 }
+
+        val h1 by lrelu(w0 * input)
+        val w1 by matrixVariable(h1.rows, count1) { abs(random.nextGaussian()) / 3.0 }
+
+        val h2 by logit(w1 * h1)
+        val w2 by matrixVariable(h2.rows, count2) { abs(random.nextGaussian()) / 3.0 }
+
+        val h3 by logit(w2 * h2)
+        val w3 by matrixVariable(h3.rows, outputs) { abs(random.nextGaussian()) / 3.0 }
+
+        val output by logit(w3 * h3)
+        val target by matrixVariable(output.columns, output.rows) { 0.0 }
+        val error by summation(0.5 * pow(target - output, 2.0))
+        val dw0 by w0 - learningRate * differentiate(d(error) / d(w0))
+        val dw1 by w1 - learningRate * differentiate(d(error) / d(w1))
+        val dw2 by w2 - learningRate * differentiate(d(error) / d(w2))
+        val dw3 by w3 - learningRate * differentiate(d(error) / d(w3))
+        val aw0 by assign(dw0 to w0)
+        val aw1 by assign(dw1 to w1)
+        val aw2 by assign(dw2 to w2)
+        val aw3 by assign(dw3 to w3)
+        val tab = tableauOf(output,error,aw0,aw1,aw2,aw3)
+        val layout = tab.linearize()
+        println(layout)
+        val space = layout.allocateSpace()
+        val targetRef = layout.shape(target).ref(space)
+        val errorSlot = layout.shape(error).ref(space)
+        val outputRef = layout.shape(output).ref(space)
+        val inputRef = layout.shape(input).ref(space)
+        val w2Ref = layout.shape(w2).ref(space)
+        val h1Ref = layout.shape(h1).ref(space)
+        val h2Ref = layout.shape(h2).ref(space)
+        val h3Ref = layout.shape(h3).ref(space)
+        val lr = layout.shape(learningRate).ref(space)
+
+        fun train(bit : Int) {
+            inputRef.set(0.0)
+            inputRef[0, bit] = 1.0
+            targetRef.set(0.0)
+            targetRef[0, bit] = 1.0
+            layout.eval(space)
+        }
+
+        repeat(10000) {
+            train(abs(random.nextInt()) % inputs)
+            if (it % 10000 == 9000) {
+                var error = 0.0
+                for(bit in 0 until 4) {
+                    train(bit)
+                    error += errorSlot.value
+                }
+                println("error = $error")
+//                println("$inputRef")
+//                println("encoded as:")
+//                println("$h2Ref")
+               // lr.set(lr.value * 0.95)
+            }
+        }
+    }
+
+    @Test
     fun `learn xor with logistic`() {
+        val random = Random(1)
         val learningRate = 7.0
         val inputs = 2
-        val count0 = 3
+        val count0 = 4
         val outputs = 1
-        val input by matrixVariable<Double>(1, inputs, 0.01, 0.02)
+        val input by matrixVariable(1, inputs) { 0.0 }
         val left by input[0,0]
         val right by input[0,1]
-        val w0 by matrixVariable<Double>(input.rows, count0)
+        val w0 by matrixVariable(input.rows, count0) { random.nextGaussian() / 3.0 }
         val h1 by logit(w0 * input)
-        val w1 by matrixVariable<Double>(w0.rows, outputs)
+        val w1 by matrixVariable(w0.rows, outputs) { random.nextGaussian() / 3.0 }
         val output by logit(w1 * h1)
-        val target by matrixVariable(output.columns, output.rows, 0.11)
+        val target by matrixVariable(output.columns, output.rows) { 0.0 }
         val error by summation(0.5 * pow(target - output, 2.0))
         val dw0 by w0 - learningRate * differentiate(d(error) / d(w0))
         val dw1 by w1 - learningRate * differentiate(d(error) / d(w1))
@@ -484,23 +563,24 @@ class KaneTest {
         val aw1 by assign(dw1 to w1)
         val targetElement by target[0,0]
         val answer by output[0,0]
-        val tab = tableauOf(left,right,targetElement,error,answer,aw0,aw1)
+        val tab = tableauOf(left,right,targetElement,error,answer,aw0,aw1,dw0,dw1)
         val layout = tab.linearize()
         println(layout)
-        val random = Random(1)
-        val space = layout.allocateSpace { abs(random.nextGaussian() / 3.0) }
-        val leftSlot = layout.scalar(left)
-        val rightSlot = layout.scalar(right)
-        val targetSlot = layout.scalar(targetElement)
-        val errorSlot = layout.scalar(error)
-        val outSlot = layout.scalar(answer)
+        layout.check()
+
+        val space = layout.allocateSpace()
+        val leftRef = layout.shape(left).ref(space)
+        val rightRef = layout.shape(right).ref(space)
+        val targetRef = layout.shape(targetElement).ref(space)
+        val errorRef = layout.shape(error).ref(space)
+        val outRef = layout.shape(answer).ref(space)
         fun repr(value : Boolean) = if (value) 0.9 else 0.1
         fun train(left : Boolean, right : Boolean, target : Boolean) : Double {
-            space[leftSlot] = repr(left)
-            space[rightSlot] = repr(right)
-            space[targetSlot] = repr(target)
+            leftRef.set(repr(left))
+            rightRef.set(repr(right))
+            targetRef.set(repr(target))
             layout.eval(space)
-            return space[outSlot]
+            return outRef.value
         }
         repeat(100000) {
             listOf(false, true).forEach { left ->
@@ -508,7 +588,7 @@ class KaneTest {
                     val target = left != right
                     val output = train(left, right, target)
                     if (it % 1000 == 900) {
-                        println("$left $right [${space[errorSlot]}] -> $output [$target=${space[targetSlot]}]")
+                        println("$left $right [$errorRef] -> $output [$target=${targetRef}]")
                     }
                 }
             }
@@ -665,7 +745,6 @@ class KaneTest {
         (-(a * b)).assertString("-a*b")
         (-1.0 * b).reduceArithmetic().assertString("-b")
         (b * -1.0).reduceArithmetic().assertString("-b")
-
     }
 
     @Test
@@ -695,7 +774,7 @@ class KaneTest {
         f2.assertString("f2=m[0,0]²*m[0,1]³")
         val df2dx by d(f2) / d(x)
         df2dx.assertString("df2dx=d(m[0,0]²*m[0,1]³)/d(m[0,0])")
-        differentiate(df2dx).assertString("df2dx'=2*m[0,1]³*m[0,0]")
+        differentiate(df2dx).assertString("df2dx'=2*m[0,0]*m[0,1]³")
         val df2dy by d(f2) / d(y)
         df2dy.assertString("df2dy=d(m[0,0]²*m[0,1]³)/d(m[0,1])")
         differentiate(df2dy).assertString("df2dy'=3*m[0,0]²*m[0,1]²")
@@ -705,10 +784,10 @@ class KaneTest {
         f3.assertString("f3=logit(m[0,0]*m[0,1])")
         val df3dx by d(f3) / d(x)
         df3dx.assertString("df3dx=d(logit(m[0,0]*m[0,1]))/d(m[0,0])")
-        differentiate(df3dx).assertString("df3dx'=(1-logit(m[0,0]*m[0,1]))*logit(m[0,0]*m[0,1])*m[0,1]")
+        differentiate(df3dx).assertString("df3dx'=logit(m[0,0]*m[0,1])*(1-logit(m[0,0]*m[0,1]))*m[0,1]")
         val df3dy by d(f3) / d(y)
         df3dy.assertString("df3dy=d(logit(m[0,0]*m[0,1]))/d(m[0,1])")
-        differentiate(df3dy).assertString("df3dy'=(1-logit(m[0,0]*m[0,1]))*logit(m[0,0]*m[0,1])*m[0,0]")
+        differentiate(df3dy).assertString("df3dy'=logit(m[0,0]*m[0,1])*(1-logit(m[0,0]*m[0,1]))*m[0,0]")
     }
 
     @Test
@@ -737,10 +816,10 @@ class KaneTest {
         f3.assertString("f3=logit(x*y)")
         val df3dx by d(f3) / d(x)
         df3dx.assertString("df3dx=d(logit(x*y))/dx")
-        differentiate(df3dx).assertString("df3dx'=(1-logit(x*y))*logit(x*y)*y")
+        differentiate(df3dx).assertString("df3dx'=logit(x*y)*(1-logit(x*y))*y")
         val df3dy by d(f3) / d(y)
         df3dy.assertString("df3dy=d(logit(x*y))/dy")
-        differentiate(df3dy).assertString("df3dy'=(1-logit(x*y))*logit(x*y)*x")
+        differentiate(df3dy).assertString("df3dy'=logit(x*y)*(1-logit(x*y))*x")
     }
 
     @Test
@@ -780,7 +859,7 @@ class KaneTest {
         val structure = expr.renderStructure()
         val id = identifierOf(structure)
         assert(expr == expr)
-        expr.reduceArithmetic()
+        expr.memoizeAndReduceArithmetic()
         if (expr.type == DoubleAlgebraicType) {
             if (expr is NamedExpr<*>) {
                 tableauOf(expr).linearize()
