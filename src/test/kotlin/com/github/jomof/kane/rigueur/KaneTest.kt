@@ -73,7 +73,7 @@ class KaneTest {
     fun mult() {
         val m1 by matrixOf(10, 1) { constant(it.column + 0.0) }
         val m2 by matrixOf(1, 10) { constant(10.0 - it.row ) }
-        val m3 by m1 * m2
+        val m3 by m1 cross m2
         m3.assertString("m3=165")
     }
 
@@ -81,7 +81,7 @@ class KaneTest {
     fun `multiplication bug`() {
         val input by matrixVariable<Double>(1, 1)
         val w0 by matrixVariable<Double>(input.rows + 1, 1)
-        val h1 by logit(w0 * (input stack 1.0))
+        val h1 by logit(w0 cross (input stack 1.0))
         h1.toDataMatrix().assertString("h1=logit(w0[0,0]*input[0,0]+w0[1,0])")
     }
 
@@ -306,8 +306,8 @@ class KaneTest {
             0.5, 0.55)
         val b0 by variable(0.35)
         val b1 by variable(0.6)
-        val h by logit(w0 * inputs + b0)
-        val output by logit(w1 * h + b1)
+        val h by logit((w0 cross inputs) + b0)
+        val output by logit((w1 cross h) + b1)
         val target by matrixVariable(1, 2, 0.01, 0.99)
         val errors by 0.5 * pow(target-output, 2.0)
         val error by summation(errors)
@@ -322,9 +322,9 @@ class KaneTest {
         val e0 by errors[0,0]
         val e1 by errors[0,1]
 
-        h0.substituteInitial().assertString("h0=logit(0.15*0.05+0.2*0.1+0.35)")
+//        h0.substituteInitial().assertString("h0=logit(0.15*0.05+0.2*0.1+0.35)")
         h0.substituteInitial().reduceArithmetic().assertString("h0=0.59327")
-        h1.substituteInitial().assertString("h1=logit(0.25*0.05+0.3*0.1+0.35)")
+//        h1.substituteInitial().assertString("h1=logit(0.25*0.05+0.3*0.1+0.35)")
         h1.substituteInitial().reduceArithmetic().assertString("h1=0.59688")
 
         o0.substituteInitial().reduceArithmetic().assertString("o0=0.75137")
@@ -364,8 +364,8 @@ class KaneTest {
             0.5f, 0.55f)
         val b1 by variable(0.35f)
         val b2 by variable(0.6f)
-        val h by logit(w0 * inputs + b1)
-        val output by logit(w1 * h + b2)
+        val h by logit((w0 cross inputs) + b1)
+        val output by logit((w1 cross h) + b2)
         val target by matrixVariable(1, 2, 0.01f, 0.99f)
         val errors by 0.5f * pow(target-output, 2.0f)
         val error by summation(errors)
@@ -414,9 +414,9 @@ class KaneTest {
         val left by input[0,0]
         val right by input[0,1]
         val w0 by matrixVariable(input.rows, count0) { abs(random.nextGaussian()) / 3.0 }
-        val h1 by lrelu(w0 * input)
+        val h1 by lrelu(w0 cross input)
         val w1 by matrixVariable(w0.rows, outputs) { abs(random.nextGaussian()) / 3.0 }
-        val output by lrelu(w1 * h1)
+        val output by lrelu(w1 cross h1)
         val target by matrixVariable<Double>(output.columns, output.rows)
         val error by summation(0.5 * pow(target - output, 2.0))
         val dw0 by w0 - learningRate * differentiate(d(error) / d(w0))
@@ -471,6 +471,28 @@ class KaneTest {
     }
 
     @Test
+    fun `rnn`() {
+        // https://github.com/nicklashansen/rnn_lstm_from_scratch/blob/master/RNN_LSTM_from_scratch.ipynb
+        val r = Random()
+        val x by matrixVariable(1, 6) { 0.0 }
+        val u by matrixVariable(x.rows, x.rows) { r.nextGaussian() }
+        val h1 by matrixVariable(x.columns, x.rows) { r.nextGaussian() }
+        val v by matrixVariable(h1.rows, u.rows) { r.nextGaussian() }
+        val h2 by logit((u cross x) + (v cross h1))
+        val w by matrixVariable(h2.rows, 5) { r.nextGaussian() }
+
+        val o by w cross h2
+        val yhat by softmax(o)
+        val step by assign(h2 to h1)
+        val model = tableauOf(yhat, o, step).linearize()
+        val space = model.allocateSpace()
+        model.eval(space)
+        val yhatref = model.shape(yhat).ref(space)
+        println(model)
+        println(yhatref)
+    }
+
+    @Test
     fun `autoencode one hot`() {
         val random = Random(1)
         val learningRate by variable(1.0)
@@ -482,16 +504,16 @@ class KaneTest {
         val input by matrixVariable(1, inputs) { 0.0 }
         val w0 by matrixVariable(input.rows, count0) { abs(random.nextGaussian()) / 3.0 }
 
-        val h1 by lrelu(w0 * input)
+        val h1 by lrelu(w0 cross input)
         val w1 by matrixVariable(h1.rows, count1) { abs(random.nextGaussian()) / 3.0 }
 
-        val h2 by logit(w1 * h1)
+        val h2 by logit(w1 cross h1)
         val w2 by matrixVariable(h2.rows, count2) { abs(random.nextGaussian()) / 3.0 }
 
-        val h3 by logit(w2 * h2)
+        val h3 by logit(w2 cross h2)
         val w3 by matrixVariable(h3.rows, outputs) { abs(random.nextGaussian()) / 3.0 }
 
-        val output by logit(w3 * h3)
+        val output by logit(w3 cross h3)
         val target by matrixVariable(output.columns, output.rows) { 0.0 }
         val error by summation(0.5 * pow(target - output, 2.0))
         val dw0 by w0 - learningRate * differentiate(d(error) / d(w0))
@@ -552,9 +574,9 @@ class KaneTest {
         val left by input[0,0]
         val right by input[0,1]
         val w0 by matrixVariable(input.rows, count0) { random.nextGaussian() / 3.0 }
-        val h1 by logit(w0 * input)
+        val h1 by logit(w0 cross input)
         val w1 by matrixVariable(w0.rows, outputs) { random.nextGaussian() / 3.0 }
-        val output by logit(w1 * h1)
+        val output by logit(w1 cross h1)
         val target by matrixVariable(output.columns, output.rows) { 0.0 }
         val error by summation(0.5 * pow(target - output, 2.0))
         val dw0 by w0 - learningRate * differentiate(d(error) / d(w0))
@@ -612,9 +634,9 @@ class KaneTest {
     fun `repro multiplication bug`() {
         val input by matrixVariable<Double>(1, 1)
         val w0 by matrixVariable<Double>(input.rows + 1, 3)
-        val h1 by logit(w0 * (input stack 1.0))
+        val h1 by logit(w0 cross (input stack 1.0))
         val w1 by matrixVariable<Double>(w0.rows + 1, 1)
-        val output by logit(w1 * (h1 stack 1.0))
+        val output by logit(w1 cross (h1 stack 1.0))
         val target by matrixVariable<Double>(output.columns, output.rows)
         val error by summation(0.5 * pow(target - output, 2.0))
         val gradientW0 by d(error) / d(w0)
@@ -724,9 +746,9 @@ class KaneTest {
         val element by z[0,1]
         element.assertString("element=m[0,1]")
         z[1,0].assertString("m[1,0]")
-        val mult by m * n
-        mult.assertString("mult=m*n")
-        (m * n).assertString("m*n")
+        val mult by m cross n
+        mult.assertString("mult=m cross n")
+        (m cross n).assertString("m cross n")
         (m stack 1.0).assertString("m stack 1|1|1|1|1")
         (m stack m stack m).assertString("m stack m stack m")
         ((m stack m) stack m).assertString("m stack m stack m")
@@ -827,9 +849,9 @@ class KaneTest {
         val learningRate = 0.1
         val input by matrixVariable<Double>(1, 2)
         val w0 by matrixVariable<Double>(input.rows + 1, 2)
-        val h1 by logit(w0 * (input stack 1.0))
+        val h1 by logit(w0 cross (input stack 1.0))
         val w1 by matrixVariable<Double>(w0.rows + 1, 1)
-        val output by logit(w1 * (h1 stack 1.0))
+        val output by logit(w1 cross (h1 stack 1.0))
         val target by matrixVariable<Double>(output.columns, output.rows)
         val error by summation(learningRate * pow(target - output, 2.0))
         instantiateVariables(error)
@@ -840,9 +862,9 @@ class KaneTest {
         val learningRate = 0.1
         val input by matrixVariable<Double>(1, 2)
         val w0 by matrixVariable<Double>(input.rows + 1, 2)
-        val h1 by logit(w0 * (input stack 1.0))
+        val h1 by logit(w0 cross (input stack 1.0))
         val w1 by matrixVariable<Double>(w0.rows + 1, 2)
-        val output by logit(w1 * (h1 stack 1.0))
+        val output by logit(w1 cross (h1 stack 1.0))
         val target by matrixVariable<Double>(output.columns, output.rows)
         val error by summation(learningRate * pow(target - output, 2.0))
         val gradientW0 by d(error) / d(w0)
@@ -943,7 +965,7 @@ class KaneTest {
         val x12: ScalarExpr<Double> by v1 * v1
         val x13: MatrixExpr<Double> by 1.0 * x1
         val x14: MatrixExpr<Double> by x1 * 1.0
-        val x15: MatrixExpr<Double> by x1 * x1
+        val x15: MatrixExpr<Double> by x1 cross x1
         val x16: MatrixExpr<Double> by x1 stack 1.0
         val x17: MatrixExpr<Double> by 1.0 stack x1
         val x18: MatrixExpr<Double> by x1 stack x1
@@ -960,9 +982,9 @@ class KaneTest {
         val learningRate = 0.1
         val input by matrixVariable<Double>(1, 2)
         val w0 by matrixVariable<Double>(input.rows + 1, 2)
-        val h1 by logit(w0 * (input stack 1.0))
+        val h1 by logit(w0 cross (input stack 1.0))
         val w1 by matrixVariable<Double>(w0.rows + 1, 2)
-        val output by logit(w1 * (h1 stack 1.0))
+        val output by logit(w1 cross (h1 stack 1.0))
         val target by matrixVariable<Double>(output.columns, output.rows)
         val error by summation(learningRate * pow(target - output, 2.0))
         val gradientW0 by d(error) / d(w0)

@@ -49,6 +49,7 @@ val SUMMATION by UnaryOp(op = "∑")
 val LOGIT by UnaryOp()
 val RELU by UnaryOp()
 val LRELU by UnaryOp()
+val EXP by UnaryOp()
 val STEP by UnaryOp()
 val LSTEP by UnaryOp()
 val NEGATE by UnaryOp(op = "-")
@@ -71,6 +72,7 @@ val TIMES by BinaryOp(op = "*", precedence = 1, associative = true, infix = true
 val DIV by BinaryOp(op = "/", precedence = 2, infix = true)
 val PLUS by BinaryOp(op = "+", precedence = 3, associative = true, infix = true)
 val MINUS by BinaryOp(op = "-", precedence = 4, infix = true)
+val CROSS by BinaryOp(op = " cross ", precedence = 5, associative = false, infix = true)
 val STACK by BinaryOp(op = " stack ", precedence = 5, associative = true, infix = true)
 
 operator fun <T:Any> ScalarExpr<T>.getValue(thisRef: Any?, property: KProperty<*>) = NamedScalar(property.name, this.record().reduceArithmetic())
@@ -117,7 +119,10 @@ data class BinaryScalar<E:Any>(
     override val op : BinaryOp,
     override val left : ScalarExpr<E>,
     override val right : ScalarExpr<E>) : ScalarExpr<E>, BinaryExpr<E>, ParentExpr<E> {
-    init { track() }
+    init {
+        track()
+        assert(op != CROSS)
+    }
     override val type get() = left.type
     override val children get() = listOf(left, right)
     override fun toString() = render()
@@ -171,21 +176,40 @@ data class BinaryMatrix<E:Any>(
     override val left : MatrixExpr<E>,
     override val right : MatrixExpr<E>,
 ) : MatrixExpr<E>, BinaryExpr<E> {
-    init { track() }
+    init {
+        track()
+        fun lm() = if (left is NamedExpr<*>) "matrix '${left.name}'" else "left matrix"
+        fun rm() = if (right is NamedExpr<*>) "matrix '${right.name}'" else "right matrix"
+        when(op) {
+            STACK -> {}
+            CROSS -> assert(left.columns == right.rows) {
+                "${lm()} columns ${left.columns} did not equal ${rm()} rows ${right.rows}"
+            }
+            else -> {
+                assert(left.rows == right.rows) {
+                    "${op.op} : ${lm()} columns ${left.rows} did not equal ${rm()} columns ${right.rows}"
+                }
+                assert(left.columns == right.columns) {
+                    "${op.op} : ${lm()} columns ${left.columns} did not equal ${rm()} columns ${right.columns}"
+                }
+            }
+        }
+    }
     override val type get() = left.type
     override fun get(column: Int, row: Int) = when(op) {
+        MINUS -> left[column,row] - right[column,row]
+        PLUS -> left[column,row] + right[column,row]
         STACK -> {
             if (row < left.rows) left[column, row]
             else right[column, row - left.rows]
         }
-        TIMES -> {
-            assert(left.columns == right.rows)
+        CROSS -> {
             (1 until left.columns)
                 .fold(left[0, row] * right[column, 0]) { prior : ScalarExpr<E>, i ->
                     prior + left[i, row] * right[column, i]
                 }
         }
-        else -> BinaryScalar(op, left[column,row], right[column,row])
+        else -> error("$op")
     }
     override fun toString() = render()
 }
@@ -222,9 +246,18 @@ data class NamedMatrixVariable<E:Any>(
     override val rows : Int,
     override val type : AlgebraicType<E>,
     val initial : List<E>) : MatrixVariableExpr<E>, NamedMatrixExpr<E> {
-    init { track() }
+    init {
+        track()
+        assert(initial.size == rows * columns)
+    }
     private fun coordinateToIndex(column: Int, row: Int) = row * columns + column
-    override fun get(column: Int, row: Int) = MatrixVariableElement(column, row, this, initial[coordinateToIndex(column, row)])
+    override fun get(column: Int, row: Int) = run {
+        assert(column >= 0)
+        assert(column < columns) { "$column greater than columns $columns of matrix $name" }
+        assert(row >= 0)
+        assert(row < rows) { "$row greater than columns $rows of matrix $name" }
+        MatrixVariableElement(column, row, this, initial[coordinateToIndex(column, row)])
+    }
     fun get(coordinate : Coordinate) = get(coordinate.column, coordinate.row)
     val elements get() = coordinates.map { get(it) }
     override fun toString() = render()
@@ -323,7 +356,17 @@ data class ScalarAssign<E:Any>(
 data class MatrixAssign<E:Any>(
     val left : NamedMatrixVariable<E>,
     val right : MatrixExpr<E>) {
-    init { track() }
+    init {
+        track()
+        fun lm() = "matrix '${left.name}'"
+        fun rm() = if (right is NamedExpr<*>) "matrix '${right.name}'" else "right matrix"
+        assert(left.rows == right.rows) {
+            "${lm()} columns ${left.rows} did not equal ${rm()} columns ${right.rows}"
+        }
+        assert(left.columns == right.columns) {
+            "${lm()} columns ${left.columns} did not equal ${rm()} columns ${right.columns}"
+        }
+    }
     operator fun getValue(thisRef: Any?, property: KProperty<*>) = NamedMatrixAssign(property.name, left, right)
 }
 
@@ -371,6 +414,11 @@ fun step(value : Float) = if (value < 0.0f) 0.0f else 1.0f
 fun <E:Any, T : ScalarExpr<E>> lstep(expr : T) : ScalarExpr<E> = UnaryScalar(LSTEP, expr)
 fun lstep(value : Double) = if (value < 0.0) 0.1 else 1.0
 fun lstep(value : Float) = if (value < 0.0f) 0.1f else 1.0f
+// Expr
+fun <E:Any> exp(expr : ScalarExpr<E>) = UnaryScalar(EXP, expr)
+fun <E:Any> exp(expr : MatrixExpr<E>) = UnaryMatrix(EXP, expr)
+// Softmax
+fun <E:Any> softmax(expr : MatrixExpr<E>) : MatrixExpr<E> = exp(expr) / summation(exp(expr))
 // Logit
 fun <E:Any, T : ScalarExpr<E>> logit(expr : T) : ScalarExpr<E> = UnaryScalar(LOGIT, expr)
 fun <E:Any, T : MatrixExpr<E>> logit(expr : T) : MatrixExpr<E> = UnaryMatrix(LOGIT, expr)
@@ -384,11 +432,8 @@ operator fun <E:Any, L : MatrixExpr<E>, R : E> L.times(right : R) = BinaryMatrix
 operator fun <E:Any, L : E, R : MatrixExpr<E>> L.times(right : R) = BinaryScalarMatrix(TIMES, right.columns, right.rows, ConstantScalar(this), right)
 operator fun <E:Any, L : MatrixExpr<E>, R : ScalarExpr<E>> L.times(right : R) = BinaryMatrixScalar(TIMES, columns, rows, this, right)
 operator fun <E:Any, L : ScalarExpr<E>, R : MatrixExpr<E>> L.times(right : R) = BinaryScalarMatrix(TIMES, right.columns, right.rows, this, right)
-operator fun <E:Any> MatrixExpr<E>.times(right : MatrixExpr<E>) = run {
-    assert(columns == right.rows) {
-        "left matrix columns $columns did not equal right matrix rows ${right.rows}"
-    }
-    BinaryMatrix(TIMES, right.columns, rows, this, right)
+infix fun <E:Any> MatrixExpr<E>.cross(right : MatrixExpr<E>) = run {
+    BinaryMatrix(CROSS, right.columns, rows, this, right)
 }
 private fun <E:Any> tryReduceTimes(left : ScalarExpr<E>, right : ScalarExpr<E>) : ScalarExpr<E>? {
     val type = left.type
@@ -535,6 +580,7 @@ private fun <E:Any> diff(expr : ScalarExpr<E>, variable : ScalarExpr<E>) : Scala
             LOGIT -> logit(expr.value) * (constant(expr.type.one) - logit(expr.value)) * expr.value.self()
             RELU -> step(expr.value) * expr.value.self()
             LRELU -> lstep(expr.value) * expr.value.self()
+            EXP -> exp(expr.value) * expr.value.self()
             NEGATE -> -expr.value.self()
             else -> error("${expr.op}")
         }
@@ -555,6 +601,7 @@ private fun <E:Any> diff(expr : ScalarExpr<E>, variable : ScalarExpr<E>) : Scala
             val result : ScalarExpr<E> = when(expr.op) {
                 PLUS -> diffLeft + diffRight
                 TIMES -> expr.left * diffRight + diffLeft * expr.right
+                DIV -> (expr.left * diffRight - diffLeft * expr.right) / pow(expr.right, expr.type.two)
                 MINUS -> diffLeft - diffRight
                 POW -> expr.right * pow(expr.left, expr.right - expr.type.one) * diffLeft
                 else -> error("${expr.op}")

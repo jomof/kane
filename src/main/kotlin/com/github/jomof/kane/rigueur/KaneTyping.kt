@@ -3,6 +3,7 @@ package com.github.jomof.kane.rigueur
 import java.math.BigDecimal
 import java.math.RoundingMode
 import kotlin.math.pow
+import kotlin.math.exp
 
 open class KaneType<E:Any>(val java : Class<E>)
 abstract class AlgebraicType<E:Any>(java : Class<E>) : KaneType<E>(java) {
@@ -27,6 +28,7 @@ val DoubleAlgebraicType = object : AlgebraicType<Double>(Double::class.java) {
         LRELU -> relu(value)
         STEP -> step(value)
         LSTEP -> step(value)
+        EXP -> exp(value)
         D -> 0.0
         else -> error("$op")
     }
