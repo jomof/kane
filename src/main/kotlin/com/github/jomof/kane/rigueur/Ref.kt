@@ -79,6 +79,10 @@ class ScalarRef<E:Any>(
 }
 
 fun <E:Any> MatrixRef<E>.render(): String {
+    if (columns == 1 && rows == 1) return type.render(this[0,0])
+    if (columns == 1) {
+        return "col " + (0 until rows).map { type.render(this[0,it]) }.joinToString("|")
+    }
     val sb = StringBuilder()
     for (row in 0 until rows) {
         for(column in 0 until columns) {

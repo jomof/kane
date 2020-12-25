@@ -25,10 +25,11 @@ val DoubleAlgebraicType = object : AlgebraicType<Double>(Double::class.java) {
         NEGATE -> -value
         LOGIT -> logit(value)
         RELU -> relu(value)
-        LRELU -> relu(value)
+        LRELU -> lrelu(value)
         STEP -> step(value)
-        LSTEP -> step(value)
+        LSTEP -> lstep(value)
         EXP -> exp(value)
+        TANH -> tanh(value)
         D -> 0.0
         else -> error("$op")
     }
@@ -58,9 +59,12 @@ val FloatAlgebraicType = object : AlgebraicType<Float>(Float::class.java) {
         NEGATE -> -value
         LOGIT -> logit(value)
         RELU -> relu(value)
-        LRELU -> relu(value)
+        LRELU -> lrelu(value)
         STEP -> step(value)
-        LSTEP -> step(value)
+        LSTEP -> lstep(value)
+        EXP -> exp(value)
+        TANH -> tanh(value)
+        D -> 0.0f
         else -> error("$op")
     }
     override fun binary(op: BinaryOp, left: Float, right: Float) = when(op) {

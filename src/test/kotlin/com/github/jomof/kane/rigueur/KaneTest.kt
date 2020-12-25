@@ -478,7 +478,7 @@ class KaneTest {
         val u by matrixVariable(x.rows, x.rows) { r.nextGaussian() }
         val h1 by matrixVariable(x.columns, x.rows) { r.nextGaussian() }
         val v by matrixVariable(h1.rows, u.rows) { r.nextGaussian() }
-        val h2 by logit((u cross x) + (v cross h1))
+        val h2 by tanh((u cross x) + (v cross h1))
         val w by matrixVariable(h2.rows, 5) { r.nextGaussian() }
 
         val o by w cross h2
@@ -493,18 +493,47 @@ class KaneTest {
     }
 
     @Test
+    fun `softmax`() {
+        val output by softmax(matrixOf(1, 3, 1.0, 5.0, 10.0))
+        val layout = output.linearize()
+        val space = layout.allocateSpace()
+        layout.eval(space)
+        val outref = layout.shape(output).ref(space)
+        println(outref)
+    }
+
+    @Test
+    fun `exp`() {
+        val x by variable<Double>()
+        val e2x by exp(x * x)
+        val e2xprime by differentiate(d(e2x)/d(x))
+        println(e2x)
+        println(e2xprime)
+    }
+
+    @Test
+    fun `divide`() {
+        val x by variable<Double>()
+        val fx by 4.0 / pow(x, 6.0)
+        val dfx by differentiate(d(fx)/d(x))
+        fx.assertString("fx=4*x⁻⁶")
+        dfx.assertString("dfx=-24*x⁻⁷")
+    }
+
+    //@Test
     fun `autoencode one hot`() {
-        val random = Random(1)
-        val learningRate by variable(1.0)
-        val inputs = 4
+        val random = Random(3)
+        val learningRate by variable(0.00001)
+        val totalbits = 4
+        val inputs = totalbits
         val count0 = 3
-        val count1 = 2
+        val count1 = 1
         val count2 = 3
-        val outputs = 4
+        val outputs = totalbits
         val input by matrixVariable(1, inputs) { 0.0 }
         val w0 by matrixVariable(input.rows, count0) { abs(random.nextGaussian()) / 3.0 }
 
-        val h1 by lrelu(w0 cross input)
+        val h1 by logit(w0 cross input)
         val w1 by matrixVariable(h1.rows, count1) { abs(random.nextGaussian()) / 3.0 }
 
         val h2 by logit(w1 cross h1)
@@ -513,7 +542,7 @@ class KaneTest {
         val h3 by logit(w2 cross h2)
         val w3 by matrixVariable(h3.rows, outputs) { abs(random.nextGaussian()) / 3.0 }
 
-        val output by logit(w3 cross h3)
+        val output by softmax(w3 cross h3)
         val target by matrixVariable(output.columns, output.rows) { 0.0 }
         val error by summation(0.5 * pow(target - output, 2.0))
         val dw0 by w0 - learningRate * differentiate(d(error) / d(w0))
@@ -524,7 +553,7 @@ class KaneTest {
         val aw1 by assign(dw1 to w1)
         val aw2 by assign(dw2 to w2)
         val aw3 by assign(dw3 to w3)
-        val tab = tableauOf(output,error,aw0,aw1,aw2,aw3)
+        val tab = tableauOf(output,error,h1,h2,h3,aw0,aw1,aw2,aw3)
         val layout = tab.linearize()
         println(layout)
         val space = layout.allocateSpace()
@@ -546,19 +575,24 @@ class KaneTest {
             layout.eval(space)
         }
 
-        repeat(10000) {
+        var broke = false
+        var lastError = 10.00
+        repeat(10000000) {
             train(abs(random.nextInt()) % inputs)
             if (it % 10000 == 9000) {
                 var error = 0.0
-                for(bit in 0 until 4) {
+                for(bit in 0 until totalbits) {
                     train(bit)
                     error += errorSlot.value
+                    println("$bit was $h2Ref => $outputRef")
                 }
+
                 println("error = $error")
-//                println("$inputRef")
-//                println("encoded as:")
-//                println("$h2Ref")
-               // lr.set(lr.value * 0.95)
+                if (error > lastError) {
+                    lr.set(lr.value * 0.95)
+                    println("Dropped learning rate to $lr")
+                }
+                lastError = error
             }
         }
     }
@@ -680,6 +714,8 @@ class KaneTest {
                 "$result != $expect"
             }
         }
+        check(DIV, POW, childIsRight = false, expect = false)
+        check(DIV, POW, childIsRight = true, expect = false)
         check(POW, PLUS, childIsRight = false, expect = true)
         check(POW, PLUS, childIsRight = true, expect = false)
         check(MINUS, PLUS, childIsRight = false, expect = false)
@@ -767,6 +803,21 @@ class KaneTest {
         (-(a * b)).assertString("-a*b")
         (-1.0 * b).reduceArithmetic().assertString("-b")
         (b * -1.0).reduceArithmetic().assertString("-b")
+    }
+
+    @Test
+    fun `superscript rendering`() {
+        val a by variable<Double>()
+        val b by variable<Double>()
+        val x by variable<Double>()
+        val M by variable<Double>()
+        (pow(a, -1.0)).reduceArithmetic().assertString("a⁻¹")
+        (pow(a, b)).reduceArithmetic().assertString("aᵇ")
+        (pow(a, M)).reduceArithmetic().assertString("aᴹ")
+        (pow(a, -b)).reduceArithmetic().assertString("a⁻ᵇ")
+        (pow(a, b-b)).reduceArithmetic().assertString("a⁽ᵇ⁻ᵇ⁾")
+        (exp(x)).reduceArithmetic().assertString("eˣ")
+        (exp(-x)).reduceArithmetic().assertString("e⁻ˣ")
     }
 
     @Test
