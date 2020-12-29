@@ -1,6 +1,7 @@
 @file:Suppress("UNCHECKED_CAST")
 package com.github.jomof.kane.rigueur
 
+import com.github.jomof.kane.rigueur.types.*
 import org.junit.Test
 import java.io.File
 import java.util.*
@@ -9,13 +10,6 @@ import kotlin.math.absoluteValue
 import kotlin.math.pow
 
 class KaneTest {
-    private fun Any.assertString(expected : String) {
-        val actual = toString().trim('\n')
-        val expectedTrimmed = expected.trim('\n')
-        assert(actual == expectedTrimmed) {
-            "actual:   $actual\nexpected: $expectedTrimmed"
-        }
-    }
 
     private fun Double.near(expected:Double) : Boolean {
         val diff = (this - expected).pow(2.0)
@@ -238,9 +232,7 @@ class KaneTest {
         val r by variable<Double>()
         val a1 by assign(r + 1.0 - 1.0 to r)
         a1.assertString("r <- r+1-1")
-        instantiateVariables(a1).assertString("r <- r+1-1")
-        instantiateVariables(a1).assertString("r <- r+1-1")
-        instantiateVariables(a1).memoizeAndReduceArithmetic().assertString("r <- r")
+        a1.memoizeAndReduceArithmetic().assertString("r <- r")
     }
 
     @Test
@@ -334,15 +326,15 @@ class KaneTest {
         e0.substituteInitial().reduceArithmetic().assertString("e0=0.27481")
         e1.substituteInitial().reduceArithmetic().assertString("e1=0.02356")
 
-        instantiateVariables(error).substituteInitial().reduceArithmetic().assertString("error=0.29837")
-        val x = instantiateVariables(dw1).substituteInitial()
+        error.substituteInitial().reduceArithmetic().assertString("error=0.29837")
+        val x = dw1.substituteInitial()
         x.reduceArithmetic().assertString("""
             dw1
             ------
             0.35892|0.40867
             0.5113|0.56137
         """.trimIndent())
-        instantiateVariables(dw0).substituteInitial().reduceArithmetic().assertString("""
+        dw0.substituteInitial().reduceArithmetic().assertString("""
             dw0
             ------
             0.14978|0.19956
@@ -389,14 +381,14 @@ class KaneTest {
         e0.substituteInitial().reduceArithmetic().assertString("e0=0.27481")
         e1.substituteInitial().reduceArithmetic().assertString("e1=0.02356")
 
-        instantiateVariables(error).substituteInitial().reduceArithmetic().assertString("error=0.29837")
-        instantiateVariables(dw1).substituteInitial().reduceArithmetic().assertString("""
+        error.substituteInitial().reduceArithmetic().assertString("error=0.29837")
+        dw1.substituteInitial().reduceArithmetic().assertString("""
             dw1
             ------
             0.35892|0.40867
             0.5113|0.56137
         """.trimIndent())
-        instantiateVariables(dw0).substituteInitial().reduceArithmetic().assertString("""
+        dw0.substituteInitial().reduceArithmetic().assertString("""
             dw0
             ------
             0.14978|0.19956
@@ -811,7 +803,7 @@ class KaneTest {
         val a by matrixVariable<Double>(1,3)
         val b by matrixVariable<Double>(3,2)
         val s by summation(a) / b
-        instantiateVariables(s[0,0]).assertString("(a[0,0]+a[0,1]+a[0,2])/b[0,0]")
+        s[0,0].assertString("(a[0,0]+a[0,1]+a[0,2])/b[0,0]")
     }
 
     @Test
@@ -823,15 +815,15 @@ class KaneTest {
         val p by pow(m, 2.0)
         p.assertString("p=pow(m,2)")
         val pe by p[1,2]
-        instantiateVariables(pe).assertString("pe=m[1,2]²")
-        instantiateVariables(p[1,2]).assertString("m[1,2]²")
+        pe.assertString("pe=m[1,2]²")
+        p[1,2].assertString("m[1,2]²")
         val column by matrixVariable<Double>(1,3)
         val s by 1.0 stack column
         s.assertString("s=[1] stack column")
-        instantiateVariables(s[0,0]).assertString("1")
-        instantiateVariables(s[0,1]).assertString("column[0,0]")
+        s[0,0].assertString("1")
+        s[0,1].assertString("column[0,0]")
         val a1 by s[0,0]
-        instantiateVariables(a1).assertString("a1=1")
+        a1.assertString("a1=1")
     }
 
     @Test
@@ -1017,19 +1009,6 @@ class KaneTest {
     }
 
     @Test
-    fun `test expand matrix elements case 1741878727`() {
-        val learningRate = 0.1
-        val input by matrixVariable<Double>(1, 2)
-        val w0 by matrixVariable<Double>(input.rows + 1, 2)
-        val h1 by logit(w0 cross (input stack 1.0))
-        val w1 by matrixVariable<Double>(w0.rows + 1, 1)
-        val output by logit(w1 cross (h1 stack 1.0))
-        val target by matrixVariable<Double>(output.columns, output.rows)
-        val error by summation(learningRate * pow(target - output, 2.0))
-        instantiateVariables(error)
-    }
-
-    @Test
     fun `test differentiate case 774036348`() {
         val learningRate = 0.1
         val input by matrixVariable<Double>(1, 2)
@@ -1063,19 +1042,6 @@ class KaneTest {
             assert(false) { "${expr.type}"}
         }
 
-        try {
-            instantiateVariables(expr)
-        } catch (e : Exception) {
-            val sb = StringBuilder()
-            expr.renderStructure()
-            sb.append("@Test\n")
-            sb.append("fun `test instantiate variables case ${structure.hashCode().absoluteValue}`() {\n")
-            sb.append("    $structure\n")
-            sb.append("    instantiateVariables($id).assertString(\"\")\n")
-            sb.append("}\n")
-            println(sb)
-            throw e
-        }
         try {
             differentiate(expr)
         } catch (e : Exception) {

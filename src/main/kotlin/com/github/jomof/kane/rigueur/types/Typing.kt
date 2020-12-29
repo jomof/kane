@@ -105,6 +105,22 @@ val StringAlgebraicType = object : AlgebraicType<String>(String::class.java) {
     override fun fromDouble(double : Double) = "$double"
 }
 
+val IntAlgebraicType = object : AlgebraicType<Int>(Int::class.java) {
+    override val simpleName = "int"
+    override val zero = 0
+    override fun unary(op : UnaryOp, value : Int) = when(op) {
+        else -> error("$op")
+    }
+    override fun binary(op: BinaryOp, left: Int, right: Int) = when(op) {
+        else -> error("$op")
+    }
+    override fun compare(left: Int, right: Int) = left.compareTo(right)
+    override fun allocArray(size: Int, init: (Int) -> Int) = Array(size, init)
+    override fun allocNullableArray(size: Int, init: (Int) -> Int?) = Array(size, init)
+    override fun render(value: Any) = value.toString()
+    override fun fromDouble(double : Double) = double.toInt()
+}
+
 val <E:Any> Class<E>.algebraicType : AlgebraicType<E> get() = when(this) {
     Double::class.java,
     java.lang.Double::class.java -> DoubleAlgebraicType
@@ -112,6 +128,8 @@ val <E:Any> Class<E>.algebraicType : AlgebraicType<E> get() = when(this) {
     java.lang.Float::class.java -> FloatAlgebraicType
     String::class.java,
     java.lang.String::class.java -> StringAlgebraicType
+    Int::class.java,
+    java.lang.Integer::class.java -> IntAlgebraicType
     else ->
         error("$this")
 } as AlgebraicType<E>
