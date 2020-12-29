@@ -2,6 +2,7 @@
 package com.github.jomof.kane.rigueur
 
 import org.junit.Test
+import java.io.File
 import java.util.*
 import kotlin.math.abs
 import kotlin.math.absoluteValue
@@ -18,7 +19,7 @@ class KaneTest {
 
     private fun Double.near(expected:Double) : Boolean {
         val diff = (this - expected).pow(2.0)
-        return diff < 0.00001
+        return diff < 0.000001
     }
 
     private fun Double.assertNear(expected:Double) {
@@ -69,20 +70,20 @@ class KaneTest {
         """.trimIndent())
     }
 
-    @Test
-    fun mult() {
-        val m1 by matrixOf(10, 1) { constant(it.column + 0.0) }
-        val m2 by matrixOf(1, 10) { constant(10.0 - it.row ) }
-        val m3 by m1 cross m2
-        m3.assertString("m3=165")
-    }
+//    @Test
+//    fun mult() {
+//        val m1 by matrixOf(10, 1) { it.column + 0.0 }
+//        val m2 by matrixOf(1, 10) { 10.0 - it.row }
+//        val m3 by m1 cross m2
+//        m3.assertString("m3=[165]")
+//    }
 
     @Test
     fun `multiplication bug`() {
         val input by matrixVariable<Double>(1, 1)
         val w0 by matrixVariable<Double>(input.rows + 1, 1)
         val h1 by logit(w0 cross (input stack 1.0))
-        h1.toDataMatrix().assertString("h1=logit(w0[0,0]*input[0,0]+w0[1,0])")
+        h1.toDataMatrix().assertString("h1=[logit(w0[0,0]*input[0,0]+w0[1,0])]")
     }
 
     @Test
@@ -520,81 +521,209 @@ class KaneTest {
         dfx.assertString("dfx=-24*x⁻⁷")
     }
 
-    //@Test
-    fun `autoencode one hot`() {
-        val random = Random(3)
-        val learningRate by variable(0.00001)
-        val totalbits = 4
-        val inputs = totalbits
-        val count0 = 3
-        val count1 = 1
-        val count2 = 3
-        val outputs = totalbits
-        val input by matrixVariable(1, inputs) { 0.0 }
-        val w0 by matrixVariable(input.rows, count0) { abs(random.nextGaussian()) / 3.0 }
+    @Test
+    fun `bits in matrixes`() {
+        bitsToArray<Double>(3, 8).toList().assertString("[1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]")
+        bitsToArray<Double>(3, 8).toRowMatrix().assertString("1|1|0|0|0|0|0|0")
+        bitsToArray<Double>(3, 8).toColumnMatrix().assertString("[1|1|0|0|0|0|0|0]ᵀ")
+        bitsToArray(3, 8, -1.0, 1.0).toList().assertString("[1.0, 1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]")
+    }
 
-        val h1 by logit(w0 cross input)
-        val w1 by matrixVariable(h1.rows, count1) { abs(random.nextGaussian()) / 3.0 }
+    @Test
+    fun `check toFunc`() {
+        // https://www.desmos.com/calculator/fdrpen56zk
+        val range = 1.0
+        val steepnessNearZero = 1.0
+        val limitSlope = 0.01
+        fun squarsh(x : MatrixExpr<Double>) = (2.0 * range / (1.0 + exp(-steepnessNearZero*x)) - range) + x*limitSlope
+        fun squarsh(x : ScalarExpr<Double>) = (2.0 * range / (1.0 + exp(-steepnessNearZero*x)) - range) + x*limitSlope
+        val x by variable(100.0)
+        val y by squarsh(x)
+        val dy by (differentiate(d(y)/d(x)))
+        y.assertString("y=((2/e⁻ˣ+1)-1)+0.01*x")
+        dy.assertString("dy=2*e⁻ˣ*(e⁻ˣ+1)⁻²+0.01")
+        val fx = y.toFunc(x)
+        val fxp = dy.toFunc(x)
+        fx(0.0).assertString("0.0")
+        fx(1.0).assertString("0.4721171572600098")
+        fx(-1.0).assertString("-0.4721171572600098")
+
+        fxp(0.0).assertString("0.51")
+        fxp(1.0).assertString("0.40322386648296377")
+        fxp(1000.0).assertString("0.01") // Should approach limitSlope
+        fxp(-1.0).assertString("0.40322386648296377")
+    }
+
+    @Test
+    fun `autoencode gaussian random into 8 bits`() {
+        val type = DoubleAlgebraicType
+        val random = Random(3)
+        val learningRate = 0.1
+        val batchSize = 100.0
+        val inputs = 1
+        val count0 = 1
+        val count1 = 8
+        val count2 = 1
+        val outputs = 1
+        val input by matrixVariable(1, inputs, type) { 0.0001 }
+        val w0 by matrixVariable(input.rows, count0, type) { random.nextGaussian() }
+
+        val h1 by w0 cross input
+        val w1 by matrixVariable(h1.rows, count1, type) { random.nextGaussian() }
 
         val h2 by logit(w1 cross h1)
-        val w2 by matrixVariable(h2.rows, count2) { abs(random.nextGaussian()) / 3.0 }
+        val w2 by matrixVariable(h2.rows, count2, type) { random.nextGaussian() }
 
-        val h3 by logit(w2 cross h2)
-        val w3 by matrixVariable(h3.rows, outputs) { abs(random.nextGaussian()) / 3.0 }
+        val h3 by w2 cross h2
+        val w3 by matrixVariable(h3.rows, outputs, type) { random.nextGaussian() }
 
-        val output by softmax(w3 cross h3)
-        val target by matrixVariable(output.columns, output.rows) { 0.0 }
-        val error by summation(0.5 * pow(target - output, 2.0))
-        val dw0 by w0 - learningRate * differentiate(d(error) / d(w0))
-        val dw1 by w1 - learningRate * differentiate(d(error) / d(w1))
-        val dw2 by w2 - learningRate * differentiate(d(error) / d(w2))
-        val dw3 by w3 - learningRate * differentiate(d(error) / d(w3))
-        val aw0 by assign(dw0 to w0)
-        val aw1 by assign(dw1 to w1)
-        val aw2 by assign(dw2 to w2)
-        val aw3 by assign(dw3 to w3)
-        val tab = tableauOf(output,error,h1,h2,h3,aw0,aw1,aw2,aw3)
+        val output by w3 cross h3
+
+        val target by matrixVariable(output.columns, output.rows, type) { 0.0 }
+        val error by summation(type.half * pow(target - output, type.two))
+        val sumdw0 by matrixVariable(w0.columns,w0.rows,type) { 0.0 }
+        val sumdw1 by matrixVariable(w1.columns,w1.rows,type) { 0.0 }
+        val sumdw2 by matrixVariable(w2.columns,w2.rows,type) { 0.0 }
+        val sumdw3 by matrixVariable(w3.columns,w3.rows,type) { 0.0 }
+        val dw0 by sumdw0 + type.fromDouble(learningRate/batchSize) * differentiate(d(error) / d(w0))
+        val dw1 by sumdw1 + type.fromDouble(learningRate/batchSize) * differentiate(d(error) / d(w1))
+        val dw2 by sumdw2 + type.fromDouble(learningRate/batchSize) * differentiate(d(error) / d(w2))
+        val dw3 by sumdw3 + type.fromDouble(learningRate/batchSize) * differentiate(d(error) / d(w3))
+        val adw0 by assign(dw0 to sumdw0)
+        val adw1 by assign(dw1 to sumdw1)
+        val adw2 by assign(dw2 to sumdw2)
+        val adw3 by assign(dw3 to sumdw3)
+        val tab = tableauOf(output,error,dw0,dw1,dw2,dw3,adw0,adw1,adw2,adw3)
         val layout = tab.linearize()
         println(layout)
         val space = layout.allocateSpace()
         val targetRef = layout.shape(target).ref(space)
-        val errorSlot = layout.shape(error).ref(space)
+        val errorRef = layout.shape(error).ref(space)
         val outputRef = layout.shape(output).ref(space)
         val inputRef = layout.shape(input).ref(space)
-        val w2Ref = layout.shape(w2).ref(space)
-        val h1Ref = layout.shape(h1).ref(space)
-        val h2Ref = layout.shape(h2).ref(space)
-        val h3Ref = layout.shape(h3).ref(space)
-        val lr = layout.shape(learningRate).ref(space)
+        val w0ref = layout.shape(w0).ref(space)
+        val w1ref = layout.shape(w1).ref(space)
+        val w2ref = layout.shape(w2).ref(space)
+        val w3ref = layout.shape(w3).ref(space)
+        val sumdw0ref = layout.shape(sumdw0).ref(space)
+        val sumdw1ref = layout.shape(sumdw1).ref(space)
+        val sumdw2ref = layout.shape(sumdw2).ref(space)
+        val sumdw3ref = layout.shape(sumdw3).ref(space)
 
-        fun train(bit : Int) {
-            inputRef.set(0.0)
-            inputRef[0, bit] = 1.0
-            targetRef.set(0.0)
-            targetRef[0, bit] = 1.0
+        fun train() : Any {
+            val roll = abs(random.nextInt(2000))
+            val target = if(roll < 1)
+                space[abs(random.nextInt()) % space.size]
+            else
+                type.fromDouble(random.nextGaussian())
+            inputRef.set(target)
+            targetRef.set(target)
             layout.eval(space)
+            return target
         }
 
-        var broke = false
-        var lastError = 10.00
-        repeat(10000000) {
-            train(abs(random.nextInt()) % inputs)
-            if (it % 10000 == 9000) {
-                var error = 0.0
-                for(bit in 0 until totalbits) {
-                    train(bit)
-                    error += errorSlot.value
-                    println("$bit was $h2Ref => $outputRef")
-                }
-
-                println("error = $error")
-                if (error > lastError) {
-                    lr.set(lr.value * 0.95)
-                    println("Dropped learning rate to $lr")
-                }
-                lastError = error
+        var lastError = 1000.0
+        repeat(100) {
+            sumdw0ref.zero()
+            sumdw1ref.zero()
+            sumdw2ref.zero()
+            sumdw3ref.zero()
+            var totalError = 0.0
+            repeat(batchSize.toInt()) {
+                train()
+                totalError += errorRef.value
             }
+            totalError /= batchSize
+            println("error=$totalError")
+
+            w0ref -= sumdw0ref
+            w1ref -= sumdw1ref
+            w2ref -= sumdw2ref
+            w3ref -= sumdw3ref
+
+            if (totalError < lastError) {
+
+                val outlier = space.indices.maxBy { index -> space[index] }
+                val file = File("/Users/jomof/IdeaProjects/KotlinRegression/src/test/kotlin/com/github/jomof/kane/rigueur/distribution.txt")
+
+                val func = layout.toFunc(space, h2, output)
+                val result = mutableListOf<Pair<Double,String>>()
+                (0 until 256).map { value ->
+                    val bits = bitsToArray(value, 8, type).toColumnMatrix()
+                    val predicted = func(bits)[0,0]
+
+                    result.add(predicted to "$bits")
+                }
+                if (file.isFile) file.delete()
+                file.appendText("$totalError\n")
+                result.sortedBy { (predicted,_) -> predicted}.forEach { (predicted,bits) ->
+                    file.appendText("$predicted = $bits\n")
+                }
+                lastError = totalError
+            }
+
+            if (it % 100 == 90) {
+                repeat(4) {
+                    val train = train()
+                    println("$train -> $outputRef")
+                }
+
+                if (totalError.near(0.0)) return
+            }
+
         }
+    }
+
+    @Test
+    fun `quarter precision`() {
+        ieeeBasis(0).assertString("0.125")
+        ieeeBasis(1).assertString("0.125")
+        ieeeBasis(7).assertString("0.125")
+        ieeeBasis(8).assertString("0.125")
+        ieeeBasis(16).assertString("0.25")
+        ieeeBasis(24).assertString("0.5")
+        ieeeBasis(128+24).assertString("0.5")
+        ieeeSignificand(0).assertString("0")
+        ieeeSignificand(7).assertString("7")
+        ieeeSignificand(8).assertString("0")
+        ieeeExponent(9).assertString("1")
+        ieeeExponent(16).assertString("2")
+        ieeeExponent(0).assertString("0")
+        ieeeExponent(7).assertString("0")
+        ieeeExponent(8).assertString("1")
+        ieeeExponent(9).assertString("1")
+        ieeeExponent(16).assertString("2")
+        ieeeSign(0).assertString("0")
+        ieeeSign(1).assertString("0")
+        ieeeSign(127).assertString("0")
+        ieeeSign(128).assertString("1")
+        ieeeSign(255).assertString("1")
+        ieeeBasis(23).assertString("0.25")
+        ieeeSignificand(23).assertString("7")
+        ieeeExponent(23).assertString("2")
+        ieeeStart(23).assertString("2.0")
+        ieeeAdd(23).assertString("1.75")
+
+
+        ieee(23).assertString("3.75")
+        ieee(24).assertString("4.0")
+        ieee(25).assertString("4.5")
+        ieee(8).assertString("1.0")
+        ieee(16).assertString("2.0")
+        ieee(17).assertString("2.25")
+        ieee(0).assertString("0.0")
+        ieee(1).assertString("0.125")
+
+        ieee(255-8).assertString("-15360.0")
+
+        ieeeExponent(15 * 8).assertString("15")
+        ieeeSignificand(15 * 8).assertString("0")
+        ieee(15 * 8).assertString("Infinity")
+        ieee(128 + 15 * 8).assertString("-Infinity")
+        ieee(15 * 8 + 1).assertString("NaN")
+        ieee(128 + 15 * 8 + 1).assertString("NaN")
+
+        doubleToByteIndex(0.0).assertString("-128")
     }
 
     @Test
@@ -698,7 +827,7 @@ class KaneTest {
         instantiateVariables(p[1,2]).assertString("m[1,2]²")
         val column by matrixVariable<Double>(1,3)
         val s by 1.0 stack column
-        s.assertString("s=1 stack column")
+        s.assertString("s=[1] stack column")
         instantiateVariables(s[0,0]).assertString("1")
         instantiateVariables(s[0,1]).assertString("column[0,0]")
         val a1 by s[0,0]
@@ -732,14 +861,6 @@ class KaneTest {
         check(PLUS, TIMES, childIsRight = true, expect = false)
         check(MINUS, TIMES, childIsRight = false, expect = false)
         check(MINUS, TIMES, childIsRight = true, expect = false)
-
-//
-//        check(POW, MINUS, childIsRight = false, expect = true)
-//        check(POW, MINUS, childIsRight = true, expect = false)
-//        check(POW, TIMES, childIsRight = false, expect = true)
-//        check(POW, TIMES, childIsRight = true, expect = false)
-//        check(POW, DIV, childIsRight = false, expect = true)
-//        check(POW, DIV, childIsRight = true, expect = false)
     }
 
     @Test

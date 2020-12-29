@@ -122,11 +122,19 @@ class LinearModel<E:Any> {
     fun setValue(expr : ScalarExpr<E>, slot : Slot<E>) { map[expr] = slot }
     fun shape(expr : NamedScalarExpr<E>) = EmbeddedScalarShape(namedScalars.getValue(expr.name).slot)
     fun shape(expr : NamedMatrixVariable<E>) = namedMatrixShapes.getValue(expr.name)
-    fun shape(expr : NamedMatrix<E>) = namedMatrixShapes.getValue(expr.name)
+    fun shape(expr : NamedMatrixExpr<E>) = namedMatrixShapes.getValue(expr.name)
 
     fun eval(space : Array<E>) {
         assignments.forEach { (output, expr) ->
             space[output] = expr.eval(space)
+        }
+    }
+
+    fun eval(space : Array<E>, protect : MatrixShape<E>) {
+        assignments.forEach { (output, expr) ->
+            if(!protect.owns(output)) {
+                space[output] = expr.eval(space)
+            }
         }
     }
 
@@ -522,5 +530,31 @@ fun <E:Any> Expr<E>.linearize() : LinearModel<E> {
         }
         stripped.linearizeExpr(model)
         return model
+    }
+}
+
+fun <E:Any> NamedScalarExpr<E>.toFunc(v1 : NamedScalarVariable<E>) : (E) -> E {
+    val model = linearize()
+    val space = model.allocateSpace()
+    val v1ref = model.shape(v1).ref(space)
+    val thisRef = model.shape(this).ref(space)
+
+    return { p1 ->
+        v1ref.set(p1)
+        model.eval(space)
+        thisRef.value
+    }
+}
+
+fun <E:Any> LinearModel<E>.toFunc(space : Array<E>, v1 : NamedMatrixExpr<E>, out :  NamedMatrixExpr<E>) : (Matrix<E>) -> Matrix<E> {
+    val clone = space.clone()
+    val v1shape = shape(v1)
+    val v1ref = v1shape.ref(clone)
+    val outRef = shape(out).ref(clone)
+
+    return { p1 ->
+        v1ref.set(p1)
+        eval(clone, protect = v1shape)
+        outRef
     }
 }
