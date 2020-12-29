@@ -10,7 +10,9 @@ import kotlin.math.sqrt
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 
-interface UntypedExpr
+interface UntypedExpr {
+    //fun map(f : (UntypedExpr) -> UntypedExpr) = this
+}
 interface TypedExpr : UntypedExpr {
     val type : AlgebraicType<*>
 }
@@ -603,9 +605,6 @@ private fun <E:Any> diff(expr : ScalarExpr<E>, variable : ScalarExpr<E>) : Scala
 }
 
 fun <E:Any> differentiate(expr : Expr<E>) : Expr<E> {
-    fun ScalarExpr<E>.self() = differentiate(this as Expr<E>) as ScalarExpr<E>
-    fun MatrixExpr<E>.self() = differentiate(this as Expr<E>) as MatrixExpr<E>
-    fun NamedExpr<E>.self() = differentiate(this as Expr<E>) as NamedExpr<E>
     fun ScalarExpr<E>.diffOr() : ScalarExpr<E>? {
         if (this !is BinaryScalar<E>) return null
         if (op != DIV) return null
@@ -626,35 +625,22 @@ fun <E:Any> differentiate(expr : Expr<E>) : Expr<E> {
             diff(left.value, right.value[column, row])
         }
     }
-    return when(expr) {
-        is NamedScalar -> {
-            val diff = expr.scalar.diffOr()
-            if (diff != null) expr.copy(name = "${expr.name}'", scalar = diff)
-            else expr.copy(scalar = expr.scalar.self())
-        }
-        is NamedMatrix -> {
-            val diff = expr.matrix.diffOr()
-            if (diff != null) expr.copy(name = "${expr.name}'", matrix = diff)
-            else expr.copy(matrix = expr.matrix.self())
-        }
-        is UnaryScalar<E> -> expr.copy(value = expr.value.self())
-        is UnaryMatrix<E> -> expr.copy(value = expr.value.self())
-        is UnaryMatrixScalar<E> -> {
-            assert(expr.op != D) {
-                "differentiation should have been handled before this"
+    return expr.replaceExpr {
+        when(it) {
+            is NamedScalar -> {
+                val diff = it.scalar.diffOr()
+                if (diff != null) it.copy(name = "${it.name}'", scalar = diff)
+                else it
             }
-            expr.copy(value = expr.value.self())
+            is NamedMatrix -> {
+                val diff = it.matrix.diffOr()
+                if (diff != null) it.copy(name = "${it.name}'", matrix = diff)
+                else it
+            }
+            is BinaryScalar<E> -> it.diffOr() ?: it
+            is BinaryScalarMatrix<E> -> it.diffOr() ?: it
+            else -> it
         }
-        is ConstantScalar -> expr
-        is VariableExpr -> expr
-        is MatrixVariableElement-> expr
-        is DataMatrix -> expr.copy(elements = expr.elements.map { it.self() })
-        is BinaryMatrixScalar<E> -> expr.copy(left = expr.left.self(), right = expr.right.self())
-        is BinaryScalarMatrix<E> -> expr.diffOr() ?: expr.copy(left = expr.left.self(), right = expr.right.self())
-        is BinaryMatrix<E> -> expr.copy(left = expr.left.self(), right = expr.right.self())
-        is BinaryScalar<E> -> expr.diffOr() ?: expr.copy(left = expr.left.self(), right = expr.right.self())
-        is Tableau<E> -> expr.copy(children = expr.children.map { it.self() })
-        else -> error("${expr.javaClass}")
     }
 }
 
@@ -812,94 +798,21 @@ private class TrackingScope : Closeable {
 fun trackExprs() : Closeable = TrackingScope()
 
 // Substitute variable initial values
-fun <E:Any> Expr<E>.substituteInitial(entryPoint : Boolean = true) : Expr<E> {
-    fun <E:Any> ScalarExpr<E>.self() = (this as Expr<E>).substituteInitial(false) as ScalarExpr<E>
-    fun <E:Any> MatrixExpr<E>.self() = (this as Expr<E>).substituteInitial(false) as MatrixExpr<E>
-    fun <E:Any> NamedExpr<E>.self() = (this as Expr<E>).substituteInitial() as NamedExpr<E>
-    val result = when(this) {
-        is ConstantScalar -> this
-        is NamedScalarVariable -> ConstantScalar(initial, type)
-        is MatrixVariableElement -> ConstantScalar(initial, type)
-        is BinaryScalar -> copy(left = left.self(), right = right.self())
-        is BinaryScalarMatrix -> copy(left = left.self(), right = right.self())
-        is BinaryMatrixScalar -> copy(left = left.self(), right = right.self())
-        is UnaryScalar -> copy(value = value.self())
-        is UnaryMatrix -> copy(value = value.self())
-        is UnaryMatrixScalar -> copy(value = value.self())
-        is NamedScalar -> copy(scalar = scalar.self())
-        is NamedMatrix -> copy(matrix = matrix.self())
-        is DataMatrix -> map { it.self() }
-        is BinaryMatrix -> copy(left = left.self(), right = right.self())
-        is NamedMatrixAssign -> copy(right = right.self())
-        is NamedScalarAssign -> copy(right = right.self())
-        is NamedMatrixVariable -> {
-            val children =  coordinatesOf(columns, rows).map { (column, row) -> ConstantScalar(this[column, row].initial, type) }.toList()
-            val data = DataMatrix(columns, rows, children)
-            if (entryPoint) NamedMatrix(name, data)
-            else data
+fun <E:Any> Expr<E>.substituteInitial() = replaceExpr {
+        with(it) {
+            when (this) {
+                is NamedScalarVariable -> ConstantScalar(initial, type)
+                is MatrixVariableElement -> ConstantScalar(initial, type)
+                is NamedMatrixVariable -> toDataMatrix()
+                else -> this
+            }
         }
-        is Tableau -> copy(children = children.map { it.self() })
-        else -> error("$javaClass")
     }
-    return result
-}
 
 fun <E:Any> ScalarExpr<E>.substituteInitial() = (this as Expr<E>).substituteInitial() as ScalarExpr<E>
 fun <E:Any> MatrixExpr<E>.substituteInitial() = (this as Expr<E>).substituteInitial() as MatrixExpr<E>
 
 // Reduce arithmetic
-private fun <E:Any> Expr<E>.humanize(memo : MutableMap<Expr<E>,Expr<E>> = mutableMapOf()) : Expr<E> {
-    if (memo.size > 10000) {
-        "hello"
-    }
-    if (memo.contains(this)) return memo.getValue(this)
-    fun ScalarExpr<E>.self() = humanize(memo) as ScalarExpr<E>
-    fun MatrixExpr<E>.self() = humanize(memo) as MatrixExpr<E>
-    val result = when(this) {
-        is NamedScalar -> copy(scalar = scalar.self())
-        is ConstantScalar -> this
-        is NamedScalarVariable -> this
-        is MatrixVariableElement -> this
-        is NamedMatrixVariable -> this
-        is NamedScalarAssign -> this
-        is DataMatrix -> map { it.self() }
-        is NamedMatrixAssign -> copy(right = right.self())
-        is NamedMatrix -> copy(matrix = matrix.self())
-        is UnaryScalar -> copy(value = value.self())
-        is UnaryMatrix -> copy(value = value.self())
-        is UnaryMatrixScalar -> copy(value = value.self())
-        is BinaryMatrix -> copy(left = left.self(), right = right.self())
-        is BinaryMatrixScalar -> copy(left = left.self(), right = right.self())
-        is BinaryScalarMatrix -> copy(left = left.self(), right = right.self())
-        is Tableau -> copy(children = children.map { it })
-        is BinaryScalar -> {
-            val left = left.self()
-            val right = right.self()
-            val leftNegate = left.tryFindNegation()
-            val rightNegate = right.tryFindNegation()
-            val leftConstant = left.tryFindConstant()
-            val rightConstant = right.tryFindConstant()
-            when {
-                this.left != left && this.right != right -> copy(left = left, right = right).self()
-                op == TIMES && leftNegate != null && rightNegate != null -> copy(left = leftNegate, right = rightNegate).self()
-                op == DIV && leftNegate != null && rightNegate != null -> copy(left = leftNegate, right = rightNegate).self()
-                op == TIMES && leftNegate != null -> (-copy(left = leftNegate, right = right)).self()
-                op == TIMES && rightNegate != null -> (-copy(left = left, right = rightNegate)).self()
-                op == TIMES && leftNegate != null -> (-copy(left = leftNegate, right = right)).self()
-                op == TIMES && rightConstant != null && type.lt(rightConstant, type.zero) ->
-                    (-copy(left = left, right = ConstantScalar(type.negate(rightConstant), type))).self()
-                op == TIMES && leftConstant != null && type.lt(leftConstant, type.zero) ->
-                    (-copy(left = ConstantScalar(type.negate(leftConstant), type), right = right)).self()
-                op == PLUS && rightNegate != null -> copy(op = MINUS, left, rightNegate)
-                else -> copy(left = left, right = right)
-            }
-        }
-        else -> error("$javaClass")
-    }
-    memo[this] = result
-    return result
-}
-
 fun <E:Any> Expr<E>.memoizeAndReduceArithmetic(
     memo : MutableMap<Expr<E>,Expr<E>> = mutableMapOf(),
     selfMemo : MutableMap<Expr<E>,Expr<E>> = mutableMapOf()) : Expr<E> {
@@ -1027,10 +940,10 @@ fun <E:Any> Expr<E>.memoizeAndReduceArithmetic(
     return result
 }
 
-fun <E:Any> NamedExpr<E>.reduceArithmetic() = (this as Expr<E>).memoizeAndReduceArithmetic().humanize() as NamedExpr<E>
-fun <E:Any> ScalarExpr<E>.reduceArithmetic() = (this as Expr<E>).memoizeAndReduceArithmetic().humanize() as ScalarExpr<E>
-fun <E:Any> MatrixExpr<E>.reduceArithmetic() = (this as Expr<E>).memoizeAndReduceArithmetic().humanize() as MatrixExpr<E>
-fun <E:Any> Tableau<E>.reduceArithmetic() = (this as Expr<E>).memoizeAndReduceArithmetic().humanize() as Tableau<E>
+fun <E:Any> NamedExpr<E>.reduceArithmetic() = (this as Expr<E>).memoizeAndReduceArithmetic() as NamedExpr<E>
+fun <E:Any> ScalarExpr<E>.reduceArithmetic() = (this as Expr<E>).memoizeAndReduceArithmetic() as ScalarExpr<E>
+fun <E:Any> MatrixExpr<E>.reduceArithmetic() = (this as Expr<E>).memoizeAndReduceArithmetic() as MatrixExpr<E>
+fun <E:Any> Tableau<E>.reduceArithmetic() = (this as Expr<E>).memoizeAndReduceArithmetic() as Tableau<E>
 
 private fun <E:Any> Expr<E>.affineName(depth : Int = 2) : String? {
     if (depth == 0) return null
@@ -1146,7 +1059,6 @@ fun tryConvertToSuperscript(value : String) : String? {
     }
     return sb.toString()
 }
-
 
 fun UntypedExpr.render(entryPoint : Boolean = true) : String {
     val parent = this
