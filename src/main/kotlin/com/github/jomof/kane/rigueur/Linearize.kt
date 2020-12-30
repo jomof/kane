@@ -331,7 +331,8 @@ private fun <E:Any> Expr<E>.claimMatrixVariables(
                 }
             }
         }
-        else -> error("$javaClass")
+        else ->
+            error("$javaClass")
     }
 }
 
@@ -379,7 +380,7 @@ private fun <E:Any> Expr<E>.gatherLeafExpressions() : List<ScalarExpr<E>> {
         else -> error("$javaClass")
     }
 
-    return fold(listOf()) { prior, current ->
+    return foldTopDown(listOf()) { prior, current ->
         prior + when {
             current is UnaryScalar && current.value.terminal() ->
                 listOf(current)
@@ -392,7 +393,7 @@ private fun <E:Any> Expr<E>.gatherLeafExpressions() : List<ScalarExpr<E>> {
 
 
 private fun <E:Any> Expr<E>.gatherNamedExprs() =
-    fold(mutableSetOf<NamedExpr<E>>()) { prior, expr ->
+    foldTopDown(mutableSetOf<NamedExpr<E>>()) { prior, expr ->
         if (expr is NamedExpr) prior += expr
         prior
     }

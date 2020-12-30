@@ -1,37 +1,60 @@
 @file:Suppress("UNCHECKED_CAST")
 package com.github.jomof.kane.rigueur
 
-private fun Any.unsafeReplace(type : AlgebraicType<*>?, f : ExprFunction<*>) : Any {
-    with(f(this)) {
-        val self = f.wrap { it.unsafeReplace(type, f) }
-        return when (this) {
-            is Slot<*>,
-            is NamedMatrixVariable<*>,
-            is MatrixVariableElement<*>,
-            is ConstantScalar<*>,
-            is AbsoluteCellReferenceExpr<*>,
-            is NamedScalarVariable<*> -> this
-            is CoerceScalar<*> -> when(value) {
-                is TypedExpr -> mapChildren(self)
-                else -> error("${value.javaClass}")
-            }
-            is ParentExpr<*> ->
-                mapChildren(self)
-            else -> error("$javaClass")
-        }
+import com.github.jomof.kane.rigueur.Direction.BOTTOM_UP
+import com.github.jomof.kane.rigueur.Direction.TOP_DOWN
+
+private fun Any.unsafeReplace(direction : Direction, type : AlgebraicType<out Any>, f : ExprFunction<out Any>) : Any {
+    val self = f.wrap { it.unsafeReplace(direction, type, f) }
+    return when(direction) {
+        TOP_DOWN -> f(this).dispatchExpr(self)
+        BOTTOM_UP -> f(dispatchExpr(self))
     }
 }
 
-fun TypedExpr.replaceTypedExpr(f: (TypedExpr) -> TypedExpr) =
-    unsafeReplace(type, ExprFunction<Any>(type) { f(it as TypedExpr) }) as TypedExpr
-fun <E:Any> Expr<E>.replaceExpr(f: (Expr<E>) -> Expr<E>) =
-    unsafeReplace(type, ExprFunction<E>(type) { f(it as Expr<E>) }) as Expr<E>
-fun <E:Any> ScalarExpr<E>.replace(f: (ScalarExpr<E>) -> ScalarExpr<E>) =
-    unsafeReplace(type, ExprFunction<E>(type) { f(it as ScalarExpr<E>) }) as ScalarExpr<E>
+private fun Any.dispatchExpr(self: ExprFunction<out Any>): Any {
+    return when (this) {
+        is Slot<*>,
+        is NamedMatrixVariable<*>,
+        is MatrixVariableElement<*>,
+        is ConstantScalar<*>,
+        is AbsoluteCellReferenceExpr<*>,
+        is NamedScalarVariable<*> -> this
+        is CoerceScalar<*> -> when (value) {
+            is TypedExpr -> mapChildren(self)
+            else -> error("${value.javaClass}")
+        }
+        is ParentExpr<*> -> mapChildren(self)
+        else -> error("$javaClass")
+    }
+}
 
-fun <S:Any, E:Any> Expr<E>.fold(state: S, f: (state : S, expr : Expr<E>) -> S) : S {
+enum class Direction { TOP_DOWN, BOTTOM_UP }
+
+fun TypedExpr.replaceTypedExprTopDown(f: (TypedExpr) -> TypedExpr) =
+    unsafeReplace(TOP_DOWN, type, ExprFunction(type) { f(it as TypedExpr) }) as TypedExpr
+fun <E:Any> Expr<E>.replaceExprTopDown(f: (Expr<E>) -> Expr<E>) =
+    unsafeReplace(TOP_DOWN, type, ExprFunction<E>(type) { f(it as Expr<E>) }) as Expr<E>
+fun <E:Any> ScalarExpr<E>.replaceTopDown(f: (ScalarExpr<E>) -> ScalarExpr<E>) =
+    unsafeReplace(TOP_DOWN, type, ExprFunction<E>(type) { f(it as ScalarExpr<E>) }) as ScalarExpr<E>
+
+fun TypedExpr.replaceTypedExprBottomUp(f: (TypedExpr) -> TypedExpr) =
+    unsafeReplace(BOTTOM_UP, type, ExprFunction<Any>(type) { f(it as TypedExpr) }) as TypedExpr
+fun <E:Any> Expr<E>.replaceExprBottomUp(f: (Expr<E>) -> Expr<E>) =
+    unsafeReplace(BOTTOM_UP, type, ExprFunction<E>(type) { f(it as Expr<E>) }) as Expr<E>
+fun <E:Any> ScalarExpr<E>.replaceBottomUp(f: (ScalarExpr<E>) -> ScalarExpr<E>) =
+    unsafeReplace(BOTTOM_UP, type, ExprFunction<E>(type) { f(it as ScalarExpr<E>) }) as ScalarExpr<E>
+
+fun TypedExpr.replaceTyped(direction : Direction = BOTTOM_UP, f: (TypedExpr) -> TypedExpr) =
+    unsafeReplace(direction, type, ExprFunction<Any>(type) { f(it as TypedExpr) }) as TypedExpr
+fun <E:Any> Expr<E>.replaceExpr(direction : Direction = BOTTOM_UP, f: (Expr<E>) -> Expr<E>) =
+    unsafeReplace(direction, type, ExprFunction<E>(type) { f(it as Expr<E>) }) as Expr<E>
+fun <E:Any> ScalarExpr<E>.replace(direction : Direction = BOTTOM_UP, f: (ScalarExpr<E>) -> ScalarExpr<E>) =
+    unsafeReplace(direction, type, ExprFunction<E>(type) { f(it as ScalarExpr<E>) }) as ScalarExpr<E>
+
+fun <S:Any, E:Any> Expr<E>.foldTopDown(state: S, f: (state : S, expr : Expr<E>) -> S) : S {
     var prior = state
-    unsafeReplace(type, ExprFunction<E>(type) {
+    unsafeReplace(TOP_DOWN, type, ExprFunction<E>(type) {
         prior = f(prior, it as Expr<E>)
         it // This defeats replacement so this whole operation becomes a visit instead
     })

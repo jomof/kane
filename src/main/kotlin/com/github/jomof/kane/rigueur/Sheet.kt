@@ -46,7 +46,7 @@ data class Sheet(
     fun eval() : Sheet {
         val cells = cells.toMutableMap()
         for((cell, expr) in cells) {
-            val replaced = expr.replaceTypedExpr {
+            val replaced = expr.replaceTypedExprTopDown {
                 when {
                     it is CellReferenceExpr<*> -> cells["$it"] ?: it
                     else -> it
@@ -58,6 +58,49 @@ data class Sheet(
             cells[cell] = (expr as Expr<*>).memoizeAndReduceArithmetic()
         }
         return copy(cells = cells)
+    }
+
+    fun minimize(target : String, vararg variables : String) : Sheet {
+        val expressions = mutableMapOf<String, NamedScalarExpr<Double>>()
+
+        // Turn each 'variable' into a NamedScalarVariable
+        variables.forEach { cell ->
+            when(val expr = (cells.getValue(cell) as Expr<Double>).memoizeAndReduceArithmetic()) {
+                is ConstantScalar -> expressions[cell] = NamedScalarVariable(cell, expr.value)
+                else -> error("$cell ($expr) is not a constant")
+            }
+        }
+
+        // Follow all expressions from 'target'
+        val remaining = mutableSetOf(target)
+        while(remaining.isNotEmpty()) {
+            val next = remaining.first()
+            remaining -= next
+            if (expressions.containsKey(next)) continue
+            val expr = cells.getValue(next) as ScalarExpr<Double>
+
+            val replaced = expr.replace {
+                when(it) {
+                    is CoerceScalar -> {
+                        val result = it.value as ScalarExpr<Double>
+                        result
+                    }
+                    is AbsoluteCellReferenceExpr -> {
+                        val ref = "$it"
+                        remaining += ref
+                        val result = expressions.getValue(ref)
+                        result
+                    }
+                    else -> it
+                }
+            }
+            expressions[next] = NamedScalar(next, replaced)
+        }
+
+        val tab = Tableau(expressions.values.toList()).linearize()
+        println(tab)
+
+        return this
     }
 
     private fun render() : String {
@@ -162,7 +205,7 @@ data class Sheet(
 // Coercion
 private fun coerceToTypedExpr(cell : String, value : Any) : TypedExpr {
     return when (value) {
-        is TypedExpr -> value.replaceTypedExpr {
+        is TypedExpr -> value.replaceTypedExprTopDown {
             when(it) {
                 is CoerceScalar<*> -> when(it.value) {
                     is RelativeCellReferenceExpr ->

@@ -631,7 +631,7 @@ fun <E:Any> differentiate(expr : Expr<E>) : Expr<E> {
             diff(left.value, right.value[column, row])
         }
     }
-    return expr.replaceExpr {
+    return expr.replaceExprTopDown {
         when(it) {
             is NamedScalar -> {
                 val diff = it.scalar.diffOr()
@@ -804,7 +804,7 @@ private class TrackingScope : Closeable {
 fun trackExprs() : Closeable = TrackingScope()
 
 // Substitute variable initial values
-fun <E:Any> Expr<E>.substituteInitial() = replaceExpr {
+fun <E:Any> Expr<E>.substituteInitial() = replaceExprTopDown {
         with(it) {
             when (this) {
                 is NamedScalarVariable -> ConstantScalar(initial, type)

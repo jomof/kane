@@ -67,7 +67,7 @@ class SheetTest {
             "A2" to pow(ABOVE, 2.0) + 1.0
         )
         println("$sheet\n")
-        println(sheet.eval())
+        println(sheet.minimize("A2", "A1"))
     }
 
     @Test
@@ -75,7 +75,7 @@ class SheetTest {
         val v by variable(0.0)
         val expr by v + v
         val result = expr
-            .replace {
+            .replaceBottomUp {
                 when(it) {
                     is BinaryScalar -> it.left - it.right
                     else -> it
