@@ -1,11 +1,11 @@
 package com.github.jomof.kane.rigueur
 
-inline fun <reified E:Any> bitsToArray(
+inline fun <reified E:Number> bitsToArray(
     value : Int,
     count : Int,
     type: AlgebraicType<E> = E::class.algebraicType) = bitsToArray(value, count, type.zero, type.one)
 
-inline fun <reified E:Any> bitsToArray(
+inline fun <reified E:Number> bitsToArray(
     value : Int,
     count : Int,
     zero : E,

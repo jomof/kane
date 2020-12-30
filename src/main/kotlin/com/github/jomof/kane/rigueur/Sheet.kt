@@ -3,9 +3,9 @@ package com.github.jomof.kane.rigueur
 import com.github.jomof.kane.rigueur.Sheet.Companion.coordinateToCellTag
 import java.lang.Integer.max
 
-interface CellReferenceExpr<E:Any> : ScalarExpr<E>
+interface CellReferenceExpr<E:Number> : ScalarExpr<E>
 
-data class AbsoluteCellReferenceExpr<E:Any>(
+data class AbsoluteCellReferenceExpr<E:Number>(
     private val coordinate : Coordinate,
     override val type: AlgebraicType<E>
 ) : CellReferenceExpr<E> {
@@ -20,7 +20,7 @@ data class RelativeCellReferenceExpr(val coordinate : Coordinate) : UntypedExpr 
     override fun toString() = "ref$coordinate"
 }
 
-data class CoerceScalar<T:Any>(
+data class CoerceScalar<T:Number>(
     val value : UntypedExpr,
     override val type : AlgebraicType<T>) : ScalarExpr<T> {
     override fun toString() = "$value"
@@ -216,7 +216,8 @@ private fun coerceToTypedExpr(cell : String, value : Any) : TypedExpr {
                 else -> it
             }
         }
-        else -> constant(value)
+        is Number -> constant(value)
+        else -> error("${value.javaClass}")
     }
 }
 

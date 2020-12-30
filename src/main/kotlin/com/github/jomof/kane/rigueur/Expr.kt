@@ -12,45 +12,45 @@ interface UntypedExpr
 interface TypedExpr : UntypedExpr {
     val type : AlgebraicType<*>
 }
-interface Expr<T:Any> : TypedExpr {
-    override val type : AlgebraicType<T>
+interface Expr<E:Number> : TypedExpr {
+    override val type : AlgebraicType<E>
 }
-interface ScalarExpr<T:Any> : Expr<T>
+interface ScalarExpr<T:Number> : Expr<T>
 
 class ExprFunction<T:Any>(
     private val type : AlgebraicType<*>,
     private val unsafe : (Any) -> Any) {
     operator fun invoke(expr : Any) = unsafe(expr)
     operator fun invoke(expr : UntypedExpr) = unsafe(expr) as UntypedExpr
-    operator fun <S:Any> invoke(expr : ScalarExpr<S>) : ScalarExpr<S> = unsafe(expr) as ScalarExpr<S>
-    operator fun <M:Any> invoke(expr : MatrixExpr<M>) : MatrixExpr<M> = unsafe(expr) as MatrixExpr<M>
-    operator fun <N:Any> invoke(expr : NamedExpr<N>) : NamedExpr<N> = unsafe(expr) as NamedExpr<N>
+    operator fun <S:Number> invoke(expr : ScalarExpr<S>) : ScalarExpr<S> = unsafe(expr) as ScalarExpr<S>
+    operator fun <M:Number> invoke(expr : MatrixExpr<M>) : MatrixExpr<M> = unsafe(expr) as MatrixExpr<M>
+    operator fun <N:Number> invoke(expr : NamedExpr<N>) : NamedExpr<N> = unsafe(expr) as NamedExpr<N>
     fun wrap(new : (Any) -> Any) = ExprFunction<T>(type) { new(it) }
 }
 
-interface ParentExpr<T:Any> : Expr<T> {
+interface ParentExpr<T:Number> : Expr<T> {
     val children : Iterable<Expr<T>>
     fun <O:Any> mapChildren(f : ExprFunction<O>) : ParentExpr<T>
 }
-interface MatrixExpr<T:Any> : ParentExpr<T> {
+interface MatrixExpr<T:Number> : ParentExpr<T> {
     val columns : Int
     val rows : Int
     operator fun get(column : Int, row : Int) : ScalarExpr<T>
     override val children : Iterable<ScalarExpr<T>> get() = elements.asIterable()
 }
-interface VariableExpr<T:Any> : Expr<T>
-interface ScalarVariableExpr<T:Any> : ScalarExpr<T>, VariableExpr<T>
-interface MatrixVariableExpr<T:Any> : MatrixExpr<T>, VariableExpr<T>
-interface NamedExpr<T:Any> : Expr<T> {
+interface VariableExpr<T:Number> : Expr<T>
+interface ScalarVariableExpr<T:Number> : ScalarExpr<T>, VariableExpr<T>
+interface MatrixVariableExpr<T:Number> : MatrixExpr<T>, VariableExpr<T>
+interface NamedExpr<T:Number> : Expr<T> {
     val name : String
 }
-interface NamedScalarExpr<T:Any> : NamedExpr<T>, ScalarExpr<T>
-interface NamedMatrixExpr<T:Any> : NamedExpr<T>, MatrixExpr<T>
-interface UnaryExpr<T:Any> : Expr<T> {
+interface NamedScalarExpr<T:Number> : NamedExpr<T>, ScalarExpr<T>
+interface NamedMatrixExpr<T:Number> : NamedExpr<T>, MatrixExpr<T>
+interface UnaryExpr<T:Number> : Expr<T> {
     val op : UnaryOp
     val value : Expr<T>
 }
-interface BinaryExpr<T:Any> : Expr<T> {
+interface BinaryExpr<T:Number> : Expr<T> {
     val op : BinaryOp
     val left : Expr<T>
     val right : Expr<T>
@@ -89,16 +89,16 @@ val MINUS by BinaryOp(op = "-", precedence = 4, infix = true)
 val CROSS by BinaryOp(op = " cross ", precedence = 5, associative = false, infix = true)
 val STACK by BinaryOp(op = " stack ", precedence = 5, associative = true, infix = true)
 
-operator fun <T:Any> ScalarExpr<T>.getValue(thisRef: Any?, property: KProperty<*>) = NamedScalar(property.name, this.record().reduceArithmetic())
-operator fun <T:Any> MatrixExpr<T>.getValue(thisRef: Any?, property: KProperty<*>) = NamedMatrix(property.name, this.record().reduceArithmetic())
+operator fun <T:Number> ScalarExpr<T>.getValue(thisRef: Any?, property: KProperty<*>) = NamedScalar(property.name, this.record().reduceArithmetic())
+operator fun <T:Number> MatrixExpr<T>.getValue(thisRef: Any?, property: KProperty<*>) = NamedMatrix(property.name, this.record().reduceArithmetic())
 
-data class ConvertScalar<E: Any, T:Any>(
+data class ConvertScalar<E: Number, T:Number>(
     val value : ScalarExpr<T>,
     override val type : AlgebraicType<E>) : ScalarExpr<E> {
     init { track() }
     override fun toString() = render()
 }
-data class ConstantScalar<E: Any>(
+data class ConstantScalar<E: Number>(
     val value : E,
     override val type : AlgebraicType<E>
 ) : ScalarExpr<E> {
@@ -108,7 +108,7 @@ data class ConstantScalar<E: Any>(
     }
     override fun toString() = render()
 }
-data class UnaryScalar<E:Any>(
+data class UnaryScalar<E:Number>(
     override val op : UnaryOp,
     override val value : ScalarExpr<E>) : ScalarExpr<E>, UnaryExpr<E>, ParentExpr<E> {
     init {
@@ -119,14 +119,14 @@ data class UnaryScalar<E:Any>(
     override fun toString() = render()
     override fun <O : Any> mapChildren(f: ExprFunction<O>) = copy(value = f(value))
 }
-data class UnaryMatrixScalar<E:Any>(override val op : UnaryOp, override val value : MatrixExpr<E>) : ScalarExpr<E>, UnaryExpr<E>, ParentExpr<E> {
+data class UnaryMatrixScalar<E:Number>(override val op : UnaryOp, override val value : MatrixExpr<E>) : ScalarExpr<E>, UnaryExpr<E>, ParentExpr<E> {
     init { track() }
     override val type get() = value.type
     override val children : Iterable<ScalarExpr<E>> = value.elements.asIterable()
     override fun toString() = render()
     override fun <O : Any> mapChildren(f: ExprFunction<O>) = copy(value = f(value))
 }
-data class UnaryMatrix<E:Any>(override val op : UnaryOp, override val value : MatrixExpr<E>) : MatrixExpr<E>, UnaryExpr<E> {
+data class UnaryMatrix<E:Number>(override val op : UnaryOp, override val value : MatrixExpr<E>) : MatrixExpr<E>, UnaryExpr<E> {
     init { track() }
     override val columns get() = value.columns
     override val rows get() = value.rows
@@ -135,7 +135,7 @@ data class UnaryMatrix<E:Any>(override val op : UnaryOp, override val value : Ma
     override fun toString() = render()
     override fun <O : Any> mapChildren(f: ExprFunction<O>) = copy(value = f(value))
 }
-data class BinaryScalar<E:Any>(
+data class BinaryScalar<E:Number>(
     override val op : BinaryOp,
     override val left : ScalarExpr<E>,
     override val right : ScalarExpr<E>) : ScalarExpr<E>, BinaryExpr<E>, ParentExpr<E> {
@@ -148,7 +148,7 @@ data class BinaryScalar<E:Any>(
     override fun toString() = render()
     override fun <O : Any> mapChildren(f: ExprFunction<O>) = copy(left = f(left), right = f(right))
 }
-data class BinaryScalarMatrix<E:Any>(
+data class BinaryScalarMatrix<E:Number>(
     override val op : BinaryOp,
     override val columns: Int,
     override val rows: Int,
@@ -160,7 +160,7 @@ data class BinaryScalarMatrix<E:Any>(
     override fun toString() = render()
     override fun <O : Any> mapChildren(f: ExprFunction<O>) = copy(left = f(left), right = f(right))
 }
-data class BinaryMatrixScalar<E:Any>(
+data class BinaryMatrixScalar<E:Number>(
     override val op : BinaryOp,
     override val columns: Int,
     override val rows: Int,
@@ -172,7 +172,7 @@ data class BinaryMatrixScalar<E:Any>(
     override fun toString() = render()
     override fun <O : Any> mapChildren(f: ExprFunction<O>) = copy(left = f(left), right = f(right))
 }
-data class BinaryMatrix<E:Any>(
+data class BinaryMatrix<E:Number>(
     override val op : BinaryOp,
     override val columns: Int,
     override val rows: Int,
@@ -219,20 +219,20 @@ data class BinaryMatrix<E:Any>(
     override fun toString() = render()
     override fun <O : Any> mapChildren(f: ExprFunction<O>) = copy(left = f(left), right = f(right))
 }
-data class ScalarVariable<E:Any>(val initial : E) {
+data class ScalarVariable<E:Number>(val initial : E) {
     init { track() }
     val type get() = initial.javaClass.kotlin
     operator fun getValue(thisRef: Any?, property: KProperty<*>) = NamedScalarVariable(property.name, initial)
     override fun toString() = "?"
 }
-data class NamedScalarVariable<E:Any>(
+data class NamedScalarVariable<E:Number>(
     override val name : String,
     val initial : E) : ScalarVariableExpr<E>, NamedScalarExpr<E> {
     init { track() }
     override fun toString() = render()
     override val type get() = initial.javaClass.algebraicType
 }
-data class MatrixVariable<E:Any>(
+data class MatrixVariable<E:Number>(
     val columns : Int,
     val rows : Int,
     val type : AlgebraicType<E>,
@@ -246,7 +246,7 @@ data class MatrixVariable<E:Any>(
     operator fun getValue(thisRef: Any?, property: KProperty<*>) = NamedMatrixVariable(property.name, columns, rows, type, defaults)
     override fun toString() = "matrixVariable(${columns}x$rows)"
 }
-data class NamedMatrixVariable<E:Any>(
+data class NamedMatrixVariable<E:Number>(
     override val name: String,
     override val columns : Int,
     override val rows : Int,
@@ -269,7 +269,7 @@ data class NamedMatrixVariable<E:Any>(
     override fun toString() = render()
     override fun <O : Any> mapChildren(f: ExprFunction<O>) = this
 }
-data class NamedScalar<E:Any>(
+data class NamedScalar<E:Number>(
     override val name : String,
     val scalar : ScalarExpr<E>) : NamedScalarExpr<E>, ParentExpr<E> {
     init { track() }
@@ -278,7 +278,7 @@ data class NamedScalar<E:Any>(
     override fun toString() = render()
     override fun <O : Any> mapChildren(f: ExprFunction<O>) = copy(scalar = f(scalar))
 }
-data class NamedMatrix<E:Any>(
+data class NamedMatrix<E:Number>(
     override val name : String,
     val matrix : MatrixExpr<E>) : NamedMatrixExpr<E> {
     init { track() }
@@ -289,7 +289,7 @@ data class NamedMatrix<E:Any>(
     override fun toString() = render()
     override fun <O : Any> mapChildren(f: ExprFunction<O>) = copy(matrix = f(matrix))
 }
-data class MatrixVariableElement<E:Any>(
+data class MatrixVariableElement<E:Number>(
     val column : Int,
     val row : Int,
     val matrix : NamedMatrixVariable<E>,
@@ -309,7 +309,7 @@ data class MatrixVariableElement<E:Any>(
         return true
     }
 }
-data class DataMatrix<E:Any>(
+data class DataMatrix<E:Number>(
     override val columns: Int,
     override val rows: Int,
     val elements: List<ScalarExpr<E>>
@@ -335,7 +335,7 @@ data class DataMatrix<E:Any>(
     override fun <O : Any> mapChildren(f: ExprFunction<O>) = copy(elements = elements.map { f(it) })
 }
 
-data class Tableau<E:Any>(
+data class Tableau<E:Number>(
     override val children: List<NamedExpr<E>>,
 ) : ParentExpr<E> {
     init { track() }
@@ -345,7 +345,7 @@ data class Tableau<E:Any>(
         = copy(children = children.map { f(it) })
 }
 
-data class Slot<E:Any>(
+data class Slot<E:Number>(
     val slot : Int,
     val replaces : ScalarExpr<E>
 ) : ScalarExpr<E> {
@@ -354,14 +354,14 @@ data class Slot<E:Any>(
     override fun toString() = render()
 }
 
-data class ScalarAssign<E:Any>(
+data class ScalarAssign<E:Number>(
     val left : NamedScalarVariable<E>,
     val right : ScalarExpr<E>) {
     init { track() }
     operator fun getValue(thisRef: Any?, property: KProperty<*>) = NamedScalarAssign(property.name, left, right)
 }
 
-data class MatrixAssign<E:Any>(
+data class MatrixAssign<E:Number>(
     val left : NamedMatrixVariable<E>,
     val right : MatrixExpr<E>) {
     init {
@@ -378,7 +378,7 @@ data class MatrixAssign<E:Any>(
     operator fun getValue(thisRef: Any?, property: KProperty<*>) = NamedMatrixAssign(property.name, left, right)
 }
 
-data class NamedScalarAssign<E:Any>(
+data class NamedScalarAssign<E:Number>(
     override val name: String,
     val left : NamedScalarVariable<E>,
     val right : ScalarExpr<E>
@@ -390,7 +390,7 @@ data class NamedScalarAssign<E:Any>(
     override fun <O : Any> mapChildren(f: ExprFunction<O>) : NamedScalarAssign<E> = copy(right = f(right))
 }
 
-data class NamedMatrixAssign<E:Any>(
+data class NamedMatrixAssign<E:Number>(
     override val name: String,
     val left : NamedMatrixVariable<E>,
     val right : MatrixExpr<E>
@@ -404,158 +404,158 @@ data class NamedMatrixAssign<E:Any>(
 
 
 // Pow
-fun <E:Any> pow(left : ScalarExpr<E>, right : E) = BinaryScalar(POW, left, ConstantScalar(right, left.type))
-fun <E:Any> pow(left : MatrixExpr<E>, right : E) = BinaryMatrixScalar(POW, left.columns, left.rows, left, ConstantScalar(right, left.type))
-fun <E:Any, L : ScalarExpr<E>, R : ScalarExpr<E>> pow(left : L, right : R) : ScalarExpr<E> = BinaryScalar(POW, left, right)
-fun <E:Any, L : MatrixExpr<E>, R : ScalarExpr<E>> pow(left : L, right : R) = BinaryMatrixScalar(POW, left.columns, left.rows, left, right)
+fun <E:Number> pow(left : ScalarExpr<E>, right : E) = BinaryScalar(POW, left, ConstantScalar(right, left.type))
+fun <E:Number> pow(left : MatrixExpr<E>, right : E) = BinaryMatrixScalar(POW, left.columns, left.rows, left, ConstantScalar(right, left.type))
+fun <E:Number, L : ScalarExpr<E>, R : ScalarExpr<E>> pow(left : L, right : R) : ScalarExpr<E> = BinaryScalar(POW, left, right)
+fun <E:Number, L : MatrixExpr<E>, R : ScalarExpr<E>> pow(left : L, right : R) = BinaryMatrixScalar(POW, left.columns, left.rows, left, right)
 // Relu
-fun <E:Any, T : ScalarExpr<E>> relu(expr : T) : ScalarExpr<E> = UnaryScalar(RELU, expr)
-fun <E:Any, T : MatrixExpr<E>> relu(expr : T) : MatrixExpr<E> = UnaryMatrix(RELU, expr)
+fun <E:Number, T : ScalarExpr<E>> relu(expr : T) : ScalarExpr<E> = UnaryScalar(RELU, expr)
+fun <E:Number, T : MatrixExpr<E>> relu(expr : T) : MatrixExpr<E> = UnaryMatrix(RELU, expr)
 fun relu(value : Double) : Double = max(0.0, value)
 fun relu(value : Float) : Float = max(0.0f, value)
 // Leaky Relu
-fun <E:Any, T : ScalarExpr<E>> lrelu(expr : T) : ScalarExpr<E> = UnaryScalar(LRELU, expr)
-fun <E:Any, T : MatrixExpr<E>> lrelu(expr : T) : MatrixExpr<E> = UnaryMatrix(LRELU, expr)
+fun <E:Number, T : ScalarExpr<E>> lrelu(expr : T) : ScalarExpr<E> = UnaryScalar(LRELU, expr)
+fun <E:Number, T : MatrixExpr<E>> lrelu(expr : T) : MatrixExpr<E> = UnaryMatrix(LRELU, expr)
 fun lrelu(value : Double) : Double = max(0.1 * value, value)
 fun lrelu(value : Float) : Float = max(0.1f * value, value)
 // Step
-fun <E:Any, T : ScalarExpr<E>> step(expr : T) : ScalarExpr<E> = UnaryScalar(STEP, expr)
+fun <E:Number, T : ScalarExpr<E>> step(expr : T) : ScalarExpr<E> = UnaryScalar(STEP, expr)
 fun step(value : Double) = if (value < 0.0) 0.0 else 1.0
 fun step(value : Float) = if (value < 0.0f) 0.0f else 1.0f
 // Lstep
-fun <E:Any, T : ScalarExpr<E>> lstep(expr : T) : ScalarExpr<E> = UnaryScalar(LSTEP, expr)
+fun <E:Number, T : ScalarExpr<E>> lstep(expr : T) : ScalarExpr<E> = UnaryScalar(LSTEP, expr)
 fun lstep(value : Double) = if (value < 0.0) 0.1 else 1.0
 fun lstep(value : Float) = if (value < 0.0f) 0.1f else 1.0f
 // Expr
-fun <E:Any> exp(expr : ScalarExpr<E>) = UnaryScalar(EXP, expr)
-fun <E:Any> exp(expr : MatrixExpr<E>) = UnaryMatrix(EXP, expr)
+fun <E:Number> exp(expr : ScalarExpr<E>) = UnaryScalar(EXP, expr)
+fun <E:Number> exp(expr : MatrixExpr<E>) = UnaryMatrix(EXP, expr)
 // Softmax
-fun <E:Any> softmax(expr : MatrixExpr<E>) : MatrixExpr<E> = exp(expr) / summation(exp(expr))
+fun <E:Number> softmax(expr : MatrixExpr<E>) : MatrixExpr<E> = exp(expr) / summation(exp(expr))
 // Logit
-fun <E:Any, T : ScalarExpr<E>> logit(expr : T) : ScalarExpr<E> = UnaryScalar(LOGIT, expr)
-fun <E:Any, T : MatrixExpr<E>> logit(expr : T) : MatrixExpr<E> = UnaryMatrix(LOGIT, expr)
+fun <E:Number, T : ScalarExpr<E>> logit(expr : T) : ScalarExpr<E> = UnaryScalar(LOGIT, expr)
+fun <E:Number, T : MatrixExpr<E>> logit(expr : T) : MatrixExpr<E> = UnaryMatrix(LOGIT, expr)
 fun logit(value : Double) : Double = 1.0 / (1.0 + exp(-value))
 fun logit(value : Float) : Float = 1.0f / (1.0f + exp(-value))
 // tanh
-fun <E:Any, T : ScalarExpr<E>> tanh(expr : T) : ScalarExpr<E> = UnaryScalar(TANH, expr)
-fun <E:Any, T : MatrixExpr<E>> tanh(expr : T) : MatrixExpr<E> = UnaryMatrix(TANH, expr)
+fun <E:Number, T : ScalarExpr<E>> tanh(expr : T) : ScalarExpr<E> = UnaryScalar(TANH, expr)
+fun <E:Number, T : MatrixExpr<E>> tanh(expr : T) : MatrixExpr<E> = UnaryMatrix(TANH, expr)
 fun tanh(value : Double) : Double = (exp(2.0 * value) - 1.0) / (exp(2.0 * value) + 1.0)
 fun tanh(value : Float) : Float = (exp(2.0f * value) - 1.0f) / (exp(2.0f * value) + 1.0f)
 // Times
-operator fun <E:Any, L : ScalarExpr<E>, R : E> L.times(right : R) = BinaryScalar(TIMES, this, ConstantScalar(right, type))
-operator fun <E:Any, L : ScalarExpr<E>, R : ScalarExpr<E>> L.times(right : R) = BinaryScalar(TIMES, this, right)
-operator fun <E:Any> E.times(right : ScalarExpr<E>) = BinaryScalar(TIMES, ConstantScalar(this, right.type), right)
-operator fun <E:Any, L : MatrixExpr<E>, R : E> L.times(right : R) = BinaryMatrixScalar(TIMES, columns, rows, this, ConstantScalar(right, type))
-operator fun <E:Any, L : E, R : MatrixExpr<E>> L.times(right : R) = BinaryScalarMatrix(TIMES, right.columns, right.rows, ConstantScalar(this, right.type), right)
-operator fun <E:Any, L : MatrixExpr<E>, R : ScalarExpr<E>> L.times(right : R) = BinaryMatrixScalar(TIMES, columns, rows, this, right)
-operator fun <E:Any, L : ScalarExpr<E>, R : MatrixExpr<E>> L.times(right : R) = BinaryScalarMatrix(TIMES, right.columns, right.rows, this, right)
-operator fun <E:Any> MatrixExpr<E>.times(right : MatrixExpr<E>) = run {
+operator fun <E:Number, L : ScalarExpr<E>, R : E> L.times(right : R) = BinaryScalar(TIMES, this, ConstantScalar(right, type))
+operator fun <E:Number, L : ScalarExpr<E>, R : ScalarExpr<E>> L.times(right : R) = BinaryScalar(TIMES, this, right)
+operator fun <E:Number> E.times(right : ScalarExpr<E>) = BinaryScalar(TIMES, ConstantScalar(this, right.type), right)
+operator fun <E:Number, L : MatrixExpr<E>, R : E> L.times(right : R) = BinaryMatrixScalar(TIMES, columns, rows, this, ConstantScalar(right, type))
+operator fun <E:Number, L : E, R : MatrixExpr<E>> L.times(right : R) = BinaryScalarMatrix(TIMES, right.columns, right.rows, ConstantScalar(this, right.type), right)
+operator fun <E:Number, L : MatrixExpr<E>, R : ScalarExpr<E>> L.times(right : R) = BinaryMatrixScalar(TIMES, columns, rows, this, right)
+operator fun <E:Number, L : ScalarExpr<E>, R : MatrixExpr<E>> L.times(right : R) = BinaryScalarMatrix(TIMES, right.columns, right.rows, this, right)
+operator fun <E:Number> MatrixExpr<E>.times(right : MatrixExpr<E>) = run {
     BinaryMatrix(TIMES, right.columns, rows, this, right)
 }
-infix fun <E:Any> MatrixExpr<E>.cross(right : MatrixExpr<E>) = run {
+infix fun <E:Number> MatrixExpr<E>.cross(right : MatrixExpr<E>) = run {
     BinaryMatrix(CROSS, right.columns, rows, this, right)
 }
 
 // Div
-operator fun <E:Any, L : ScalarExpr<E>, R : E> L.div(right : R) = BinaryScalar(DIV, this, ConstantScalar(right, type))
-operator fun <E:Any, L : ScalarExpr<E>, R : ScalarExpr<E>> L.div(right : R) = BinaryScalar(DIV, this, right)
-operator fun <E:Any> E.div(right : ScalarExpr<E>) = BinaryScalar(DIV, ConstantScalar(this, right.type), right)
-operator fun <E:Any, L : MatrixExpr<E>, R : E> L.div(right : R) = BinaryMatrixScalar(DIV, columns, rows, this, ConstantScalar(right, type))
-operator fun <E:Any, L : E, R : MatrixExpr<E>> L.div(right : R) = BinaryScalarMatrix(DIV, right.columns, right.rows, ConstantScalar(this, right.type), right)
-operator fun <E:Any, L : MatrixExpr<E>, R : ScalarExpr<E>> L.div(right : R) = BinaryMatrixScalar(DIV, columns, rows, this, right)
-operator fun <E:Any, L : ScalarExpr<E>, R : MatrixExpr<E>> L.div(right : R) = BinaryScalarMatrix(DIV, right.columns, right.rows, this, right)
+operator fun <E:Number, L : ScalarExpr<E>, R : E> L.div(right : R) = BinaryScalar(DIV, this, ConstantScalar(right, type))
+operator fun <E:Number, L : ScalarExpr<E>, R : ScalarExpr<E>> L.div(right : R) = BinaryScalar(DIV, this, right)
+operator fun <E:Number> E.div(right : ScalarExpr<E>) = BinaryScalar(DIV, ConstantScalar(this, right.type), right)
+operator fun <E:Number, L : MatrixExpr<E>, R : E> L.div(right : R) = BinaryMatrixScalar(DIV, columns, rows, this, ConstantScalar(right, type))
+operator fun <E:Number, L : E, R : MatrixExpr<E>> L.div(right : R) = BinaryScalarMatrix(DIV, right.columns, right.rows, ConstantScalar(this, right.type), right)
+operator fun <E:Number, L : MatrixExpr<E>, R : ScalarExpr<E>> L.div(right : R) = BinaryMatrixScalar(DIV, columns, rows, this, right)
+operator fun <E:Number, L : ScalarExpr<E>, R : MatrixExpr<E>> L.div(right : R) = BinaryScalarMatrix(DIV, right.columns, right.rows, this, right)
 // Plus
-operator fun <E:Any> ScalarExpr<E>.plus(right : E) = BinaryScalar(PLUS, this, ConstantScalar(right, type))
-operator fun <E:Any> ScalarExpr<E>.plus(right : ScalarExpr<E>) = BinaryScalar(PLUS, this, right)
-operator fun <E:Any> E.plus(right : ScalarExpr<E>) = BinaryScalar(PLUS, ConstantScalar(this, right.type), right)
-operator fun <E:Any, L : MatrixExpr<E>, R : E> L.plus(right : R) = BinaryMatrixScalar(PLUS, columns, rows, this, ConstantScalar(right, type))
-operator fun <E:Any, L : E, R : MatrixExpr<E>> L.plus(right : R) = BinaryScalarMatrix(PLUS, right.columns, right.rows, ConstantScalar(this, right.type), right)
-operator fun <E:Any, L : MatrixExpr<E>, R : ScalarExpr<E>> L.plus(right : R) = BinaryMatrixScalar(PLUS, columns, rows, this, right)
-operator fun <E:Any, L : ScalarExpr<E>, R : MatrixExpr<E>> L.plus(right : R) = BinaryScalarMatrix(PLUS, right.columns, right.rows, this, right)
-operator fun <E:Any, L : MatrixExpr<E>, R : MatrixExpr<E>> L.plus(right : R) = BinaryMatrix(PLUS, right.columns, right.rows, this, right)
+operator fun <E:Number> ScalarExpr<E>.plus(right : E) = BinaryScalar(PLUS, this, ConstantScalar(right, type))
+operator fun <E:Number> ScalarExpr<E>.plus(right : ScalarExpr<E>) = BinaryScalar(PLUS, this, right)
+operator fun <E:Number> E.plus(right : ScalarExpr<E>) = BinaryScalar(PLUS, ConstantScalar(this, right.type), right)
+operator fun <E:Number, L : MatrixExpr<E>, R : E> L.plus(right : R) = BinaryMatrixScalar(PLUS, columns, rows, this, ConstantScalar(right, type))
+operator fun <E:Number, L : E, R : MatrixExpr<E>> L.plus(right : R) = BinaryScalarMatrix(PLUS, right.columns, right.rows, ConstantScalar(this, right.type), right)
+operator fun <E:Number, L : MatrixExpr<E>, R : ScalarExpr<E>> L.plus(right : R) = BinaryMatrixScalar(PLUS, columns, rows, this, right)
+operator fun <E:Number, L : ScalarExpr<E>, R : MatrixExpr<E>> L.plus(right : R) = BinaryScalarMatrix(PLUS, right.columns, right.rows, this, right)
+operator fun <E:Number, L : MatrixExpr<E>, R : MatrixExpr<E>> L.plus(right : R) = BinaryMatrix(PLUS, right.columns, right.rows, this, right)
 // Minus
-operator fun <E:Any, L : ScalarExpr<E>, R : E> L.minus(right : R) = BinaryScalar(MINUS, this, ConstantScalar(right, type))
-operator fun <E:Any, L : ScalarExpr<E>, R : ScalarExpr<E>> L.minus(right : R) = BinaryScalar(MINUS, this, right)
-operator fun <E:Any> E.minus(right : ScalarExpr<E>) = BinaryScalar(MINUS, ConstantScalar(this, right.type), right)
-operator fun <E:Any, L : MatrixExpr<E>, R : E> L.minus(right : R) = BinaryMatrixScalar(MINUS, columns, rows, this, ConstantScalar(right, type))
-operator fun <E:Any, L : E, R : MatrixExpr<E>> L.minus(right : R) = BinaryScalarMatrix(MINUS, right.columns, right.rows, ConstantScalar(this, right.type), right)
-operator fun <E:Any, L : MatrixExpr<E>, R : ScalarExpr<E>> L.minus(right : R) = BinaryMatrixScalar(MINUS, columns, rows, this, right)
-operator fun <E:Any, L : ScalarExpr<E>, R : MatrixExpr<E>> L.minus(right : R) = BinaryScalarMatrix(MINUS, right.columns, right.rows, this, right)
-operator fun <E:Any, L : MatrixExpr<E>, R : MatrixExpr<E>> L.minus(right : R) = BinaryMatrix(MINUS, right.columns, right.rows, this, right)
+operator fun <E:Number, L : ScalarExpr<E>, R : E> L.minus(right : R) = BinaryScalar(MINUS, this, ConstantScalar(right, type))
+operator fun <E:Number, L : ScalarExpr<E>, R : ScalarExpr<E>> L.minus(right : R) = BinaryScalar(MINUS, this, right)
+operator fun <E:Number> E.minus(right : ScalarExpr<E>) = BinaryScalar(MINUS, ConstantScalar(this, right.type), right)
+operator fun <E:Number, L : MatrixExpr<E>, R : E> L.minus(right : R) = BinaryMatrixScalar(MINUS, columns, rows, this, ConstantScalar(right, type))
+operator fun <E:Number, L : E, R : MatrixExpr<E>> L.minus(right : R) = BinaryScalarMatrix(MINUS, right.columns, right.rows, ConstantScalar(this, right.type), right)
+operator fun <E:Number, L : MatrixExpr<E>, R : ScalarExpr<E>> L.minus(right : R) = BinaryMatrixScalar(MINUS, columns, rows, this, right)
+operator fun <E:Number, L : ScalarExpr<E>, R : MatrixExpr<E>> L.minus(right : R) = BinaryScalarMatrix(MINUS, right.columns, right.rows, this, right)
+operator fun <E:Number, L : MatrixExpr<E>, R : MatrixExpr<E>> L.minus(right : R) = BinaryMatrix(MINUS, right.columns, right.rows, this, right)
 // Unary minus
-operator fun <E:Any> ScalarExpr<E>.unaryMinus() = UnaryScalar(NEGATE, this)
-operator fun <E:Any> MatrixExpr<E>.unaryMinus() = UnaryMatrix(NEGATE, this)
+operator fun <E:Number> ScalarExpr<E>.unaryMinus() = UnaryScalar(NEGATE, this)
+operator fun <E:Number> MatrixExpr<E>.unaryMinus() = UnaryMatrix(NEGATE, this)
 // Stack
-private fun <E:Any> stackMatrix(left : MatrixExpr<E>, right : MatrixExpr<E>) : MatrixExpr<E> {
+private fun <E:Number> stackMatrix(left : MatrixExpr<E>, right : MatrixExpr<E>) : MatrixExpr<E> {
     assert(left.columns == right.columns)
     return BinaryMatrix(STACK, left.columns, left.rows + right.rows, left, right)
 }
-infix fun <E:Any> MatrixExpr<E>.stack(right : E) : MatrixExpr<E> = stackMatrix(this, repeated(columns, 1, type, right))
-infix fun <E:Any> E.stack(right : MatrixExpr<E>) : MatrixExpr<E> = stackMatrix(repeated(right.columns, 1, right.type, this), right)
-infix fun <E:Any> MatrixExpr<E>.stack(right : ScalarExpr<E>) = stackMatrix(this, repeated(columns, 1, right))
-infix fun <E:Any> ScalarExpr<E>.stack(right : MatrixExpr<E>) =stackMatrix(repeated(right.columns, 1, this), right)
-infix fun <E:Any> MatrixExpr<E>.stack(right : MatrixExpr<E>) = stackMatrix(this, right)
+infix fun <E:Number> MatrixExpr<E>.stack(right : E) : MatrixExpr<E> = stackMatrix(this, repeated(columns, 1, type, right))
+infix fun <E:Number> E.stack(right : MatrixExpr<E>) : MatrixExpr<E> = stackMatrix(repeated(right.columns, 1, right.type, this), right)
+infix fun <E:Number> MatrixExpr<E>.stack(right : ScalarExpr<E>) = stackMatrix(this, repeated(columns, 1, right))
+infix fun <E:Number> ScalarExpr<E>.stack(right : MatrixExpr<E>) =stackMatrix(repeated(right.columns, 1, this), right)
+infix fun <E:Number> MatrixExpr<E>.stack(right : MatrixExpr<E>) = stackMatrix(this, right)
 // Summation
-fun <E:Any> summation(expr : MatrixExpr<E>) : ScalarExpr<E> = UnaryMatrixScalar(SUMMATION, expr)
+fun <E:Number> summation(expr : MatrixExpr<E>) : ScalarExpr<E> = UnaryMatrixScalar(SUMMATION, expr)
 // Assign
-inline fun <reified E:Any> assign(assignment : Pair<ScalarExpr<E>, NamedScalarVariable<E>>) = ScalarAssign(assignment.second, assignment.first)
-inline fun <reified E:Any> assign(assignment : Pair<MatrixExpr<E>, NamedMatrixVariable<E>>) = MatrixAssign(assignment.second, assignment.first)
+inline fun <reified E:Number> assign(assignment : Pair<ScalarExpr<E>, NamedScalarVariable<E>>) = ScalarAssign(assignment.second, assignment.first)
+inline fun <reified E:Number> assign(assignment : Pair<MatrixExpr<E>, NamedMatrixVariable<E>>) = MatrixAssign(assignment.second, assignment.first)
 // Default
-fun <E:Any> defaultOf(type : Class<E>) : E = when (type) {
+fun <E:Number> defaultOf(type : Class<E>) : E = when (type) {
     java.lang.Double::class.java -> 0.0 as E
     java.lang.Integer::class.java -> 0 as E
     java.lang.String::class.java -> "" as E
     else -> error("$type")
 }
-fun <E:Any> defaultOf(type : KClass<E>) : E = defaultOf(type.java)
-inline fun <reified E:Any> defaultOf() : E = defaultOf(E::class)
+fun <E:Number> defaultOf(type : KClass<E>) : E = defaultOf(type.java)
+inline fun <reified E:Number> defaultOf() : E = defaultOf(E::class)
 // Variables
-inline fun <reified E:Any> matrixVariable(columns : Int, rows : Int) = matrixVariable(E::class.java.algebraicType, columns, rows)
-inline fun <reified E:Any> matrixVariable(type : AlgebraicType<E>, columns : Int, rows : Int) =
+inline fun <reified E:Number> matrixVariable(columns : Int, rows : Int) = matrixVariable(E::class.java.algebraicType, columns, rows)
+inline fun <reified E:Number> matrixVariable(type : AlgebraicType<E>, columns : Int, rows : Int) =
     MatrixVariable(columns, rows, type, (0 until rows * columns).map { type.zero })
-inline fun <reified E:Any> matrixVariable(columns : Int, rows : Int, vararg elements : E) =
+inline fun <reified E:Number> matrixVariable(columns : Int, rows : Int, vararg elements : E) =
     MatrixVariable(columns, rows, E::class.java.algebraicType, elements.toList().map { it })
-inline fun <reified E:Any> matrixVariable(columns : Int, rows : Int, init : (Coordinate) -> E) =
+inline fun <reified E:Number> matrixVariable(columns : Int, rows : Int, init : (Coordinate) -> E) =
     MatrixVariable(columns, rows, E::class.java.algebraicType, coordinatesOf(columns, rows).toList().map { init(it) })
-inline fun <reified E:Any> matrixVariable(columns : Int, rows : Int, type : AlgebraicType<E>, init : (Coordinate) -> Double) =
+inline fun <reified E:Number> matrixVariable(columns : Int, rows : Int, type : AlgebraicType<E>, init : (Coordinate) -> Double) =
     MatrixVariable(columns, rows, type, coordinatesOf(columns, rows).toList().map { type.coerceFrom(init(it)) })
-inline fun <reified E:Any> variable(initial : E = defaultOf()) = ScalarVariable(initial)
-inline fun <reified E:Any> columnVariable(vararg elements : E) =
+inline fun <reified E:Number> variable(initial : E = defaultOf()) = ScalarVariable(initial)
+inline fun <reified E:Number> columnVariable(vararg elements : E) =
     MatrixVariable(1, elements.size, E::class.java.algebraicType, elements.toList().map { it })
 // Constant
-fun <E:Any> constant(value : E, type : AlgebraicType<*>) = ConstantScalar(value, type as AlgebraicType<E>)
-fun <E:Any> constant(value : E) = ConstantScalar(value, value.javaClass.algebraicType)
+fun <E:Number> constant(value : E, type : AlgebraicType<*>) = ConstantScalar(value, type as AlgebraicType<E>)
+fun <E:Number> constant(value : E) = ConstantScalar(value, value.javaClass.algebraicType)
 
 // Tableau
-fun <E:Any> tableauOf(vararg elements : NamedExpr<E>) : Tableau<E> = Tableau(elements.toList())
+fun <E:Number> tableauOf(vararg elements : NamedExpr<E>) : Tableau<E> = Tableau(elements.toList())
 // Misc
-//fun <E:Any> constant(value : E) : ScalarExpr<E> = ConstantScalar(value)
-fun <E:Any> repeated(columns : Int, rows : Int, type : AlgebraicType<E>, value : E) : MatrixExpr<E> =
+//fun <E:Number> constant(value : E) : ScalarExpr<E> = ConstantScalar(value)
+fun <E:Number> repeated(columns : Int, rows : Int, type : AlgebraicType<E>, value : E) : MatrixExpr<E> =
     repeated(columns, rows, ConstantScalar(value, type))
-fun <E:Any> repeated(columns : Int, rows : Int, value : ScalarExpr<E>) : MatrixExpr<E> =
+fun <E:Number> repeated(columns : Int, rows : Int, value : ScalarExpr<E>) : MatrixExpr<E> =
     DataMatrix(columns, rows, (0 until columns * rows).map { value })
-fun <E:Any> ScalarExpr<E>.tryFindConstant() : E? = when(this) {
+fun <E:Number> ScalarExpr<E>.tryFindConstant() : E? = when(this) {
     is ConstantScalar -> value
     is NamedScalar -> scalar.tryFindConstant()
     else -> null
 }
-fun <E:Any> ScalarExpr<E>.tryFindNegation(): ScalarExpr<E>? {
+fun <E:Number> ScalarExpr<E>.tryFindNegation(): ScalarExpr<E>? {
     return if (this is UnaryScalar<*> && op == NEGATE) return value as ScalarExpr<E>
     else null
 }
 // Coordinates
-inline operator fun <E:Any, reified M:MatrixExpr<E>> M.get(coord : Coordinate) = get(coord.column, coord.row)
-val <E:Any> MatrixExpr<E>.coordinates get() = coordinatesOf(columns, rows)
-inline val <E:Any, reified M:MatrixExpr<E>> M.elements get() = coordinates.map { get(it) }
-fun <E:Any,R:Any> MatrixExpr<E>.foldCoordinates(initial: ScalarExpr<R>?, action : (ScalarExpr<R>?, Coordinate)->ScalarExpr<R>) =
+inline operator fun <E:Number, reified M:MatrixExpr<E>> M.get(coord : Coordinate) = get(coord.column, coord.row)
+val <E:Number> MatrixExpr<E>.coordinates get() = coordinatesOf(columns, rows)
+inline val <E:Number, reified M:MatrixExpr<E>> M.elements get() = coordinates.map { get(it) }
+fun <E:Number,R:Number> MatrixExpr<E>.foldCoordinates(initial: ScalarExpr<R>?, action : (ScalarExpr<R>?, Coordinate)->ScalarExpr<R>) =
     coordinates.fold(initial) { prior, coord -> action(prior, coord) }
 
 
 // Differentiation
-fun <E:Any, T : ScalarExpr<E>> d(expr : T) : ScalarExpr<E> = UnaryScalar(D, expr)
-fun <E:Any, T : MatrixExpr<E>> d(expr : T) : MatrixExpr<E> = UnaryMatrix(D, expr)
+fun <E:Number, T : ScalarExpr<E>> d(expr : T) : ScalarExpr<E> = UnaryScalar(D, expr)
+fun <E:Number, T : MatrixExpr<E>> d(expr : T) : MatrixExpr<E> = UnaryMatrix(D, expr)
 
-private fun <E:Any> diff(expr : ScalarExpr<E>, variable : ScalarExpr<E>) : ScalarExpr<E> {
+private fun <E:Number> diff(expr : ScalarExpr<E>, variable : ScalarExpr<E>) : ScalarExpr<E> {
     if (variable is NamedScalar) return diff(expr, variable.scalar)
     fun ScalarExpr<E>.self() = diff(this, variable)
     val result : ScalarExpr<E> = when (expr) {
@@ -610,7 +610,7 @@ private fun <E:Any> diff(expr : ScalarExpr<E>, variable : ScalarExpr<E>) : Scala
     return result
 }
 
-fun <E:Any> differentiate(expr : Expr<E>) : Expr<E> {
+fun <E:Number> differentiate(expr : Expr<E>) : Expr<E> {
     fun ScalarExpr<E>.diffOr() : ScalarExpr<E>? {
         if (this !is BinaryScalar<E>) return null
         if (op != DIV) return null
@@ -650,30 +650,30 @@ fun <E:Any> differentiate(expr : Expr<E>) : Expr<E> {
     }
 }
 
-fun <E:Any> differentiate(expr : ScalarExpr<E>) : ScalarExpr<E> = (differentiate(expr as Expr<E>) as ScalarExpr<E>).reduceArithmetic()
-fun <E:Any> differentiate(expr : MatrixExpr<E>) : MatrixExpr<E> = (differentiate(expr as Expr<E>) as MatrixExpr<E>).reduceArithmetic()
+fun <E:Number> differentiate(expr : ScalarExpr<E>) : ScalarExpr<E> = (differentiate(expr as Expr<E>) as ScalarExpr<E>).reduceArithmetic()
+fun <E:Number> differentiate(expr : MatrixExpr<E>) : MatrixExpr<E> = (differentiate(expr as Expr<E>) as MatrixExpr<E>).reduceArithmetic()
 
 // Data matrix
-inline fun <reified E:Any> matrixOf(columns: Int, rows: Int, vararg elements : E) = DataMatrix(
+inline fun <reified E:Number> matrixOf(columns: Int, rows: Int, vararg elements : E) = DataMatrix(
     columns,
     rows,
     elements.map { ConstantScalar(it, elements[0].javaClass.algebraicType) }.toList()
 )
-fun <E:Any> matrixOf(columns: Int, rows: Int, action:(Coordinate)->ScalarExpr<E>) :DataMatrix<E> =
+fun <E:Number> matrixOf(columns: Int, rows: Int, action:(Coordinate)->ScalarExpr<E>) :DataMatrix<E> =
     DataMatrix(
         columns,
         rows,
         coordinatesOf(columns, rows).map(action).toList()
     )
-fun <E:Any> MatrixExpr<E>.toDataMatrix() : MatrixExpr<E> = when(this) {
+fun <E:Number> MatrixExpr<E>.toDataMatrix() : MatrixExpr<E> = when(this) {
     is DataMatrix -> this
     is NamedMatrix -> copy(matrix = matrix.toDataMatrix())
     else -> DataMatrix(columns, rows, elements.toList())
 }
-fun <E:Any> MatrixExpr<E>.map(action:(ScalarExpr<E>)->ScalarExpr<E>) = DataMatrix(columns, rows, elements.map(action).toList())
+fun <E:Number> MatrixExpr<E>.map(action:(ScalarExpr<E>)->ScalarExpr<E>) = DataMatrix(columns, rows, elements.map(action).toList())
 
 // Evaluate
-fun <E:Any> Expr<E>.eval(map : MutableMap<String, E>) : Expr<E> {
+fun <E:Number> Expr<E>.eval(map : MutableMap<String, E>) : Expr<E> {
     fun NamedExpr<E>.self() = eval(map) as NamedExpr<E>
     fun ScalarExpr<E>.self() = eval(map) as ScalarExpr<E>
     fun MatrixExpr<E>.self() = eval(map) as MatrixExpr<E>
@@ -743,7 +743,7 @@ fun <E:Any> Expr<E>.eval(map : MutableMap<String, E>) : Expr<E> {
     return result
 }
 
-fun <E:Any> Tableau<E>.eval(map : MutableMap<String, E>) = ((this as Expr<E>).eval(map) as Tableau).reduceArithmetic()
+fun <E:Number> Tableau<E>.eval(map : MutableMap<String, E>) = ((this as Expr<E>).eval(map) as Tableau).reduceArithmetic()
 
 // Allocation tracking
 private var trackingEnabled = false
@@ -804,7 +804,7 @@ private class TrackingScope : Closeable {
 fun trackExprs() : Closeable = TrackingScope()
 
 // Substitute variable initial values
-fun <E:Any> Expr<E>.substituteInitial() = replaceExprTopDown {
+fun <E:Number> Expr<E>.substituteInitial() = replaceExprTopDown {
         with(it) {
             when (this) {
                 is NamedScalarVariable -> ConstantScalar(initial, type)
@@ -815,11 +815,11 @@ fun <E:Any> Expr<E>.substituteInitial() = replaceExprTopDown {
         }
     }
 
-fun <E:Any> ScalarExpr<E>.substituteInitial() = (this as Expr<E>).substituteInitial() as ScalarExpr<E>
-fun <E:Any> MatrixExpr<E>.substituteInitial() = (this as Expr<E>).substituteInitial() as MatrixExpr<E>
+fun <E:Number> ScalarExpr<E>.substituteInitial() = (this as Expr<E>).substituteInitial() as ScalarExpr<E>
+fun <E:Number> MatrixExpr<E>.substituteInitial() = (this as Expr<E>).substituteInitial() as MatrixExpr<E>
 
 // Reduce arithmetic
-fun <E:Any> Expr<E>.memoizeAndReduceArithmetic(
+fun <E:Number> Expr<E>.memoizeAndReduceArithmetic(
     memo : MutableMap<TypedExpr,TypedExpr> = mutableMapOf(),
     selfMemo : MutableMap<TypedExpr,TypedExpr> = mutableMapOf()) : Expr<E> {
     val thiz = selfMemo.computeIfAbsent(this) { this }
@@ -828,7 +828,7 @@ fun <E:Any> Expr<E>.memoizeAndReduceArithmetic(
         return result as Expr<E>
     }
     val result : Expr<E> = with(thiz as Expr<E>) {
-        fun <O:Any> Expr<O>.self() = this.memoizeAndReduceArithmetic(memo, selfMemo) as Expr<O>
+        fun <O:Number> Expr<O>.self() = this.memoizeAndReduceArithmetic(memo, selfMemo) as Expr<O>
         fun ScalarExpr<E>.self() = memoizeAndReduceArithmetic(memo, selfMemo) as ScalarExpr<E>
         fun MatrixExpr<E>.self() = memoizeAndReduceArithmetic(memo, selfMemo) as MatrixExpr<E>
         fun NamedMatrixVariable<E>.self() = memoizeAndReduceArithmetic(memo, selfMemo) as NamedMatrixVariable<E>
@@ -965,12 +965,12 @@ fun <E:Any> Expr<E>.memoizeAndReduceArithmetic(
     return result
 }
 
-fun <E:Any> NamedExpr<E>.reduceArithmetic() = (this as Expr<E>).memoizeAndReduceArithmetic() as NamedExpr<E>
-fun <E:Any> ScalarExpr<E>.reduceArithmetic() = (this as Expr<E>).memoizeAndReduceArithmetic() as ScalarExpr<E>
-fun <E:Any> MatrixExpr<E>.reduceArithmetic() = (this as Expr<E>).memoizeAndReduceArithmetic() as MatrixExpr<E>
-fun <E:Any> Tableau<E>.reduceArithmetic() = (this as Expr<E>).memoizeAndReduceArithmetic() as Tableau<E>
+fun <E:Number> NamedExpr<E>.reduceArithmetic() = (this as Expr<E>).memoizeAndReduceArithmetic() as NamedExpr<E>
+fun <E:Number> ScalarExpr<E>.reduceArithmetic() = (this as Expr<E>).memoizeAndReduceArithmetic() as ScalarExpr<E>
+fun <E:Number> MatrixExpr<E>.reduceArithmetic() = (this as Expr<E>).memoizeAndReduceArithmetic() as MatrixExpr<E>
+fun <E:Number> Tableau<E>.reduceArithmetic() = (this as Expr<E>).memoizeAndReduceArithmetic() as Tableau<E>
 
-private fun <E:Any> Expr<E>.affineName(depth : Int = 2) : String? {
+private fun <E:Number> Expr<E>.affineName(depth : Int = 2) : String? {
     if (depth == 0) return null
     return when(this) {
         is CoerceScalar -> null

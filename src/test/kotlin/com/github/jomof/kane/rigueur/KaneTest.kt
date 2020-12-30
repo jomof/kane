@@ -886,10 +886,8 @@ class KaneTest {
         (a - -b).reduceArithmetic().assertString("a+b")
         val m : MatrixExpr<Double> by matrixVariable<Double>(5, 2)
         val n : MatrixExpr<Double> by matrixVariable<Double>(3, 5)
-        val s by matrixVariable<String>(4, 5)
         m.assertString("m")
         n.assertString("n")
-        s.assertString("s")
         val z by m
         z.assertString("z=m")
         val element by z[0,1]
@@ -1037,7 +1035,6 @@ class KaneTest {
             if (expr is NamedExpr<*>) {
                 tableauOf(expr).linearize()
             }
-        } else if (expr.type == StringAlgebraicType) {
         } else {
             assert(false) { "${expr.type}"}
         }
@@ -1114,7 +1111,6 @@ class KaneTest {
         val x24: MatrixExpr<Double> by logit(x1)
         val x25: ScalarExpr<Double> by variable<Double>()
         val x26: ScalarExpr<Double> by variable<Double>()
-        val x27: ScalarExpr<String> by variable<String>()
         val x28: ScalarExpr<Double> by v1 + v1
         val x29: ScalarExpr<Double> by v1 * v1
         val learningRate = 0.1
@@ -1138,7 +1134,7 @@ class KaneTest {
         val dm by differentiate(d(polyError)/d(m))
         val db by differentiate(d(polyError)/d(b))
         val all = listOf(x2, x3, x4, x7, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18,
-                         x19, x20, x22, x23, x24, x25, x26, x27, x28, x29,
+                         x19, x20, x22, x23, x24, x25, x26, x28, x29,
                          input, w0, h1, w1, output, target, error, gradientW0, gradientW1,
                          x, q, m, b, y, polyTarget, polyError, dq, dm, db)
 

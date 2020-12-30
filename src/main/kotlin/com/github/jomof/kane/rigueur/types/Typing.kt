@@ -6,8 +6,8 @@ import kotlin.math.pow
 import kotlin.math.exp
 import kotlin.reflect.KClass
 
-open class KaneType<E:Any>(val java : Class<E>)
-abstract class AlgebraicType<E:Any>(java : Class<E>) : KaneType<E>(java) {
+open class KaneType<E:Number>(val java : Class<E>)
+abstract class AlgebraicType<E:Number>(java : Class<E>) : KaneType<E>(java) {
     abstract val simpleName : String
     open val zero : E get() = error("not supported")
     open val one : E get() = error("not supported")
@@ -107,21 +107,6 @@ val FloatAlgebraicType = object : AlgebraicType<Float>(Float::class.java) {
         else -> error("${value.javaClass}")
     }
 }
-val StringAlgebraicType = object : AlgebraicType<String>(String::class.java) {
-    override val simpleName = "string"
-    override val zero = ""
-    override fun unary(op : UnaryOp, value : String) = when(op) {
-        else -> error("$op")
-    }
-    override fun binary(op: BinaryOp, left: String, right: String) = when(op) {
-        else -> error("$op")
-    }
-    override fun compare(left: String, right: String) = left.compareTo(right)
-    override fun allocArray(size: Int, init: (Int) -> String) = Array(size, init)
-    override fun allocNullableArray(size: Int, init: (Int) -> String?) = Array(size, init)
-    override fun render(value: Any) = value.toString()
-    override fun coerceFrom(value : Any) = "$value"
-}
 
 val IntAlgebraicType = object : AlgebraicType<Int>(Int::class.java) {
     override val simpleName = "int"
@@ -147,32 +132,30 @@ val IntAlgebraicType = object : AlgebraicType<Int>(Int::class.java) {
     }
 }
 
-val <E:Any> Class<E>.algebraicType : AlgebraicType<E> get() = when(this) {
+val <E:Number> Class<E>.algebraicType : AlgebraicType<E> get() = when(this) {
     Double::class.java,
     java.lang.Double::class.java -> doubleAlgebraicType
     Float::class.java,
     java.lang.Float::class.java -> FloatAlgebraicType
-    String::class.java,
-    java.lang.String::class.java -> StringAlgebraicType
     Int::class.java,
     java.lang.Integer::class.java -> IntAlgebraicType
     else ->
         error("$this")
 } as AlgebraicType<E>
 
-val <E:Any> KClass<E>.algebraicType get() = java.algebraicType
+val <E:Number> KClass<E>.algebraicType get() = java.algebraicType
 
-fun <E:Any> AlgebraicType<E>.negate(value : E) = unary(NEGATE, value)
-fun <E:Any> AlgebraicType<E>.add(left : E, right : E) = binary(PLUS, left, right)
-fun <E:Any> AlgebraicType<E>.subtract(left : E, right : E) = binary(MINUS, left, right)
-fun <E:Any> AlgebraicType<E>.multiply(left : E, right : E) = binary(TIMES, left, right)
-fun <E:Any> AlgebraicType<E>.divide(left : E, right : E) = binary(DIV, left, right)
-fun <E:Any> AlgebraicType<E>.pow(left : E, right : E) = binary(POW, left, right)
-fun <E:Any> AlgebraicType<E>.lt(left : E, right : E) = compare(left, right) == -1
-fun <E:Any> AlgebraicType<E>.lte(left : E, right : E) = compare(left, right) != 1
-fun <E:Any> AlgebraicType<E>.gt(left : E, right : E) = compare(left, right) == 1
-fun <E:Any> AlgebraicType<E>.gte(left : E, right : E) = compare(left, right) != -1
-fun <E:Any> AlgebraicType<E>.eq(left : E, right : E) = compare(left, right) == 0
-val <E:Any> AlgebraicType<E>.two : E get() = add(one, one)
-val <E:Any> AlgebraicType<E>.half : E get() = coerceFrom(0.5)
-val <E:Any> AlgebraicType<E>.negativeOne : E get() = negate(one)
+fun <E:Number> AlgebraicType<E>.negate(value : E) = unary(NEGATE, value)
+fun <E:Number> AlgebraicType<E>.add(left : E, right : E) = binary(PLUS, left, right)
+fun <E:Number> AlgebraicType<E>.subtract(left : E, right : E) = binary(MINUS, left, right)
+fun <E:Number> AlgebraicType<E>.multiply(left : E, right : E) = binary(TIMES, left, right)
+fun <E:Number> AlgebraicType<E>.divide(left : E, right : E) = binary(DIV, left, right)
+fun <E:Number> AlgebraicType<E>.pow(left : E, right : E) = binary(POW, left, right)
+fun <E:Number> AlgebraicType<E>.lt(left : E, right : E) = compare(left, right) == -1
+fun <E:Number> AlgebraicType<E>.lte(left : E, right : E) = compare(left, right) != 1
+fun <E:Number> AlgebraicType<E>.gt(left : E, right : E) = compare(left, right) == 1
+fun <E:Number> AlgebraicType<E>.gte(left : E, right : E) = compare(left, right) != -1
+fun <E:Number> AlgebraicType<E>.eq(left : E, right : E) = compare(left, right) == 0
+val <E:Number> AlgebraicType<E>.two : E get() = add(one, one)
+val <E:Number> AlgebraicType<E>.half : E get() = coerceFrom(0.5)
+val <E:Number> AlgebraicType<E>.negativeOne : E get() = negate(one)

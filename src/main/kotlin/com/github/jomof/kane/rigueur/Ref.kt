@@ -1,6 +1,6 @@
 package com.github.jomof.kane.rigueur
 
-interface MatrixShape<E:Any> {
+interface MatrixShape<E:Number> {
     val columns : Int
     val rows : Int
     val type : AlgebraicType<E>
@@ -8,7 +8,7 @@ interface MatrixShape<E:Any> {
     fun owns(index : Int) : Boolean
 }
 
-data class LinearMatrixShape<E:Any>(
+data class LinearMatrixShape<E:Number>(
     override val columns : Int,
     override val rows : Int,
     val offset : Int,
@@ -18,7 +18,7 @@ data class LinearMatrixShape<E:Any>(
     override fun owns(index: Int) = index >= offset && index < offset + columns * rows
 }
 
-class LinearMatrixRef<E:Any>(
+class LinearMatrixRef<E:Number>(
     override val columns : Int,
     override val rows : Int,
     override val type : AlgebraicType<E>,
@@ -30,7 +30,7 @@ class LinearMatrixRef<E:Any>(
     override fun set(column: Int, row: Int, value: E) { array[coordinateToIndex(column, row) + offset] = value }
 }
 
-data class LookupMatrixShape<E:Any>(
+data class LookupMatrixShape<E:Number>(
     override val columns : Int,
     override val rows : Int,
     val offsets : List<Int>,
@@ -40,7 +40,7 @@ data class LookupMatrixShape<E:Any>(
     override fun owns(index: Int) = offsets.contains(index)
 }
 
-class LookupMatrixRef<E:Any>(
+class LookupMatrixRef<E:Number>(
     override val columns : Int,
     override val rows : Int,
     override val type : AlgebraicType<E>,
@@ -53,10 +53,10 @@ class LookupMatrixRef<E:Any>(
 }
 
 data class EmbeddedScalarShape(val offset : Int) {
-    fun <E:Any> ref(array : Array<E>) = ScalarRef(offset, array)
+    fun <E:Number> ref(array : Array<E>) = ScalarRef(offset, array)
 }
 
-class ScalarRef<E:Any>(
+class ScalarRef<E:Number>(
     private val offset : Int,
     private val array : Array<E>) {
     val value : E get() = array[offset]

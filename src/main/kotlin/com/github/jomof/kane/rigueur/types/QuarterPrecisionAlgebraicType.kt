@@ -139,5 +139,5 @@ val QuarterPrecisionAlgebraicType = object : AlgebraicType<Byte>(Byte::class.jav
         return if (result.contains(".")) result.trimEnd('0').trimEnd('.')
         else result
     }
-    override fun fromDouble(double : Double) = doubleToByteIndex(double)
+    override fun coerceFrom(value: Any) = doubleToByteIndex(value as Double)
 }
