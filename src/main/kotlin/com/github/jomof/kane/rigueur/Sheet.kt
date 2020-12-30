@@ -62,7 +62,7 @@ data class Sheet(
 
     private fun render() : String {
         val sb = StringBuilder()
-        val widths = Array(columns + 1) { 2 }
+        val widths = Array(columns + 1) { 0 }
 
         // Calculate widths
         for(row in 0 until rows) {
@@ -74,33 +74,29 @@ data class Sheet(
             }
         }
 
-        fun leftPad(value : String, width : Int) = value + " ".repeat(width - value.length) + " "
-        fun rightPad(value : String, width : Int) = " ".repeat(width - value.length) + value + " "
-        fun centerPad(value : String, width : Int) = rightPad(leftPad(value, width / 2), width)
-
         // Column headers
         widths.indices.forEach { index ->
             val width = widths[index]
-            if (index == 0) sb.append(centerPad("", width))
-            else sb.append(centerPad(indexToColumnTag(index - 1), width))
+            if (index == 0) sb.append(" ".repeat(width) + " ")
+            else sb.append(padCenter(indexToColumnTag(index - 1), width) + " ")
         }
         sb.append("\n")
 
         // Dashes headers
         widths.indices.forEach { index ->
             val width = widths[index]
-            if (index == 0) sb.append(centerPad("", width))
+            if (index == 0) sb.append(" ".repeat(width) + " ")
             else sb.append("-".repeat(widths[index]) + " ")
         }
         sb.append("\n")
 
         // Data
         for(row in 0 until rows) {
-            sb.append(rightPad("${row+1}", widths[0]))
+            sb.append(padLeft("${row+1}", widths[0]) + " ")
             for(column in 0 until columns) {
                 val cell = coordinateToCellTag(column, row)
                 val value = cells[cell] ?: ""
-                sb.append(rightPad("$value", widths[column + 1]))
+                sb.append(padLeft("$value", widths[column + 1]) + " ")
             }
             if (row != rows - 1) sb.append("\n")
         }
@@ -111,6 +107,10 @@ data class Sheet(
 
     companion object {
         val CURRENT = RelativeCellReferenceExpr(Coordinate(0, 0))
+        val ABOVE = CURRENT.above()
+        val BELOW = CURRENT.below()
+        val LEFT = CURRENT.left()
+        val RIGHT = CURRENT.right()
 
         fun indexToColumnTag(column : Int) : String {
             assert(column >= 0)
@@ -161,26 +161,25 @@ data class Sheet(
 
 // Coercion
 private fun coerceToTypedExpr(cell : String, value : Any) : TypedExpr {
-    val coord = Sheet.cellTagToCoordinate(cell)
     return when (value) {
         is TypedExpr -> value.replaceTypedExpr {
             when(it) {
                 is CoerceScalar<*> -> when(it.value) {
                     is RelativeCellReferenceExpr ->
-                        it.copy(value = AbsoluteCellReferenceExpr(coord + it.value.coordinate, it.type))
+                        it.copy(value = AbsoluteCellReferenceExpr(
+                            Sheet.cellTagToCoordinate(cell) + it.value.coordinate, it.type))
                     else -> it
                 }
                 else -> it
             }
         }
-        is Int -> ConstantScalar(value, Int::class.java.algebraicType)
-        else -> error("Type of '$value' is unknown")
+        else -> constant(value)
     }
 }
 
 // Times
-inline operator fun <reified E:Any> RelativeCellReferenceExpr.plus(right : ScalarExpr<E>) =
-    CoerceScalar(this, right.type) + right
-inline operator fun <reified E:Any> RelativeCellReferenceExpr.plus(right : E) =
-    CoerceScalar(this, E::class.java.algebraicType) + right
-
+inline operator fun <reified E:Any> RelativeCellReferenceExpr.plus(right : ScalarExpr<E>) = CoerceScalar(this, right.type) + right
+inline operator fun <reified E:Any> RelativeCellReferenceExpr.plus(right : E) = CoerceScalar(this, E::class.java.algebraicType) + right
+// Pow
+inline fun <reified E:Any> pow(left : RelativeCellReferenceExpr, right : ScalarExpr<E>) = pow(CoerceScalar(left, right.type), right)
+inline fun <reified E:Any> pow(left : RelativeCellReferenceExpr, right : E) = pow(CoerceScalar(left, E::class.java.algebraicType), right)

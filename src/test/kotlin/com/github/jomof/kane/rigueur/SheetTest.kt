@@ -1,5 +1,6 @@
 package com.github.jomof.kane.rigueur
 
+import com.github.jomof.kane.rigueur.Sheet.Companion.ABOVE
 import com.github.jomof.kane.rigueur.Sheet.Companion.CURRENT
 import com.github.jomof.kane.rigueur.types.dollars
 import org.junit.Test
@@ -57,6 +58,16 @@ class SheetTest {
             "A4" to 2024, "B4" to dollars(1_000_000),
         )
         println(sheet)
+    }
+
+    @Test
+    fun `find minimum`() {
+        val sheet = Sheet("dollars").with(
+            "A1" to 2.0,
+            "A2" to pow(ABOVE, 2.0) + 1.0
+        )
+        println("$sheet\n")
+        println(sheet.eval())
     }
 
     @Test

@@ -524,6 +524,7 @@ inline fun <reified E:Any> columnVariable(vararg elements : E) =
     MatrixVariable(1, elements.size, E::class.java.algebraicType, elements.toList().map { it })
 // Constant
 fun <E:Any> constant(value : E, type : AlgebraicType<*>) = ConstantScalar(value, type as AlgebraicType<E>)
+fun <E:Any> constant(value : E) = ConstantScalar(value, value.javaClass.algebraicType)
 
 // Tableau
 fun <E:Any> tableauOf(vararg elements : NamedExpr<E>) : Tableau<E> = Tableau(elements.toList())
