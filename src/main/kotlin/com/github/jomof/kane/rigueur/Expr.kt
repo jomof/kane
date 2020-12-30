@@ -465,8 +465,8 @@ operator fun <E:Any, L : E, R : MatrixExpr<E>> L.div(right : R) = BinaryScalarMa
 operator fun <E:Any, L : MatrixExpr<E>, R : ScalarExpr<E>> L.div(right : R) = BinaryMatrixScalar(DIV, columns, rows, this, right)
 operator fun <E:Any, L : ScalarExpr<E>, R : MatrixExpr<E>> L.div(right : R) = BinaryScalarMatrix(DIV, right.columns, right.rows, this, right)
 // Plus
-operator fun <E:Any, L : ScalarExpr<E>, R : E> L.plus(right : R) = BinaryScalar(PLUS, this, ConstantScalar(right, type))
-operator fun <E:Any, L : ScalarExpr<E>, R : ScalarExpr<E>> L.plus(right : R) : ScalarExpr<E> = BinaryScalar(PLUS, this, right)
+operator fun <E:Any> ScalarExpr<E>.plus(right : E) = BinaryScalar(PLUS, this, ConstantScalar(right, type))
+operator fun <E:Any> ScalarExpr<E>.plus(right : ScalarExpr<E>) = BinaryScalar(PLUS, this, right)
 operator fun <E:Any> E.plus(right : ScalarExpr<E>) = BinaryScalar(PLUS, ConstantScalar(this, right.type), right)
 operator fun <E:Any, L : MatrixExpr<E>, R : E> L.plus(right : R) = BinaryMatrixScalar(PLUS, columns, rows, this, ConstantScalar(right, type))
 operator fun <E:Any, L : E, R : MatrixExpr<E>> L.plus(right : R) = BinaryScalarMatrix(PLUS, right.columns, right.rows, ConstantScalar(this, right.type), right)

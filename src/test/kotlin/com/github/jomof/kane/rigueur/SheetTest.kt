@@ -64,10 +64,11 @@ class SheetTest {
     fun `find minimum`() {
         val sheet = Sheet("dollars").with(
             "A1" to 2.0,
-            "A2" to pow(ABOVE, 2.0) + 1.0
+            "A2" to -2.0,
+            "A3" to (pow(CURRENT.above(2), 2.0) + pow(CURRENT.above(1), 2.0)) + 1.0
         )
         println("$sheet\n")
-        println(sheet.minimize("A2", "A1"))
+        println(sheet.minimize("A3", "A1", "A2"))
     }
 
     @Test

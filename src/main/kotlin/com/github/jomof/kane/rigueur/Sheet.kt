@@ -221,8 +221,8 @@ private fun coerceToTypedExpr(cell : String, value : Any) : TypedExpr {
 }
 
 // Times
-inline operator fun <reified E:Any> RelativeCellReferenceExpr.plus(right : ScalarExpr<E>) = CoerceScalar(this, right.type) + right
-inline operator fun <reified E:Any> RelativeCellReferenceExpr.plus(right : E) = CoerceScalar(this, E::class.java.algebraicType) + right
+inline operator fun <reified E:Number> RelativeCellReferenceExpr.plus(right : ScalarExpr<E>) = CoerceScalar(this, right.type) + right
+inline operator fun <reified E:Number> RelativeCellReferenceExpr.plus(right : E) = CoerceScalar(this, E::class.java.algebraicType) + right
 // Pow
-inline fun <reified E:Any> pow(left : RelativeCellReferenceExpr, right : ScalarExpr<E>) = pow(CoerceScalar(left, right.type), right)
-inline fun <reified E:Any> pow(left : RelativeCellReferenceExpr, right : E) = pow(CoerceScalar(left, E::class.java.algebraicType), right)
+inline fun <reified E:Number> pow(left : RelativeCellReferenceExpr, right : ScalarExpr<E>) = pow(CoerceScalar(left, right.type), right)
+inline fun <reified E:Number> pow(left : RelativeCellReferenceExpr, right : E) : ScalarExpr<E> = pow(CoerceScalar(left, E::class.java.algebraicType), right)
