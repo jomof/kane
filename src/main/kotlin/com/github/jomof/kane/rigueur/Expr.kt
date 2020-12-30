@@ -5,14 +5,10 @@ package com.github.jomof.kane.rigueur
 import java.io.Closeable
 import kotlin.math.exp
 import kotlin.math.max
-import kotlin.math.pow
-import kotlin.math.sqrt
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 
-interface UntypedExpr {
-    //fun map(f : (UntypedExpr) -> UntypedExpr) = this
-}
+interface UntypedExpr
 interface TypedExpr : UntypedExpr {
     val type : AlgebraicType<*>
 }
@@ -20,8 +16,21 @@ interface Expr<T:Any> : TypedExpr {
     override val type : AlgebraicType<T>
 }
 interface ScalarExpr<T:Any> : Expr<T>
+
+class ExprFunction<T:Any>(
+    private val type : AlgebraicType<*>,
+    private val unsafe : (Any) -> Any) {
+    operator fun invoke(expr : Any) = unsafe(expr)
+    operator fun invoke(expr : UntypedExpr) = unsafe(expr) as UntypedExpr
+    operator fun <S:Any> invoke(expr : ScalarExpr<S>) : ScalarExpr<S> = unsafe(expr) as ScalarExpr<S>
+    operator fun <M:Any> invoke(expr : MatrixExpr<M>) : MatrixExpr<M> = unsafe(expr) as MatrixExpr<M>
+    operator fun <N:Any> invoke(expr : NamedExpr<N>) : NamedExpr<N> = unsafe(expr) as NamedExpr<N>
+    fun wrap(new : (Any) -> Any) = ExprFunction<T>(type) { new(it) }
+}
+
 interface ParentExpr<T:Any> : Expr<T> {
     val children : Iterable<Expr<T>>
+    fun <O:Any> mapChildren(f : ExprFunction<O>) : ParentExpr<T>
 }
 interface MatrixExpr<T:Any> : ParentExpr<T> {
     val columns : Int
@@ -108,12 +117,14 @@ data class UnaryScalar<E:Any>(
     override val type get() = value.type
     override val children get() = listOf(value)
     override fun toString() = render()
+    override fun <O : Any> mapChildren(f: ExprFunction<O>) = copy(value = f(value))
 }
 data class UnaryMatrixScalar<E:Any>(override val op : UnaryOp, override val value : MatrixExpr<E>) : ScalarExpr<E>, UnaryExpr<E>, ParentExpr<E> {
     init { track() }
     override val type get() = value.type
     override val children : Iterable<ScalarExpr<E>> = value.elements.asIterable()
     override fun toString() = render()
+    override fun <O : Any> mapChildren(f: ExprFunction<O>) = copy(value = f(value))
 }
 data class UnaryMatrix<E:Any>(override val op : UnaryOp, override val value : MatrixExpr<E>) : MatrixExpr<E>, UnaryExpr<E> {
     init { track() }
@@ -122,7 +133,7 @@ data class UnaryMatrix<E:Any>(override val op : UnaryOp, override val value : Ma
     override val type get() = value.type
     override fun get(column: Int, row: Int) = UnaryScalar(op, value[column,row])
     override fun toString() = render()
-
+    override fun <O : Any> mapChildren(f: ExprFunction<O>) = copy(value = f(value))
 }
 data class BinaryScalar<E:Any>(
     override val op : BinaryOp,
@@ -135,6 +146,7 @@ data class BinaryScalar<E:Any>(
     override val type get() = left.type
     override val children get() = listOf(left, right)
     override fun toString() = render()
+    override fun <O : Any> mapChildren(f: ExprFunction<O>) = copy(left = f(left), right = f(right))
 }
 data class BinaryScalarMatrix<E:Any>(
     override val op : BinaryOp,
@@ -146,6 +158,7 @@ data class BinaryScalarMatrix<E:Any>(
     override val type get() = left.type
     override fun get(column: Int, row: Int) = BinaryScalar(op, left, right[column, row])
     override fun toString() = render()
+    override fun <O : Any> mapChildren(f: ExprFunction<O>) = copy(left = f(left), right = f(right))
 }
 data class BinaryMatrixScalar<E:Any>(
     override val op : BinaryOp,
@@ -157,6 +170,7 @@ data class BinaryMatrixScalar<E:Any>(
     override val type get() = left.type
     override fun get(column: Int, row: Int) = BinaryScalar(op, left[column, row], right)
     override fun toString() = render()
+    override fun <O : Any> mapChildren(f: ExprFunction<O>) = copy(left = f(left), right = f(right))
 }
 data class BinaryMatrix<E:Any>(
     override val op : BinaryOp,
@@ -203,6 +217,7 @@ data class BinaryMatrix<E:Any>(
         else -> error("$op")
     }
     override fun toString() = render()
+    override fun <O : Any> mapChildren(f: ExprFunction<O>) = copy(left = f(left), right = f(right))
 }
 data class ScalarVariable<E:Any>(val initial : E) {
     init { track() }
@@ -252,6 +267,7 @@ data class NamedMatrixVariable<E:Any>(
     fun get(coordinate : Coordinate) = get(coordinate.column, coordinate.row)
     val elements get() = coordinates.map { get(it) }
     override fun toString() = render()
+    override fun <O : Any> mapChildren(f: ExprFunction<O>) = this
 }
 data class NamedScalar<E:Any>(
     override val name : String,
@@ -260,6 +276,7 @@ data class NamedScalar<E:Any>(
     override val type get() = scalar.type
     override val children get() = listOf(scalar)
     override fun toString() = render()
+    override fun <O : Any> mapChildren(f: ExprFunction<O>) = copy(scalar = f(scalar))
 }
 data class NamedMatrix<E:Any>(
     override val name : String,
@@ -270,6 +287,7 @@ data class NamedMatrix<E:Any>(
     override val type get() = matrix.type
     override fun get(column: Int, row: Int) = matrix[column,row]
     override fun toString() = render()
+    override fun <O : Any> mapChildren(f: ExprFunction<O>) = copy(matrix = f(matrix))
 }
 data class MatrixVariableElement<E:Any>(
     val column : Int,
@@ -314,6 +332,7 @@ data class DataMatrix<E:Any>(
         elements[coordinateToIndex(column, row)]
     }
     override fun toString() = render()
+    override fun <O : Any> mapChildren(f: ExprFunction<O>) = copy(elements = elements.map { f(it) })
 }
 
 data class Tableau<E:Any>(
@@ -322,6 +341,8 @@ data class Tableau<E:Any>(
     init { track() }
     override val type get() = children[0].type
     override fun toString() = render()
+    override fun <O : Any> mapChildren(f: ExprFunction<O>)
+        = copy(children = children.map { f(it) })
 }
 
 data class Slot<E:Any>(
@@ -360,21 +381,25 @@ data class MatrixAssign<E:Any>(
 data class NamedScalarAssign<E:Any>(
     override val name: String,
     val left : NamedScalarVariable<E>,
-    val right : ScalarExpr<E>,
-) : NamedExpr<E> {
+    val right : ScalarExpr<E>
+) : NamedExpr<E>, ParentExpr<E> {
     override val type get() = left.type
     init { track() }
     override fun toString() = render()
+    override val children = listOf(right)
+    override fun <O : Any> mapChildren(f: ExprFunction<O>) : NamedScalarAssign<E> = copy(right = f(right))
 }
 
 data class NamedMatrixAssign<E:Any>(
     override val name: String,
     val left : NamedMatrixVariable<E>,
     val right : MatrixExpr<E>
-) : NamedExpr<E> {
+) : NamedExpr<E>, ParentExpr<E> {
     override val type get() = left.type
     init { track() }
     override fun toString() = render()
+    override val children = listOf(right)
+    override fun <O : Any> mapChildren(f: ExprFunction<O>) : NamedMatrixAssign<E> = copy(right = f(right))
 }
 
 
@@ -493,32 +518,12 @@ inline fun <reified E:Any> matrixVariable(columns : Int, rows : Int, vararg elem
 inline fun <reified E:Any> matrixVariable(columns : Int, rows : Int, init : (Coordinate) -> E) =
     MatrixVariable(columns, rows, E::class.java.algebraicType, coordinatesOf(columns, rows).toList().map { init(it) })
 inline fun <reified E:Any> matrixVariable(columns : Int, rows : Int, type : AlgebraicType<E>, init : (Coordinate) -> Double) =
-    MatrixVariable(columns, rows, type, coordinatesOf(columns, rows).toList().map { type.fromDouble(init(it)) })
+    MatrixVariable(columns, rows, type, coordinatesOf(columns, rows).toList().map { type.coerceFrom(init(it)) })
 inline fun <reified E:Any> variable(initial : E = defaultOf()) = ScalarVariable(initial)
 inline fun <reified E:Any> columnVariable(vararg elements : E) =
     MatrixVariable(1, elements.size, E::class.java.algebraicType, elements.toList().map { it })
-// Fold
-fun <E:Any> MatrixExpr<E>.fold(
-    seed : ScalarExpr<E>,
-    op : (prior:ScalarExpr<E>, current:ScalarExpr<E>) -> ScalarExpr<E>) : ScalarExpr<E> {
-    return elements.fold(seed) { prior, current -> op(prior, current) }
-}
-
-fun <E:Any> MatrixExpr<E>.foldIndexed(
-    seed : ScalarExpr<E>,
-    op : (coord : Coordinate, prior:ScalarExpr<E>, current:ScalarExpr<E>) -> ScalarExpr<E>) : ScalarExpr<E> {
-    return coordinates.fold(seed) { prior, coord -> op(coord, prior, this[coord]) }
-}
-
-fun <E:Any> MatrixExpr<E>.foldIndexedToMatrix(
-    seed : ScalarExpr<E>,
-    op : (coord : Coordinate, prior:ScalarExpr<E>, current:ScalarExpr<E>) -> ScalarExpr<E>) : MatrixExpr<E> {
-    var prior = seed
-    return DataMatrix(columns, rows, coordinates.map { coord ->
-        prior = op(coord,  prior, this[coord])
-        prior
-    }.toList())
-}
+// Constant
+fun <E:Any> constant(value : E, type : AlgebraicType<*>) = ConstantScalar(value, type as AlgebraicType<E>)
 
 // Tableau
 fun <E:Any> tableauOf(vararg elements : NamedExpr<E>) : Tableau<E> = Tableau(elements.toList())
@@ -814,14 +819,15 @@ fun <E:Any> MatrixExpr<E>.substituteInitial() = (this as Expr<E>).substituteInit
 
 // Reduce arithmetic
 fun <E:Any> Expr<E>.memoizeAndReduceArithmetic(
-    memo : MutableMap<Expr<E>,Expr<E>> = mutableMapOf(),
-    selfMemo : MutableMap<Expr<E>,Expr<E>> = mutableMapOf()) : Expr<E> {
+    memo : MutableMap<TypedExpr,TypedExpr> = mutableMapOf(),
+    selfMemo : MutableMap<TypedExpr,TypedExpr> = mutableMapOf()) : Expr<E> {
     val thiz = selfMemo.computeIfAbsent(this) { this }
     if (memo.contains(thiz)) {
         val result = memo.getValue(thiz)
-        return result
+        return result as Expr<E>
     }
-    val result : Expr<E> = with(thiz) {
+    val result : Expr<E> = with(thiz as Expr<E>) {
+        fun <O:Any> Expr<O>.self() = this.memoizeAndReduceArithmetic(memo, selfMemo) as Expr<O>
         fun ScalarExpr<E>.self() = memoizeAndReduceArithmetic(memo, selfMemo) as ScalarExpr<E>
         fun MatrixExpr<E>.self() = memoizeAndReduceArithmetic(memo, selfMemo) as MatrixExpr<E>
         fun NamedMatrixVariable<E>.self() = memoizeAndReduceArithmetic(memo, selfMemo) as NamedMatrixVariable<E>
@@ -933,6 +939,24 @@ fun <E:Any> Expr<E>.memoizeAndReduceArithmetic(
             }
             is NamedScalarAssign -> copy(right = right.self())
             is Tableau -> copy(children = children.map { it.self() })
+            is CoerceScalar -> {
+                val value = when(value) {
+                    is Expr<*> -> value.self()
+                    else -> value
+                }
+                when {
+                    value is AbsoluteCellReferenceExpr<*> -> this
+                    value is Expr<*> && value.type == type ->  value as Expr<E>
+                    value is ConstantScalar<*> -> {
+                        assert (type != value.type)
+                        constant(type.coerceFrom(value.value), type)
+                    }
+                    else ->
+                        error("${value.javaClass}")
+                }
+
+            }
+            is AbsoluteCellReferenceExpr -> this
             else -> error("$javaClass")
         }
     }
@@ -948,6 +972,7 @@ fun <E:Any> Tableau<E>.reduceArithmetic() = (this as Expr<E>).memoizeAndReduceAr
 private fun <E:Any> Expr<E>.affineName(depth : Int = 2) : String? {
     if (depth == 0) return null
     return when(this) {
+        is CoerceScalar -> null
         is ConstantScalar -> null
         is NamedScalar -> name
         is MatrixVariableElement -> matrix.name

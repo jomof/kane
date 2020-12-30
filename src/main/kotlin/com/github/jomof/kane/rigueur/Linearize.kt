@@ -368,7 +368,6 @@ private fun <E:Any> Expr<E>.eval(space : Array<E>) : E {
 }
 
 private fun <E:Any> Expr<E>.gatherLeafExpressions() : List<ScalarExpr<E>> {
-    fun Expr<E>.self() = gatherLeafExpressions()
     fun Expr<E>.terminal() : Boolean = when(this) {
         is ConstantScalar -> true
         is Slot -> true
@@ -379,69 +378,24 @@ private fun <E:Any> Expr<E>.gatherLeafExpressions() : List<ScalarExpr<E>> {
         is UnaryScalar -> false
         else -> error("$javaClass")
     }
-   val result = when(this) {
-        is Slot -> listOf()
-        is NamedScalarVariable -> listOf()
-        is UnaryScalar -> {
-            if (value.terminal())
-                listOf(this)
-            else value.self()
+
+    return fold(listOf()) { prior, current ->
+        prior + when {
+            current is UnaryScalar && current.value.terminal() ->
+                listOf(current)
+            current is BinaryScalar && current.left.terminal() && current.right.terminal() ->
+                listOf(current)
+            else -> listOf()
         }
-        is BinaryScalar -> {
-           if (left.terminal() && right.terminal())
-               listOf(this)
-           else left.self() + right.self()
-        }
-        is ConstantScalar -> listOf()
-        is MatrixVariableElement -> listOf()
-        is ParentExpr -> children.flatMap { it.self() }
-        is NamedMatrixAssign -> right.elements.flatMap { it.self() }.toList()
-        is NamedScalarAssign -> right.self()
-        else -> error("$javaClass")
     }
-    return result
 }
 
 
-private fun <E:Any> Expr<E>.gatherNamedExprs(named : MutableSet<NamedExpr<E>> = mutableSetOf()) : Set<NamedExpr<E>> {
-    fun ScalarExpr<E>.self() { gatherNamedExprs(named) }
-    fun MatrixExpr<E>.self() { gatherNamedExprs(named) }
-    fun NamedExpr<E>.self() { gatherNamedExprs(named) }
-    if (this is NamedExpr) named += this
-    when(this) {
-        is ConstantScalar -> { }
-        is MatrixVariableElement -> { }
-        is NamedScalarVariable -> { }
-        is NamedMatrixVariable -> { }
-        is NamedScalarAssign -> right.self()
-        is NamedMatrixAssign -> right.self()
-        is NamedMatrix -> matrix.self()
-        is NamedScalar -> scalar.self()
-        is UnaryScalar -> value.self()
-        is UnaryMatrix -> value.self()
-        is UnaryMatrixScalar -> value.self()
-        is BinaryScalarMatrix -> {
-            left.self()
-            right.self()
-        }
-        is BinaryMatrixScalar -> {
-            left.self()
-            right.self()
-        }
-        is BinaryMatrix -> {
-            left.self()
-            right.self()
-        }
-        is BinaryScalar -> {
-            left.self()
-            right.self()
-        }
-        is DataMatrix -> elements.forEach { it.self() }
-        is Tableau -> children.forEach { child -> child.self() }
-        else -> error("$javaClass")
+private fun <E:Any> Expr<E>.gatherNamedExprs() =
+    fold(mutableSetOf<NamedExpr<E>>()) { prior, expr ->
+        if (expr is NamedExpr) prior += expr
+        prior
     }
-    return named
-}
 
 private fun <E:Any> Expr<E>.stripNames() : Expr<E> {
     fun <E:Any> ScalarExpr<E>.self() = stripNames() as ScalarExpr

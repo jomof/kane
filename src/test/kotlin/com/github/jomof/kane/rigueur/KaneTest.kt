@@ -548,7 +548,7 @@ class KaneTest {
 
     @Test
     fun `autoencode gaussian random into 8 bits`() {
-        val type = DoubleAlgebraicType
+        val type = doubleAlgebraicType
         val random = Random(3)
         val learningRate = 0.1
         val batchSize = 100.0
@@ -577,10 +577,10 @@ class KaneTest {
         val sumdw1 by matrixVariable(w1.columns,w1.rows,type) { 0.0 }
         val sumdw2 by matrixVariable(w2.columns,w2.rows,type) { 0.0 }
         val sumdw3 by matrixVariable(w3.columns,w3.rows,type) { 0.0 }
-        val dw0 by sumdw0 + type.fromDouble(learningRate/batchSize) * differentiate(d(error) / d(w0))
-        val dw1 by sumdw1 + type.fromDouble(learningRate/batchSize) * differentiate(d(error) / d(w1))
-        val dw2 by sumdw2 + type.fromDouble(learningRate/batchSize) * differentiate(d(error) / d(w2))
-        val dw3 by sumdw3 + type.fromDouble(learningRate/batchSize) * differentiate(d(error) / d(w3))
+        val dw0 by sumdw0 + type.coerceFrom(learningRate/batchSize) * differentiate(d(error) / d(w0))
+        val dw1 by sumdw1 + type.coerceFrom(learningRate/batchSize) * differentiate(d(error) / d(w1))
+        val dw2 by sumdw2 + type.coerceFrom(learningRate/batchSize) * differentiate(d(error) / d(w2))
+        val dw3 by sumdw3 + type.coerceFrom(learningRate/batchSize) * differentiate(d(error) / d(w3))
         val adw0 by assign(dw0 to sumdw0)
         val adw1 by assign(dw1 to sumdw1)
         val adw2 by assign(dw2 to sumdw2)
@@ -607,7 +607,7 @@ class KaneTest {
             val target = if(roll < 1)
                 space[abs(random.nextInt()) % space.size]
             else
-                type.fromDouble(random.nextGaussian())
+                type.coerceFrom(random.nextGaussian())
             inputRef.set(target)
             targetRef.set(target)
             layout.eval(space)
@@ -1033,7 +1033,7 @@ class KaneTest {
         val id = identifierOf(structure)
         assert(expr == expr)
         expr.memoizeAndReduceArithmetic()
-        if (expr.type == DoubleAlgebraicType) {
+        if (expr.type == doubleAlgebraicType) {
             if (expr is NamedExpr<*>) {
                 tableauOf(expr).linearize()
             }

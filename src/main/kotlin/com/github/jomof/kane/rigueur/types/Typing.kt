@@ -17,9 +17,14 @@ abstract class AlgebraicType<E:Any>(java : Class<E>) : KaneType<E>(java) {
     abstract fun compare(left : E, right : E) : Int
     abstract fun allocArray(size : Int, init: (Int) -> E) : Array<E>
     abstract fun allocNullableArray(size : Int, init: (Int) -> E?) : Array<E?>
-    abstract fun fromDouble(double : Double) : E
+    abstract fun coerceFrom(value : Any) : E
 }
-val DoubleAlgebraicType = object : AlgebraicType<Double>(Double::class.java) {
+
+class DoubleAlgebraicType(
+    val prefix : String = "",
+    val trimLeastSignificantZeros : Boolean = true,
+    val precision : Int = 5
+) : AlgebraicType<Double>(Double::class.java) {
     override val simpleName = "double"
     override val zero = 0.0
     override val one = 1.0
@@ -48,12 +53,22 @@ val DoubleAlgebraicType = object : AlgebraicType<Double>(Double::class.java) {
     override fun allocArray(size: Int, init: (Int) -> Double) = Array(size, init)
     override fun allocNullableArray(size: Int, init: (Int) -> Double?) = Array(size, init)
     override fun render(value: Any): String {
-        val result = BigDecimal(value as Double).setScale(5, RoundingMode.HALF_EVEN).toString()
-        return if (result.contains(".")) result.trimEnd('0').trimEnd('.')
+        val result = BigDecimal(value as Double).setScale(precision, RoundingMode.HALF_EVEN).toString()
+        val trimmed = if (result.contains(".") && trimLeastSignificantZeros)
+                result.trimEnd('0').trimEnd('.')
             else result
+        return prefix + trimmed
     }
-    override fun fromDouble(double : Double) = double
+    override fun coerceFrom(value : Any) = when(value) {
+        is Double -> value
+        is Int -> value.toDouble()
+        else -> error("${value.javaClass}")
+    }
 }
+
+val doubleAlgebraicType = DoubleAlgebraicType()
+
+
 val FloatAlgebraicType = object : AlgebraicType<Float>(Float::class.java) {
     override val simpleName = "float"
     override val zero = 0.0f
@@ -87,7 +102,10 @@ val FloatAlgebraicType = object : AlgebraicType<Float>(Float::class.java) {
         return if (result.contains(".")) result.trimEnd('0').trimEnd('.')
         else result
     }
-    override fun fromDouble(double : Double) = double.toFloat()
+    override fun coerceFrom(value : Any) = when(value) {
+        is Double -> value.toFloat()
+        else -> error("${value.javaClass}")
+    }
 }
 val StringAlgebraicType = object : AlgebraicType<String>(String::class.java) {
     override val simpleName = "string"
@@ -102,7 +120,7 @@ val StringAlgebraicType = object : AlgebraicType<String>(String::class.java) {
     override fun allocArray(size: Int, init: (Int) -> String) = Array(size, init)
     override fun allocNullableArray(size: Int, init: (Int) -> String?) = Array(size, init)
     override fun render(value: Any) = value.toString()
-    override fun fromDouble(double : Double) = "$double"
+    override fun coerceFrom(value : Any) = "$value"
 }
 
 val IntAlgebraicType = object : AlgebraicType<Int>(Int::class.java) {
@@ -112,18 +130,26 @@ val IntAlgebraicType = object : AlgebraicType<Int>(Int::class.java) {
         else -> error("$op")
     }
     override fun binary(op: BinaryOp, left: Int, right: Int) = when(op) {
+        PLUS -> left + right
+        MINUS -> left - right
+        TIMES -> left * right
+        DIV -> left / right
         else -> error("$op")
     }
     override fun compare(left: Int, right: Int) = left.compareTo(right)
     override fun allocArray(size: Int, init: (Int) -> Int) = Array(size, init)
     override fun allocNullableArray(size: Int, init: (Int) -> Int?) = Array(size, init)
     override fun render(value: Any) = value.toString()
-    override fun fromDouble(double : Double) = double.toInt()
+    override fun coerceFrom(value : Any) = when(value) {
+        is Double -> value.toInt()
+        is Int -> value
+        else -> error("${value.javaClass}")
+    }
 }
 
 val <E:Any> Class<E>.algebraicType : AlgebraicType<E> get() = when(this) {
     Double::class.java,
-    java.lang.Double::class.java -> DoubleAlgebraicType
+    java.lang.Double::class.java -> doubleAlgebraicType
     Float::class.java,
     java.lang.Float::class.java -> FloatAlgebraicType
     String::class.java,
@@ -148,5 +174,5 @@ fun <E:Any> AlgebraicType<E>.gt(left : E, right : E) = compare(left, right) == 1
 fun <E:Any> AlgebraicType<E>.gte(left : E, right : E) = compare(left, right) != -1
 fun <E:Any> AlgebraicType<E>.eq(left : E, right : E) = compare(left, right) == 0
 val <E:Any> AlgebraicType<E>.two : E get() = add(one, one)
-val <E:Any> AlgebraicType<E>.half : E get() = fromDouble(0.5)
+val <E:Any> AlgebraicType<E>.half : E get() = coerceFrom(0.5)
 val <E:Any> AlgebraicType<E>.negativeOne : E get() = negate(one)
