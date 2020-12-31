@@ -548,7 +548,7 @@ class KaneTest {
 
     @Test
     fun `autoencode gaussian random into 8 bits`() {
-        val type = doubleAlgebraicType
+        val type = Double::class.java.algebraicType
         val random = Random(3)
         val learningRate = 0.1
         val batchSize = 100.0
@@ -1022,8 +1022,8 @@ class KaneTest {
 
 
     // Try various things to see if we can make it crash
-    private fun spamExpression(expr : UntypedExpr) {
-        if (expr !is Expr<*>) return
+    private fun spamExpression(expr : Expr) {
+        if (expr !is AlgebraicExpr<*>) return
         fun identifierOf(structure : String) = structure.substringAfter("val ").substringBefore(" ")
         expr.toString()
 
@@ -1031,7 +1031,7 @@ class KaneTest {
         val id = identifierOf(structure)
         assert(expr == expr)
         expr.memoizeAndReduceArithmetic()
-        if (expr.type == doubleAlgebraicType) {
+        if (expr.type == Double::class.algebraicType) {
             if (expr is NamedExpr<*>) {
                 tableauOf(expr).linearize()
             }
@@ -1138,8 +1138,8 @@ class KaneTest {
                          input, w0, h1, w1, output, target, error, gradientW0, gradientW1,
                          x, q, m, b, y, polyTarget, polyError, dq, dm, db)
 
-        val next = mutableSetOf<UntypedExpr>()
-        val seen = mutableSetOf<UntypedExpr>()
+        val next = mutableSetOf<Expr>()
+        val seen = mutableSetOf<Expr>()
         next += all
         next += getRecordedExprs()
 

@@ -1,5 +1,7 @@
 package com.github.jomof.kane.rigueur
 
+import com.github.jomof.kane.rigueur.types.*
+
 interface Matrix<E:Number> {
     val columns : Int
     val rows : Int

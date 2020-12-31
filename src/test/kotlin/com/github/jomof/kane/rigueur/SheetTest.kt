@@ -61,6 +61,14 @@ class SheetTest {
     }
 
     @Test
+    fun `string in sheet`() {
+        val sheet = Sheet("dollars").with(
+            "A1" to "My String"
+        )
+        println("$sheet\n")
+    }
+
+    @Test
     fun `find minimum`() {
         val sheet = Sheet("dollars").with(
             "A1" to 2.0,

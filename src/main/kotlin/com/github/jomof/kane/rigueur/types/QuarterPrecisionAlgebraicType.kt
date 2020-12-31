@@ -133,11 +133,11 @@ val QuarterPrecisionAlgebraicType = object : AlgebraicType<Byte>(Byte::class.jav
         doubleLookup[left+128].compareTo(doubleLookup[right+128])
     override fun allocArray(size: Int, init: (Int) -> Byte) = Array(size, init)
     override fun allocNullableArray(size: Int, init: (Int) -> Byte?) = Array(size, init)
-    override fun render(byte: Any): String {
-        val value = byteToDouble(byte as Byte)
+    override fun render(value: Number): String {
+        val value = byteToDouble(value.toByte())
         val result = BigDecimal(value).setScale(5, RoundingMode.HALF_EVEN).toString()
         return if (result.contains(".")) result.trimEnd('0').trimEnd('.')
         else result
     }
-    override fun coerceFrom(value: Any) = doubleToByteIndex(value as Double)
+    override fun coerceFrom(value: Number) = doubleToByteIndex(value.toDouble())
 }

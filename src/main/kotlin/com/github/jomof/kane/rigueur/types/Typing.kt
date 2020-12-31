@@ -1,23 +1,26 @@
-package com.github.jomof.kane.rigueur
+@file:Suppress("UNCHECKED_CAST")
 
+package com.github.jomof.kane.rigueur.types
+
+import com.github.jomof.kane.rigueur.*
 import java.math.BigDecimal
 import java.math.RoundingMode
 import kotlin.math.pow
 import kotlin.math.exp
 import kotlin.reflect.KClass
 
-open class KaneType<E:Number>(val java : Class<E>)
+open class KaneType<E:Any>(val java : Class<E>)
 abstract class AlgebraicType<E:Number>(java : Class<E>) : KaneType<E>(java) {
     abstract val simpleName : String
     open val zero : E get() = error("not supported")
     open val one : E get() = error("not supported")
-    abstract fun render(value : Any) : String
+    abstract fun render(value : Number) : String
     abstract fun binary(op : BinaryOp, left : E, right : E) : E
     abstract fun unary(op : UnaryOp, value : E) : E
     abstract fun compare(left : E, right : E) : Int
     abstract fun allocArray(size : Int, init: (Int) -> E) : Array<E>
     abstract fun allocNullableArray(size : Int, init: (Int) -> E?) : Array<E?>
-    abstract fun coerceFrom(value : Any) : E
+    abstract fun coerceFrom(value : Number) : E
 }
 
 class DoubleAlgebraicType(
@@ -52,24 +55,21 @@ class DoubleAlgebraicType(
     override fun compare(left: Double, right: Double) = left.compareTo(right)
     override fun allocArray(size: Int, init: (Int) -> Double) = Array(size, init)
     override fun allocNullableArray(size: Int, init: (Int) -> Double?) = Array(size, init)
-    override fun render(value: Any): String {
-        val result = BigDecimal(value as Double).setScale(precision, RoundingMode.HALF_EVEN).toString()
+    override fun render(value: Number): String {
+        val result = BigDecimal(value.toDouble()).setScale(precision, RoundingMode.HALF_EVEN).toString()
         val trimmed = if (result.contains(".") && trimLeastSignificantZeros)
                 result.trimEnd('0').trimEnd('.')
             else result
         return prefix + trimmed
     }
-    override fun coerceFrom(value : Any) = when(value) {
-        is Double -> value
-        is Int -> value.toDouble()
-        else -> error("${value.javaClass}")
+    override fun coerceFrom(value : Number) = value.toDouble()
+
+    companion object {
+        val kaneType = DoubleAlgebraicType()
     }
 }
 
-val doubleAlgebraicType = DoubleAlgebraicType()
-
-
-val FloatAlgebraicType = object : AlgebraicType<Float>(Float::class.java) {
+class FloatAlgebraicType : AlgebraicType<Float>(Float::class.java) {
     override val simpleName = "float"
     override val zero = 0.0f
     override val one = 1.0f
@@ -97,18 +97,19 @@ val FloatAlgebraicType = object : AlgebraicType<Float>(Float::class.java) {
     override fun compare(left: Float, right: Float) = left.compareTo(right)
     override fun allocArray(size: Int, init: (Int) -> Float) = Array(size, init)
     override fun allocNullableArray(size: Int, init: (Int) -> Float?) = Array(size, init)
-    override fun render(value: Any): String {
-        val result = BigDecimal((value as Float).toDouble()).setScale(5, RoundingMode.HALF_EVEN).toString()
+    override fun render(value: Number): String {
+        val result = BigDecimal(value.toDouble()).setScale(5, RoundingMode.HALF_EVEN).toString()
         return if (result.contains(".")) result.trimEnd('0').trimEnd('.')
         else result
     }
-    override fun coerceFrom(value : Any) = when(value) {
-        is Double -> value.toFloat()
-        else -> error("${value.javaClass}")
+    override fun coerceFrom(value : Number) = value.toFloat()
+
+    companion object {
+        val kaneType = FloatAlgebraicType()
     }
 }
 
-val IntAlgebraicType = object : AlgebraicType<Int>(Int::class.java) {
+class IntAlgebraicType : AlgebraicType<Int>(Int::class.java) {
     override val simpleName = "int"
     override val zero = 0
     override fun unary(op : UnaryOp, value : Int) = when(op) {
@@ -124,21 +125,22 @@ val IntAlgebraicType = object : AlgebraicType<Int>(Int::class.java) {
     override fun compare(left: Int, right: Int) = left.compareTo(right)
     override fun allocArray(size: Int, init: (Int) -> Int) = Array(size, init)
     override fun allocNullableArray(size: Int, init: (Int) -> Int?) = Array(size, init)
-    override fun render(value: Any) = value.toString()
-    override fun coerceFrom(value : Any) = when(value) {
-        is Double -> value.toInt()
-        is Int -> value
-        else -> error("${value.javaClass}")
+    override fun render(value: Number) = value.toString()
+    override fun coerceFrom(value : Number) = value.toInt()
+
+    companion object {
+        val kaneType = IntAlgebraicType()
     }
 }
 
-val <E:Number> Class<E>.algebraicType : AlgebraicType<E> get() = when(this) {
+val <E:Number> Class<E>.algebraicType : AlgebraicType<E>
+    get() = when(this) {
     Double::class.java,
-    java.lang.Double::class.java -> doubleAlgebraicType
+    java.lang.Double::class.java -> DoubleAlgebraicType.kaneType
     Float::class.java,
-    java.lang.Float::class.java -> FloatAlgebraicType
+    java.lang.Float::class.java -> FloatAlgebraicType.kaneType
     Int::class.java,
-    java.lang.Integer::class.java -> IntAlgebraicType
+    java.lang.Integer::class.java -> IntAlgebraicType.kaneType
     else ->
         error("$this")
 } as AlgebraicType<E>

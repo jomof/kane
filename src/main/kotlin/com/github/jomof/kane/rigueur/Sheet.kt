@@ -1,6 +1,9 @@
 package com.github.jomof.kane.rigueur
 
 import com.github.jomof.kane.rigueur.Sheet.Companion.coordinateToCellTag
+import com.github.jomof.kane.rigueur.types.AlgebraicType
+import com.github.jomof.kane.rigueur.types.StringType
+import com.github.jomof.kane.rigueur.types.algebraicType
 import java.lang.Integer.max
 
 interface CellReferenceExpr<E:Number> : ScalarExpr<E>
@@ -12,7 +15,7 @@ data class AbsoluteCellReferenceExpr<E:Number>(
     override fun toString() = coordinateToCellTag(coordinate)
 }
 
-data class RelativeCellReferenceExpr(val coordinate : Coordinate) : UntypedExpr {
+data class RelativeCellReferenceExpr(val coordinate : Coordinate) : Expr {
     fun above(offset : Int = 1) = copy(coordinate = coordinate.copy(row = coordinate.row - offset))
     fun below(offset : Int = 1) = copy(coordinate = coordinate.copy(row = coordinate.row + offset))
     fun left(offset : Int = 1) = copy(coordinate = coordinate.copy(column = coordinate.column - offset))
@@ -21,15 +24,16 @@ data class RelativeCellReferenceExpr(val coordinate : Coordinate) : UntypedExpr 
 }
 
 data class CoerceScalar<T:Number>(
-    val value : UntypedExpr,
-    override val type : AlgebraicType<T>) : ScalarExpr<T> {
+    val value : Expr,
+    override val type : AlgebraicType<T>
+) : ScalarExpr<T> {
     override fun toString() = "$value"
-    fun <O:Any> mapChildren(f : ExprFunction<O>) = copy(value = f(value))
+    fun mapChildren(f : ExprFunction) = copy(value = f(value))
 }
 
 data class Sheet(
-    val name : String,
-    val cells : Map<String, TypedExpr> = mapOf()) {
+    val name : String = "",
+    val cells : Map<String, TypedExpr<*>> = mapOf()) {
 
     operator fun get(cell : String) = cells[cell]
 
@@ -55,7 +59,7 @@ data class Sheet(
             cells[cell] = replaced
         }
         cells.forEach { (cell, expr) ->
-            cells[cell] = (expr as Expr<*>).memoizeAndReduceArithmetic()
+            cells[cell] = (expr as AlgebraicExpr<*>).memoizeAndReduceArithmetic()
         }
         return copy(cells = cells)
     }
@@ -65,7 +69,7 @@ data class Sheet(
 
         // Turn each 'variable' into a NamedScalarVariable
         variables.forEach { cell ->
-            when(val expr = (cells.getValue(cell) as Expr<Double>).memoizeAndReduceArithmetic()) {
+            when(val expr = (cells.getValue(cell) as AlgebraicExpr<Double>).memoizeAndReduceArithmetic()) {
                 is ConstantScalar -> expressions[cell] = NamedScalarVariable(cell, expr.value)
                 else -> error("$cell ($expr) is not a constant")
             }
@@ -203,9 +207,9 @@ data class Sheet(
 }
 
 // Coercion
-private fun coerceToTypedExpr(cell : String, value : Any) : TypedExpr {
+private fun coerceToTypedExpr(cell : String, value : Any) : TypedExpr<*> {
     return when (value) {
-        is TypedExpr -> value.replaceTypedExprTopDown {
+        is TypedExpr<*> -> value.replaceTypedExprTopDown {
             when(it) {
                 is CoerceScalar<*> -> when(it.value) {
                     is RelativeCellReferenceExpr ->
@@ -217,6 +221,7 @@ private fun coerceToTypedExpr(cell : String, value : Any) : TypedExpr {
             }
         }
         is Number -> constant(value)
+        is String -> ValueExpr(value, StringType.kaneType)
         else -> error("${value.javaClass}")
     }
 }

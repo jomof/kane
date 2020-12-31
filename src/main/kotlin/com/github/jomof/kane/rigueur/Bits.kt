@@ -1,5 +1,8 @@
 package com.github.jomof.kane.rigueur
 
+import com.github.jomof.kane.rigueur.types.AlgebraicType
+import com.github.jomof.kane.rigueur.types.algebraicType
+
 inline fun <reified E:Number> bitsToArray(
     value : Int,
     count : Int,

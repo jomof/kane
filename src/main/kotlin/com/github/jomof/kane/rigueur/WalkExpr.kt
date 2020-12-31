@@ -3,8 +3,12 @@ package com.github.jomof.kane.rigueur
 
 import com.github.jomof.kane.rigueur.Direction.BOTTOM_UP
 import com.github.jomof.kane.rigueur.Direction.TOP_DOWN
+import com.github.jomof.kane.rigueur.types.KaneType
 
-private fun Any.unsafeReplace(direction : Direction, type : AlgebraicType<out Number>, f : ExprFunction<out Number>) : Any {
+private fun Any.unsafeReplace(
+    direction : Direction,
+    type : KaneType<out Any>,
+    f : ExprFunction) : Any {
     val self = f.wrap { it.unsafeReplace(direction, type, f) }
     return when(direction) {
         TOP_DOWN -> f(this).dispatchExpr(self)
@@ -12,7 +16,7 @@ private fun Any.unsafeReplace(direction : Direction, type : AlgebraicType<out Nu
     }
 }
 
-private fun Any.dispatchExpr(self: ExprFunction<out Any>): Any {
+private fun Any.dispatchExpr(self: ExprFunction): Any {
     return when (this) {
         is Slot<*>,
         is NamedMatrixVariable<*>,
@@ -21,7 +25,7 @@ private fun Any.dispatchExpr(self: ExprFunction<out Any>): Any {
         is AbsoluteCellReferenceExpr<*>,
         is NamedScalarVariable<*> -> this
         is CoerceScalar<*> -> when (value) {
-            is TypedExpr -> mapChildren(self)
+            is TypedExpr<*> -> mapChildren(self)
             else -> error("${value.javaClass}")
         }
         is ParentExpr<*> -> mapChildren(self)
@@ -31,31 +35,31 @@ private fun Any.dispatchExpr(self: ExprFunction<out Any>): Any {
 
 enum class Direction { TOP_DOWN, BOTTOM_UP }
 
-fun TypedExpr.replaceTypedExprTopDown(f: (TypedExpr) -> TypedExpr) =
-    unsafeReplace(TOP_DOWN, type, ExprFunction(type) { f(it as TypedExpr) }) as TypedExpr
-fun <E:Number> Expr<E>.replaceExprTopDown(f: (Expr<E>) -> Expr<E>) =
-    unsafeReplace(TOP_DOWN, type, ExprFunction<E>(type) { f(it as Expr<E>) }) as Expr<E>
+fun TypedExpr<*>.replaceTypedExprTopDown(f: (TypedExpr<*>) -> TypedExpr<*>) =
+    unsafeReplace(TOP_DOWN, type, ExprFunction { f(it as TypedExpr<*>) }) as TypedExpr<*>
+fun <E:Number> AlgebraicExpr<E>.replaceExprTopDown(f: (AlgebraicExpr<E>) -> AlgebraicExpr<E>) =
+    unsafeReplace(TOP_DOWN, type, ExprFunction { f(it as AlgebraicExpr<E>) }) as AlgebraicExpr<E>
 fun <E:Number> ScalarExpr<E>.replaceTopDown(f: (ScalarExpr<E>) -> ScalarExpr<E>) =
-    unsafeReplace(TOP_DOWN, type, ExprFunction<E>(type) { f(it as ScalarExpr<E>) }) as ScalarExpr<E>
+    unsafeReplace(TOP_DOWN, type, ExprFunction { f(it as ScalarExpr<E>) }) as ScalarExpr<E>
 
-fun TypedExpr.replaceTypedExprBottomUp(f: (TypedExpr) -> TypedExpr) =
-    unsafeReplace(BOTTOM_UP, type, ExprFunction(type) { f(it as TypedExpr) }) as TypedExpr
-fun <E:Number> Expr<E>.replaceExprBottomUp(f: (Expr<E>) -> Expr<E>) =
-    unsafeReplace(BOTTOM_UP, type, ExprFunction<E>(type) { f(it as Expr<E>) }) as Expr<E>
+fun TypedExpr<*>.replaceTypedExprBottomUp(f: (TypedExpr<*>) -> TypedExpr<*>) =
+    unsafeReplace(BOTTOM_UP, type, ExprFunction { f(it as TypedExpr<*>) }) as TypedExpr<*>
+fun <E:Number> AlgebraicExpr<E>.replaceExprBottomUp(f: (AlgebraicExpr<E>) -> AlgebraicExpr<E>) =
+    unsafeReplace(BOTTOM_UP, type, ExprFunction { f(it as AlgebraicExpr<E>) }) as AlgebraicExpr<E>
 fun <E:Number> ScalarExpr<E>.replaceBottomUp(f: (ScalarExpr<E>) -> ScalarExpr<E>) =
-    unsafeReplace(BOTTOM_UP, type, ExprFunction<E>(type) { f(it as ScalarExpr<E>) }) as ScalarExpr<E>
+    unsafeReplace(BOTTOM_UP, type, ExprFunction { f(it as ScalarExpr<E>) }) as ScalarExpr<E>
 
-fun TypedExpr.replaceTyped(direction : Direction = BOTTOM_UP, f: (TypedExpr) -> TypedExpr) =
-    unsafeReplace(direction, type, ExprFunction(type) { f(it as TypedExpr) }) as TypedExpr
-fun <E:Number> Expr<E>.replaceExpr(direction : Direction = BOTTOM_UP, f: (Expr<E>) -> Expr<E>) =
-    unsafeReplace(direction, type, ExprFunction<E>(type) { f(it as Expr<E>) }) as Expr<E>
+fun TypedExpr<*>.replaceTyped(direction : Direction = BOTTOM_UP, f: (TypedExpr<*>) -> TypedExpr<*>) =
+    unsafeReplace(direction, type, ExprFunction { f(it as TypedExpr<*>) }) as TypedExpr<*>
+fun <E:Number> AlgebraicExpr<E>.replaceExpr(direction : Direction = BOTTOM_UP, f: (AlgebraicExpr<E>) -> AlgebraicExpr<E>) =
+    unsafeReplace(direction, type, ExprFunction { f(it as AlgebraicExpr<E>) }) as AlgebraicExpr<E>
 fun <E:Number> ScalarExpr<E>.replace(direction : Direction = BOTTOM_UP, f: (ScalarExpr<E>) -> ScalarExpr<E>) =
-    unsafeReplace(direction, type, ExprFunction<E>(type) { f(it as ScalarExpr<E>) }) as ScalarExpr<E>
+    unsafeReplace(direction, type, ExprFunction { f(it as ScalarExpr<E>) }) as ScalarExpr<E>
 
-fun <S:Any, E:Number> Expr<E>.foldTopDown(state: S, f: (state : S, expr : Expr<E>) -> S) : S {
+fun <S:Any, E:Number> AlgebraicExpr<E>.foldTopDown(state: S, f: (state : S, expr : AlgebraicExpr<E>) -> S) : S {
     var prior = state
-    unsafeReplace(TOP_DOWN, type, ExprFunction<E>(type) {
-        prior = f(prior, it as Expr<E>)
+    unsafeReplace(TOP_DOWN, type, ExprFunction {
+        prior = f(prior, it as AlgebraicExpr<E>)
         it // This defeats replacement so this whole operation becomes a visit instead
     })
     return prior
