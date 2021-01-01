@@ -509,14 +509,22 @@ operator fun <E:Number, L : MatrixExpr<E>, R : ScalarExpr<E>> L.plus(right : R) 
 operator fun <E:Number, L : ScalarExpr<E>, R : MatrixExpr<E>> L.plus(right : R) = BinaryScalarMatrix(PLUS, right.columns, right.rows, this, right)
 operator fun <E:Number, L : MatrixExpr<E>, R : MatrixExpr<E>> L.plus(right : R) = BinaryMatrix(PLUS, right.columns, right.rows, this, right)
 // Minus
-operator fun <E:Number, L : ScalarExpr<E>, R : E> L.minus(right : R) = BinaryScalar(MINUS, this, ConstantScalar(right, type))
-operator fun <E:Number, L : ScalarExpr<E>, R : ScalarExpr<E>> L.minus(right : R) = BinaryScalar(MINUS, this, right)
-operator fun <E:Number> E.minus(right : ScalarExpr<E>) = BinaryScalar(MINUS, ConstantScalar(this, right.type), right)
-operator fun <E:Number, L : MatrixExpr<E>, R : E> L.minus(right : R) = BinaryMatrixScalar(MINUS, columns, rows, this, ConstantScalar(right, type))
-operator fun <E:Number, L : E, R : MatrixExpr<E>> L.minus(right : R) = BinaryScalarMatrix(MINUS, right.columns, right.rows, ConstantScalar(this, right.type), right)
-operator fun <E:Number, L : MatrixExpr<E>, R : ScalarExpr<E>> L.minus(right : R) = BinaryMatrixScalar(MINUS, columns, rows, this, right)
-operator fun <E:Number, L : ScalarExpr<E>, R : MatrixExpr<E>> L.minus(right : R) = BinaryScalarMatrix(MINUS, right.columns, right.rows, this, right)
-operator fun <E:Number, L : MatrixExpr<E>, R : MatrixExpr<E>> L.minus(right : R) = BinaryMatrix(MINUS, right.columns, right.rows, this, right)
+operator fun <E:Number, L : ScalarExpr<E>, R : E> L.minus(right : R) =
+    BinaryScalar(MINUS, this, ConstantScalar(right, type))
+operator fun <E:Number, L : ScalarExpr<E>, R : ScalarExpr<E>> L.minus(right : R) =
+    BinaryScalar(MINUS, this, right)
+operator fun <E:Number> E.minus(right : ScalarExpr<E>) =
+    BinaryScalar(MINUS, ConstantScalar(this, right.type), right)
+operator fun <E:Number, L : MatrixExpr<E>, R : E> L.minus(right : R) =
+    BinaryMatrixScalar(MINUS, columns, rows, this, ConstantScalar(right, type))
+operator fun <E:Number, L : E, R : MatrixExpr<E>> L.minus(right : R) =
+    BinaryScalarMatrix(MINUS, right.columns, right.rows, ConstantScalar(this, right.type), right)
+operator fun <E:Number, L : MatrixExpr<E>, R : ScalarExpr<E>> L.minus(right : R) =
+    BinaryMatrixScalar(MINUS, columns, rows, this, right)
+operator fun <E:Number, L : ScalarExpr<E>, R : MatrixExpr<E>> L.minus(right : R) =
+    BinaryScalarMatrix(MINUS, right.columns, right.rows, this, right)
+operator fun <E:Number, L : MatrixExpr<E>, R : MatrixExpr<E>> L.minus(right : R) =
+    BinaryMatrix(MINUS, right.columns, right.rows, this, right)
 // Unary minus
 operator fun <E:Number> ScalarExpr<E>.unaryMinus() = UnaryScalar(NEGATE, this)
 operator fun <E:Number> MatrixExpr<E>.unaryMinus() = UnaryMatrix(NEGATE, this)
@@ -903,7 +911,7 @@ fun <E:Number> AlgebraicExpr<E>.memoizeAndReduceArithmetic(
                 val rightAffine = right.affineName()
                 val result: AlgebraicExpr<E> = when {
                     leftConst != null && rightConst != null -> ConstantScalar(type.binary(op, leftConst, rightConst), type)
-                    leftAffine != null && rightAffine != null && leftAffine.compareTo(rightAffine) == 1 ->
+                    leftAffine != null && rightAffine != null && leftAffine.compareTo(rightAffine) == 1 && op.associative ->
                         BinaryScalar(op, right, left).self()
                     op == TIMES && left is UnaryScalar && left.op == NEGATE && right is UnaryScalar && right.op == NEGATE ->
                         (left.value * right.value).self()
@@ -1133,7 +1141,7 @@ fun Expr.render(entryPoint : Boolean = true) : String {
     return when(this) {
         is Slot<*> -> "\$$slot"
         is NamedScalarVariable<*> -> name
-        is ScalarVariable<*> -> "$initial"
+        is ScalarVariable<*> -> type.render(initial)
         is BinaryMatrix<*> -> binary(op, left, right)
         is NamedScalarAssign<*> -> "${left.self()} <- ${right.self()}"
         is NamedMatrixAssign<*> -> "${left.self()} <- ${right.self()}"

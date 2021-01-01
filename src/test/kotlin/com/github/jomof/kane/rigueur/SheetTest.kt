@@ -50,7 +50,7 @@ class SheetTest {
         sheet["A4"]!!.assertString("A5+3")
         sheet["A5"]!!.assertString("B5+5")
         sheet["B1"]!!.assertString("A1+8")
-        sheet["B5"]!!.assertString("7.0")
+        sheet["B5"]!!.assertString("7")
         val evaluated = sheet.eval()
         println(evaluated)
         evaluated["A1"]!!.assertString("1")
@@ -104,11 +104,36 @@ class SheetTest {
             val a1 by constant(2.0)
             val b1 by constant(11.0)
             val a2 by constant(-2.0)
-            val a3 by pow(a1, 2.0) + (1.0 - pow(a2, 2.0)) + b1 + 1.0
-            add(a1,a2,b1,a3)
+            val a3 by b1 - a2 - 1.0
+            val a4 by pow(a1, 2.0) + pow(up, 2.0) + 1.0
+            add(a1,a2,b1,a3,a4)
         }
         println("$sheet\n")
-        println(sheet.minimize("A3", "A1", "B1", "A2"))
+        val minimized = sheet.minimize("A4", "A1", "B1", "A2")
+        println("$minimized\n")
+        minimized["A1"].assertString("0")
+        minimized["A2"].assertString("4")
+        minimized["B1"].assertString("5")
+        minimized.eval()["A4"].assertString("1") // The minimized target
+    }
+
+    @Test
+    fun `find minimum but keep a variable constant`() {
+        val sheet = sheetOf {
+            val a1 by constant(2.0)
+            val b1 by constant(11.0)
+            val a2 by constant(-2.0)
+            val a3 by b1 - a2 - 1.0
+            val a4 by pow(a1, 2.0) + pow(up, 2.0) + 1.0
+            add(a1,a2,b1,a3,a4)
+        }
+        println("$sheet\n")
+        val minimized = sheet.minimize("A4", "A1", "A2") // Does not include B1
+        println("$minimized\n")
+        minimized["A1"].assertString("0")
+        minimized["A2"].assertString("10")
+        minimized["B1"].assertString("11") // Should be held constant
+        minimized.eval()["A4"].assertString("1") // The minimized target
     }
 
     @Test

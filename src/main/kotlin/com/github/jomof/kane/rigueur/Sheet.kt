@@ -6,6 +6,8 @@ import com.github.jomof.kane.rigueur.types.KaneType
 import com.github.jomof.kane.rigueur.types.StringType
 import com.github.jomof.kane.rigueur.types.kaneType
 import java.lang.Integer.max
+import kotlin.math.abs
+import kotlin.math.pow
 import kotlin.reflect.KProperty
 
 interface CellReferenceExpr : Expr
@@ -97,7 +99,7 @@ data class SheetBuilder(
                             is NamedScalarVariable<*> -> {
                                 val name = it.name.toUpperCase()
                                 val coordinate = cellNameToCoordinate(name) // Check name is valid cell name
-                                cells[name] = variable(it.initial as Number, it.type as AlgebraicType<Number>)
+                                cells[name] = variable(it.initial, it.type as AlgebraicType<Number>)
                                 CoerceScalar(AbsoluteCellReferenceExpr(coordinate), it.type)
                             }
                             else -> it
@@ -172,9 +174,10 @@ fun Sheet.eval() : Sheet {
     return SheetBuilder(name = name, cells = cells)
 }
 
-fun Sheet.minimize(target : String, vararg variables : String) : Sheet {
-    val expressions = mutableMapOf<String, NamedScalarExpr<Double>>()
-    val resolvedVariables = mutableMapOf<String, NamedScalarExpr<Double>>()
+fun Sheet.minimize(
+    target : String,
+    vararg variables : String) : Sheet {
+    val resolvedVariables = mutableMapOf<String, NamedScalarVariable<Double>>()
 
     // Turn each 'variable' into a NamedScalarVariable
     variables.forEach { cell ->
@@ -192,36 +195,74 @@ fun Sheet.minimize(target : String, vararg variables : String) : Sheet {
     }
 
     // Follow all expressions from 'target'
-    val remaining = mutableSetOf(target)
-    while(remaining.isNotEmpty()) {
-        val next = remaining.first()
-        remaining -= next
-        if (expressions.containsKey(next)) continue
-        val expr = cells.getValue(next)
-        if (expr is ScalarVariable<*>) continue
-
-        val replaced = expr.replaceExpr {
+    var targetExpr = cells.getValue(target)
+    var done = false
+    while(!done) {
+        done = true
+        targetExpr = targetExpr.replaceExpr {
             when(it) {
                 is CoerceScalar<*> -> {
-                    val result = it.value as ScalarExpr<Double>
-                    result
+                    when(it.value) {
+                        is ScalarVariable<*> -> {
+                            // This variable is not being optimized so treat it as constant
+                            constant(it.value.initial)
+                        }
+                        is ScalarExpr<*> -> it.value
+                        else -> error("${it.value.javaClass}")
+                    }
                 }
                 is AbsoluteCellReferenceExpr -> {
                     val ref = "$it"
-                    remaining += ref
-                    val result = resolvedVariables.getValue(ref)
+                    val result = resolvedVariables[ref]?:cells.getValue(ref)
+                    done = false
                     result
                 }
                 else -> it
             }
         } as ScalarExpr<Double>
-        expressions[next] = NamedScalar(next, replaced)
+    }
+    if (targetExpr !is ScalarExpr<*>) {
+        error("'$target' was not a numeric expression")
+    }
+    val namedTarget : NamedScalarExpr<Double> = NamedScalar(target, targetExpr as ScalarExpr<Double>)
+
+    // Differentiate target with respect to each variable
+    val diffs = resolvedVariables.map { (name, variable) ->
+        val name = "d$target/d${variable.name}"
+        val derivative = differentiate(d(namedTarget)/d(variable)).reduceArithmetic()
+        NamedScalar(name, derivative)
     }
 
-    val tab = Tableau(resolvedVariables.values + expressions.values).linearize()
-    println(tab)
+    // Assign back variables updated by a delta of their respective derivative
+    val assignBacks = (resolvedVariables.values zip diffs).map { (variable, diff) ->
+        NamedScalarAssign("update(${variable.name})", variable, variable - 0.01 * diff).reduceArithmetic()
+    }
 
-    return this
+    // Create the model, allocate space for it, and iterate. Break when the target didn't move much
+    val model = Tableau(resolvedVariables.values + diffs + namedTarget + assignBacks).linearize()
+    val space = model.allocateSpace()
+    var priorTarget = model.shape(namedTarget).ref(space).value
+    for(i in 0 until 100000) {
+        val sb = StringBuilder()
+        sb.append(resolvedVariables.values.joinToString(" ") {
+            val value = model.shape(it).ref(space)
+            "${it.name}: $value"
+        })
+        model.eval(space)
+        val newTarget = model.shape(namedTarget).ref(space).value
+        if (abs(newTarget-priorTarget) < 0.0000000000001)
+            break
+        priorTarget = newTarget
+    }
+
+    // Extract the computed values and plug them back into a new sheet
+    val new = cells.toMutableMap()
+    resolvedVariables.values.forEach {
+        val value = model.shape(it).ref(space)
+        assert(new.containsKey(it.name))
+        new[it.name] = variable(value.value, (cells[it.name] as AlgebraicExpr<Double>).type)
+    }
+    return SheetBuilder(name, new)
 }
 
 fun Sheet.render() : String {
@@ -234,8 +275,8 @@ fun Sheet.render() : String {
         widths[0] = max(widths[0], "$row".length)
         for(column in 0 until columns) {
             val cell = coordinateToCellName(column, row)
-            val value = cells[cell] ?: ""
-            widths[column + 1] = max(widths[column + 1], "$value".length)
+            val value = cells[cell]?.toString() ?: ""
+            widths[column + 1] = max(widths[column + 1], value.length)
             widths[column + 1] = max(widths[column + 1], indexToColumnName(column).length)
         }
     }
@@ -261,8 +302,8 @@ fun Sheet.render() : String {
         sb.append(padLeft("${row+1}", widths[0]) + " ")
         for(column in 0 until columns) {
             val cell = coordinateToCellName(column, row)
-            val value = cells[cell] ?: ""
-            sb.append(padLeft("$value", widths[column + 1]) + " ")
+            val value = cells[cell]?.toString() ?: ""
+            sb.append(padLeft(value, widths[column + 1]) + " ")
         }
         if (row != rows - 1) sb.append("\n")
     }

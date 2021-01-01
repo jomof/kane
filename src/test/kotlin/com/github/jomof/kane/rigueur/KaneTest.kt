@@ -860,7 +860,7 @@ class KaneTest {
 
     @Test
     fun `variable rendering`() {
-        variable<Double>().assertString("0.0")
+        variable<Double>().assertString("0")
         variable<Int>().assertString("0")
         val a by variable<Double>()
         a.assertString("a")
@@ -871,7 +871,11 @@ class KaneTest {
         (a * -1.0).assertString("a*-1")
         (a * b).assertString("a*b")
         (a - b).assertString("a-b")
+        (b + a).reduceArithmetic().assertString("a+b")
+        (b - a).reduceArithmetic().assertString("b-a")
         (a / b).assertString("a/b")
+        (b * a).reduceArithmetic().assertString("a*b")
+        (b / a).reduceArithmetic().assertString("b/a")
         (a + a * b).assertString("a+a*b")
         ((a + a) * b).assertString("(a+a)*b")
         ((a - a) * b).assertString("(a-a)*b")

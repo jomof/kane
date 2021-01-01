@@ -1,6 +1,7 @@
 package com.github.jomof.kane.rigueur
 
-fun Any.assertString(expected : String) {
+fun Any?.assertString(expected : String) {
+    if (this == null) return "null".assertString(expected)
     val actual = toString().trim('\n')
     val expectedTrimmed = expected.trim('\n')
     assert(actual == expectedTrimmed) {
