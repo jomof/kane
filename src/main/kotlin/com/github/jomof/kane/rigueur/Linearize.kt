@@ -396,8 +396,8 @@ private fun <E:Number> AlgebraicExpr<E>.gatherLeafExpressions() : List<ScalarExp
 
 
 private fun <E:Number> AlgebraicExpr<E>.gatherNamedExprs() =
-    foldTopDown(mutableSetOf<NamedExpr<E>>()) { prior, expr ->
-        if (expr is NamedExpr) prior += expr
+    foldTopDown(mutableSetOf<NamedAlgebraicExpr<E>>()) { prior, expr ->
+        if (expr is NamedAlgebraicExpr) prior += expr
         prior
     }
 
@@ -440,7 +440,7 @@ private fun <E:Number> AlgebraicExpr<E>.linearizeExprs(
     model : LinearModel<E>) : AlgebraicExpr<E> {
     fun ScalarExpr<E>.self() = linearizeExprs(exprs, model) as ScalarExpr
     fun MatrixExpr<E>.self() = linearizeExprs(exprs, model) as MatrixExpr
-    fun NamedExpr<E>.self() = linearizeExprs(exprs, model) as NamedExpr
+    fun NamedAlgebraicExpr<E>.self() = linearizeExprs(exprs, model) as NamedAlgebraicExpr
     if (exprs.contains(this)) {
         return linearizeExpr(model)
     }

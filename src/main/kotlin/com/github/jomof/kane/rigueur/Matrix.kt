@@ -69,11 +69,11 @@ fun <E:Number> Matrix<E>.render(): String {
 
 
 inline fun <reified E:Number> valueMatrixOf(columns : Int, rows : Int, vararg values : E) =
-    ValueMatrix(columns, rows, E::class.java.algebraicType, values.toList())
+    ValueMatrix(columns, rows, E::class.java.kaneType, values.toList())
 inline fun <reified E:Number> Array<E>.toColumnMatrix() =
-    ValueMatrix(1, size, E::class.java.algebraicType, toList())
+    ValueMatrix(1, size, E::class.java.kaneType, toList())
 inline fun <reified E:Number> Array<E>.toRowMatrix() =
-    ValueMatrix(size, 1, E::class.java.algebraicType, toList())
+    ValueMatrix(size, 1, E::class.java.kaneType, toList())
 
 data class ValueMatrix<E:Number>(
     override val columns: Int,

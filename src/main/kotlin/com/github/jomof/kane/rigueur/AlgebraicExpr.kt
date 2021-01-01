@@ -19,13 +19,21 @@ interface AlgebraicExpr<E:Number> : TypedExpr<E> {
 interface ScalarExpr<T:Number> : AlgebraicExpr<T>
 
 class ExprFunction(
-    private val unsafe : (Any) -> Any) {
-    operator fun invoke(expr : Any) = unsafe(expr)
-    operator fun invoke(expr : Expr) = unsafe(expr) as Expr
-    operator fun <S:Number> invoke(expr : ScalarExpr<S>) : ScalarExpr<S> = unsafe(expr) as ScalarExpr<S>
+    private val unsafe : (Expr) -> Expr) {
+    operator fun invoke(expr : Expr) = unsafe(expr)
+    operator fun <S:Number> invoke(expr : ScalarExpr<S>) : ScalarExpr<S> = run {
+        val result = unsafe(expr)
+        try {
+            result as ScalarExpr<S>
+        } catch (e: Throwable) {
+            unsafe(expr)
+            throw e
+        }
+    }
     operator fun <M:Number> invoke(expr : MatrixExpr<M>) : MatrixExpr<M> = unsafe(expr) as MatrixExpr<M>
-    operator fun <N:Number> invoke(expr : NamedExpr<N>) : NamedExpr<N> = unsafe(expr) as NamedExpr<N>
-    fun wrap(new : (Any) -> Any) = ExprFunction { new(it) }
+    operator fun <N:Number> invoke(expr : NamedAlgebraicExpr<N>) : NamedAlgebraicExpr<N> = unsafe(expr) as NamedAlgebraicExpr<N>
+    operator fun <N:Number> invoke(expr : NamedScalarExpr<N>) : NamedScalarExpr<N> = unsafe(expr) as NamedScalarExpr<N>
+    fun wrap(new : (Expr) -> Expr) = ExprFunction { new(it) }
 }
 
 interface ParentExpr<T:Any> : TypedExpr<T> {
@@ -41,11 +49,12 @@ interface MatrixExpr<T:Number> : AlgebraicExpr<T>, ParentExpr<T> {
 interface VariableExpr<T:Number> : AlgebraicExpr<T>
 interface ScalarVariableExpr<T:Number> : ScalarExpr<T>, VariableExpr<T>
 interface MatrixVariableExpr<T:Number> : MatrixExpr<T>, VariableExpr<T>
-interface NamedExpr<T:Number> : AlgebraicExpr<T> {
+interface NamedExpr : Expr {
     val name : String
 }
-interface NamedScalarExpr<T:Number> : NamedExpr<T>, ScalarExpr<T>
-interface NamedMatrixExpr<T:Number> : NamedExpr<T>, MatrixExpr<T>
+interface NamedAlgebraicExpr<T:Number> : NamedExpr, AlgebraicExpr<T>
+interface NamedScalarExpr<T:Number> : NamedAlgebraicExpr<T>, ScalarExpr<T>
+interface NamedMatrixExpr<T:Number> : NamedAlgebraicExpr<T>, MatrixExpr<T>
 interface UnaryExpr<T:Number> : AlgebraicExpr<T> {
     val op : UnaryOp
     val value : AlgebraicExpr<T>
@@ -89,8 +98,8 @@ val MINUS by BinaryOp(op = "-", precedence = 4, infix = true)
 val CROSS by BinaryOp(op = " cross ", precedence = 5, associative = false, infix = true)
 val STACK by BinaryOp(op = " stack ", precedence = 5, associative = true, infix = true)
 
-operator fun <T:Number> ScalarExpr<T>.getValue(thisRef: Any?, property: KProperty<*>) = NamedScalar(property.name, this.record().reduceArithmetic())
-operator fun <T:Number> MatrixExpr<T>.getValue(thisRef: Any?, property: KProperty<*>) = NamedMatrix(property.name, this.record().reduceArithmetic())
+operator fun <T:Number> ScalarExpr<T>.getValue(thisRef: Any?, property: KProperty<*>) = NamedScalar(property.name, reduceArithmetic())
+operator fun <T:Number> MatrixExpr<T>.getValue(thisRef: Any?, property: KProperty<*>) = NamedMatrix(property.name, reduceArithmetic())
 
 data class ConvertScalar<E: Number, T:Number>(
     val value : ScalarExpr<T>,
@@ -113,6 +122,20 @@ data class ValueExpr<E: Any>(
     val value : E,
     override val type : KaneType<E>
 ) : TypedExpr<E> {
+    init {
+        assert(value !is Expr) {
+            "${value.javaClass}"
+        }
+        track()
+    }
+    override fun toString() = value.toString()
+    operator fun getValue(e: E?, property: KProperty<*>) = NamedValueExpr(property.name, value, type)
+}
+data class NamedValueExpr<E: Any>(
+    override val name: String,
+    val value : E,
+    override val type : KaneType<E>
+) : NamedExpr, TypedExpr<E> {
     init {
         assert(value !is Expr)
         track()
@@ -192,8 +215,8 @@ data class BinaryMatrix<E:Number>(
 ) : MatrixExpr<E>, BinaryExpr<E> {
     init {
         track()
-        fun lm() = if (left is NamedExpr<*>) "matrix '${left.name}'" else "left matrix"
-        fun rm() = if (right is NamedExpr<*>) "matrix '${right.name}'" else "right matrix"
+        fun lm() = if (left is NamedExpr) "matrix '${left.name}'" else "left matrix"
+        fun rm() = if (right is NamedExpr) "matrix '${right.name}'" else "right matrix"
         when(op) {
             STACK -> {}
             CROSS -> assert(left.columns == right.rows) {
@@ -230,18 +253,19 @@ data class BinaryMatrix<E:Number>(
     override fun toString() = render()
     override fun mapChildren(f: ExprFunction) = copy(left = f(left), right = f(right))
 }
-data class ScalarVariable<E:Number>(val initial : E) {
+data class ScalarVariable<E:Number>(
+    val initial : E,
+    override val type: AlgebraicType<E>) : AlgebraicExpr<E> {
     init { track() }
-    val type get() = initial.javaClass.kotlin
     operator fun getValue(thisRef: Any?, property: KProperty<*>) = NamedScalarVariable(property.name, initial)
-    override fun toString() = "?"
+    override fun toString() = render()
 }
 data class NamedScalarVariable<E:Number>(
     override val name : String,
     val initial : E) : ScalarVariableExpr<E>, NamedScalarExpr<E> {
     init { track() }
     override fun toString() = render()
-    override val type get() = initial.javaClass.algebraicType
+    override val type get() = initial.javaClass.kaneType
 }
 data class MatrixVariable<E:Number>(
     val columns : Int,
@@ -347,7 +371,7 @@ data class DataMatrix<E:Number>(
 }
 
 data class Tableau<E:Number>(
-    override val children: List<NamedExpr<E>>,
+    override val children: List<NamedAlgebraicExpr<E>>,
 ) : AlgebraicExpr<E>, ParentExpr<E> {
     init { track() }
     override val type get() = children[0].type
@@ -378,7 +402,7 @@ data class MatrixAssign<E:Number>(
     init {
         track()
         fun lm() = "matrix '${left.name}'"
-        fun rm() = if (right is NamedExpr<*>) "matrix '${right.name}'" else "right matrix"
+        fun rm() = if (right is NamedExpr) "matrix '${right.name}'" else "right matrix"
         assert(left.rows == right.rows) {
             "${lm()} columns ${left.rows} did not equal ${rm()} columns ${right.rows}"
         }
@@ -393,7 +417,7 @@ data class NamedScalarAssign<E:Number>(
     override val name: String,
     val left : NamedScalarVariable<E>,
     val right : ScalarExpr<E>
-) : NamedExpr<E>, ParentExpr<E> {
+) : NamedAlgebraicExpr<E>, ParentExpr<E> {
     override val type get() = left.type
     init { track() }
     override fun toString() = render()
@@ -405,7 +429,7 @@ data class NamedMatrixAssign<E:Number>(
     override val name: String,
     val left : NamedMatrixVariable<E>,
     val right : MatrixExpr<E>
-) : NamedExpr<E>, ParentExpr<E> {
+) : NamedAlgebraicExpr<E>, ParentExpr<E> {
     override val type get() = left.type
     init { track() }
     override fun toString() = render()
@@ -521,26 +545,25 @@ fun <E:Number> defaultOf(type : Class<E>) : E = when (type) {
 fun <E:Number> defaultOf(type : KClass<E>) : E = defaultOf(type.java)
 inline fun <reified E:Number> defaultOf() : E = defaultOf(E::class)
 // Variables
-inline fun <reified E:Number> matrixVariable(columns : Int, rows : Int) = matrixVariable(E::class.java.algebraicType, columns, rows)
+inline fun <reified E:Number> matrixVariable(columns : Int, rows : Int) = matrixVariable(E::class.java.kaneType, columns, rows)
 inline fun <reified E:Number> matrixVariable(type : AlgebraicType<E>, columns : Int, rows : Int) =
     MatrixVariable(columns, rows, type, (0 until rows * columns).map { type.zero })
 inline fun <reified E:Number> matrixVariable(columns : Int, rows : Int, vararg elements : E) =
-    MatrixVariable(columns, rows, E::class.java.algebraicType, elements.toList().map { it })
+    MatrixVariable(columns, rows, E::class.java.kaneType, elements.toList().map { it })
 inline fun <reified E:Number> matrixVariable(columns : Int, rows : Int, init : (Coordinate) -> E) =
-    MatrixVariable(columns, rows, E::class.java.algebraicType, coordinatesOf(columns, rows).toList().map { init(it) })
+    MatrixVariable(columns, rows, E::class.java.kaneType, coordinatesOf(columns, rows).toList().map { init(it) })
 inline fun <reified E:Number> matrixVariable(columns : Int, rows : Int, type : AlgebraicType<E>, init : (Coordinate) -> Double) =
     MatrixVariable(columns, rows, type, coordinatesOf(columns, rows).toList().map { type.coerceFrom(init(it)) })
-inline fun <reified E:Number> variable(initial : E = defaultOf()) = ScalarVariable(initial)
+inline fun <reified E:Number> variable(initial : E = defaultOf(), type : AlgebraicType<E> = E::class.kaneType) = ScalarVariable(initial, type)
 inline fun <reified E:Number> columnVariable(vararg elements : E) =
-    MatrixVariable(1, elements.size, E::class.java.algebraicType, elements.toList().map { it })
+    MatrixVariable(1, elements.size, E::class.java.kaneType, elements.toList().map { it })
 // Constant
 fun <E:Number> constant(value : E, type : AlgebraicType<*>) = ConstantScalar(value, type as AlgebraicType<E>)
-fun <E:Number> constant(value : E) = ConstantScalar(value, value.javaClass.algebraicType)
+fun <E:Number> constant(value : E) = ConstantScalar(value, value.javaClass.kaneType)
 
 // Tableau
-fun <E:Number> tableauOf(vararg elements : NamedExpr<E>) : Tableau<E> = Tableau(elements.toList())
+fun <E:Number> tableauOf(vararg elements : NamedAlgebraicExpr<E>) : Tableau<E> = Tableau(elements.toList())
 // Misc
-//fun <E:Number> constant(value : E) : ScalarExpr<E> = ConstantScalar(value)
 fun <E:Number> repeated(columns : Int, rows : Int, type : AlgebraicType<E>, value : E) : MatrixExpr<E> =
     repeated(columns, rows, ConstantScalar(value, type))
 fun <E:Number> repeated(columns : Int, rows : Int, value : ScalarExpr<E>) : MatrixExpr<E> =
@@ -550,10 +573,7 @@ fun <E:Number> ScalarExpr<E>.tryFindConstant() : E? = when(this) {
     is NamedScalar -> scalar.tryFindConstant()
     else -> null
 }
-fun <E:Number> ScalarExpr<E>.tryFindNegation(): ScalarExpr<E>? {
-    return if (this is UnaryScalar<*> && op == NEGATE) return value as ScalarExpr<E>
-    else null
-}
+
 // Coordinates
 inline operator fun <E:Number, reified M:MatrixExpr<E>> M.get(coord : Coordinate) = get(coord.column, coord.row)
 val <E:Number> MatrixExpr<E>.coordinates get() = coordinatesOf(columns, rows)
@@ -668,7 +688,7 @@ fun <E:Number> differentiate(expr : MatrixExpr<E>) : MatrixExpr<E> = (differenti
 inline fun <reified E:Number> matrixOf(columns: Int, rows: Int, vararg elements : E) = DataMatrix(
     columns,
     rows,
-    elements.map { ConstantScalar(it, elements[0].javaClass.algebraicType) }.toList()
+    elements.map { ConstantScalar(it, elements[0].javaClass.kaneType) }.toList()
 )
 fun <E:Number> matrixOf(columns: Int, rows: Int, action:(Coordinate)->ScalarExpr<E>) :DataMatrix<E> =
     DataMatrix(
@@ -685,7 +705,7 @@ fun <E:Number> MatrixExpr<E>.map(action:(ScalarExpr<E>)->ScalarExpr<E>) = DataMa
 
 // Evaluate
 fun <E:Number> AlgebraicExpr<E>.eval(map : MutableMap<String, E>) : AlgebraicExpr<E> {
-    fun NamedExpr<E>.self() = eval(map) as NamedExpr<E>
+    fun NamedAlgebraicExpr<E>.self() = eval(map) as NamedAlgebraicExpr<E>
     fun ScalarExpr<E>.self() = eval(map) as ScalarExpr<E>
     fun MatrixExpr<E>.self() = eval(map) as MatrixExpr<E>
     fun AlgebraicExpr<E>.unwrapConstant() : ConstantScalar<E> = when(this) {
@@ -843,7 +863,7 @@ fun <E:Number> AlgebraicExpr<E>.memoizeAndReduceArithmetic(
         fun ScalarExpr<E>.self() = memoizeAndReduceArithmetic(memo, selfMemo) as ScalarExpr<E>
         fun MatrixExpr<E>.self() = memoizeAndReduceArithmetic(memo, selfMemo) as MatrixExpr<E>
         fun NamedMatrixVariable<E>.self() = memoizeAndReduceArithmetic(memo, selfMemo) as NamedMatrixVariable<E>
-        fun NamedExpr<E>.self() = memoizeAndReduceArithmetic(memo, selfMemo) as NamedExpr<E>
+        fun NamedAlgebraicExpr<E>.self() = memoizeAndReduceArithmetic(memo, selfMemo) as NamedAlgebraicExpr<E>
         when (this) {
             is NamedMatrixVariable -> this
             is ConstantScalar -> this
@@ -957,26 +977,25 @@ fun <E:Number> AlgebraicExpr<E>.memoizeAndReduceArithmetic(
                     else -> value
                 }
                 when {
-                    value is AbsoluteCellReferenceExpr<*> -> this
                     value is AlgebraicExpr<*> && value.type == type ->  value as AlgebraicExpr<E>
                     value is ConstantScalar<*> -> {
                         assert (type != value.type)
                         constant(type.coerceFrom(value.value), type)
                     }
-                    else ->
-                        error("${value.javaClass}")
+                    else -> copy(value = value)
                 }
 
             }
-            is AbsoluteCellReferenceExpr -> this
-            else -> error("$javaClass")
+            is ScalarVariable -> this
+            else ->
+                error("$javaClass")
         }
     }
     memo[thiz] = selfMemo.computeIfAbsent(result) { result }
     return result
 }
 
-fun <E:Number> NamedExpr<E>.reduceArithmetic() = (this as AlgebraicExpr<E>).memoizeAndReduceArithmetic() as NamedExpr<E>
+fun <E:Number> NamedAlgebraicExpr<E>.reduceArithmetic() = (this as AlgebraicExpr<E>).memoizeAndReduceArithmetic() as NamedAlgebraicExpr<E>
 fun <E:Number> ScalarExpr<E>.reduceArithmetic() = (this as AlgebraicExpr<E>).memoizeAndReduceArithmetic() as ScalarExpr<E>
 fun <E:Number> MatrixExpr<E>.reduceArithmetic() = (this as AlgebraicExpr<E>).memoizeAndReduceArithmetic() as MatrixExpr<E>
 fun <E:Number> Tableau<E>.reduceArithmetic() = (this as AlgebraicExpr<E>).memoizeAndReduceArithmetic() as Tableau<E>
@@ -991,6 +1010,7 @@ private fun <E:Number> AlgebraicExpr<E>.affineName(depth : Int = 2) : String? {
         is UnaryScalar -> value.affineName(depth - 1) ?: op.op
         is BinaryScalar -> left.affineName(depth - 1) ?: right.affineName(depth - 1) ?: op.op
         is NamedScalarVariable -> name
+        is NamedScalarExpr -> name
         else ->
             error("$javaClass")
     }
@@ -1009,7 +1029,7 @@ fun binaryRequiresParents(parent : BinaryOp, child : BinaryOp, childIsRight: Boo
         bit(childIsRight, 7)
     //println(sig)
     return when(sig) {
-        4,8,44,60,68,96,100,112,132,172,178,196,224,228,240 -> false
+        4,8,12,44,60,68,96,100,112,132,140,172,178,196,224,228,240 -> false
         else -> true
     }
 }
@@ -1113,7 +1133,7 @@ fun Expr.render(entryPoint : Boolean = true) : String {
     return when(this) {
         is Slot<*> -> "\$$slot"
         is NamedScalarVariable<*> -> name
-        is ScalarVariable<*> -> "?"
+        is ScalarVariable<*> -> "$initial"
         is BinaryMatrix<*> -> binary(op, left, right)
         is NamedScalarAssign<*> -> "${left.self()} <- ${right.self()}"
         is NamedMatrixAssign<*> -> "${left.self()} <- ${right.self()}"

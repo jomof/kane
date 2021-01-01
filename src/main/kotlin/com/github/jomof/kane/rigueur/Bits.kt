@@ -1,12 +1,12 @@
 package com.github.jomof.kane.rigueur
 
 import com.github.jomof.kane.rigueur.types.AlgebraicType
-import com.github.jomof.kane.rigueur.types.algebraicType
+import com.github.jomof.kane.rigueur.types.kaneType
 
 inline fun <reified E:Number> bitsToArray(
     value : Int,
     count : Int,
-    type: AlgebraicType<E> = E::class.algebraicType) = bitsToArray(value, count, type.zero, type.one)
+    type: AlgebraicType<E> = E::class.kaneType) = bitsToArray(value, count, type.zero, type.one)
 
 inline fun <reified E:Number> bitsToArray(
     value : Int,

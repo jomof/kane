@@ -102,6 +102,7 @@ class KaneTest {
         val error by pow(target - y, 2.0)
         val dm by -1.0 * r * differentiate(d(error)/d(m))
         val db by -1.0 * r * differentiate(d(error)/d(b))
+        (1.0 - pow(r, 2.0)).assertString("1-r²")
         error.assertString("error=(target-(m*x+b))²")
         dm.assertString("dm=2*r*(target-(m*x+b))*x")
         db.assertString("db=2*r*(target-(m*x+b))")
@@ -532,7 +533,7 @@ class KaneTest {
         val x by variable(100.0)
         val y by squarsh(x)
         val dy by (differentiate(d(y)/d(x)))
-        y.assertString("y=((2/e⁻ˣ+1)-1)+0.01*x")
+        y.assertString("y=(2/e⁻ˣ+1-1)+0.01*x")
         dy.assertString("dy=2*e⁻ˣ*(e⁻ˣ+1)⁻²+0.01")
         val fx = y.toFunc(x)
         val fxp = dy.toFunc(x)
@@ -548,7 +549,7 @@ class KaneTest {
 
     @Test
     fun `autoencode gaussian random into 8 bits`() {
-        val type = Double::class.java.algebraicType
+        val type = Double::class.java.kaneType
         val random = Random(3)
         val learningRate = 0.1
         val batchSize = 100.0
@@ -835,6 +836,8 @@ class KaneTest {
                 "$result != $expect"
             }
         }
+        check(MINUS, POW, childIsRight = false, expect = false)
+        check(MINUS, POW, childIsRight = true, expect = false)
         check(DIV, POW, childIsRight = false, expect = false)
         check(DIV, POW, childIsRight = true, expect = false)
         check(POW, PLUS, childIsRight = false, expect = true)
@@ -857,8 +860,8 @@ class KaneTest {
 
     @Test
     fun `variable rendering`() {
-        variable<Double>().assertString("?")
-        variable<Int>().assertString("?")
+        variable<Double>().assertString("0.0")
+        variable<Int>().assertString("0")
         val a by variable<Double>()
         a.assertString("a")
         val b by variable<Double>()
@@ -1031,8 +1034,8 @@ class KaneTest {
         val id = identifierOf(structure)
         assert(expr == expr)
         expr.memoizeAndReduceArithmetic()
-        if (expr.type == Double::class.algebraicType) {
-            if (expr is NamedExpr<*>) {
+        if (expr.type == Double::class.kaneType) {
+            if (expr is NamedAlgebraicExpr<*>) {
                 tableauOf(expr).linearize()
             }
         } else {
