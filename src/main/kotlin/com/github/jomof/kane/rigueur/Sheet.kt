@@ -69,12 +69,15 @@ data class SheetBuilder(
     val down get() = down()
     val left get() = left()
     val right get() = right()
-    fun <E:Number> constant(value : E) = ScalarVariable(value, value.javaClass.kaneType)
-    inline fun <reified E:Any> constant(value : E) = ValueExpr(value, object : KaneType<E>(E::class.java) { })
+    //fun <E:Number> constant(value : E) = ScalarVariable(value, value.javaClass.kaneType)
+    //inline fun <reified E:Any> constant(value : E) = ValueExpr(value, object : KaneType<E>(E::class.java) { })
     fun columnOf(vararg values : Any) = ColumnExpr(values.toList().map {
         when(it) {
             is Expr -> it
+            //is Number -> ScalarVariable(it, it.javaClass.kaneType)
             else -> constant(it)
+           //     error("${it.javaClass}")
+          //      ValueExpr(it, object : KaneType(it.javaClass) { })
         }
     })
 
@@ -102,7 +105,20 @@ data class SheetBuilder(
                                 cells[name] = variable(it.initial, it.type as AlgebraicType<Number>)
                                 CoerceScalar(AbsoluteCellReferenceExpr(coordinate), it.type)
                             }
-                            else -> it
+                            is NamedScalar<*> -> {
+                                remaining += it
+                                when {
+                                    it.scalar is ConstantScalar<*> -> {
+                                        val name = it.name.toUpperCase()
+                                        val coordinate = cellNameToCoordinate(name) // Check name is valid cell name
+                                        cells[name] = variable(it.scalar.value, it.type as AlgebraicType<Number>)
+                                        CoerceScalar(AbsoluteCellReferenceExpr(coordinate), it.type)
+                                    }
+                                    else -> it
+                                }
+                            }
+                            else ->
+                                it
                         }
                     }
                     cells[name] = typed
@@ -187,8 +203,8 @@ fun Sheet.minimize(
             else -> error("${value.javaClass}")
         }
         val variable = when(reduced) {
-            is ConstantScalar -> NamedScalarVariable(cell, reduced.value as Double)
-            is ScalarVariable -> NamedScalarVariable(cell, reduced.initial as Double)
+            is ConstantScalar -> NamedScalarVariable(cell, reduced.value as Double, reduced.type as AlgebraicType<Double>)
+            is ScalarVariable -> NamedScalarVariable(cell, reduced.initial as Double, reduced.type as AlgebraicType<Double>)
             else -> error("$cell (${cells.getValue(cell)}) is not a constant")
         }
         resolvedVariables[cell] = variable

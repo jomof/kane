@@ -77,7 +77,7 @@ class KaneTest {
         val input by matrixVariable<Double>(1, 1)
         val w0 by matrixVariable<Double>(input.rows + 1, 1)
         val h1 by logit(w0 cross (input stack 1.0))
-        h1.toDataMatrix().assertString("h1=[logit(w0[0,0]*input[0,0]+w0[1,0])]")
+        h1.toDataMatrix().reduceArithmetic().assertString("h1=[logit(w0[0,0]*input[0,0]+w0[1,0])]")
     }
 
     @Test
@@ -103,9 +103,9 @@ class KaneTest {
         val dm by -1.0 * r * differentiate(d(error)/d(m))
         val db by -1.0 * r * differentiate(d(error)/d(b))
         (1.0 - pow(r, 2.0)).assertString("1-r²")
-        error.assertString("error=(target-(m*x+b))²")
-        dm.assertString("dm=2*r*(target-(m*x+b))*x")
-        db.assertString("db=2*r*(target-(m*x+b))")
+        error.reduceArithmetic().assertString("error=(target-(m*x+b))²")
+        dm.reduceArithmetic().assertString("dm=2*r*(target-(m*x+b))*x")
+        db.reduceArithmetic().assertString("db=2*r*(target-(m*x+b))")
     }
 
     @Test
@@ -316,8 +316,9 @@ class KaneTest {
         val e0 by errors[0,0]
         val e1 by errors[0,1]
 
-//        h0.substituteInitial().assertString("h0=logit(0.15*0.05+0.2*0.1+0.35)")
-        h0.substituteInitial().reduceArithmetic().assertString("h0=0.59327")
+        val substituted = h0.substituteInitial()
+        substituted.assertString("h0=logit(0.15*0.05+0.2*0.1+0.35)")
+        substituted.reduceArithmetic().assertString("h0=0.59327")
 //        h1.substituteInitial().assertString("h1=logit(0.25*0.05+0.3*0.1+0.35)")
         h1.substituteInitial().reduceArithmetic().assertString("h1=0.59688")
 
@@ -510,8 +511,8 @@ class KaneTest {
         val x by variable<Double>()
         val fx by 4.0 / pow(x, 6.0)
         val dfx by differentiate(d(fx)/d(x))
-        fx.assertString("fx=4*x⁻⁶")
-        dfx.assertString("dfx=-24*x⁻⁷")
+        fx.reduceArithmetic().assertString("fx=4*x⁻⁶")
+        dfx.reduceArithmetic().assertString("dfx=-24*x⁻⁷")
     }
 
     @Test
@@ -533,7 +534,7 @@ class KaneTest {
         val x by variable(100.0)
         val y by squarsh(x)
         val dy by (differentiate(d(y)/d(x)))
-        y.assertString("y=(2/e⁻ˣ+1-1)+0.01*x")
+        y.reduceArithmetic().assertString("y=(2/e⁻ˣ+1-1)+0.01*x")
         dy.assertString("dy=2*e⁻ˣ*(e⁻ˣ+1)⁻²+0.01")
         val fx = y.toFunc(x)
         val fxp = dy.toFunc(x)
@@ -804,7 +805,7 @@ class KaneTest {
         val a by matrixVariable<Double>(1,3)
         val b by matrixVariable<Double>(3,2)
         val s by summation(a) / b
-        s[0,0].assertString("(a[0,0]+a[0,1]+a[0,2])/b[0,0]")
+        s[0,0].reduceArithmetic().assertString("(a[0,0]+a[0,1]+a[0,2])/b[0,0]")
     }
 
     @Test
@@ -856,6 +857,15 @@ class KaneTest {
         check(PLUS, TIMES, childIsRight = true, expect = false)
         check(MINUS, TIMES, childIsRight = false, expect = false)
         check(MINUS, TIMES, childIsRight = true, expect = false)
+    }
+
+    @Test
+    fun `dont eagerly expand constants`() {
+        val x by constant(1.0)
+        val y by constant(1.0)
+        val z by x + y
+        val p = z
+        z.assertString("z=x+y")
     }
 
     @Test
@@ -954,30 +964,30 @@ class KaneTest {
         val x by m[0,0]
         val y by m[0,1]
         val f1 by pow(x, 2.0) + pow(y, 3.0)
-        f1.assertString("f1=m[0,0]²+m[0,1]³")
+        f1.reduceArithmetic().assertString("f1=m[0,0]²+m[0,1]³")
         val d1 by d(f1) / d(x)
-        d1.assertString("d1=d(m[0,0]²+m[0,1]³)/d(m[0,0])")
+        d1.reduceArithmetic().assertString("d1=d(m[0,0]²+m[0,1]³)/d(m[0,0])")
         differentiate(d1).assertString("d1'=2*m[0,0]")
         val d2 by d(f1) / d(y)
-        d2.assertString("d2=d(m[0,0]²+m[0,1]³)/d(m[0,1])")
+        d2.reduceArithmetic().assertString("d2=d(m[0,0]²+m[0,1]³)/d(m[0,1])")
         differentiate(d2).assertString("d2'=3*m[0,1]²")
         val f2 by pow(x, 2.0) * pow(y, 3.0)
-        f2.assertString("f2=m[0,0]²*m[0,1]³")
+        f2.reduceArithmetic().assertString("f2=m[0,0]²*m[0,1]³")
         val df2dx by d(f2) / d(x)
-        df2dx.assertString("df2dx=d(m[0,0]²*m[0,1]³)/d(m[0,0])")
+        df2dx.reduceArithmetic().assertString("df2dx=d(m[0,0]²*m[0,1]³)/d(m[0,0])")
         differentiate(df2dx).assertString("df2dx'=2*m[0,0]*m[0,1]³")
         val df2dy by d(f2) / d(y)
-        df2dy.assertString("df2dy=d(m[0,0]²*m[0,1]³)/d(m[0,1])")
+        df2dy.reduceArithmetic().assertString("df2dy=d(m[0,0]²*m[0,1]³)/d(m[0,1])")
         differentiate(df2dy).assertString("df2dy'=3*m[0,0]²*m[0,1]²")
         val assigned by differentiate(df2dy)
-        assigned.assertString("assigned=3*m[0,0]²*m[0,1]²")
+        assigned.reduceArithmetic().assertString("assigned=3*m[0,0]²*m[0,1]²")
         val f3 by logit(x * y)
-        f3.assertString("f3=logit(m[0,0]*m[0,1])")
+        f3.reduceArithmetic().assertString("f3=logit(m[0,0]*m[0,1])")
         val df3dx by d(f3) / d(x)
-        df3dx.assertString("df3dx=d(logit(m[0,0]*m[0,1]))/d(m[0,0])")
+        df3dx.reduceArithmetic().assertString("df3dx=d(logit(m[0,0]*m[0,1]))/d(m[0,0])")
         differentiate(df3dx).assertString("df3dx'=logit(m[0,0]*m[0,1])*(1-logit(m[0,0]*m[0,1]))*m[0,1]")
         val df3dy by d(f3) / d(y)
-        df3dy.assertString("df3dy=d(logit(m[0,0]*m[0,1]))/d(m[0,1])")
+        df3dy.reduceArithmetic().assertString("df3dy=d(logit(m[0,0]*m[0,1]))/d(m[0,1])")
         differentiate(df3dy).assertString("df3dy'=logit(m[0,0]*m[0,1])*(1-logit(m[0,0]*m[0,1]))*m[0,0]")
     }
 
@@ -988,28 +998,28 @@ class KaneTest {
         val f1 by pow(x, 2.0) + pow(y, 3.0)
         f1.assertString("f1=x²+y³")
         val d1 by d(f1) / d(x)
-        d1.assertString("d1=d(x²+y³)/dx")
+        d1.reduceArithmetic().assertString("d1=d(x²+y³)/dx")
         differentiate(d1).assertString("d1'=2*x")
         val d2 by d(f1) / d(y)
-        d2.assertString("d2=d(x²+y³)/dy")
+        d2.reduceArithmetic().assertString("d2=d(x²+y³)/dy")
         differentiate(d2).assertString("d2'=3*y²")
         val f2 by pow(x, 2.0) * pow(y, 3.0)
         f2.assertString("f2=x²*y³")
         val df2dx by d(f2) / d(x)
-        df2dx.assertString("df2dx=d(x²*y³)/dx")
+        df2dx.reduceArithmetic().assertString("df2dx=d(x²*y³)/dx")
         differentiate(df2dx).assertString("df2dx'=2*x*y³")
         val df2dy by d(f2) / d(y)
-        df2dy.assertString("df2dy=d(x²*y³)/dy")
+        df2dy.reduceArithmetic().assertString("df2dy=d(x²*y³)/dy")
         differentiate(df2dy).assertString("df2dy'=3*x²*y²")
         val assigned by differentiate(df2dy)
-        assigned.assertString("assigned=3*x²*y²")
+        assigned.reduceArithmetic().assertString("assigned=3*x²*y²")
         val f3 by logit(x * y)
         f3.assertString("f3=logit(x*y)")
         val df3dx by d(f3) / d(x)
-        df3dx.assertString("df3dx=d(logit(x*y))/dx")
+        df3dx.reduceArithmetic().assertString("df3dx=d(logit(x*y))/dx")
         differentiate(df3dx).assertString("df3dx'=logit(x*y)*(1-logit(x*y))*y")
         val df3dy by d(f3) / d(y)
-        df3dy.assertString("df3dy=d(logit(x*y))/dy")
+        df3dy.reduceArithmetic().assertString("df3dy=d(logit(x*y))/dy")
         differentiate(df3dy).assertString("df3dy'=logit(x*y)*(1-logit(x*y))*x")
     }
 

@@ -35,7 +35,7 @@ class WalkExprTest {
             b=2
             1
             c=1
-            2+1
+            b+c
         """.trimIndent())
     }
 
@@ -48,7 +48,7 @@ class WalkExprTest {
             1
         """.trimIndent())
         replacePlan(b + c).assertString("""
-            2+1
+            b+c
             b=2
             2
             c=1

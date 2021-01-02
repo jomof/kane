@@ -2,6 +2,8 @@
 
 package com.github.jomof.kane.rigueur
 
+import com.github.jomof.kane.rigueur.NamedScalar.RenderMode.NAME
+import com.github.jomof.kane.rigueur.NamedScalar.RenderMode.VALUE
 import com.github.jomof.kane.rigueur.types.*
 import java.io.Closeable
 import kotlin.math.exp
@@ -98,8 +100,8 @@ val MINUS by BinaryOp(op = "-", precedence = 4, infix = true)
 val CROSS by BinaryOp(op = " cross ", precedence = 5, associative = false, infix = true)
 val STACK by BinaryOp(op = " stack ", precedence = 5, associative = true, infix = true)
 
-operator fun <T:Number> ScalarExpr<T>.getValue(thisRef: Any?, property: KProperty<*>) = NamedScalar(property.name, reduceArithmetic())
-operator fun <T:Number> MatrixExpr<T>.getValue(thisRef: Any?, property: KProperty<*>) = NamedMatrix(property.name, reduceArithmetic())
+operator fun <T:Number> ScalarExpr<T>.getValue(thisRef: Any?, property: KProperty<*>) = NamedScalar(property.name, this)
+operator fun <T:Number> MatrixExpr<T>.getValue(thisRef: Any?, property: KProperty<*>) = NamedMatrix(property.name, this)
 
 data class ConvertScalar<E: Number, T:Number>(
     val value : ScalarExpr<T>,
@@ -257,15 +259,16 @@ data class ScalarVariable<E:Number>(
     val initial : E,
     override val type: AlgebraicType<E>) : AlgebraicExpr<E> {
     init { track() }
-    operator fun getValue(thisRef: Any?, property: KProperty<*>) = NamedScalarVariable(property.name, initial)
+    operator fun getValue(thisRef: Any?, property: KProperty<*>) = NamedScalarVariable(property.name, initial, type)
     override fun toString() = render()
 }
 data class NamedScalarVariable<E:Number>(
     override val name : String,
-    val initial : E) : ScalarVariableExpr<E>, NamedScalarExpr<E> {
+    val initial : E,
+    override val type : AlgebraicType<E>
+) : ScalarVariableExpr<E>, NamedScalarExpr<E> {
     init { track() }
     override fun toString() = render()
-    override val type get() = initial.javaClass.kaneType
 }
 data class MatrixVariable<E:Number>(
     val columns : Int,
@@ -306,7 +309,9 @@ data class NamedMatrixVariable<E:Number>(
 }
 data class NamedScalar<E:Number>(
     override val name : String,
-    val scalar : ScalarExpr<E>) : NamedScalarExpr<E>, ParentExpr<E> {
+    val scalar : ScalarExpr<E>
+) : NamedScalarExpr<E>, ParentExpr<E> {
+    enum class RenderMode { NAME, VALUE }
     init { track() }
     override val type get() = scalar.type
     override val children get() = listOf(scalar)
@@ -568,6 +573,7 @@ inline fun <reified E:Number> columnVariable(vararg elements : E) =
 // Constant
 fun <E:Number> constant(value : E, type : AlgebraicType<*>) = ConstantScalar(value, type as AlgebraicType<E>)
 fun <E:Number> constant(value : E) = ConstantScalar(value, value.javaClass.kaneType)
+inline fun <reified E:Any> constant(value : E) = ValueExpr(value, object : KaneType<E>(E::class.java) { })
 
 // Tableau
 fun <E:Number> tableauOf(vararg elements : NamedAlgebraicExpr<E>) : Tableau<E> = Tableau(elements.toList())
@@ -859,6 +865,7 @@ fun <E:Number> MatrixExpr<E>.substituteInitial() = (this as AlgebraicExpr<E>).su
 
 // Reduce arithmetic
 fun <E:Number> AlgebraicExpr<E>.memoizeAndReduceArithmetic(
+    entryPoint : Boolean = true,
     memo : MutableMap<TypedExpr<*>,TypedExpr<*>> = mutableMapOf(),
     selfMemo : MutableMap<TypedExpr<*>,TypedExpr<*>> = mutableMapOf()) : AlgebraicExpr<E> {
     val thiz = selfMemo.computeIfAbsent(this) { this }
@@ -867,11 +874,11 @@ fun <E:Number> AlgebraicExpr<E>.memoizeAndReduceArithmetic(
         return result as AlgebraicExpr<E>
     }
     val result : AlgebraicExpr<E> = with(thiz as AlgebraicExpr<E>) {
-        fun <O:Number> AlgebraicExpr<O>.self() = this.memoizeAndReduceArithmetic(memo, selfMemo)
-        fun ScalarExpr<E>.self() = memoizeAndReduceArithmetic(memo, selfMemo) as ScalarExpr<E>
-        fun MatrixExpr<E>.self() = memoizeAndReduceArithmetic(memo, selfMemo) as MatrixExpr<E>
-        fun NamedMatrixVariable<E>.self() = memoizeAndReduceArithmetic(memo, selfMemo) as NamedMatrixVariable<E>
-        fun NamedAlgebraicExpr<E>.self() = memoizeAndReduceArithmetic(memo, selfMemo) as NamedAlgebraicExpr<E>
+        fun <O:Number> AlgebraicExpr<O>.self() = this.memoizeAndReduceArithmetic(false, memo, selfMemo)
+        fun ScalarExpr<E>.self() = memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr<E>
+        fun MatrixExpr<E>.self() = memoizeAndReduceArithmetic(false, memo, selfMemo) as MatrixExpr<E>
+        fun NamedMatrixVariable<E>.self() = memoizeAndReduceArithmetic(false, memo, selfMemo) as NamedMatrixVariable<E>
+        //fun NamedAlgebraicExpr<E>.self() = memoizeAndReduceArithmetic(false, memo, selfMemo) as AlgebraicExpr<E>
         when (this) {
             is NamedMatrixVariable -> this
             is ConstantScalar -> this
@@ -885,7 +892,9 @@ fun <E:Number> AlgebraicExpr<E>.memoizeAndReduceArithmetic(
             is MatrixVariableElement -> copy(matrix = matrix.self())
             is UnaryMatrix -> copy(value = value.self())
             is NamedMatrix -> copy(matrix = matrix.self())
-            is NamedScalar -> copy(scalar = scalar.self())
+            is NamedScalar ->
+                if (entryPoint) copy(scalar = scalar.self())
+                else scalar.self()
             is NamedScalarVariable -> this
             is UnaryScalar -> {
                 val value = value.self()
@@ -945,6 +954,16 @@ fun <E:Number> AlgebraicExpr<E>.memoizeAndReduceArithmetic(
                     op.associative && left is BinaryScalar && left.op == op && left.left is ConstantScalar -> {
                         BinaryScalar(op, left.left, BinaryScalar(op, left.right, right)).self()
                     }
+                    op == POW && left is BinaryScalar && left.op == POW-> {
+                        pow(left.left, right * left.right).self()
+                    }
+                    op == TIMES &&
+                            left is BinaryScalar && left.op == POW &&
+                            right is BinaryScalar && right.op == POW
+                            && left.left == right.left -> {
+                        // x^5 * x^4 => x^9
+                        (pow(left.left, left.right + right.right)).self()
+                    }
                     op == TIMES && left is BinaryScalar && left.op == TIMES && left.right == right -> {
                         (left.left * pow(right, type.two)).self()
                     }
@@ -978,7 +997,7 @@ fun <E:Number> AlgebraicExpr<E>.memoizeAndReduceArithmetic(
                 result
             }
             is NamedScalarAssign -> copy(right = right.self())
-            is Tableau -> copy(children = children.map { it.self() })
+            is Tableau -> copy(children = children.map { it.memoizeAndReduceArithmetic(true, memo, selfMemo) as NamedAlgebraicExpr<E>})
             is CoerceScalar -> {
                 val value = when(value) {
                     is AlgebraicExpr<*> -> value.self()
@@ -1003,6 +1022,7 @@ fun <E:Number> AlgebraicExpr<E>.memoizeAndReduceArithmetic(
     return result
 }
 
+fun <E:Number> NamedScalar<E>.reduceArithmetic() = (this as AlgebraicExpr<E>).memoizeAndReduceArithmetic() as NamedScalar<E>
 fun <E:Number> NamedAlgebraicExpr<E>.reduceArithmetic() = (this as AlgebraicExpr<E>).memoizeAndReduceArithmetic() as NamedAlgebraicExpr<E>
 fun <E:Number> ScalarExpr<E>.reduceArithmetic() = (this as AlgebraicExpr<E>).memoizeAndReduceArithmetic() as ScalarExpr<E>
 fun <E:Number> MatrixExpr<E>.reduceArithmetic() = (this as AlgebraicExpr<E>).memoizeAndReduceArithmetic() as MatrixExpr<E>
@@ -1011,16 +1031,13 @@ fun <E:Number> Tableau<E>.reduceArithmetic() = (this as AlgebraicExpr<E>).memoiz
 private fun <E:Number> AlgebraicExpr<E>.affineName(depth : Int = 2) : String? {
     if (depth == 0) return null
     return when(this) {
-        is CoerceScalar -> null
-        is ConstantScalar -> null
         is NamedScalar -> name
         is MatrixVariableElement -> matrix.name
         is UnaryScalar -> value.affineName(depth - 1) ?: op.op
         is BinaryScalar -> left.affineName(depth - 1) ?: right.affineName(depth - 1) ?: op.op
         is NamedScalarVariable -> name
         is NamedScalarExpr -> name
-        else ->
-            error("$javaClass")
+        else -> null
     }
 }
 
@@ -1134,14 +1151,14 @@ fun Expr.render(entryPoint : Boolean = true) : String {
         }
     fun binary(op : BinaryOp, left : Expr, right : Expr) : String =
         when  {
-            right is NamedScalar<*> -> binary(op, left, right.scalar)
             op.infix -> "${left.self()}${op.op}${right.self(true)}"
             else -> "${op.op}(${left.self()},${right.self()})"
         }
     return when(this) {
         is Slot<*> -> "\$$slot"
         is NamedScalarVariable<*> -> name
-        is ScalarVariable<*> -> type.render(initial)
+        is ScalarVariable<*> ->
+            type.render(initial)
         is BinaryMatrix<*> -> binary(op, left, right)
         is NamedScalarAssign<*> -> "${left.self()} <- ${right.self()}"
         is NamedMatrixAssign<*> -> "${left.self()} <- ${right.self()}"
@@ -1158,22 +1175,14 @@ fun Expr.render(entryPoint : Boolean = true) : String {
         }
         is BinaryMatrixScalar<*> -> binary(op, left, right)
         is BinaryScalarMatrix<*> -> binary(op, left, right)
-        is NamedScalar<*> -> {
-            when {
-                !entryPoint -> scalar.self()
-                else -> "$name=" + scalar.self()
-            }
-        }
+        is NamedScalar<*> ->
+            if (entryPoint) "$name=${scalar.self()}"
+            else name
         is NamedMatrix<*> -> {
             when {
-                //matrix is MatrixVariable -> name
-                matrix is DataMatrix && !entryPoint -> name
-                !entryPoint -> matrix.self()
-                else ->
-                    when {
-                        matrix is DataMatrix && rows != 1 -> "\n$name\n------\n${matrix.self()}"
-                        else -> "$name=${matrix.self()}"
-                    }
+                !entryPoint -> name
+                matrix is DataMatrix && rows != 1 -> "\n$name\n------\n${matrix.self()}"
+                else -> "$name=${matrix.self()}"
             }
         }
         is MatrixVariableElement<*> -> "${matrix.name}[$column,$row]"
