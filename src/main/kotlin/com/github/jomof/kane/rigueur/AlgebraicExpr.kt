@@ -2,6 +2,8 @@
 
 package com.github.jomof.kane.rigueur
 
+import com.github.jomof.kane.rigueur.functions.AlgebraicBinaryScalar
+import com.github.jomof.kane.rigueur.functions.pow
 import com.github.jomof.kane.rigueur.types.*
 import java.io.Closeable
 import kotlin.math.exp
@@ -10,6 +12,7 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 
 interface Expr
+interface UntypedScalar : Expr
 interface TypedExpr<E:Any> : Expr {
     val type : KaneType<E>
 }
@@ -447,10 +450,10 @@ data class NamedMatrixAssign<E:Number>(
 
 
 // Pow
-fun <E:Number> pow(left : ScalarExpr<E>, right : E) = BinaryScalar(POW, left, ConstantScalar(right, left.type))
-fun <E:Number> pow(left : MatrixExpr<E>, right : E) = BinaryMatrixScalar(POW, left.columns, left.rows, left, ConstantScalar(right, left.type))
-fun <E:Number, L : ScalarExpr<E>, R : ScalarExpr<E>> pow(left : L, right : R) : ScalarExpr<E> = BinaryScalar(POW, left, right)
-fun <E:Number, L : MatrixExpr<E>, R : ScalarExpr<E>> pow(left : L, right : R) = BinaryMatrixScalar(POW, left.columns, left.rows, left, right)
+//fun <E:Number> pow(left : ScalarExpr<E>, right : E) = BinaryScalar(POW, left, ConstantScalar(right, left.type))
+//fun <E:Number> pow(left : MatrixExpr<E>, right : E) = BinaryMatrixScalar(POW, left.columns, left.rows, left, ConstantScalar(right, left.type))
+//fun <E:Number, L : ScalarExpr<E>, R : ScalarExpr<E>> pow(left : L, right : R) : ScalarExpr<E> = BinaryScalar(POW, left, right)
+//fun <E:Number, L : MatrixExpr<E>, R : ScalarExpr<E>> pow(left : L, right : R) = BinaryMatrixScalar(POW, left.columns, left.rows, left, right)
 // Relu
 fun <E:Number, T : ScalarExpr<E>> relu(expr : T) : ScalarExpr<E> = UnaryScalar(RELU, expr)
 fun <E:Number, T : MatrixExpr<E>> relu(expr : T) : MatrixExpr<E> = UnaryMatrix(RELU, expr)
@@ -645,7 +648,7 @@ private fun <E:Number> diff(expr : ScalarExpr<E>, variable : ScalarExpr<E>) : Sc
                     top / bottom
                 }
                 MINUS -> diffLeft - diffRight
-                POW -> expr.right * pow(expr.left, expr.right - expr.type.one) * diffLeft
+                //POW -> expr.right * pow(expr.left, expr.right - expr.type.one) * diffLeft
                 else -> error("${expr.op}")
             }
             result
@@ -653,6 +656,11 @@ private fun <E:Number> diff(expr : ScalarExpr<E>, variable : ScalarExpr<E>) : Sc
         is MatrixVariableElement -> ConstantScalar(expr.type.zero, expr.type)
         is ScalarVariableExpr -> ConstantScalar(expr.type.zero, expr.type)
         is ConstantScalar -> ConstantScalar(expr.type.zero, expr.type)
+        is AlgebraicBinaryScalar -> {
+            val p1d = expr.left.self()
+            val p2d = expr.right.self()
+            expr.op.differentiate(expr.left, p1d, expr.right, p2d, variable)
+        }
         else -> error("${expr.javaClass}")
     }
     return result
@@ -820,7 +828,7 @@ private fun trackImpl() {
         }
     }
 }
-private fun track() {
+internal fun track() {
     if (trackingEnabled)  trackImpl()
 }
 
@@ -941,11 +949,11 @@ fun <E:Number> AlgebraicExpr<E>.memoizeAndReduceArithmetic(
                     op == MINUS && leftConst == type.zero -> (-right).self()
                     op == MINUS && rightConst == type.zero -> left.self()
                     op == MINUS && right is UnaryScalar && right.op == NEGATE -> (left + right.value).self()
-                    op == POW && rightConst == type.one -> left.self()
-                    op == POW && rightConst == type.zero -> ConstantScalar(type.one, type)
+//                    op == POW && rightConst == type.one -> left.self()
+//                    op == POW && rightConst == type.zero -> ConstantScalar(type.one, type)
                     op == TIMES && right is UnaryScalar && right.op == NEGATE -> (-(left * right.value)).self()
                     op == TIMES && left is UnaryScalar && left.op == NEGATE -> (-(left.value * right)).self()
-                    op == DIV && right is BinaryScalar && right.op == POW -> {
+                    op == DIV && right is AlgebraicBinaryScalar && right.op == pow -> {
                         val result = (left * pow(right.left, -right.right))
                         result.self()
                     }
@@ -957,12 +965,12 @@ fun <E:Number> AlgebraicExpr<E>.memoizeAndReduceArithmetic(
                     op.associative && left is BinaryScalar && left.op == op && left.left is ConstantScalar && right !is ConstantScalar -> {
                         BinaryScalar(op, left.left, BinaryScalar(op, left.right, right)).self()
                     }
-                    op == POW && left is BinaryScalar && left.op == POW-> {
-                        pow(left.left, right * left.right).self()
-                    }
+//                    op == POW && left is BinaryScalar && left.op == POW-> {
+//                        pow(left.left, right * left.right).self()
+//                    }
                     op == TIMES &&
-                            left is BinaryScalar && left.op == POW &&
-                            right is BinaryScalar && right.op == POW
+                            left is AlgebraicBinaryScalar && left.op == pow &&
+                            right is AlgebraicBinaryScalar && right.op == pow
                             && left.left == right.left -> {
                         // x^5 * x^4 => x^9
                         (pow(left.left, left.right + right.right)).self()
@@ -1018,6 +1026,12 @@ fun <E:Number> AlgebraicExpr<E>.memoizeAndReduceArithmetic(
 
             }
             is ScalarVariable -> this
+            is AlgebraicBinaryScalar -> {
+                val leftSelf = left.self()
+                val rightSelf = right.self()
+                if (left != leftSelf || right != right.self()) AlgebraicBinaryScalar(op, leftSelf, rightSelf).self()
+                else op.reduceArithmetic(left, right)?.self() ?: this
+            }
             else ->
                 error("$javaClass")
         }
@@ -1036,6 +1050,7 @@ fun <E:Number> Tableau<E>.reduceArithmetic() = (this as AlgebraicExpr<E>).memoiz
 private fun <E:Number> AlgebraicExpr<E>.affineName(depth : Int = 2) : String? {
     if (depth == 0) return null
     return when(this) {
+        is AlgebraicBinaryScalar -> left.affineName(depth - 1) ?: right.affineName(depth - 1) ?: op.meta.op
         is NamedScalar -> name
         is MatrixVariableElement -> matrix.name
         is UnaryScalar -> value.affineName(depth - 1) ?: op.op
@@ -1064,20 +1079,22 @@ fun binaryRequiresParents(parent : BinaryOp, child : BinaryOp, childIsRight: Boo
     }
 }
 
-private fun requiresParens(parent : Expr, child : Expr, childIsRight : Boolean) : Boolean {
-    fun Expr.binop() : BinaryOp? = when(this) {
-            is BinaryMatrixScalar<*> -> op
-            is BinaryScalarMatrix<*> -> op
-            is BinaryScalar<*> -> op
-            is BinaryMatrix<*> -> op
-            else -> null
-        }
-    val parentBinOp = parent.binop()
-    val childBinOp = child.binop()
-    if (parentBinOp != null && childBinOp != null) {
-        return binaryRequiresParents(parentBinOp, childBinOp, childIsRight)
-    }
-    return false
+fun Expr.tryGetBinaryOp() : BinaryOp? = when(this) {
+    is AlgebraicBinaryScalar<*> -> op.meta
+    is BinaryMatrixScalar<*> -> op
+    is BinaryScalarMatrix<*> -> op
+    is BinaryScalar<*> -> op
+    is BinaryMatrix<*> -> op
+    else -> null
+}
+
+fun requiresParens(parentBinOp : BinaryOp?, childBinOp : BinaryOp?, childIsRight : Boolean) : Boolean {
+    if (parentBinOp == null || childBinOp == null) return false
+    return binaryRequiresParents(parentBinOp, childBinOp, childIsRight)
+}
+
+fun requiresParens(parent : Expr, child : Expr, childIsRight : Boolean) : Boolean {
+    return requiresParens(parent.tryGetBinaryOp(), child.tryGetBinaryOp(), childIsRight)
 }
 
 fun tryConvertToSuperscript(value : String) : String? {
@@ -1247,55 +1264,5 @@ fun Expr.render(entryPoint : Boolean = true) : String {
             }
         }
         else -> "$this"
-    }
-}
-
-// Render Structure
-fun Expr.renderStructure(entryPoint : Boolean = true) : String {
-    val parent = this
-    fun Expr.self(childIsRight : Boolean = false) =
-        when {
-            requiresParens(parent, this, childIsRight) -> "(${renderStructure(false)})"
-            else -> renderStructure(false)
-        }
-    fun binary(op : BinaryOp, left : Expr, right : Expr) =
-        when  {
-            op.infix -> "${left.self()}${op.op}${right.self(true)}"
-            else -> "${op.op}(${left.self()},${right.self()})"
-        }
-    if (entryPoint) {
-        return when(this) {
-            is NamedScalar<*> -> "val $name by ${scalar.self()}"
-            is NamedMatrix<*> -> "val $name by ${matrix.self()}"
-            else -> "val expr = ${self()}"
-        }
-    }
-    return when(this) {
-        is NamedScalarVariable<*> -> "NamedScalarVariable(\"$name\")"
-        is NamedMatrixVariable<*> -> "NamedMatrixVariable(\"$name\",$columns,$rows)"
-        is ConstantScalar<*> -> "$value"
-        is ScalarVariable<*> -> "variable<${type.simpleName}>()"
-        is MatrixVariable<*> -> "matrixVariable<${type.simpleName}>($columns,$rows)"
-        is BinaryMatrix<*> -> binary(op, left, right)
-        is BinaryScalar<*> -> binary(op, left, right)
-        is BinaryMatrixScalar<*> -> binary(op, left, right)
-        is BinaryScalarMatrix<*> -> binary(op, left, right)
-        is UnaryMatrixScalar<*> ->
-            when(op) {
-                SUMMATION -> "summation(${value.self()})"
-                else -> "${op.op}(${value.self()})"
-            }
-        is UnaryScalar<*> -> "${op.op}(${value.self()})"
-        is UnaryMatrix<*> -> "${op.op}(${value.self()})"
-        is MatrixVariableElement<*> -> "$this"
-        is NamedScalar<*> -> "NamedScalar(\"$name\", ${scalar.self()})"
-        is NamedMatrix<*> -> matrix.self()
-        is DataMatrix<*> -> {
-            val sb = StringBuilder()
-            sb.append("matrixOf($columns,$rows,${elements.joinToString(",") { it.self() }})")
-            "$sb"
-        }
-        is Tableau<*> -> "Tableau(...)"
-        else -> error("$javaClass")
     }
 }

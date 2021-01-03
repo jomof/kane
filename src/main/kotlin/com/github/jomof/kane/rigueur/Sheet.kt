@@ -18,9 +18,7 @@ data class AbsoluteCellReferenceExpr(
     override fun toString() = coordinateToCellName(coordinate)
 }
 
-interface UntypedCellReference : Expr
-
-data class UntypedRelativeCellReference(val offset : Coordinate) : UntypedCellReference {
+data class UntypedRelativeCellReference(val offset : Coordinate) : UntypedScalar {
     override fun toString() = "ref$offset"
     operator fun getValue(nothing: Nothing?, property: KProperty<*>) = run {
         val name = property.name.toUpperCase()
@@ -33,7 +31,7 @@ data class UntypedRelativeCellReference(val offset : Coordinate) : UntypedCellRe
 
 data class NamedUntypedAbsoluteCellReference(
     override val name : String,
-    val coordinate : Coordinate) : UntypedCellReference, NamedExpr {
+    val coordinate : Coordinate) : UntypedScalar, NamedExpr {
     override fun toString() = "$name=${coordinateToCellName(coordinate)}"
 }
 
@@ -403,10 +401,10 @@ private fun replaceRelativeCellReferences(coordinate : Coordinate, value : Any) 
 }
 
 // Plus
-inline operator fun <reified E:Number> ScalarExpr<E>.plus(right : UntypedCellReference) = this + CoerceScalar(right, type)
-inline operator fun <reified E:Number> UntypedCellReference.plus(right : ScalarExpr<E>) = CoerceScalar(this, right.type) + right
-inline operator fun <reified E:Number> UntypedCellReference.plus(right : E) = CoerceScalar(this, E::class.java.kaneType) + right
+inline operator fun <reified E:Number> ScalarExpr<E>.plus(right : UntypedScalar) = this + CoerceScalar(right, type)
+inline operator fun <reified E:Number> UntypedScalar.plus(right : ScalarExpr<E>) = CoerceScalar(this, right.type) + right
+inline operator fun <reified E:Number> UntypedScalar.plus(right : E) = CoerceScalar(this, E::class.java.kaneType) + right
 // Pow
-inline fun <reified E:Number> ScalarExpr<E>.pow(right : UntypedCellReference) = pow(this, CoerceScalar(right, type))
-inline fun <reified E:Number> pow(left : UntypedCellReference, right : ScalarExpr<E>) = pow(CoerceScalar(left, right.type), right)
-inline fun <reified E:Number> pow(left : UntypedCellReference, right : E) : ScalarExpr<E> = pow(CoerceScalar(left, E::class.java.kaneType), right)
+//inline fun <reified E:Number> pow(left : ScalarExpr<E>, right : UntypedCellReference) : ScalarExpr<E> = pow(left, CoerceScalar(right, left.type))
+//inline fun <reified E:Number> pow(left : UntypedScalar, right : ScalarExpr<E>) : ScalarExpr<E> = pow(CoerceScalar(left, right.type), right)
+//inline fun <reified E:Number> pow(left : UntypedCellReference, right : E) : ScalarExpr<E> = pow(CoerceScalar(left, E::class.java.kaneType), right)

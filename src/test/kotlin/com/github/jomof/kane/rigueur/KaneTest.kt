@@ -1,6 +1,7 @@
 @file:Suppress("UNCHECKED_CAST")
 package com.github.jomof.kane.rigueur
 
+import com.github.jomof.kane.rigueur.functions.pow
 import com.github.jomof.kane.rigueur.types.*
 import org.junit.Test
 import java.io.File
@@ -815,7 +816,7 @@ class KaneTest {
         e.assertString("e=m[1,1]")
         (matrixVariable<Double>(2,3)).assertString("matrixVariable(2x3)")
         val p by pow(m, 2.0)
-        p.assertString("p=pow(m,2)")
+        p.assertString("p=m²")
         val pe by p[1,2]
         pe.assertString("pe=m[1,2]²")
         p[1,2].assertString("m[1,2]²")
@@ -1035,139 +1036,6 @@ class KaneTest {
         val error by summation(learningRate * pow(target - output, 2.0))
         val gradientW0 by d(error) / d(w0)
         differentiate(gradientW0)
-    }
-
-
-    // Try various things to see if we can make it crash
-    private fun spamExpression(expr : Expr) {
-        if (expr !is AlgebraicExpr<*>) return
-        fun identifierOf(structure : String) = structure.substringAfter("val ").substringBefore(" ")
-        expr.toString()
-
-        val structure = expr.renderStructure()
-        val id = identifierOf(structure)
-        assert(expr == expr)
-        expr.memoizeAndReduceArithmetic()
-        if (expr.type == Double::class.kaneType) {
-            if (expr is NamedAlgebraicExpr<*>) {
-                tableauOf(expr).linearize()
-            }
-        } else {
-            assert(false) { "${expr.type}"}
-        }
-
-        try {
-            differentiate(expr)
-        } catch (e : Exception) {
-            val sb = StringBuilder()
-            expr.renderStructure()
-            sb.append("@Test\n")
-            sb.append("fun `test differentiate case ${structure.hashCode().absoluteValue}`() {\n")
-            sb.append("    $structure\n")
-            sb.append("    differentiate($id).assertString(\"\")\n")
-            sb.append("}\n")
-            println(sb)
-            throw e
-        }
-        try {
-            differentiate(expr).render()
-        } catch (e : Exception) {
-            val sb = StringBuilder()
-            expr.renderStructure()
-            sb.append("@Test\n")
-            sb.append("fun `test differentiate case ${structure.hashCode().absoluteValue}`() {\n")
-            sb.append("    $structure\n")
-            sb.append("    differentiate($id).assertString(\"\")\n")
-            sb.append("}\n")
-            println(sb)
-            throw e
-        }
-
-        if(expr is MatrixExpr<*>) {
-            for(column in 0 until expr.columns) {
-                for (row in 0 until expr.rows) {
-                    try {
-                        expr[column, row]
-                    } catch (e : Exception) {
-                        val sb = StringBuilder()
-                        sb.append("@Test\n")
-                        sb.append("fun `test matrix element case ${structure.hashCode().absoluteValue}`() {\n")
-                        sb.append("    $structure\n")
-                        sb.append("    $id[$column,$row].assertString(\"\")\n")
-                        sb.append("}\n")
-                        println(sb)
-                        throw e
-                    }
-                }
-            }
-        }
-    }
-
-    @Test
-    fun `generate new tests`() = trackExprs().use {
-        val v1 by variable<Double>()
-        val x1 by matrixVariable<Double>(1,1)
-        val x2: ScalarExpr<Double> by pow(v1, 1.0)
-        val x3: ScalarExpr<Double> by pow(v1, v1)
-        val x4: MatrixExpr<Double> by pow(x1, v1)
-        val x7: ScalarExpr<Double> by x4[0, 0]
-        val x9: ScalarExpr<Double> by logit(v1)
-        val x10: ScalarExpr<Double> by v1 * 1.0
-        val x11: ScalarExpr<Double> by 1.0 * v1
-        val x12: ScalarExpr<Double> by v1 * v1
-        val x13: MatrixExpr<Double> by 1.0 * x1
-        val x14: MatrixExpr<Double> by x1 * 1.0
-        val x15: MatrixExpr<Double> by x1 cross x1
-        val x16: MatrixExpr<Double> by x1 stack 1.0
-        val x17: MatrixExpr<Double> by 1.0 stack x1
-        val x18: MatrixExpr<Double> by x1 stack x1
-        val x19: MatrixExpr<Double> by x1 stack v1
-        val x20: MatrixExpr<Double> by v1 stack x1
-        val x22: MatrixExpr<Double> by v1 * x1
-        val x23: MatrixExpr<Double> by x1 * v1
-        val x24: MatrixExpr<Double> by logit(x1)
-        val x25: ScalarExpr<Double> by variable<Double>()
-        val x26: ScalarExpr<Double> by variable<Double>()
-        val x28: ScalarExpr<Double> by v1 + v1
-        val x29: ScalarExpr<Double> by v1 * v1
-        val learningRate = 0.1
-        val input by matrixVariable<Double>(1, 2)
-        val w0 by matrixVariable<Double>(input.rows + 1, 2)
-        val h1 by logit(w0 cross (input stack 1.0))
-        val w1 by matrixVariable<Double>(w0.rows + 1, 2)
-        val output by logit(w1 cross (h1 stack 1.0))
-        val target by matrixVariable<Double>(output.columns, output.rows)
-        val error by summation(learningRate * pow(target - output, 2.0))
-        val gradientW0 by d(error) / d(w0)
-        val gradientW1 by d(error) / d(w1)
-        val x by variable<Double>()
-        val q by variable<Double>()
-        val m by variable<Double>()
-        val b by variable<Double>()
-        val y by q * pow(x,2.0) + m * x + b
-        val polyTarget by variable<Double>()
-        val polyError = pow(y - polyTarget, 2.0)
-        val dq by differentiate(d(polyError)/d(q))
-        val dm by differentiate(d(polyError)/d(m))
-        val db by differentiate(d(polyError)/d(b))
-        val all = listOf(x2, x3, x4, x7, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18,
-                         x19, x20, x22, x23, x24, x25, x26, x28, x29,
-                         input, w0, h1, w1, output, target, error, gradientW0, gradientW1,
-                         x, q, m, b, y, polyTarget, polyError, dq, dm, db)
-
-        val next = mutableSetOf<Expr>()
-        val seen = mutableSetOf<Expr>()
-        next += all
-        next += getRecordedExprs()
-
-        while (next.isNotEmpty()) {
-            for (expr in next.toList()) {
-                spamExpression(expr)
-                seen += expr
-            }
-            next += getRecordedExprs()
-            next -= seen
-        }
     }
 }
 
