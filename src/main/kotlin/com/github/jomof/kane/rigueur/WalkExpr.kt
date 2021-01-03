@@ -63,7 +63,7 @@ fun <S:Any, E:Number> AlgebraicExpr<E>.foldTopDown(state: S, f: (state : S, expr
 
 fun Expr.visit(f: (expr : Expr) -> Unit) {
     unsafeReplace(TOP_DOWN, ExprFunction {
-        f(it as Expr)
+        f(it)
         it // This defeats replacement so this whole operation becomes a visit instead
     })
 }

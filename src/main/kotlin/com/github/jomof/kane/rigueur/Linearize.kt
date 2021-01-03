@@ -3,7 +3,7 @@ package com.github.jomof.kane.rigueur
 import com.github.jomof.kane.rigueur.types.AlgebraicType
 import com.github.jomof.kane.rigueur.types.add
 
-class LinearModel<E:Number> {
+class LinearModel<E:Number>(val type : AlgebraicType<E>) {
     private val map = mutableMapOf<ScalarExpr<E>, Slot<E>>()
     private val namedScalarVariables = mutableMapOf<String, NamedScalarVariable<E>>()
     private val namedMatrixVariableElements = mutableMapOf<String, MatrixVariableElement<E>>()
@@ -93,6 +93,12 @@ class LinearModel<E:Number> {
         assignBacks += target.slot to slot
     }
 
+    fun assignBack(name : String, constant : ConstantScalar<E>) {
+        val target = namedScalars.getValue(name)
+        assignments += target.slot to constant
+        assignBacks += target.slot to constant
+    }
+
     override fun toString(): String {
         val sb = StringBuilder()
         slots.forEach { (slot,comment) ->
@@ -103,9 +109,6 @@ class LinearModel<E:Number> {
         }
         return sb.toString()
     }
-
-    private val type : AlgebraicType<E> get() = map.keys.first().type
-
 
     fun allocateSpace() : Array<E> {
         val result = type.allocArray(slots.size) { type.zero }
@@ -162,7 +165,7 @@ class LinearModel<E:Number> {
     }
 }
 
-private fun <E:Number> AlgebraicExpr<E>.linearizeExpr(model : LinearModel<E> = LinearModel()) : AlgebraicExpr<E> {
+private fun <E:Number> AlgebraicExpr<E>.linearizeExpr(model : LinearModel<E> = LinearModel(type)) : AlgebraicExpr<E> {
     fun NamedScalar<E>.self() = linearizeExpr(model) as ScalarExpr<E>
     fun ScalarExpr<E>.self() = linearizeExpr(model) as ScalarExpr<E>
     fun MatrixExpr<E>.self() = linearizeExpr(model) as MatrixExpr<E>
@@ -197,7 +200,7 @@ private fun <E:Number> AlgebraicExpr<E>.linearizeExpr(model : LinearModel<E> = L
                         val matrix = it.matrix.self()
                         val pure = matrix.elements.all { element -> element is Slot }
                         if (!pure) {
-                            println("${it.name} had non-slot elements")
+                            LookupOrConstantsMatrixShape(it.columns, it.rows, matrix.elements, it.type)
                         } else {
                             val slots = matrix.elements.map { element -> (element as Slot).slot }.toList()
                             val start = slots[0]
@@ -233,7 +236,10 @@ private fun <E:Number> AlgebraicExpr<E>.linearizeExpr(model : LinearModel<E> = L
                     is NamedScalarVariable -> { }
                     is NamedMatrixVariable -> { }
                     is NamedScalarAssign -> {
-                        model.assignBack(it.left.name, model.knownSlot(it.right))
+                        when(it.right) {
+                            is ConstantScalar -> model.assignBack(it.left.name, it.right)
+                            else -> model.assignBack(it.left.name, model.knownSlot(it.right))
+                        }
                     }
                     is NamedMatrixAssign -> {
                         (it.left.elements zip it.right.elements).forEach { (left, right) ->
@@ -253,89 +259,38 @@ private fun <E:Number> AlgebraicExpr<E>.linearizeExpr(model : LinearModel<E> = L
     return result
 }
 
-private fun <E:Number> AlgebraicExpr<E>.claimScalarVariables(model : LinearModel<E> = LinearModel()) {
-    fun NamedScalar<E>.self() = claimScalarVariables(model)
-    fun ScalarExpr<E>.self() = claimScalarVariables(model)
-    fun MatrixExpr<E>.self() = claimScalarVariables(model)
-    when(this) {
-        is ConstantScalar -> {}
-        is MatrixVariableElement -> {}
-        is NamedScalarVariable -> model.registerNamedScalarVariable(this)
-        is UnaryScalar -> value.self()
-        is UnaryMatrixScalar -> value.self()
-        is BinaryScalar -> {
-            left.self()
-            right.self()
-        }
-        is DataMatrix -> elements.forEach { it.self() }
-        is BinaryMatrix -> elements.forEach { it.self() }
-        is BinaryMatrixScalar -> elements.forEach { it.self() }
-        is BinaryScalarMatrix -> elements.forEach { it.self() }
-        is UnaryMatrix -> elements.forEach { it.self() }
-        is NamedMatrix-> matrix.self()
-        is NamedScalar -> scalar.self()
-        is Tableau -> {
-            children.map {
-                when(it) {
-                    is NamedScalar -> it.self()
-                    is NamedMatrix -> it.self()
-                    is NamedScalarAssign -> it.right.self()
-                    is NamedMatrixAssign -> it.right.self()
-                    is NamedScalarVariable -> { }
-                    is NamedMatrixVariable -> { }
-                    else -> error("${it.javaClass}")
-                }
-            }
-        }
-        else -> error("$javaClass")
+private fun <E:Number> AlgebraicExpr<E>.claimScalarVariables(model : LinearModel<E> = LinearModel(type)) {
+    visit {
+        if (it is NamedScalarAssign<*>)
+            model.registerNamedScalarVariable(it.left as NamedScalarVariable<E>)
+        if (it is NamedScalarVariable<*>)
+            model.registerNamedScalarVariable(it as NamedScalarVariable<E>)
     }
 }
 
 
-private fun <E:Number> AlgebraicExpr<E>.claimMatrixVariables(
-    model : LinearModel<E> = LinearModel(),
-    seen : MutableSet<String> = mutableSetOf()) {
-    fun NamedScalar<E>.self() = claimMatrixVariables(model, seen)
-    fun ScalarExpr<E>.self() = claimMatrixVariables(model, seen)
-    fun MatrixExpr<E>.self() = claimMatrixVariables(model, seen)
-    when(this) {
-        is NamedMatrixVariable -> {
-            if (!seen.contains(name)) {
-                elements.forEach { model.registerMatrixVariableElement(it) }
-                seen += name
-            }
+private fun <E:Number> AlgebraicExpr<E>.claimMatrixVariables(model : LinearModel<E> = LinearModel(type)) {
+    val seen = mutableSetOf<String>()
+    visit {
+        if (it is MatrixVariableElement<*>) {
+            model.registerMatrixVariableElement(it as MatrixVariableElement<E>)
         }
-        is ConstantScalar -> {}
-        is MatrixVariableElement -> matrix.self()
-        is NamedScalarVariable -> {}
-        is UnaryScalar -> value.self()
-        is BinaryScalar -> {
-            left.self()
-            right.self()
-        }
-        is UnaryMatrixScalar -> value.self()
-        is UnaryMatrix -> elements.forEach { it.self() }
-        is DataMatrix -> elements.forEach { it.self() }
-        is BinaryMatrix -> elements.forEach { it.self() }
-        is BinaryMatrixScalar -> elements.forEach { it.self() }
-        is BinaryScalarMatrix -> elements.forEach { it.self() }
-        is NamedMatrix-> matrix.self()
-        is NamedScalar -> scalar.self()
-        is Tableau -> {
-            children.forEach {
-                when(it) {
-                    is NamedScalar -> it.self()
-                    is NamedMatrix -> it.self()
-                    is NamedScalarAssign -> it.right.self()
-                    is NamedMatrixAssign -> it.right.self()
-                    is NamedScalarVariable -> { }
-                    is NamedMatrixVariable -> { }
-                    else -> error("${it.javaClass}")
+        if (it is NamedMatrixAssign<*>) {
+            if (!seen.contains(it.name)) {
+                seen += it.name
+                it.left.elements.forEach { element ->
+                    model.registerMatrixVariableElement(element as MatrixVariableElement<E>)
                 }
             }
         }
-        else ->
-            error("$javaClass")
+        if (it is NamedMatrixVariable<*>) {
+            if (!seen.contains(it.name)) {
+                seen += it.name
+                it.elements.forEach { element ->
+                    model.registerMatrixVariableElement(element as MatrixVariableElement<E>)
+                }
+            }
+        }
     }
 }
 
@@ -364,7 +319,9 @@ private fun <E:Number> AlgebraicExpr<E>.eval(space : Array<E>) : E {
         is UnaryScalar -> type.unary(op, value.eval(space))
         is UnaryMatrixScalar -> when(op) {
             SUMMATION -> children.map { it.eval(space) }.fold(type.zero) { prior, current -> type.add(prior, current) }
-            else -> error("$op")
+            D -> type.zero
+            else ->
+                error("$op")
         }
         else ->
             error("$javaClass")
@@ -395,11 +352,13 @@ private fun <E:Number> AlgebraicExpr<E>.gatherLeafExpressions() : List<ScalarExp
 }
 
 
-private fun <E:Number> AlgebraicExpr<E>.gatherNamedExprs() =
-    foldTopDown(mutableSetOf<NamedAlgebraicExpr<E>>()) { prior, expr ->
-        if (expr is NamedAlgebraicExpr) prior += expr
-        prior
+private fun <E:Number> AlgebraicExpr<E>.gatherNamedExprs() : Set<NamedAlgebraicExpr<E>> {
+    val result = mutableSetOf<NamedAlgebraicExpr<E>>()
+    visit { expr ->
+        if (expr is NamedAlgebraicExpr<*>) result += (expr as NamedAlgebraicExpr<E>)
     }
+    return result
+}
 
 private fun <E:Number> AlgebraicExpr<E>.stripNames() : AlgebraicExpr<E> {
     fun <E:Number> ScalarExpr<E>.self() = stripNames() as ScalarExpr
@@ -468,9 +427,9 @@ private fun <E:Number> AlgebraicExpr<E>.linearizeExprs(
 }
 
 fun <E:Number> AlgebraicExpr<E>.linearize() : LinearModel<E> {
-    val names = gatherNamedExprs()
-    with(Tableau(names.toList())) {
-        val model = LinearModel<E>()
+    val names = gatherNamedExprs().toList().map { it.reduceArithmetic() }
+    with(Tableau(names)) {
+        val model = LinearModel<E>(type)
         claimMatrixVariables(model)
         claimScalarVariables(model)
         var stripped = stripNames()

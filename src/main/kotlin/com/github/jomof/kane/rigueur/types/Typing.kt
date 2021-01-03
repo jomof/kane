@@ -41,6 +41,7 @@ class DoubleAlgebraicType(
         LSTEP -> lstep(value)
         EXP -> exp(value)
         TANH -> tanh(value)
+        SUMMATION -> value
         D -> 0.0
         else -> error("$op")
     }
@@ -50,13 +51,16 @@ class DoubleAlgebraicType(
         TIMES -> left * right
         DIV -> left / right
         POW -> left.pow(right)
-        else -> error("$op")
+        else ->
+            error("$op")
     }
 
     override fun compare(left: Double, right: Double) = left.compareTo(right)
     override fun allocArray(size: Int, init: (Int) -> Double) = Array(size, init)
     override fun allocNullableArray(size: Int, init: (Int) -> Double?) = Array(size, init)
     override fun render(value: Number): String {
+        if (value.toDouble().isInfinite()) return "Infinite"
+        if (value.toDouble().isNaN()) return "NaN"
         val result = BigDecimal(value.toDouble()).setScale(precision, RoundingMode.HALF_EVEN).toString()
         val trimmed = if (result.contains(".") && trimLeastSignificantZeros)
                 result.trimEnd('0').trimEnd('.')
@@ -84,6 +88,7 @@ class FloatAlgebraicType : AlgebraicType<Float>(Float::class.java) {
         EXP -> exp(value)
         TANH -> tanh(value)
         D -> 0.0f
+        SUMMATION -> value
         else -> error("$op")
     }
     override fun binary(op: BinaryOp, left: Float, right: Float) = when(op) {
@@ -96,9 +101,11 @@ class FloatAlgebraicType : AlgebraicType<Float>(Float::class.java) {
     }
 
     override fun compare(left: Float, right: Float) = left.compareTo(right)
-    override fun allocArray(size: Int, init: (Int) -> Float) = Array(size, init)
+    override fun allocArray(size: Int, init: (Int) -> Float) = Array<Float>(size, init)
     override fun allocNullableArray(size: Int, init: (Int) -> Float?) = Array(size, init)
     override fun render(value: Number): String {
+        if (value.toFloat().isInfinite()) return "Infinite"
+        if (value.toFloat().isNaN()) return "NaN"
         val result = BigDecimal(value.toDouble()).setScale(5, RoundingMode.HALF_EVEN).toString()
         return if (result.contains(".")) result.trimEnd('0').trimEnd('.')
         else result

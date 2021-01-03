@@ -54,6 +54,40 @@ class LookupMatrixRef<E:Number>(
     override fun toString() = render()
 }
 
+
+data class LookupOrConstantsMatrixShape<E:Number>(
+    override val columns: Int,
+    override val rows: Int,
+    val elements: List<ScalarExpr<E>>,
+    override val type: AlgebraicType<E>
+) : MatrixShape<E> {
+    override fun ref(array : Array<E>) = LookupOrConstantMatrixRef(columns, rows, type, elements, array)
+    override fun owns(index: Int) = elements.filterIsInstance<Slot<E>>().map { it.slot }.contains(index)
+}
+
+class LookupOrConstantMatrixRef<E:Number>(
+    override val columns : Int,
+    override val rows : Int,
+    override val type : AlgebraicType<E>,
+    val elements : List<ScalarExpr<E>>,
+    private val array : Array<E>) : MutableMatrix<E> {
+    private fun coordinateToIndex(column : Int, row : Int) = row * columns + column
+    override fun get(column: Int, row: Int) : E = run {
+            when(val offset = elements[coordinateToIndex(column, row)]) {
+                is Slot -> array[offset.slot]
+                is ConstantScalar -> offset.value
+                else -> error("${offset.javaClass}")
+            }
+    }
+    override fun set(column: Int, row: Int, value: E) {
+        when(val offset = elements[coordinateToIndex(column, row)]) {
+            is Slot -> array[offset.slot] = value
+            else -> error("Can't set non-slot")
+        }
+    }
+    override fun toString() = render()
+}
+
 data class EmbeddedScalarShape(val offset : Int) {
     fun <E:Number> ref(array : Array<E>) = ScalarRef(offset, array)
 }
