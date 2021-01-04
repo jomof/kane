@@ -1,0 +1,48 @@
+package com.github.jomof.kane.rigueur.functions
+
+import com.github.jomof.kane.rigueur.*
+import com.github.jomof.kane.rigueur.types.one
+import com.github.jomof.kane.rigueur.types.two
+import com.github.jomof.kane.rigueur.types.zero
+
+val DIV by BinaryOp(op = "/", precedence = 2, infix = true)
+
+private class DivideFunction : AlgebraicBinaryScalarFunction {
+    override val meta = DIV
+    override fun doubleOp(p1: Double, p2: Double) = p1 / p2
+    override fun floatOp(p1: Float, p2: Float) = p1 / p2
+    override fun intOp(p1: Int, p2: Int) = p1 / p2
+
+    override fun <E : Number> reduceArithmetic(p1: ScalarExpr<E>, p2: ScalarExpr<E>): ScalarExpr<E>? {
+        if (p1 is NamedScalarVariable && p2 is NamedScalarVariable) return null
+        val leftConst = p1.tryFindConstant()
+        val rightConst = p2.tryFindConstant()
+        val result = when {
+            leftConst == p1.type.zero -> p1
+            rightConst == p2.type.one -> p1
+            p1 is AlgebraicUnaryScalar && p1.op == negate && p2 is AlgebraicUnaryScalar && p2.op == negate -> p1.value / p2.value
+            p2 is AlgebraicBinaryScalar && p2.op == pow -> p1 * pow(p2.left, -p2.right)
+            else -> null
+        }
+        assert(result != p1/p2) {
+            "Should be null"
+        }
+        return result
+    }
+
+    override fun <E : Number> differentiate(
+        p1: ScalarExpr<E>,
+        p1d: ScalarExpr<E>,
+        p2: ScalarExpr<E>,
+        p2d: ScalarExpr<E>,
+        variable: ScalarExpr<E>
+    ): ScalarExpr<E> {
+        val topLeft = p1d * p2
+        val topRight = p1 * p2d
+        val top = topLeft - topRight
+        val bottom = pow(p2, p2.type.two)
+        return top / bottom
+    }
+}
+
+val divide : AlgebraicBinaryScalarFunction = DivideFunction()

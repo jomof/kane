@@ -1,6 +1,7 @@
 package com.github.jomof.kane.rigueur.types
 
 import com.github.jomof.kane.rigueur.*
+import com.github.jomof.kane.rigueur.functions.*
 import java.math.BigDecimal
 import java.math.RoundingMode
 import kotlin.math.exp
@@ -80,8 +81,6 @@ private fun lookup(table : Array<Byte>, byte : Byte) = table[byte + 128]
 
 val QuarterPrecisionAlgebraicType = object : AlgebraicType<Byte>(Byte::class.java) {
     override val simpleName = "8-bit float"
-    override val zero = 0.toByte()
-    override val one = doubleToByteIndex(1.0)
     override fun unary(op : UnaryOp, value : Byte) : Byte = run {
         val result = when(op) {
             NEGATE ->
@@ -103,32 +102,8 @@ val QuarterPrecisionAlgebraicType = object : AlgebraicType<Byte>(Byte::class.jav
             D -> zero
             else -> error("$op")
         }
-//        val x = "$op ${render(value)} -> ${render(result)}"
-//        val compare = DoubleAlgebraicType.unary(op, byteToDouble(value))
-//        if (abs(compare - byteToDouble(result)) > 0.06) {
-//            error("hello")
-//        }
         result
     }
-    override fun binary(op: BinaryOp, left: Byte, right: Byte) = run {
-        val result = when(op) {
-            PLUS ->
-                lookup(additionTable, left, right)
-            MINUS ->
-                lookup(subtractionTable, left, right)
-            TIMES ->
-                lookup(multiplicationTable, left, right)
-            DIV -> {
-                assert(right != 0.toByte())
-                lookup(divisionTable, left, right)
-            }
-            POW ->
-                lookup(powerTable, left, right)
-            else -> error("$op")
-        }
-        result
-    }
-
     override fun compare(left: Byte, right: Byte) =
         doubleLookup[left+128].compareTo(doubleLookup[right+128])
     override fun allocArray(size: Int, init: (Int) -> Byte) = Array(size, init)

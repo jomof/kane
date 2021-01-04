@@ -1,7 +1,7 @@
 @file:Suppress("UNCHECKED_CAST")
 package com.github.jomof.kane.rigueur
 
-import com.github.jomof.kane.rigueur.functions.pow
+import com.github.jomof.kane.rigueur.functions.*
 import com.github.jomof.kane.rigueur.types.*
 import org.junit.Test
 import java.io.File
@@ -535,7 +535,7 @@ class KaneTest {
         val x by variable(100.0)
         val y by squarsh(x)
         val dy by (differentiate(d(y)/d(x)))
-        y.reduceArithmetic().assertString("y=(2/e⁻ˣ+1-1)+0.01*x")
+        y.reduceArithmetic().assertString("y=(2/(e⁻ˣ+1)-1)+0.01*x")
         dy.assertString("dy=2*e⁻ˣ*(e⁻ˣ+1)⁻²+0.01")
         val fx = y.toFunc(x)
         val fxp = dy.toFunc(x)
@@ -816,7 +816,7 @@ class KaneTest {
         e.assertString("e=m[1,1]")
         (matrixVariable<Double>(2,3)).assertString("matrixVariable(2x3)")
         val p by pow(m, 2.0)
-        p.assertString("p=m²")
+        p.assertString("p=pow(m,2)")
         val pe by p[1,2]
         pe.assertString("pe=m[1,2]²")
         p[1,2].assertString("m[1,2]²")
@@ -831,13 +831,18 @@ class KaneTest {
 
     @Test
     fun `requires parens`() {
-        fun check(parent : BinaryOp, child : BinaryOp, childIsRight: Boolean, expect : Boolean?) {
+        fun check(parent : BinaryOp, child : BinaryOp, childIsRight: Boolean, expect : Boolean) {
+            //if (expect) return
             val result = binaryRequiresParents(parent, child, childIsRight)
             assert(result == expect) {
                 binaryRequiresParents(parent, child, childIsRight)
                 "$result != $expect"
             }
         }
+        check(PLUS, POW, childIsRight = false, expect = false)
+        check(PLUS, POW, childIsRight = true, expect = false)
+        check(DIV, PLUS, childIsRight = true, expect = true)
+        check(DIV, MINUS, childIsRight = true, expect = true)
         check(MINUS, POW, childIsRight = false, expect = false)
         check(MINUS, POW, childIsRight = true, expect = false)
         check(DIV, POW, childIsRight = false, expect = false)
@@ -1011,7 +1016,8 @@ class KaneTest {
         differentiate(df2dx).assertString("df2dx'=2*x*y³")
         val df2dy by d(f2) / d(y)
         df2dy.reduceArithmetic().assertString("df2dy=d(x²*y³)/dy")
-        differentiate(df2dy).assertString("df2dy'=3*x²*y²")
+        val diff = differentiate(df2dy)
+        diff.reduceArithmetic().assertString("df2dy'=3*x²*y²")
         val assigned by differentiate(df2dy)
         assigned.reduceArithmetic().assertString("assigned=3*x²*y²")
         val f3 by logit(x * y)

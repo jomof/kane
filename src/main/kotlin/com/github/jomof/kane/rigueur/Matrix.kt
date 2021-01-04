@@ -1,5 +1,8 @@
 package com.github.jomof.kane.rigueur
 
+import com.github.jomof.kane.rigueur.functions.divide
+import com.github.jomof.kane.rigueur.functions.multiply
+import com.github.jomof.kane.rigueur.functions.subtract
 import com.github.jomof.kane.rigueur.types.*
 
 interface Matrix<E:Number> {
@@ -41,12 +44,12 @@ fun <E:Number> MutableMatrix<E>.set(value : Matrix<E>) {
     }
 }
 
-operator fun <E:Number> MutableMatrix<E>.divAssign(value: E) { mapAssign { type.divide(it, value) } }
-operator fun <E:Number> MutableMatrix<E>.timesAssign(value: E) { mapAssign { type.multiply(it, value) } }
+operator fun <E:Number> MutableMatrix<E>.divAssign(value: E) { mapAssign { divide(it, value) } }
+operator fun <E:Number> MutableMatrix<E>.timesAssign(value: E) { mapAssign { multiply(it, value) } }
 operator fun <E:Number> MutableMatrix<E>.minusAssign(value: Matrix<E>) {
     for(column in 0 until columns) {
         for(row in 0 until rows) {
-            this[column,row] = type.subtract(this[column,row], value[column,row])
+            this[column,row] = subtract(this[column,row], value[column,row])
         }
     }
 }

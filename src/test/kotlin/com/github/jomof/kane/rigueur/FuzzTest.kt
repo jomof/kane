@@ -13,6 +13,7 @@ class FuzzTest {
 //            println("$expr")
             expr.render()
             expr.reduceArithmetic()
+            expr.elements.forEach { }
         }
     }
 
@@ -73,7 +74,12 @@ class FuzzTest {
         repeat(10000) {
             val expr = random.nextAlgebraicExpr<Double>()
             expr.render()
-            expr.memoizeAndReduceArithmetic()
+            try {
+                expr.memoizeAndReduceArithmetic()
+            } catch (e:Throwable) {
+                expr.memoizeAndReduceArithmetic()
+                throw e
+            }
         }
     }
 

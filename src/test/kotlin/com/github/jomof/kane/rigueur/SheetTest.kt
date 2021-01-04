@@ -1,5 +1,6 @@
 package com.github.jomof.kane.rigueur
 
+import com.github.jomof.kane.rigueur.functions.AlgebraicBinaryScalar
 import com.github.jomof.kane.rigueur.functions.pow
 import com.github.jomof.kane.rigueur.types.dollars
 import org.junit.Test
@@ -144,7 +145,7 @@ class SheetTest {
         val result = expr
             .replaceBottomUp {
                 when(it) {
-                    is BinaryScalar -> it.left - it.right
+                    is AlgebraicBinaryScalar -> it.left - it.right
                     else -> it
                 }
             }

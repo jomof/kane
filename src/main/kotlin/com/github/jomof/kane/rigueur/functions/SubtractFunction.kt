@@ -1,0 +1,47 @@
+package com.github.jomof.kane.rigueur.functions
+
+import com.github.jomof.kane.rigueur.*
+import com.github.jomof.kane.rigueur.types.negativeOne
+import com.github.jomof.kane.rigueur.types.negativeZero
+import com.github.jomof.kane.rigueur.types.two
+import com.github.jomof.kane.rigueur.types.zero
+
+val MINUS by BinaryOp(op = "-", precedence = 4, infix = true)
+
+private class SubtractFunction : AlgebraicBinaryScalarFunction {
+    override val meta = MINUS
+    override fun doubleOp(p1: Double, p2: Double) = p1 - p2
+    override fun floatOp(p1: Float, p2: Float) = p1 - p2
+    override fun intOp(p1: Int, p2: Int) = p1 - p2
+
+    override fun <E : Number> reduceArithmetic(p1: ScalarExpr<E>, p2: ScalarExpr<E>): ScalarExpr<E>? {
+        if (p1 is NamedScalarVariable && p2 is NamedScalarVariable) return null
+        val leftConst = p1.tryFindConstant()
+        val rightConst = p2.tryFindConstant()
+        val result = when {
+            leftConst == p1.type.zero -> -p2
+            leftConst == p1.type.negativeZero -> -p2
+            rightConst == p2.type.zero -> p1
+            rightConst == p2.type.negativeZero -> p1
+            rightConst != null && p1 is AlgebraicBinaryScalar && p1.op == add && p1.right is ConstantScalar -> {
+                p1.left + (p1.right - rightConst)
+            }
+            p2 is AlgebraicUnaryScalar && p2.op == negate -> p1 + p2.value
+            else ->
+                null
+        }
+        assert(result != p1*p2) {
+            "Should be null"
+        }
+        return result
+    }
+    override fun <E : Number> differentiate(
+        p1: ScalarExpr<E>,
+        p1d: ScalarExpr<E>,
+        p2: ScalarExpr<E>,
+        p2d: ScalarExpr<E>,
+        variable: ScalarExpr<E>
+    ) = p1d - p2d
+}
+
+val subtract : AlgebraicBinaryScalarFunction = SubtractFunction()

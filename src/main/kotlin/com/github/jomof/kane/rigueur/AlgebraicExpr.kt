@@ -2,8 +2,7 @@
 
 package com.github.jomof.kane.rigueur
 
-import com.github.jomof.kane.rigueur.functions.AlgebraicBinaryScalar
-import com.github.jomof.kane.rigueur.functions.pow
+import com.github.jomof.kane.rigueur.functions.*
 import com.github.jomof.kane.rigueur.types.*
 import java.io.Closeable
 import kotlin.math.exp
@@ -93,11 +92,7 @@ data class BinaryOp(
         if (op.isBlank()) copy(op = property.name.toLowerCase())
         else this
 }
-val POW by BinaryOp(precedence = 0)
-val TIMES by BinaryOp(op = "*", precedence = 1, associative = true, infix = true)
-val DIV by BinaryOp(op = "/", precedence = 2, infix = true)
-val PLUS by BinaryOp(op = "+", precedence = 3, associative = true, infix = true)
-val MINUS by BinaryOp(op = "-", precedence = 4, infix = true)
+
 val CROSS by BinaryOp(op = " cross ", precedence = 5, associative = false, infix = true)
 val STACK by BinaryOp(op = " stack ", precedence = 5, associative = true, infix = true)
 
@@ -142,6 +137,7 @@ data class UnaryScalar<E:Number>(
     override val op : UnaryOp,
     override val value : ScalarExpr<E>) : ScalarExpr<E>, UnaryExpr<E>, ParentExpr<E> {
     init {
+        assert(op != NEGATE)
         track()
     }
     override val type get() = value.type
@@ -150,63 +146,31 @@ data class UnaryScalar<E:Number>(
     override fun mapChildren(f: ExprFunction) = copy(value = f(value))
 }
 data class UnaryMatrixScalar<E:Number>(override val op : UnaryOp, override val value : MatrixExpr<E>) : ScalarExpr<E>, UnaryExpr<E>, ParentExpr<E> {
-    init { track() }
+    init {
+        assert(op != NEGATE)
+        track()
+    }
     override val type get() = value.type
     override val children : Iterable<ScalarExpr<E>> = value.elements.asIterable()
     override fun toString() = render()
     override fun mapChildren(f: ExprFunction) = copy(value = f(value))
 }
 data class UnaryMatrix<E:Number>(override val op : UnaryOp, override val value : MatrixExpr<E>) : MatrixExpr<E>, UnaryExpr<E> {
-    init { track() }
+    init {
+        assert(op != NEGATE)
+        track()
+    }
     override val columns get() = value.columns
     override val rows get() = value.rows
     override val type get() = value.type
-    override fun get(column: Int, row: Int) = UnaryScalar(op, value[column,row])
+    override fun get(column: Int, row: Int) : ScalarExpr<E> = when(op) {
+        NEGATE -> AlgebraicUnaryScalar(negate, value[column,row])
+        else -> UnaryScalar(op, value[column,row])
+    }
     override fun toString() = render()
     override fun mapChildren(f: ExprFunction) = copy(value = f(value))
 }
-data class BinaryScalar<E:Number>(
-    override val op : BinaryOp,
-    override val left : ScalarExpr<E>,
-    override val right : ScalarExpr<E>) : ScalarExpr<E>, BinaryExpr<E>, ParentExpr<E> {
-    init {
-        assert(op != STACK)
-        assert(op != CROSS)
-        track()
-    }
-    override val type get() = left.type
-    override val children get() = listOf(left, right)
-    override fun toString() = render()
-    override fun mapChildren(f: ExprFunction) = copy(left = f(left), right = f(right))
-}
-data class BinaryScalarMatrix<E:Number>(
-    override val op : BinaryOp,
-    override val columns: Int,
-    override val rows: Int,
-    override val left : ScalarExpr<E>,
-    override val right : MatrixExpr<E>) : MatrixExpr<E>, BinaryExpr<E>  {
-    init { track() }
-    override val type get() = left.type
-    override fun get(column: Int, row: Int) = BinaryScalar(op, left, right[column, row])
-    override fun toString() = render()
-    override fun mapChildren(f: ExprFunction) = copy(left = f(left), right = f(right))
-}
-data class BinaryMatrixScalar<E:Number>(
-    override val op : BinaryOp,
-    override val columns: Int,
-    override val rows: Int,
-    override val left : MatrixExpr<E>,
-    override val right : ScalarExpr<E>) : MatrixExpr<E>, BinaryExpr<E>  {
-    init {
-        assert(op != STACK)
-        assert(op != CROSS)
-        track()
-    }
-    override val type get() = left.type
-    override fun get(column: Int, row: Int) = BinaryScalar(op, left[column, row], right)
-    override fun toString() = render()
-    override fun mapChildren(f: ExprFunction) = copy(left = f(left), right = f(right))
-}
+
 data class BinaryMatrix<E:Number>(
     override val op : BinaryOp,
     override val columns: Int,
@@ -448,12 +412,6 @@ data class NamedMatrixAssign<E:Number>(
     override fun mapChildren(f: ExprFunction) : NamedMatrixAssign<E> = copy(right = f(right))
 }
 
-
-// Pow
-//fun <E:Number> pow(left : ScalarExpr<E>, right : E) = BinaryScalar(POW, left, ConstantScalar(right, left.type))
-//fun <E:Number> pow(left : MatrixExpr<E>, right : E) = BinaryMatrixScalar(POW, left.columns, left.rows, left, ConstantScalar(right, left.type))
-//fun <E:Number, L : ScalarExpr<E>, R : ScalarExpr<E>> pow(left : L, right : R) : ScalarExpr<E> = BinaryScalar(POW, left, right)
-//fun <E:Number, L : MatrixExpr<E>, R : ScalarExpr<E>> pow(left : L, right : R) = BinaryMatrixScalar(POW, left.columns, left.rows, left, right)
 // Relu
 fun <E:Number, T : ScalarExpr<E>> relu(expr : T) : ScalarExpr<E> = UnaryScalar(RELU, expr)
 fun <E:Number, T : MatrixExpr<E>> relu(expr : T) : MatrixExpr<E> = UnaryMatrix(RELU, expr)
@@ -472,7 +430,7 @@ fun step(value : Float) = if (value < 0.0f) 0.0f else 1.0f
 fun <E:Number, T : ScalarExpr<E>> lstep(expr : T) : ScalarExpr<E> = UnaryScalar(LSTEP, expr)
 fun lstep(value : Double) = if (value < 0.0) 0.1 else 1.0
 fun lstep(value : Float) = if (value < 0.0f) 0.1f else 1.0f
-// Expr
+// Exp
 fun <E:Number> exp(expr : ScalarExpr<E>) = UnaryScalar(EXP, expr)
 fun <E:Number> exp(expr : MatrixExpr<E>) = UnaryMatrix(EXP, expr)
 // Softmax
@@ -488,56 +446,50 @@ fun <E:Number, T : MatrixExpr<E>> tanh(expr : T) : MatrixExpr<E> = UnaryMatrix(T
 fun tanh(value : Double) : Double = (exp(2.0 * value) - 1.0) / (exp(2.0 * value) + 1.0)
 fun tanh(value : Float) : Float = (exp(2.0f * value) - 1.0f) / (exp(2.0f * value) + 1.0f)
 // Times
-operator fun <E:Number, L : ScalarExpr<E>, R : E> L.times(right : R) = BinaryScalar(TIMES, this, ConstantScalar(right, type))
-operator fun <E:Number, L : ScalarExpr<E>, R : ScalarExpr<E>> L.times(right : R) = BinaryScalar(TIMES, this, right)
-operator fun <E:Number> E.times(right : ScalarExpr<E>) = BinaryScalar(TIMES, ConstantScalar(this, right.type), right)
-operator fun <E:Number, L : MatrixExpr<E>, R : E> L.times(right : R) = BinaryMatrixScalar(TIMES, columns, rows, this, ConstantScalar(right, type))
-operator fun <E:Number, L : E, R : MatrixExpr<E>> L.times(right : R) = BinaryScalarMatrix(TIMES, right.columns, right.rows, ConstantScalar(this, right.type), right)
-operator fun <E:Number, L : MatrixExpr<E>, R : ScalarExpr<E>> L.times(right : R) = BinaryMatrixScalar(TIMES, columns, rows, this, right)
-operator fun <E:Number, L : ScalarExpr<E>, R : MatrixExpr<E>> L.times(right : R) = BinaryScalarMatrix(TIMES, right.columns, right.rows, this, right)
-operator fun <E:Number> MatrixExpr<E>.times(right : MatrixExpr<E>) = run {
-    BinaryMatrix(TIMES, right.columns, rows, this, right)
-}
+operator fun <E:Number> ScalarExpr<E>.times(right : E) = multiply(this, right)
+operator fun <E:Number> E.times(right : ScalarExpr<E>) = multiply(this, right)
+operator fun <E:Number> ScalarExpr<E>.times(right : ScalarExpr<E>) = multiply(this, right)
+operator fun <E:Number> MatrixExpr<E>.times(right : E) = multiply(this, right)
+operator fun <E:Number> MatrixExpr<E>.times(right : ScalarExpr<E>) = multiply(this, right)
+operator fun <E:Number> E.times(right : MatrixExpr<E>) = multiply(this, right)
+operator fun <E:Number> ScalarExpr<E>.times(right : MatrixExpr<E>) = multiply(this, right)
+operator fun <E:Number> MatrixExpr<E>.times(right : MatrixExpr<E>) = multiply(this, right)
+
+// Cross Product
 infix fun <E:Number> MatrixExpr<E>.cross(right : MatrixExpr<E>) = run {
     BinaryMatrix(CROSS, right.columns, rows, this, right)
 }
 
 // Div
-operator fun <E:Number, L : ScalarExpr<E>, R : E> L.div(right : R) = BinaryScalar(DIV, this, ConstantScalar(right, type))
-operator fun <E:Number, L : ScalarExpr<E>, R : ScalarExpr<E>> L.div(right : R) = BinaryScalar(DIV, this, right)
-operator fun <E:Number> E.div(right : ScalarExpr<E>) = BinaryScalar(DIV, ConstantScalar(this, right.type), right)
-operator fun <E:Number, L : MatrixExpr<E>, R : E> L.div(right : R) = BinaryMatrixScalar(DIV, columns, rows, this, ConstantScalar(right, type))
-operator fun <E:Number, L : E, R : MatrixExpr<E>> L.div(right : R) = BinaryScalarMatrix(DIV, right.columns, right.rows, ConstantScalar(this, right.type), right)
-operator fun <E:Number, L : MatrixExpr<E>, R : ScalarExpr<E>> L.div(right : R) = BinaryMatrixScalar(DIV, columns, rows, this, right)
-operator fun <E:Number, L : ScalarExpr<E>, R : MatrixExpr<E>> L.div(right : R) = BinaryScalarMatrix(DIV, right.columns, right.rows, this, right)
+operator fun <E:Number> ScalarExpr<E>.div(right : E) = divide(this, right)
+operator fun <E:Number> E.div(right : ScalarExpr<E>) = divide(this, right)
+operator fun <E:Number> ScalarExpr<E>.div(right : ScalarExpr<E>) = divide(this, right)
+operator fun <E:Number> MatrixExpr<E>.div(right : E) = divide(this, right)
+operator fun <E:Number> MatrixExpr<E>.div(right : ScalarExpr<E>) = divide(this, right)
+operator fun <E:Number> E.div(right : MatrixExpr<E>) = divide(this, right)
+operator fun <E:Number> ScalarExpr<E>.div(right : MatrixExpr<E>) = divide(this, right)
+operator fun <E:Number> MatrixExpr<E>.div(right : MatrixExpr<E>) = divide(this, right)
+
 // Plus
-operator fun <E:Number> ScalarExpr<E>.plus(right : E) = BinaryScalar(PLUS, this, ConstantScalar(right, type))
-operator fun <E:Number> ScalarExpr<E>.plus(right : ScalarExpr<E>) = BinaryScalar(PLUS, this, right)
-operator fun <E:Number> E.plus(right : ScalarExpr<E>) = BinaryScalar(PLUS, ConstantScalar(this, right.type), right)
-operator fun <E:Number, L : MatrixExpr<E>, R : E> L.plus(right : R) = BinaryMatrixScalar(PLUS, columns, rows, this, ConstantScalar(right, type))
-operator fun <E:Number, L : E, R : MatrixExpr<E>> L.plus(right : R) = BinaryScalarMatrix(PLUS, right.columns, right.rows, ConstantScalar(this, right.type), right)
-operator fun <E:Number, L : MatrixExpr<E>, R : ScalarExpr<E>> L.plus(right : R) = BinaryMatrixScalar(PLUS, columns, rows, this, right)
-operator fun <E:Number, L : ScalarExpr<E>, R : MatrixExpr<E>> L.plus(right : R) = BinaryScalarMatrix(PLUS, right.columns, right.rows, this, right)
-operator fun <E:Number, L : MatrixExpr<E>, R : MatrixExpr<E>> L.plus(right : R) = BinaryMatrix(PLUS, right.columns, right.rows, this, right)
+operator fun <E:Number> ScalarExpr<E>.plus(right : E) = add(this, right)
+operator fun <E:Number> E.plus(right : ScalarExpr<E>) = add(this, right)
+operator fun <E:Number> ScalarExpr<E>.plus(right : ScalarExpr<E>) = add(this, right)
+operator fun <E:Number> MatrixExpr<E>.plus(right : E) = add(this, right)
+operator fun <E:Number> MatrixExpr<E>.plus(right : ScalarExpr<E>) = add(this, right)
+operator fun <E:Number> E.plus(right : MatrixExpr<E>) = add(this, right)
+operator fun <E:Number> ScalarExpr<E>.plus(right : MatrixExpr<E>) = add(this, right)
+operator fun <E:Number> MatrixExpr<E>.plus(right : MatrixExpr<E>) = add(this, right)
 // Minus
-operator fun <E:Number, L : ScalarExpr<E>, R : E> L.minus(right : R) =
-    BinaryScalar(MINUS, this, ConstantScalar(right, type))
-operator fun <E:Number, L : ScalarExpr<E>, R : ScalarExpr<E>> L.minus(right : R) =
-    BinaryScalar(MINUS, this, right)
-operator fun <E:Number> E.minus(right : ScalarExpr<E>) =
-    BinaryScalar(MINUS, ConstantScalar(this, right.type), right)
-operator fun <E:Number, L : MatrixExpr<E>, R : E> L.minus(right : R) =
-    BinaryMatrixScalar(MINUS, columns, rows, this, ConstantScalar(right, type))
-operator fun <E:Number, L : E, R : MatrixExpr<E>> L.minus(right : R) =
-    BinaryScalarMatrix(MINUS, right.columns, right.rows, ConstantScalar(this, right.type), right)
-operator fun <E:Number, L : MatrixExpr<E>, R : ScalarExpr<E>> L.minus(right : R) =
-    BinaryMatrixScalar(MINUS, columns, rows, this, right)
-operator fun <E:Number, L : ScalarExpr<E>, R : MatrixExpr<E>> L.minus(right : R) =
-    BinaryScalarMatrix(MINUS, right.columns, right.rows, this, right)
-operator fun <E:Number, L : MatrixExpr<E>, R : MatrixExpr<E>> L.minus(right : R) =
-    BinaryMatrix(MINUS, right.columns, right.rows, this, right)
+operator fun <E:Number> ScalarExpr<E>.minus(right : E) = subtract(this, right)
+operator fun <E:Number> E.minus(right : ScalarExpr<E>) = subtract(this, right)
+operator fun <E:Number> ScalarExpr<E>.minus(right : ScalarExpr<E>) = subtract(this, right)
+operator fun <E:Number> MatrixExpr<E>.minus(right : E) = subtract(this, right)
+operator fun <E:Number> MatrixExpr<E>.minus(right : ScalarExpr<E>) = subtract(this, right)
+operator fun <E:Number> E.minus(right : MatrixExpr<E>) = subtract(this, right)
+operator fun <E:Number> ScalarExpr<E>.minus(right : MatrixExpr<E>) = subtract(this, right)
+operator fun <E:Number> MatrixExpr<E>.minus(right : MatrixExpr<E>) = subtract(this, right)
 // Unary minus
-operator fun <E:Number> ScalarExpr<E>.unaryMinus() = UnaryScalar(NEGATE, this)
+operator fun <E:Number> ScalarExpr<E>.unaryMinus() : ScalarExpr<E> = negate(this)
 operator fun <E:Number> MatrixExpr<E>.unaryMinus() = UnaryMatrix(NEGATE, this)
 // Stack
 private fun <E:Number> stackMatrix(left : MatrixExpr<E>, right : MatrixExpr<E>) : BinaryMatrix<E> {
@@ -634,25 +586,6 @@ private fun <E:Number> diff(expr : ScalarExpr<E>, variable : ScalarExpr<E>) : Sc
             }
             else -> error("${expr.op}")
         }
-        is BinaryScalar -> {
-            val diffLeft = expr.left.self()
-            val diffRight = expr.right.self()
-            val result : ScalarExpr<E> = when(expr.op) {
-                PLUS -> diffLeft + diffRight
-                TIMES -> expr.left * diffRight + diffLeft * expr.right
-                DIV -> {
-                    val topLeft = diffLeft * expr.right
-                    val topRight = expr.left * diffRight
-                    val top = topLeft - topRight
-                    val bottom = pow(expr.right, expr.type.two)
-                    top / bottom
-                }
-                MINUS -> diffLeft - diffRight
-                //POW -> expr.right * pow(expr.left, expr.right - expr.type.one) * diffLeft
-                else -> error("${expr.op}")
-            }
-            result
-        }
         is MatrixVariableElement -> ConstantScalar(expr.type.zero, expr.type)
         is ScalarVariableExpr -> ConstantScalar(expr.type.zero, expr.type)
         is ConstantScalar -> ConstantScalar(expr.type.zero, expr.type)
@@ -667,24 +600,35 @@ private fun <E:Number> diff(expr : ScalarExpr<E>, variable : ScalarExpr<E>) : Sc
 }
 
 fun <E:Number> differentiate(expr : AlgebraicExpr<E>) : AlgebraicExpr<E> {
+    fun ScalarExpr<E>.tryD() = when {
+        this is UnaryScalar && this.op == D -> this.value
+        this is AlgebraicUnaryScalar -> error("")
+        else -> null
+    }
+    fun MatrixExpr<E>.tryD() = when {
+        this is UnaryMatrix && this.op == D -> value
+        //this is AlgebraicUnaryMatrix -> error("")
+        else -> null
+    }
     fun ScalarExpr<E>.diffOr() : ScalarExpr<E>? {
-        if (this !is BinaryScalar<E>) return null
-        if (op != DIV) return null
-        if (left !is UnaryScalar) return null
-        if (left.op != D) return null
-        if (right !is UnaryScalar) return null
-        if (right.op != D) return null
-        return diff(left.value, right.value)
+        when(this) {
+            is AlgebraicBinaryScalar -> {
+                if (op != divide) return null
+                val dleft = left.tryD() ?: return null
+                val dright = right.tryD() ?: return null
+                return diff(dleft, dright)
+            }
+            else -> return null
+        }
     }
     fun MatrixExpr<E>.diffOr() : MatrixExpr<E>? {
-        if (this !is BinaryScalarMatrix<E>) return null
-        if (op != DIV) return null
-        if (left !is UnaryScalar) return null
-        if (left.op != D) return null
-        if (right !is UnaryMatrix) return null
-        if (right.op != D) return null
+        if (this !is AlgebraicBinaryScalarMatrix<E>) return null
+        if (op != divide) return null
+        val dleft = left.tryD() ?: return null
+        val dright = right.tryD() ?: return null
+
         return matrixOf(right.columns, right.rows) { (column, row) ->
-            diff(left.value, right.value[column, row])
+            diff(dleft, dright[column, row])
         }
     }
     return expr.replaceExprTopDown {
@@ -699,8 +643,8 @@ fun <E:Number> differentiate(expr : AlgebraicExpr<E>) : AlgebraicExpr<E> {
                 if (diff != null) it.copy(name = "${it.name}'", matrix = diff)
                 else it
             }
-            is BinaryScalar<E> -> it.diffOr() ?: it
-            is BinaryScalarMatrix<E> -> it.diffOr() ?: it
+            is AlgebraicBinaryScalar<E> -> it.diffOr() ?: it
+            is AlgebraicBinaryScalarMatrix<E> -> it.diffOr() ?: it
             else -> it
         }
     }
@@ -756,7 +700,8 @@ fun <E:Number> AlgebraicExpr<E>.eval(map : MutableMap<String, E>) : AlgebraicExp
         is NamedScalar -> copy(scalar = scalar.self())
         is DataMatrix -> map { it.self() }
         is BinaryMatrix -> toDataMatrix().self()
-        is BinaryScalar -> copy(left = left.self(), right = right.self())
+        is AlgebraicBinaryScalar -> copy(left = left.self(), right = right.self())
+        is AlgebraicUnaryScalar -> copy(value = value.self())
         is UnaryScalar -> copy(value = value.self())
         is Tableau -> {
             copy(children = children.map { child ->
@@ -893,6 +838,12 @@ fun <E:Number> AlgebraicExpr<E>.memoizeAndReduceArithmetic(
         when (this) {
             is NamedMatrixVariable -> this
             is ConstantScalar -> this
+            is AlgebraicBinaryMatrix -> {
+                val dm = toDataMatrix()
+                val dmself = dm.self()
+                if (dm != dmself) dmself
+                else this
+            }
             is BinaryMatrix -> {
                 val dm = toDataMatrix()
                 val dmself = dm.self()
@@ -922,91 +873,8 @@ fun <E:Number> AlgebraicExpr<E>.memoizeAndReduceArithmetic(
                 }
                 result
             }
-            is BinaryMatrixScalar -> copy(left = left.self(), right = right.self())
-            is BinaryScalarMatrix -> copy(left = left.self(), right = right.self())
-            is BinaryScalar -> {
-                val leftConst = left.tryFindConstant()
-                val rightConst = right.tryFindConstant()
-                val leftAffine = left.affineName()
-                val rightAffine = right.affineName()
-                val result: AlgebraicExpr<E> = when {
-                    leftConst != null && rightConst != null -> ConstantScalar(type.binary(op, leftConst, rightConst), type)
-                    leftAffine != null && rightAffine != null && leftAffine.compareTo(rightAffine) == 1 && op.associative ->
-                        BinaryScalar(op, right, left).self()
-                    op == TIMES && left is UnaryScalar && left.op == NEGATE && right is UnaryScalar && right.op == NEGATE ->
-                        (left.value * right.value).self()
-                    op == DIV && left is UnaryScalar && left.op == NEGATE && right is UnaryScalar && right.op == NEGATE ->
-                        (left.value / right.value).self()
-                    op == TIMES && right == left -> pow(left, type.two).self()
-                    op == TIMES && rightConst == type.zero -> right
-                    op == TIMES && rightConst == type.one -> left.self()
-                    op == TIMES && leftConst == type.zero -> left
-                    op == TIMES && leftConst == type.one -> right.self()
-                    op == TIMES && leftConst == type.negativeOne -> (-right).self()
-                    op == TIMES && rightConst == type.negativeOne -> (-left).self()
-                    op == PLUS && rightConst == type.zero -> left.self()
-                    op == PLUS && leftConst == type.zero -> right.self()
-                    op == MINUS && leftConst == type.zero -> (-right).self()
-                    op == MINUS && rightConst == type.zero -> left.self()
-                    op == MINUS && right is UnaryScalar && right.op == NEGATE -> (left + right.value).self()
-//                    op == POW && rightConst == type.one -> left.self()
-//                    op == POW && rightConst == type.zero -> ConstantScalar(type.one, type)
-                    op == TIMES && right is UnaryScalar && right.op == NEGATE -> (-(left * right.value)).self()
-                    op == TIMES && left is UnaryScalar && left.op == NEGATE -> (-(left.value * right)).self()
-                    op == DIV && right is AlgebraicBinaryScalar && right.op == pow -> {
-                        val result = (left * pow(right.left, -right.right))
-                        result.self()
-                    }
-                    op == TIMES && left !is ConstantScalar && right is ConstantScalar -> BinaryScalar(op, right, left).self()
-                    op == PLUS && right !is ConstantScalar && left is ConstantScalar -> BinaryScalar(op, right, left).self()
-                    op.associative && left !is ConstantScalar && right is BinaryScalar && right.op == op && right.left is ConstantScalar -> {
-                        BinaryScalar(op, right.left, BinaryScalar(op, left, right.right)).self()
-                    }
-                    op.associative && left is BinaryScalar && left.op == op && left.left is ConstantScalar && right !is ConstantScalar -> {
-                        BinaryScalar(op, left.left, BinaryScalar(op, left.right, right)).self()
-                    }
-//                    op == POW && left is BinaryScalar && left.op == POW-> {
-//                        pow(left.left, right * left.right).self()
-//                    }
-                    op == TIMES &&
-                            left is AlgebraicBinaryScalar && left.op == pow &&
-                            right is AlgebraicBinaryScalar && right.op == pow
-                            && left.left == right.left -> {
-                        // x^5 * x^4 => x^9
-                        (pow(left.left, left.right + right.right)).self()
-                    }
-                    op == TIMES && left is BinaryScalar && left.op == TIMES && left.right == right -> {
-                        (left.left * pow(right, type.two)).self()
-                    }
-                    op == TIMES && left is BinaryScalar && left.op == TIMES && left.left == right -> {
-                        (left.right * pow(right, type.two)).self()
-                    }
-                    op == TIMES && left is ConstantScalar && right is BinaryScalar && right.op == TIMES && right.left is ConstantScalar -> {
-                        (ConstantScalar(type.multiply(left.value, right.left.value), type) * right.right).self()
-                    }
-                    op == TIMES && left is ConstantScalar && right is BinaryScalar && right.op == TIMES && right.right is ConstantScalar -> {
-                        (ConstantScalar(type.multiply(left.value, right.right.value), type) * right.left).self()
-                    }
-                    op == PLUS && left is ConstantScalar && right is BinaryScalar && right.op == PLUS && right.left is ConstantScalar -> {
-                        (ConstantScalar(type.add(left.value, right.left.value), type) + right.right).self()
-                    }
-                    op == PLUS && left is ConstantScalar && right is BinaryScalar && right.op == PLUS && right.right is ConstantScalar -> {
-                        (ConstantScalar(type.add(left.value, right.right.value), type) + right.left).self()
-                    }
-                    op == MINUS && right is ConstantScalar && left is BinaryScalar && left.op == PLUS && left.right is ConstantScalar -> {
-                        (left.left + type.subtract(left.right.value, right.value)).self()
-                    }
-                    else -> {
-                        val left = left.self()
-                        val right = right.self()
-                        when {
-                            this.left != left || this.right != right -> BinaryScalar(op, left, right).self()
-                            else -> this
-                        }
-                    }
-                }
-                result
-            }
+            is AlgebraicBinaryScalarMatrix -> copy(left = left.self(), right = right.self())
+            is AlgebraicBinaryMatrixScalar -> copy(left = left.self(), right = right.self())
             is NamedScalarAssign -> copy(right = right.self())
             is NamedMatrixAssign -> copy(right = right.self())
             is Tableau -> copy(children = children.map { it.memoizeAndReduceArithmetic(true, memo, selfMemo) as NamedAlgebraicExpr<E>})
@@ -1029,8 +897,32 @@ fun <E:Number> AlgebraicExpr<E>.memoizeAndReduceArithmetic(
             is AlgebraicBinaryScalar -> {
                 val leftSelf = left.self()
                 val rightSelf = right.self()
+                val leftAffine = left.affineName()
+                val rightAffine = right.affineName()
                 if (left != leftSelf || right != right.self()) AlgebraicBinaryScalar(op, leftSelf, rightSelf).self()
-                else op.reduceArithmetic(left, right)?.self() ?: this
+                else if (leftAffine != null && rightAffine != null && leftAffine.compareTo(rightAffine) == 1 && op.meta.associative) {
+                    val result : ScalarExpr<E> = op(right, left).self()
+                    result
+                }
+                else {
+                    val leftConst = left.tryFindConstant()
+                    val rightConst = right.tryFindConstant()
+                    when {
+                        leftConst != null && rightConst != null -> ConstantScalar(op(leftConst, rightConst), type)
+                        else -> op.reduceArithmetic(left, right)?.self() ?: this
+                    }
+                }
+            }
+            is AlgebraicUnaryScalar -> {
+                val valueSelf = value.self()
+                if (value != valueSelf) copy(value = valueSelf).self()
+                else {
+                    val valueConst = value.tryFindConstant()
+                    when {
+                        valueConst != null -> ConstantScalar(op(valueConst), type)
+                        else -> op.reduceArithmetic(value)?.self() ?: this
+                    }
+                }
             }
             else ->
                 error("$javaClass")
@@ -1053,8 +945,8 @@ private fun <E:Number> AlgebraicExpr<E>.affineName(depth : Int = 2) : String? {
         is AlgebraicBinaryScalar -> left.affineName(depth - 1) ?: right.affineName(depth - 1) ?: op.meta.op
         is NamedScalar -> name
         is MatrixVariableElement -> matrix.name
+        is AlgebraicUnaryScalar -> value.affineName(depth - 1) ?: op.meta.op
         is UnaryScalar -> value.affineName(depth - 1) ?: op.op
-        is BinaryScalar -> left.affineName(depth - 1) ?: right.affineName(depth - 1) ?: op.op
         is NamedScalarVariable -> name
         is NamedScalarExpr -> name
         else -> null
@@ -1068,22 +960,20 @@ fun binaryRequiresParents(parent : BinaryOp, child : BinaryOp, childIsRight: Boo
         bit(parent.precedence < child.precedence, 1) +
         bit(child.precedence < parent.precedence, 2) +
         bit(parent == MINUS, 3) +
-        bit(child == PLUS, 4) +
-        bit(child.associative, 5) +
-        bit(parent.associative, 6) +
-        bit(childIsRight, 7)
-    //println(sig)
+        bit(parent == DIV, 4) +
+        bit(child == PLUS, 5) +
+        bit(child.associative, 6) +
+        bit(parent.associative, 7) +
+        bit(childIsRight, 8)
+    //print("$sig,")
     return when(sig) {
-        4,8,12,44,60,68,96,100,112,132,140,172,178,196,224,228,240 -> false
+        12,268,20,276,354,108,224,480,192,448,8,196,452,76,332,388,132 -> false
         else -> true
     }
 }
 
 fun Expr.tryGetBinaryOp() : BinaryOp? = when(this) {
     is AlgebraicBinaryScalar<*> -> op.meta
-    is BinaryMatrixScalar<*> -> op
-    is BinaryScalarMatrix<*> -> op
-    is BinaryScalar<*> -> op
     is BinaryMatrix<*> -> op
     else -> null
 }
@@ -1184,19 +1074,19 @@ fun Expr.render(entryPoint : Boolean = true) : String {
         is BinaryMatrix<*> -> binary(op, left, right)
         is NamedScalarAssign<*> -> "${left.self()} <- ${right.self()}"
         is NamedMatrixAssign<*> -> "${left.self()} <- ${right.self()}"
-        is BinaryScalar<*> -> {
+        is AlgebraicBinaryScalar<*> -> {
             when {
-                op == POW -> {
+                op == pow -> {
                     val rightSuper = tryConvertToSuperscript(right.self())
                     if (rightSuper == null) binary(POW, left, right)
                     else "${left.self()}$rightSuper"
 
                 }
-                else -> binary(op, left, right)
+                else -> binary(op.meta, left, right)
             }
         }
-        is BinaryMatrixScalar<*> -> binary(op, left, right)
-        is BinaryScalarMatrix<*> -> binary(op, left, right)
+        is AlgebraicBinaryMatrixScalar<*> -> binary(op.meta, left, right)
+        is AlgebraicBinaryScalarMatrix<*> -> binary(op.meta, left, right)
         is NamedScalar<*> ->
             if (entryPoint) "$name=${scalar.self()}"
             else name
@@ -1209,6 +1099,18 @@ fun Expr.render(entryPoint : Boolean = true) : String {
         }
         is MatrixVariableElement<*> -> "${matrix.name}[$column,$row]"
         is ConstantScalar<*> -> type.render(value)
+        is AlgebraicUnaryScalar<*> -> when {
+//            op == EXP -> {
+//                val rightSuper = tryConvertToSuperscript(value.self())
+//                if (rightSuper == null) "${op.op}(${value.self()})"
+//                else "e$rightSuper"
+//            }
+//            op == D && value is NamedScalarVariable -> "${op.op}${value.self()}"
+            op == negate &&
+                    (value is NamedScalarVariable ||
+                            value is AlgebraicBinaryScalar && value.op == multiply) -> "${op.meta.op}${value.self()}"
+            else -> "${op.meta.op}(${value.self()})"
+        }
         is UnaryScalar<*> -> when {
             op == EXP -> {
                 val rightSuper = tryConvertToSuperscript(value.self())
@@ -1217,8 +1119,7 @@ fun Expr.render(entryPoint : Boolean = true) : String {
             }
             op == D && value is NamedScalarVariable -> "${op.op}${value.self()}"
             op == NEGATE &&
-                (value is NamedScalarVariable ||
-                value is BinaryScalar && value.op == TIMES) -> "${op.op}${value.self()}"
+                (value is NamedScalarVariable) -> "${op.op}${value.self()}"
             else -> "${op.op}(${value.self()})"
         }
         is UnaryMatrix<*> -> "${op.op}(${value.self()})"

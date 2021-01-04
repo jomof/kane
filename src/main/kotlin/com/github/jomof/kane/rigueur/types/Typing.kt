@@ -3,6 +3,7 @@
 package com.github.jomof.kane.rigueur.types
 
 import com.github.jomof.kane.rigueur.*
+import com.github.jomof.kane.rigueur.functions.*
 import java.math.BigDecimal
 import java.math.RoundingMode
 import kotlin.math.pow
@@ -13,10 +14,7 @@ abstract class KaneType<E:Any>(val java : Class<E>) {
     open val simpleName : String get() = java.simpleName
 }
 abstract class AlgebraicType<E:Number>(java : Class<E>) : KaneType<E>(java) {
-    abstract val zero : E
-    abstract val one : E
     abstract fun render(value : Number) : String
-    abstract fun binary(op : BinaryOp, left : E, right : E) : E
     abstract fun unary(op : UnaryOp, value : E) : E
     abstract fun compare(left : E, right : E) : Int
     abstract fun allocArray(size : Int, init: (Int) -> E) : Array<E>
@@ -30,8 +28,6 @@ class DoubleAlgebraicType(
     val precision : Int = 5
 ) : AlgebraicType<Double>(Double::class.java) {
     override val simpleName = "double"
-    override val zero = 0.0
-    override val one = 1.0
     override fun unary(op : UnaryOp, value : Double) = when(op) {
         NEGATE -> -value
         LOGIT -> logit(value)
@@ -42,19 +38,9 @@ class DoubleAlgebraicType(
         EXP -> exp(value)
         TANH -> tanh(value)
         SUMMATION -> value
-        D -> 0.0
+        D -> Double.NaN
         else -> error("$op")
     }
-    override fun binary(op: BinaryOp, left: Double, right: Double) = when(op) {
-        PLUS -> left + right
-        MINUS -> left - right
-        TIMES -> left * right
-        DIV -> left / right
-        POW -> left.pow(right)
-        else ->
-            error("$op")
-    }
-
     override fun compare(left: Double, right: Double) = left.compareTo(right)
     override fun allocArray(size: Int, init: (Int) -> Double) = Array(size, init)
     override fun allocNullableArray(size: Int, init: (Int) -> Double?) = Array(size, init)
@@ -76,8 +62,6 @@ class DoubleAlgebraicType(
 
 class FloatAlgebraicType : AlgebraicType<Float>(Float::class.java) {
     override val simpleName = "float"
-    override val zero = 0.0f
-    override val one = 1.0f
     override fun unary(op : UnaryOp, value : Float) = when(op) {
         NEGATE -> -value
         LOGIT -> logit(value)
@@ -87,19 +71,10 @@ class FloatAlgebraicType : AlgebraicType<Float>(Float::class.java) {
         LSTEP -> lstep(value)
         EXP -> exp(value)
         TANH -> tanh(value)
-        D -> 0.0f
         SUMMATION -> value
+        D -> Float.NaN
         else -> error("$op")
     }
-    override fun binary(op: BinaryOp, left: Float, right: Float) = when(op) {
-        PLUS -> left + right
-        MINUS -> left - right
-        TIMES -> left * right
-        DIV -> left / right
-        POW -> left.pow(right)
-        else -> error("$op")
-    }
-
     override fun compare(left: Float, right: Float) = left.compareTo(right)
     override fun allocArray(size: Int, init: (Int) -> Float) = Array<Float>(size, init)
     override fun allocNullableArray(size: Int, init: (Int) -> Float?) = Array(size, init)
@@ -119,16 +94,7 @@ class FloatAlgebraicType : AlgebraicType<Float>(Float::class.java) {
 
 class IntAlgebraicType : AlgebraicType<Int>(Int::class.java) {
     override val simpleName = "int"
-    override val zero = 0
-    override val one = 1
     override fun unary(op : UnaryOp, value : Int) = when(op) {
-        else -> error("$op")
-    }
-    override fun binary(op: BinaryOp, left: Int, right: Int) = when(op) {
-        PLUS -> left + right
-        MINUS -> left - right
-        TIMES -> left * right
-        DIV -> left / right
         else -> error("$op")
     }
     override fun compare(left: Int, right: Int) = left.compareTo(right)
@@ -156,17 +122,9 @@ val <E:Number> Class<E>.kaneType : AlgebraicType<E>
 
 val <E:Number> KClass<E>.kaneType get() = java.kaneType
 
-fun <E:Number> AlgebraicType<E>.negate(value : E) = unary(NEGATE, value)
-fun <E:Number> AlgebraicType<E>.add(left : E, right : E) = binary(PLUS, left, right)
-fun <E:Number> AlgebraicType<E>.subtract(left : E, right : E) = binary(MINUS, left, right)
-fun <E:Number> AlgebraicType<E>.multiply(left : E, right : E) = binary(TIMES, left, right)
-fun <E:Number> AlgebraicType<E>.divide(left : E, right : E) = binary(DIV, left, right)
-fun <E:Number> AlgebraicType<E>.pow(left : E, right : E) = binary(POW, left, right)
-fun <E:Number> AlgebraicType<E>.lt(left : E, right : E) = compare(left, right) == -1
-fun <E:Number> AlgebraicType<E>.lte(left : E, right : E) = compare(left, right) != 1
-fun <E:Number> AlgebraicType<E>.gt(left : E, right : E) = compare(left, right) == 1
-fun <E:Number> AlgebraicType<E>.gte(left : E, right : E) = compare(left, right) != -1
-fun <E:Number> AlgebraicType<E>.eq(left : E, right : E) = compare(left, right) == 0
-val <E:Number> AlgebraicType<E>.two : E get() = add(one, one)
+val <E:Number> AlgebraicType<E>.zero : E get() = coerceFrom(0.0)
+val <E:Number> AlgebraicType<E>.one : E get() = coerceFrom(1.0)
+val <E:Number> AlgebraicType<E>.two : E get() = coerceFrom(2.0)
 val <E:Number> AlgebraicType<E>.half : E get() = coerceFrom(0.5)
-val <E:Number> AlgebraicType<E>.negativeOne : E get() = negate(one)
+val <E:Number> AlgebraicType<E>.negativeOne : E get() = coerceFrom(-1.0)
+val <E:Number> AlgebraicType<E>.negativeZero : E get() = coerceFrom(-0.0)
