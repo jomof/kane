@@ -37,7 +37,6 @@ interface AlgebraicBinaryScalarFunction {
         AlgebraicBinaryMatrixScalar(this, p1.columns, p1.rows, p1, constant(p2))
     operator fun <E:Number> invoke(p1 : E, p2 : ScalarExpr<E>) : ScalarExpr<E> = invoke(constant(p1), p2)
     operator fun <E:Number> invoke(p1 : ScalarExpr<E>, p2 : E) : ScalarExpr<E> = invoke(p1, constant(p2))
-//    fun render(p1 : Expr, p2 : Expr) : String
     fun <E:Number> reduceArithmetic(p1 : ScalarExpr<E>, p2 : ScalarExpr<E>) : ScalarExpr<E>?
     fun <E:Number> differentiate(
         p1 : ScalarExpr<E>,
@@ -111,9 +110,11 @@ interface AlgebraicUnaryScalarFunction {
     fun doubleOp(value : Double) : Double
     fun floatOp(value : Float) : Float
     operator fun <E:Number> invoke(value : ScalarExpr<E>) : ScalarExpr<E> = AlgebraicUnaryScalar(this, value)
-    fun render(value : Expr) : String
+    operator fun <E:Number> invoke(value : MatrixExpr<E>) : MatrixExpr<E> = AlgebraicUnaryMatrix(this, value)
     fun <E:Number> reduceArithmetic(value : ScalarExpr<E>) : ScalarExpr<E>?
+    fun <E:Number> differentiate(expr : ScalarExpr<E>, exprd : ScalarExpr<E>, variable : ScalarExpr<E>) : ScalarExpr<E>
 }
+
 data class AlgebraicUnaryScalar<E:Number>(
     val op : AlgebraicUnaryScalarFunction,
     val value : ScalarExpr<E>
@@ -121,6 +122,18 @@ data class AlgebraicUnaryScalar<E:Number>(
     init { track() }
     override val type get() = value.type
     override val children get() = listOf(value)
+    override fun toString() = render()
+    override fun mapChildren(f: ExprFunction) = copy(value = f(value))
+}
+
+data class AlgebraicUnaryMatrix<E:Number>(
+    val op : AlgebraicUnaryScalarFunction,
+    val value : MatrixExpr<E>) : MatrixExpr<E> {
+    init { track() }
+    override val columns get() = value.columns
+    override val rows get() = value.rows
+    override val type get() = value.type
+    override fun get(column: Int, row: Int) = AlgebraicUnaryScalar(op, value[column,row])
     override fun toString() = render()
     override fun mapChildren(f: ExprFunction) = copy(value = f(value))
 }

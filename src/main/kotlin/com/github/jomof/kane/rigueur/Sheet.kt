@@ -1,6 +1,7 @@
 package com.github.jomof.kane.rigueur
 
 import com.github.jomof.kane.rigueur.Direction.*
+import com.github.jomof.kane.rigueur.functions.d
 import com.github.jomof.kane.rigueur.functions.div
 import com.github.jomof.kane.rigueur.functions.minus
 import com.github.jomof.kane.rigueur.functions.multiply

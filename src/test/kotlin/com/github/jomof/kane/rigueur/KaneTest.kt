@@ -410,6 +410,7 @@ class KaneTest {
         val left by input[0,0]
         val right by input[0,1]
         val w0 by matrixVariable(input.rows, count0) { abs(random.nextGaussian()) / 3.0 }
+        val x = lrelu(w0 cross input)
         val h1 by lrelu(w0 cross input)
         val w1 by matrixVariable(w0.rows, outputs) { abs(random.nextGaussian()) / 3.0 }
         val output by lrelu(w1 cross h1)

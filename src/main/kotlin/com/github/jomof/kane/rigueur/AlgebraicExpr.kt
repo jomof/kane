@@ -5,8 +5,6 @@ package com.github.jomof.kane.rigueur
 import com.github.jomof.kane.rigueur.functions.*
 import com.github.jomof.kane.rigueur.types.*
 import java.io.Closeable
-import kotlin.math.exp
-import kotlin.math.max
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 
@@ -71,16 +69,6 @@ data class UnaryOp(val op : String = "") {
         if (op.isBlank()) copy(op = property.name.toLowerCase())
         else this
 }
-val D by UnaryOp()
-val SUMMATION by UnaryOp(op = "∑")
-val LOGIT by UnaryOp()
-val TANH by UnaryOp()
-val RELU by UnaryOp()
-val LRELU by UnaryOp()
-val EXP by UnaryOp()
-val STEP by UnaryOp()
-val LSTEP by UnaryOp()
-val NEGATE by UnaryOp(op = "-")
 
 data class BinaryOp(
     val op : String = "",
@@ -133,43 +121,6 @@ data class NamedValueExpr<E: Any>(
     }
     override fun toString() = value.toString()
 }
-data class UnaryScalar<E:Number>(
-    override val op : UnaryOp,
-    override val value : ScalarExpr<E>) : ScalarExpr<E>, UnaryExpr<E>, ParentExpr<E> {
-    init {
-        assert(op != NEGATE)
-        track()
-    }
-    override val type get() = value.type
-    override val children get() = listOf(value)
-    override fun toString() = render()
-    override fun mapChildren(f: ExprFunction) = copy(value = f(value))
-}
-data class UnaryMatrixScalar<E:Number>(override val op : UnaryOp, override val value : MatrixExpr<E>) : ScalarExpr<E>, UnaryExpr<E>, ParentExpr<E> {
-    init {
-        assert(op != NEGATE)
-        track()
-    }
-    override val type get() = value.type
-    override val children : Iterable<ScalarExpr<E>> = value.elements.asIterable()
-    override fun toString() = render()
-    override fun mapChildren(f: ExprFunction) = copy(value = f(value))
-}
-data class UnaryMatrix<E:Number>(override val op : UnaryOp, override val value : MatrixExpr<E>) : MatrixExpr<E>, UnaryExpr<E> {
-    init {
-        assert(op != NEGATE)
-        track()
-    }
-    override val columns get() = value.columns
-    override val rows get() = value.rows
-    override val type get() = value.type
-    override fun get(column: Int, row: Int) : ScalarExpr<E> = when(op) {
-        NEGATE -> AlgebraicUnaryScalar(negate, value[column,row])
-        else -> UnaryScalar(op, value[column,row])
-    }
-    override fun toString() = render()
-    override fun mapChildren(f: ExprFunction) = copy(value = f(value))
-}
 
 data class BinaryMatrix<E:Number>(
     override val op : BinaryOp,
@@ -199,11 +150,6 @@ data class BinaryMatrix<E:Number>(
     }
     override val type get() = left.type
     override fun get(column: Int, row: Int) = when(op) {
-        TIMES -> left[column,row] * right[column,row]
-        DIV -> left[column,row] / right[column,row]
-        MINUS -> left[column,row] - right[column,row]
-        PLUS -> left[column,row] + right[column,row]
-        POW -> pow(left[column,row], right[column,row])
         STACK -> {
             if (row < left.rows) left[column, row]
             else right[column, row - left.rows]
@@ -412,48 +358,14 @@ data class NamedMatrixAssign<E:Number>(
     override fun mapChildren(f: ExprFunction) : NamedMatrixAssign<E> = copy(right = f(right))
 }
 
-// Relu
-fun <E:Number, T : ScalarExpr<E>> relu(expr : T) : ScalarExpr<E> = UnaryScalar(RELU, expr)
-fun <E:Number, T : MatrixExpr<E>> relu(expr : T) : MatrixExpr<E> = UnaryMatrix(RELU, expr)
-fun relu(value : Double) : Double = max(0.0, value)
-fun relu(value : Float) : Float = max(0.0f, value)
-// Leaky Relu
-fun <E:Number, T : ScalarExpr<E>> lrelu(expr : T) : ScalarExpr<E> = UnaryScalar(LRELU, expr)
-fun <E:Number, T : MatrixExpr<E>> lrelu(expr : T) : MatrixExpr<E> = UnaryMatrix(LRELU, expr)
-fun lrelu(value : Double) : Double = max(0.1 * value, value)
-fun lrelu(value : Float) : Float = max(0.1f * value, value)
-// Step
-fun <E:Number, T : ScalarExpr<E>> step(expr : T) : ScalarExpr<E> = UnaryScalar(STEP, expr)
-fun step(value : Double) = if (value < 0.0) 0.0 else 1.0
-fun step(value : Float) = if (value < 0.0f) 0.0f else 1.0f
-// Lstep
-fun <E:Number, T : ScalarExpr<E>> lstep(expr : T) : ScalarExpr<E> = UnaryScalar(LSTEP, expr)
-fun lstep(value : Double) = if (value < 0.0) 0.1 else 1.0
-fun lstep(value : Float) = if (value < 0.0f) 0.1f else 1.0f
-// Exp
-fun <E:Number> exp(expr : ScalarExpr<E>) = UnaryScalar(EXP, expr)
-fun <E:Number> exp(expr : MatrixExpr<E>) = UnaryMatrix(EXP, expr)
 // Softmax
 fun <E:Number> softmax(expr : MatrixExpr<E>) : MatrixExpr<E> = exp(expr) / summation(exp(expr))
-// Logit
-fun <E:Number, T : ScalarExpr<E>> logit(expr : T) : ScalarExpr<E> = UnaryScalar(LOGIT, expr)
-fun <E:Number, T : MatrixExpr<E>> logit(expr : T) : MatrixExpr<E> = UnaryMatrix(LOGIT, expr)
-fun logit(value : Double) : Double = 1.0 / (1.0 + exp(-value))
-fun logit(value : Float) : Float = 1.0f / (1.0f + exp(-value))
-// tanh
-fun <E:Number, T : ScalarExpr<E>> tanh(expr : T) : ScalarExpr<E> = UnaryScalar(TANH, expr)
-fun <E:Number, T : MatrixExpr<E>> tanh(expr : T) : MatrixExpr<E> = UnaryMatrix(TANH, expr)
-fun tanh(value : Double) : Double = (exp(2.0 * value) - 1.0) / (exp(2.0 * value) + 1.0)
-fun tanh(value : Float) : Float = (exp(2.0f * value) - 1.0f) / (exp(2.0f * value) + 1.0f)
 
 // Cross Product
 infix fun <E:Number> MatrixExpr<E>.cross(right : MatrixExpr<E>) = run {
     BinaryMatrix(CROSS, right.columns, rows, this, right)
 }
 
-// Unary minus
-operator fun <E:Number> ScalarExpr<E>.unaryMinus() : ScalarExpr<E> = negate(this)
-operator fun <E:Number> MatrixExpr<E>.unaryMinus() = UnaryMatrix(NEGATE, this)
 // Stack
 private fun <E:Number> stackMatrix(left : MatrixExpr<E>, right : MatrixExpr<E>) : BinaryMatrix<E> {
     assert(left.columns == right.columns)
@@ -464,8 +376,6 @@ infix fun <E:Number> E.stack(right : MatrixExpr<E>) : MatrixExpr<E> = stackMatri
 infix fun <E:Number> MatrixExpr<E>.stack(right : ScalarExpr<E>) = stackMatrix(this, repeated(columns, 1, right))
 infix fun <E:Number> ScalarExpr<E>.stack(right : MatrixExpr<E>) =stackMatrix(repeated(right.columns, 1, this), right)
 infix fun <E:Number> MatrixExpr<E>.stack(right : MatrixExpr<E>) = stackMatrix(this, right)
-// Summation
-fun <E:Number> summation(expr : MatrixExpr<E>) : ScalarExpr<E> = UnaryMatrixScalar(SUMMATION, expr)
 // Assign
 inline fun <reified E:Number> assign(assignment : Pair<ScalarExpr<E>, NamedScalarVariable<E>>) = ScalarAssign(assignment.second, assignment.first)
 inline fun <reified E:Number> assign(assignment : Pair<MatrixExpr<E>, NamedMatrixVariable<E>>) = MatrixAssign(assignment.second, assignment.first)
@@ -492,7 +402,7 @@ inline fun <reified E:Number> variable(initial : E = defaultOf(), type : Algebra
 inline fun <reified E:Number> columnVariable(vararg elements : E) =
     MatrixVariable(1, elements.size, E::class.java.kaneType, elements.toList().map { it })
 // Constant
-fun <E:Number> constant(value : E, type : AlgebraicType<*>) = ConstantScalar(value, type as AlgebraicType<E>)
+fun <E:Number> constant(value : E, type : AlgebraicType<*>) : ScalarExpr<E> = ConstantScalar(value, type as AlgebraicType<E>)
 fun <E:Number> constant(value : E) = ConstantScalar(value, value.javaClass.kaneType)
 inline fun <reified E:Any> constant(value : E) = ValueExpr(value, object : KaneType<E>(E::class.java) { })
 
@@ -518,40 +428,42 @@ fun <E:Number,R:Number> MatrixExpr<E>.foldCoordinates(initial: ScalarExpr<R>?, a
 
 
 // Differentiation
-fun <E:Number, T : ScalarExpr<E>> d(expr : T) : ScalarExpr<E> = UnaryScalar(D, expr)
-fun <E:Number, T : MatrixExpr<E>> d(expr : T) : MatrixExpr<E> = UnaryMatrix(D, expr)
-
 private fun <E:Number> diff(expr : ScalarExpr<E>, variable : ScalarExpr<E>) : ScalarExpr<E> {
     if (variable is NamedScalar) return diff(expr, variable.scalar)
     fun ScalarExpr<E>.self() = diff(this, variable)
     val result : ScalarExpr<E> = when (expr) {
         variable -> ConstantScalar(expr.type.one, expr.type)
-        is UnaryScalar -> when(expr.op) {
-            LOGIT -> logit(expr.value) * (ConstantScalar(expr.type.one, expr.type) - logit(expr.value)) * expr.value.self()
-            RELU -> step(expr.value) * expr.value.self()
-            LRELU -> lstep(expr.value) * expr.value.self()
-            EXP -> {
-                val result = exp(expr.value) * expr.value.self()
-                result
-            }
-            TANH -> ConstantScalar(expr.type.one, expr.type) - pow(tanh(expr.value), expr.type.two) * expr.value.self()
-            NEGATE -> -expr.value.self()
-            else -> error("${expr.op}")
-        }
+//        is UnaryScalar -> when(expr.op) {
+////            LOGIT -> logit(expr.value) * (ConstantScalar(expr.type.one, expr.type) - logit(expr.value)) * expr.value.self()
+////            RELU -> step(expr.value) * expr.value.self()
+////            LRELU -> lstep(expr.value) * expr.value.self()
+////            EXP -> {
+////                val result = exp(expr.value) * expr.value.self()
+////                result
+////            }
+////            TANH -> ConstantScalar(expr.type.one, expr.type) - pow(tanh(expr.value), expr.type.two) * expr.value.self()
+////            NEGATE -> -expr.value.self()
+//            else -> error("${expr.op}")
+//        }
         is NamedScalar -> expr.scalar.self()
-        is UnaryMatrixScalar -> when(expr.op) {
-            SUMMATION -> {
-                expr.value.foldCoordinates(null) { prior, (column, row) ->
-                    val result = expr.value[column, row].self()
-                    if (prior == null) result
-                    else prior + result
-                }!!
-            }
-            else -> error("${expr.op}")
-        }
+        is AlgebraicUnaryMatrixScalar -> expr.reduceArithmetic().self()
+//        is UnaryMatrixScalar -> when(expr.op) {
+//            SUMMATION -> {
+//                expr.value.foldCoordinates(null) { prior, (column, row) ->
+//                    val result = expr.value[column, row].self()
+//                    if (prior == null) result
+//                    else prior + result
+//                }!!
+//            }
+//            else -> error("${expr.op}")
+//        }
         is MatrixVariableElement -> ConstantScalar(expr.type.zero, expr.type)
         is ScalarVariableExpr -> ConstantScalar(expr.type.zero, expr.type)
         is ConstantScalar -> ConstantScalar(expr.type.zero, expr.type)
+        is AlgebraicUnaryScalar -> {
+            val vd = expr.value.self()
+            expr.op.differentiate(expr.value, vd, variable)
+        }
         is AlgebraicBinaryScalar -> {
             val p1d = expr.left.self()
             val p2d = expr.right.self()
@@ -564,13 +476,11 @@ private fun <E:Number> diff(expr : ScalarExpr<E>, variable : ScalarExpr<E>) : Sc
 
 fun <E:Number> differentiate(expr : AlgebraicExpr<E>) : AlgebraicExpr<E> {
     fun ScalarExpr<E>.tryD() = when {
-        this is UnaryScalar && this.op == D -> this.value
-        this is AlgebraicUnaryScalar -> error("")
+        this is AlgebraicUnaryScalar && op == d -> value
         else -> null
     }
     fun MatrixExpr<E>.tryD() = when {
-        this is UnaryMatrix && this.op == D -> value
-        //this is AlgebraicUnaryMatrix -> error("")
+        this is AlgebraicUnaryMatrix && op == d -> value
         else -> null
     }
     fun ScalarExpr<E>.diffOr() : ScalarExpr<E>? {
@@ -606,7 +516,8 @@ fun <E:Number> differentiate(expr : AlgebraicExpr<E>) : AlgebraicExpr<E> {
                 if (diff != null) it.copy(name = "${it.name}'", matrix = diff)
                 else it
             }
-            is AlgebraicBinaryScalar<E> -> it.diffOr() ?: it
+            is AlgebraicBinaryScalar<E> ->
+                it.diffOr() ?: it
             is AlgebraicBinaryScalarMatrix<E> -> it.diffOr() ?: it
             else -> it
         }
@@ -665,7 +576,6 @@ fun <E:Number> AlgebraicExpr<E>.eval(map : MutableMap<String, E>) : AlgebraicExp
         is BinaryMatrix -> toDataMatrix().self()
         is AlgebraicBinaryScalar -> copy(left = left.self(), right = right.self())
         is AlgebraicUnaryScalar -> copy(value = value.self())
-        is UnaryScalar -> copy(value = value.self())
         is Tableau -> {
             copy(children = children.map { child ->
                 when(val result = child.self().reduceArithmetic()) {
@@ -815,27 +725,13 @@ fun <E:Number> AlgebraicExpr<E>.memoizeAndReduceArithmetic(
             }
             is DataMatrix -> map { it.self() }
             is MatrixVariableElement -> copy(matrix = matrix.self())
-            is UnaryMatrix -> copy(value = value.self())
+            is AlgebraicUnaryMatrix -> copy(value = value.self())
             is NamedMatrix -> copy(matrix = matrix.self())
             is NamedScalar ->
                 if (entryPoint) copy(scalar = scalar.self())
                 else scalar.self()
             is NamedScalarVariable -> this
-            is UnaryScalar -> {
-                val value = value.self()
-                when {
-                    value is ConstantScalar -> ConstantScalar(type.unary(op, value.value), type)
-                    op == NEGATE && value is UnaryScalar && value.op == NEGATE -> value.value
-                    else -> copy(value = value.self())
-                }
-            }
-            is UnaryMatrixScalar -> {
-                val result: AlgebraicExpr<E> = when {
-                    op == SUMMATION -> children.fold(ConstantScalar(type.zero, type) as ScalarExpr<E>) { prior, current -> prior + current }.self()
-                    else -> copy(value = value.self())
-                }
-                result
-            }
+            is NamedScalarVariable -> this
             is AlgebraicBinaryScalarMatrix -> copy(left = left.self(), right = right.self())
             is AlgebraicBinaryMatrixScalar -> copy(left = left.self(), right = right.self())
             is NamedScalarAssign -> copy(right = right.self())
@@ -887,6 +783,7 @@ fun <E:Number> AlgebraicExpr<E>.memoizeAndReduceArithmetic(
                     }
                 }
             }
+            is AlgebraicUnaryMatrixScalar -> op.reduceArithmetic(value).self()
             else ->
                 error("$javaClass")
         }
@@ -909,7 +806,6 @@ private fun <E:Number> AlgebraicExpr<E>.affineName(depth : Int = 2) : String? {
         is NamedScalar -> name
         is MatrixVariableElement -> matrix.name
         is AlgebraicUnaryScalar -> value.affineName(depth - 1) ?: op.meta.op
-        is UnaryScalar -> value.affineName(depth - 1) ?: op.op
         is NamedScalarVariable -> name
         is NamedScalarExpr -> name
         else -> null
@@ -937,6 +833,9 @@ fun binaryRequiresParents(parent : BinaryOp, child : BinaryOp, childIsRight: Boo
 
 fun Expr.tryGetBinaryOp() : BinaryOp? = when(this) {
     is AlgebraicBinaryScalar<*> -> op.meta
+    is AlgebraicBinaryMatrix<*> -> op.meta
+    is AlgebraicBinaryMatrixScalar<*> -> op.meta
+    is AlgebraicBinaryScalarMatrix<*> -> op.meta
     is BinaryMatrix<*> -> op
     else -> null
 }
@@ -1063,30 +962,17 @@ fun Expr.render(entryPoint : Boolean = true) : String {
         is MatrixVariableElement<*> -> "${matrix.name}[$column,$row]"
         is ConstantScalar<*> -> type.render(value)
         is AlgebraicUnaryScalar<*> -> when {
-//            op == EXP -> {
-//                val rightSuper = tryConvertToSuperscript(value.self())
-//                if (rightSuper == null) "${op.op}(${value.self()})"
-//                else "e$rightSuper"
-//            }
-//            op == D && value is NamedScalarVariable -> "${op.op}${value.self()}"
+            op == exp -> {
+                val rightSuper = tryConvertToSuperscript(value.self())
+                if (rightSuper == null) "${op.meta.op}(${value.self()})"
+                else "e$rightSuper"
+            }
+            op == d && value is NamedScalarVariable -> "${op.meta.op}${value.self()}"
             op == negate &&
                     (value is NamedScalarVariable ||
                             value is AlgebraicBinaryScalar && value.op == multiply) -> "${op.meta.op}${value.self()}"
             else -> "${op.meta.op}(${value.self()})"
         }
-        is UnaryScalar<*> -> when {
-            op == EXP -> {
-                val rightSuper = tryConvertToSuperscript(value.self())
-                if (rightSuper == null) "${op.op}(${value.self()})"
-                else "e$rightSuper"
-            }
-            op == D && value is NamedScalarVariable -> "${op.op}${value.self()}"
-            op == NEGATE &&
-                (value is NamedScalarVariable) -> "${op.op}${value.self()}"
-            else -> "${op.op}(${value.self()})"
-        }
-        is UnaryMatrix<*> -> "${op.op}(${value.self()})"
-        is UnaryMatrixScalar<*> -> "${op.op}(${value.self()})"
         is NamedMatrixVariable<*> -> name
         is Tableau<*> -> {
             val sb = StringBuilder()

@@ -11,10 +11,7 @@ private val interestingTypes = listOf(
     ConstantScalar::class.java,
     ValueExpr::class.java,
     AlgebraicBinaryScalar::class.java,
-    UnaryScalar::class.java,
     AlgebraicUnaryScalar::class.java,
-    UnaryMatrix::class.java,
-    UnaryMatrixScalar::class.java,
     NamedScalarAssign::class.java,
     NamedMatrixVariable::class.java,
     NamedMatrix::class.java,
@@ -66,16 +63,10 @@ fun <E:Any> Random.nextInstance(type : Class<*>) : E {
 fun <E:Any> Random.nextListOf(length : Int, type : Class<*>) : List<E> = (0 until length).map { nextInstance(type) }
 
 fun Random.nextUnaryOp() = chooseOne(listOf(D, SUMMATION, LOGIT, TANH, RELU, LRELU, EXP, STEP, LSTEP))
-fun Random.nextAlgebraicUnaryOp() = chooseOne(listOf(negate))
+fun Random.nextAlgebraicUnaryOp() = chooseOne(listOf(negate, exp, logit, tanh, relu, step, lrelu, lstep))
 fun Random.nextBinaryOp() = chooseOne(listOf(CROSS, STACK))
 fun Random.nextBinaryScalarOp() = chooseOne(listOf(POW, PLUS, MINUS))
 fun Random.nextAlgebraicBinaryScalarOp() = chooseOne(listOf(pow, multiply, divide, add, subtract))
-
-fun <E:Number> Random.nextUnaryMatrix(
-    columns : Int = nextInt(1, 5),
-    rows : Int = nextInt(1, 5),
-    type : AlgebraicType<E>) =
-    UnaryMatrix(nextUnaryOp(), nextMatrixExpr(columns, rows, type))
 
 fun <E:Number> Random.nextBinaryMatrix(
     columns : Int = nextInt(1, 5),
@@ -109,17 +100,10 @@ fun <E:Number> Random.nextBinaryMatrix(
     }
 }
 
-fun <E:Number> Random.nextUnaryScalar(type : AlgebraicType<E>) = UnaryScalar(nextUnaryOp(), nextScalarExpr(type))
 fun <E:Number> Random.nextAlgebraicUnaryScalar(type : AlgebraicType<E>) = AlgebraicUnaryScalar(nextAlgebraicUnaryOp(), nextScalarExpr(type))
 
 fun <E:Number> Random.nextAlgebraicBinaryScalar(type : AlgebraicType<E>) : AlgebraicBinaryScalar<E> =
     AlgebraicBinaryScalar(nextAlgebraicBinaryScalarOp(), nextScalarExpr(type), nextScalarExpr(type))
-
-fun <E:Number> Random.nextUnaryMatrixScalar(type : AlgebraicType<E>) : UnaryMatrixScalar<E> =
-    UnaryMatrixScalar(nextUnaryOp(), nextMatrixExpr(
-        columns = nextInt(1, 5),
-        rows = nextInt(1, 5),
-        type))
 
 fun <E:Number> Random.nextAlgebraicBinaryMatrixScalar(
     columns : Int = nextInt(1, 5),
@@ -159,7 +143,6 @@ fun <E:Number> Random.nextMatrixExpr(columns : Int, rows : Int, type : Algebraic
     val result = when(method) {
         NamedMatrix::class.java -> nextNamedMatrix(columns, rows, type)
         AlgebraicBinaryScalarMatrix::class.java -> nextAlgebraicBinaryScalarMatrix(columns, rows, type)
-        UnaryMatrix::class.java -> nextUnaryMatrix(columns, rows, type)
         BinaryMatrix::class.java -> nextBinaryMatrix(columns, rows, type)
         NamedMatrixVariable::class.java -> nextNamedMatrixVariable(columns, rows, type)
         AlgebraicBinaryMatrixScalar::class.java -> nextAlgebraicBinaryMatrixScalar(columns, rows, type)
@@ -248,11 +231,8 @@ private fun <E:Number> Random.dispatchExpr(exprType : Class<*>, type : Algebraic
         NamedScalarAssign::class.java -> nextNamedScalarAssign(type)
         NamedMatrixAssign::class.java -> nextNamedMatrixAssign(type = type)
         NamedMatrix::class.java -> nextNamedMatrix(type = type)
-        UnaryMatrix::class.java -> nextUnaryMatrix(type = type)
-        UnaryMatrixScalar::class.java -> nextUnaryMatrixScalar(type)
         AlgebraicBinaryMatrixScalar::class.java -> nextAlgebraicBinaryMatrixScalar(type = type)
         AlgebraicBinaryScalarMatrix::class.java -> nextAlgebraicBinaryScalarMatrix(type = type)
-        UnaryScalar::class.java -> nextUnaryScalar(type)
         AlgebraicBinaryScalar::class.java -> nextAlgebraicBinaryScalar(type)
         AlgebraicUnaryScalar::class.java -> nextAlgebraicUnaryScalar(type)
         BinaryMatrix::class.java -> nextBinaryMatrix(type = type)

@@ -1,8 +1,6 @@
 package com.github.jomof.kane.rigueur
 
-import com.github.jomof.kane.rigueur.functions.AlgebraicBinaryScalar
-import com.github.jomof.kane.rigueur.functions.AlgebraicUnaryScalar
-import com.github.jomof.kane.rigueur.functions.add
+import com.github.jomof.kane.rigueur.functions.*
 import com.github.jomof.kane.rigueur.types.AlgebraicType
 import com.github.jomof.kane.rigueur.types.zero
 
@@ -178,9 +176,8 @@ private fun <E:Number> AlgebraicExpr<E>.linearizeExpr(model : LinearModel<E> = L
         is ConstantScalar -> this
         is MatrixVariableElement -> model.slotOfExistingMatrixVariableElement(this)
         is NamedScalarVariable -> model.slotOfExistingNamedScalarVariable(this)
-        is UnaryScalar -> model.computeSlot(this) { copy(value = value.self()) }
         is AlgebraicUnaryScalar -> model.computeSlot(this) { copy(value = value.self()) }
-        is UnaryMatrixScalar -> model.computeSlot(this) { copy(value = value.self()) }
+        is AlgebraicUnaryMatrixScalar -> model.computeSlot(this) { copy(value = value.self()) }
         is AlgebraicBinaryScalar -> model.computeSlot(this) { copy(left = left.self(), right = right.self()) }
         is DataMatrix -> map { it.self() }
         is NamedScalar -> {
@@ -304,13 +301,7 @@ private fun <E:Number> AlgebraicExpr<E>.evalNullable(space : Array<E?>) : E {
         is NamedScalar -> scalar.evalNullable(space)
         is AlgebraicUnaryScalar -> op(value.evalNullable(space))
         is AlgebraicBinaryScalar -> op(left.evalNullable(space), right.evalNullable(space))
-        is UnaryScalar -> type.unary(op, value.evalNullable(space))
-        is UnaryMatrixScalar -> when(op) {
-            SUMMATION -> children.map { it.evalNullable(space) }.fold(type.zero) { prior, current -> add(prior, current) }
-            else -> error("$op")
-        }
-        else ->
-            error("$javaClass")
+        else -> error("$javaClass")
     }
 }
 
@@ -321,13 +312,6 @@ private fun <E:Number> AlgebraicExpr<E>.eval(space : Array<E>) : E {
         is NamedScalar -> scalar.eval(space)
         is AlgebraicBinaryScalar -> op(left.eval(space), right.eval(space))
         is AlgebraicUnaryScalar -> op(value.eval(space))
-        is UnaryScalar -> type.unary(op, value.eval(space))
-        is UnaryMatrixScalar -> when(op) {
-            SUMMATION -> children.map { it.eval(space) }.fold(type.zero) { prior, current -> add(prior, current) }
-            D -> type.zero
-            else ->
-                error("$op")
-        }
         else ->
             error("$javaClass")
     }
@@ -339,16 +323,14 @@ private fun <E:Number> AlgebraicExpr<E>.gatherLeafExpressions() : List<ScalarExp
         is Slot -> true
         is NamedScalarVariable -> true
         is MatrixVariableElement -> true
-        is UnaryMatrixScalar -> false
         is AlgebraicBinaryScalar -> false
-        is UnaryScalar -> false
         is AlgebraicUnaryScalar -> false
         else -> error("$javaClass")
     }
 
     return foldTopDown(listOf()) { prior, current ->
         prior + when {
-            current is UnaryScalar && current.value.terminal() ->
+            current is AlgebraicUnaryScalar && current.value.terminal() ->
                 listOf(current)
             current is AlgebraicBinaryScalar && current.left.terminal() && current.right.terminal() ->
                 listOf(current)
@@ -376,9 +358,6 @@ private fun <E:Number> AlgebraicExpr<E>.stripNames() : AlgebraicExpr<E> {
         is NamedMatrixVariable -> this
         is NamedMatrix -> matrix.self()
         is NamedScalar -> scalar.self()
-        is UnaryScalar -> copy(value = value.self())
-        is UnaryMatrix -> copy(value = value.self())
-        is UnaryMatrixScalar -> copy(value = value.self())
         is BinaryMatrix -> copy(left = left.self(), right = right.self())
         is AlgebraicUnaryScalar -> copy(value = value.self())
         is AlgebraicBinaryScalar -> copy(left = left.self(), right = right.self())
@@ -418,10 +397,7 @@ private fun <E:Number> AlgebraicExpr<E>.linearizeExprs(
         is NamedMatrixAssign -> copy(right = right.self())
         is NamedMatrix -> copy(matrix = matrix.self())
         is NamedScalar -> copy(scalar = scalar.self())
-        is UnaryScalar -> copy(value = value.self())
         is AlgebraicUnaryScalar -> copy(value = value.self())
-        is UnaryMatrix -> copy(value = value.self())
-        is UnaryMatrixScalar -> copy(value = value.self())
         is BinaryMatrix -> copy(left = left.self(), right = right.self())
         is AlgebraicBinaryScalar -> copy(left = left.self(), right = right.self())
         is DataMatrix -> map { it.self() }
