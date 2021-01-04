@@ -3,7 +3,7 @@ package com.github.jomof.kane.rigueur.functions
 import com.github.jomof.kane.rigueur.*
 import com.github.jomof.kane.rigueur.types.kaneType
 
-// f(scalar,scalar)->scalar
+// f(scalar,scalar)->scalar (extended to matrix 1<->1 mapping)
 interface AlgebraicBinaryScalarFunction {
     val meta : BinaryOp
     operator fun <E:Number> invoke(p1 : E, p2 : E) : E = when(p1) {
@@ -137,3 +137,39 @@ data class AlgebraicUnaryMatrix<E:Number>(
     override fun toString() = render()
     override fun mapChildren(f: ExprFunction) = copy(value = f(value))
 }
+
+// f(matrix)->scalar
+interface AlgebraicUnaryMatrixScalarFunction {
+    val meta : UnaryOp
+    operator fun <E:Number> invoke(value : MatrixExpr<E>) : ScalarExpr<E> = AlgebraicUnaryMatrixScalar(this, value)
+    fun <E:Number> reduceArithmetic(value : MatrixExpr<E>) : ScalarExpr<E>
+}
+
+data class AlgebraicUnaryMatrixScalar<E:Number>(
+    val op : AlgebraicUnaryMatrixScalarFunction,
+    val value : MatrixExpr<E>) : ScalarExpr<E>, ParentExpr<E> {
+    init { track() }
+    override val type get() = value.type
+    override val children : Iterable<ScalarExpr<E>> get() = value.elements.asIterable()
+    override fun toString() = render()
+    override fun mapChildren(f: ExprFunction) = copy(value = f(value))
+}
+
+// f(expr, expr) -> matrix
+data class AlgebraicDeferredDataMatrix<E:Number>(
+    val op : BinaryOp,
+    val left : TypedExpr<E>,
+    val right : TypedExpr<E>,
+    val data : DataMatrix<E>
+) : MatrixExpr<E> {
+    override val type = data.type
+    override fun mapChildren(f: ExprFunction) = copy(
+        left = f(left),
+        right = f(right),
+        data = data.mapChildren(f))
+    override val columns = data.columns
+    override val rows = data.rows
+    override fun get(column: Int, row: Int) = data[column, row]
+    override fun toString() = render()
+}
+

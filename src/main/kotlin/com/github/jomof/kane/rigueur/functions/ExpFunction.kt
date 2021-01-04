@@ -22,9 +22,7 @@ private class ExpFunction : AlgebraicUnaryScalarFunction {
         expr : ScalarExpr<E>,
         exprd : ScalarExpr<E>,
         variable : ScalarExpr<E>
-    ): ScalarExpr<E> {
-        return exp(expr) * exprd
-    }
+    ) = exp(expr) * exprd
 }
 
 val exp : AlgebraicUnaryScalarFunction = ExpFunction()

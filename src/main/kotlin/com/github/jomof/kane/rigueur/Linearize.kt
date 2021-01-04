@@ -358,7 +358,6 @@ private fun <E:Number> AlgebraicExpr<E>.stripNames() : AlgebraicExpr<E> {
         is NamedMatrixVariable -> this
         is NamedMatrix -> matrix.self()
         is NamedScalar -> scalar.self()
-        is BinaryMatrix -> copy(left = left.self(), right = right.self())
         is AlgebraicUnaryScalar -> copy(value = value.self())
         is AlgebraicBinaryScalar -> copy(left = left.self(), right = right.self())
         is DataMatrix -> map { it.self() }
@@ -398,7 +397,6 @@ private fun <E:Number> AlgebraicExpr<E>.linearizeExprs(
         is NamedMatrix -> copy(matrix = matrix.self())
         is NamedScalar -> copy(scalar = scalar.self())
         is AlgebraicUnaryScalar -> copy(value = value.self())
-        is BinaryMatrix -> copy(left = left.self(), right = right.self())
         is AlgebraicBinaryScalar -> copy(left = left.self(), right = right.self())
         is DataMatrix -> map { it.self() }
         is Tableau -> copy(children = children.map { child -> child.self() })

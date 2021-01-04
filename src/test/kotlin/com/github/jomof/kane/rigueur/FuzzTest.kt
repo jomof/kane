@@ -126,17 +126,4 @@ class FuzzTest {
         val a by matrixOf(1,1) { constant(-1.0) }
         println(a.linearize())
     }
-
-    @Test
-    fun `xxx`() {
-        val a by matrixVariable<Double>(2, 2)
-        val numbers = matrixOf(2,2) { constant(1.0) }
-        //val c by pow(a, tanh(0.9777 * pow(numbers, a)))
-        /*
-        c=pow(a,tanh(0.9777*pow(0.82056|0.67258|0.46508|0.77273
-            0.19365|0.85567|0.30867|0.19204
-            0.7162|0.21897|0.76465|0.90392
-            0.80911|0.20081|0.65123|0.63573,a)))
-         */
-    }
 }

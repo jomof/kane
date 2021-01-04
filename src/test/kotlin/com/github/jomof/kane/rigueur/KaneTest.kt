@@ -410,7 +410,6 @@ class KaneTest {
         val left by input[0,0]
         val right by input[0,1]
         val w0 by matrixVariable(input.rows, count0) { abs(random.nextGaussian()) / 3.0 }
-        val x = lrelu(w0 cross input)
         val h1 by lrelu(w0 cross input)
         val w1 by matrixVariable(w0.rows, outputs) { abs(random.nextGaussian()) / 3.0 }
         val output by lrelu(w1 cross h1)
@@ -441,7 +440,7 @@ class KaneTest {
             return outSlot.value
         }
         repeat(100000) {
-            repeat(4) { r ->
+            repeat(4) {
                 val left = rev(abs(random.nextGaussian() / 1.5))
                 val right = rev(abs(random.nextGaussian() / 1.5))
                 val target = left != right
@@ -639,7 +638,6 @@ class KaneTest {
 
             if (totalError < lastError) {
 
-                val outlier = space.indices.maxBy { index -> space[index] }
                 val file = File("/Users/jomof/IdeaProjects/KotlinRegression/src/test/kotlin/com/github/jomof/kane/rigueur/distribution.txt")
 
                 val func = layout.toFunc(space, h2, output)
@@ -823,7 +821,7 @@ class KaneTest {
         p[1,2].assertString("m[1,2]²")
         val column by matrixVariable<Double>(1,3)
         val s by 1.0 stack column
-        s.assertString("s=[1] stack column")
+        s.assertString("s=1 stack column")
         s[0,0].assertString("1")
         s[0,1].assertString("column[0,0]")
         val a1 by s[0,0]
@@ -871,7 +869,6 @@ class KaneTest {
         val x by constant(1.0)
         val y by constant(1.0)
         val z by x + y
-        val p = z
         z.assertString("z=x+y")
     }
 
@@ -920,7 +917,7 @@ class KaneTest {
         val mult by m cross n
         mult.assertString("mult=m cross n")
         (m cross n).assertString("m cross n")
-        (m stack 1.0).assertString("m stack 1|1|1|1|1")
+        (m stack 1.0).assertString("m stack 1")
         (m stack m stack m).assertString("m stack m stack m")
         ((m stack m) stack m).assertString("m stack m stack m")
         (m stack (m stack m)).assertString("m stack m stack m")

@@ -30,6 +30,7 @@ class ExprFunction(
             throw e
         }
     }
+    operator fun <M:Number> invoke(expr : TypedExpr<M>) : TypedExpr<M> = unsafe(expr) as TypedExpr<M>
     operator fun <M:Number> invoke(expr : MatrixExpr<M>) : MatrixExpr<M> = unsafe(expr) as MatrixExpr<M>
     operator fun <N:Number> invoke(expr : NamedAlgebraicExpr<N>) : NamedAlgebraicExpr<N> = unsafe(expr) as NamedAlgebraicExpr<N>
     operator fun <N:Number> invoke(expr : NamedScalarExpr<N>) : NamedScalarExpr<N> = unsafe(expr) as NamedScalarExpr<N>
@@ -55,15 +56,6 @@ interface NamedExpr : Expr {
 interface NamedAlgebraicExpr<T:Number> : NamedExpr, AlgebraicExpr<T>
 interface NamedScalarExpr<T:Number> : NamedAlgebraicExpr<T>, ScalarExpr<T>
 interface NamedMatrixExpr<T:Number> : NamedAlgebraicExpr<T>, MatrixExpr<T>
-interface UnaryExpr<T:Number> : AlgebraicExpr<T> {
-    val op : UnaryOp
-    val value : AlgebraicExpr<T>
-}
-interface BinaryExpr<T:Number> : AlgebraicExpr<T> {
-    val op : BinaryOp
-    val left : AlgebraicExpr<T>
-    val right : AlgebraicExpr<T>
-}
 data class UnaryOp(val op : String = "") {
     operator fun getValue(nothing: Nothing?, property: KProperty<*>) =
         if (op.isBlank()) copy(op = property.name.toLowerCase())
@@ -80,9 +72,6 @@ data class BinaryOp(
         if (op.isBlank()) copy(op = property.name.toLowerCase())
         else this
 }
-
-val CROSS by BinaryOp(op = " cross ", precedence = 5, associative = false, infix = true)
-val STACK by BinaryOp(op = " stack ", precedence = 5, associative = true, infix = true)
 
 operator fun <T:Number> ScalarExpr<T>.getValue(thisRef: Any?, property: KProperty<*>) = NamedScalar(property.name, this)
 operator fun <T:Number> MatrixExpr<T>.getValue(thisRef: Any?, property: KProperty<*>) = NamedMatrix(property.name, this)
@@ -122,49 +111,6 @@ data class NamedValueExpr<E: Any>(
     override fun toString() = value.toString()
 }
 
-data class BinaryMatrix<E:Number>(
-    override val op : BinaryOp,
-    override val columns: Int,
-    override val rows: Int,
-    override val left : MatrixExpr<E>,
-    override val right : MatrixExpr<E>,
-) : MatrixExpr<E>, BinaryExpr<E> {
-    init {
-        track()
-        fun lm() = if (left is NamedExpr) "matrix '${left.name}'" else "left matrix"
-        fun rm() = if (right is NamedExpr) "matrix '${right.name}'" else "right matrix"
-        when(op) {
-            STACK -> {}
-            CROSS -> assert(left.columns == right.rows) {
-                "${lm()} columns ${left.columns} did not equal ${rm()} rows ${right.rows}"
-            }
-            else -> {
-                assert(left.rows == right.rows) {
-                    "${op.op} : ${lm()} columns ${left.rows} did not equal ${rm()} columns ${right.rows}"
-                }
-                assert(left.columns == right.columns) {
-                    "${op.op} : ${lm()} columns ${left.columns} did not equal ${rm()} columns ${right.columns}"
-                }
-            }
-        }
-    }
-    override val type get() = left.type
-    override fun get(column: Int, row: Int) = when(op) {
-        STACK -> {
-            if (row < left.rows) left[column, row]
-            else right[column, row - left.rows]
-        }
-        CROSS -> {
-            (1 until left.columns)
-                .fold(left[0, row] * right[column, 0]) { prior : ScalarExpr<E>, i ->
-                    prior + left[i, row] * right[column, i]
-                }
-        }
-        else -> error("$op")
-    }
-    override fun toString() = render()
-    override fun mapChildren(f: ExprFunction) = copy(left = f(left), right = f(right))
-}
 data class ScalarVariable<E:Number>(
     val initial : E,
     override val type: AlgebraicType<E>) : AlgebraicExpr<E> {
@@ -361,21 +307,6 @@ data class NamedMatrixAssign<E:Number>(
 // Softmax
 fun <E:Number> softmax(expr : MatrixExpr<E>) : MatrixExpr<E> = exp(expr) / summation(exp(expr))
 
-// Cross Product
-infix fun <E:Number> MatrixExpr<E>.cross(right : MatrixExpr<E>) = run {
-    BinaryMatrix(CROSS, right.columns, rows, this, right)
-}
-
-// Stack
-private fun <E:Number> stackMatrix(left : MatrixExpr<E>, right : MatrixExpr<E>) : BinaryMatrix<E> {
-    assert(left.columns == right.columns)
-    return BinaryMatrix(STACK, left.columns, left.rows + right.rows, left, right)
-}
-infix fun <E:Number> MatrixExpr<E>.stack(right : E) : MatrixExpr<E> = stackMatrix(this, repeated(columns, 1, type, right))
-infix fun <E:Number> E.stack(right : MatrixExpr<E>) : MatrixExpr<E> = stackMatrix(repeated(right.columns, 1, right.type, this), right)
-infix fun <E:Number> MatrixExpr<E>.stack(right : ScalarExpr<E>) = stackMatrix(this, repeated(columns, 1, right))
-infix fun <E:Number> ScalarExpr<E>.stack(right : MatrixExpr<E>) =stackMatrix(repeated(right.columns, 1, this), right)
-infix fun <E:Number> MatrixExpr<E>.stack(right : MatrixExpr<E>) = stackMatrix(this, right)
 // Assign
 inline fun <reified E:Number> assign(assignment : Pair<ScalarExpr<E>, NamedScalarVariable<E>>) = ScalarAssign(assignment.second, assignment.first)
 inline fun <reified E:Number> assign(assignment : Pair<MatrixExpr<E>, NamedMatrixVariable<E>>) = MatrixAssign(assignment.second, assignment.first)
@@ -399,8 +330,6 @@ inline fun <reified E:Number> matrixVariable(columns : Int, rows : Int, init : (
 inline fun <reified E:Number> matrixVariable(columns : Int, rows : Int, type : AlgebraicType<E>, init : (Coordinate) -> Double) =
     MatrixVariable(columns, rows, type, coordinatesOf(columns, rows).toList().map { type.coerceFrom(init(it)) })
 inline fun <reified E:Number> variable(initial : E = defaultOf(), type : AlgebraicType<E> = E::class.kaneType) = ScalarVariable(initial, type)
-inline fun <reified E:Number> columnVariable(vararg elements : E) =
-    MatrixVariable(1, elements.size, E::class.java.kaneType, elements.toList().map { it })
 // Constant
 fun <E:Number> constant(value : E, type : AlgebraicType<*>) : ScalarExpr<E> = ConstantScalar(value, type as AlgebraicType<E>)
 fun <E:Number> constant(value : E) = ConstantScalar(value, value.javaClass.kaneType)
@@ -423,9 +352,6 @@ fun <E:Number> ScalarExpr<E>.tryFindConstant() : E? = when(this) {
 inline operator fun <E:Number, reified M:MatrixExpr<E>> M.get(coord : Coordinate) = get(coord.column, coord.row)
 val <E:Number> MatrixExpr<E>.coordinates get() = coordinatesOf(columns, rows)
 inline val <E:Number, reified M:MatrixExpr<E>> M.elements get() = coordinates.map { get(it) }
-fun <E:Number,R:Number> MatrixExpr<E>.foldCoordinates(initial: ScalarExpr<R>?, action : (ScalarExpr<R>?, Coordinate)->ScalarExpr<R>) =
-    coordinates.fold(initial) { prior, coord -> action(prior, coord) }
-
 
 // Differentiation
 private fun <E:Number> diff(expr : ScalarExpr<E>, variable : ScalarExpr<E>) : ScalarExpr<E> {
@@ -573,7 +499,6 @@ fun <E:Number> AlgebraicExpr<E>.eval(map : MutableMap<String, E>) : AlgebraicExp
         is NamedMatrix -> copy(matrix = matrix.self())
         is NamedScalar -> copy(scalar = scalar.self())
         is DataMatrix -> map { it.self() }
-        is BinaryMatrix -> toDataMatrix().self()
         is AlgebraicBinaryScalar -> copy(left = left.self(), right = right.self())
         is AlgebraicUnaryScalar -> copy(value = value.self())
         is Tableau -> {
@@ -717,12 +642,6 @@ fun <E:Number> AlgebraicExpr<E>.memoizeAndReduceArithmetic(
                 if (dm != dmself) dmself
                 else this
             }
-            is BinaryMatrix -> {
-                val dm = toDataMatrix()
-                val dmself = dm.self()
-                if (dm != dmself) dmself
-                else this
-            }
             is DataMatrix -> map { it.self() }
             is MatrixVariableElement -> copy(matrix = matrix.self())
             is AlgebraicUnaryMatrix -> copy(value = value.self())
@@ -730,7 +649,6 @@ fun <E:Number> AlgebraicExpr<E>.memoizeAndReduceArithmetic(
             is NamedScalar ->
                 if (entryPoint) copy(scalar = scalar.self())
                 else scalar.self()
-            is NamedScalarVariable -> this
             is NamedScalarVariable -> this
             is AlgebraicBinaryScalarMatrix -> copy(left = left.self(), right = right.self())
             is AlgebraicBinaryMatrixScalar -> copy(left = left.self(), right = right.self())
@@ -784,6 +702,7 @@ fun <E:Number> AlgebraicExpr<E>.memoizeAndReduceArithmetic(
                 }
             }
             is AlgebraicUnaryMatrixScalar -> op.reduceArithmetic(value).self()
+            is AlgebraicDeferredDataMatrix -> data.self()
             else ->
                 error("$javaClass")
         }
@@ -836,7 +755,7 @@ fun Expr.tryGetBinaryOp() : BinaryOp? = when(this) {
     is AlgebraicBinaryMatrix<*> -> op.meta
     is AlgebraicBinaryMatrixScalar<*> -> op.meta
     is AlgebraicBinaryScalarMatrix<*> -> op.meta
-    is BinaryMatrix<*> -> op
+    is AlgebraicDeferredDataMatrix<*> -> op
     else -> null
 }
 
@@ -933,7 +852,6 @@ fun Expr.render(entryPoint : Boolean = true) : String {
         is NamedScalarVariable<*> -> name
         is ScalarVariable<*> ->
             type.render(initial)
-        is BinaryMatrix<*> -> binary(op, left, right)
         is NamedScalarAssign<*> -> "${left.self()} <- ${right.self()}"
         is NamedMatrixAssign<*> -> "${left.self()} <- ${right.self()}"
         is AlgebraicBinaryScalar<*> -> {
@@ -961,6 +879,7 @@ fun Expr.render(entryPoint : Boolean = true) : String {
         }
         is MatrixVariableElement<*> -> "${matrix.name}[$column,$row]"
         is ConstantScalar<*> -> type.render(value)
+        is AlgebraicUnaryMatrixScalar<*> -> "${op.meta.op}(${value.self()})"
         is AlgebraicUnaryScalar<*> -> when {
             op == exp -> {
                 val rightSuper = tryConvertToSuperscript(value.self())
@@ -984,6 +903,10 @@ fun Expr.render(entryPoint : Boolean = true) : String {
             }
             sorted.forEach { sb.append("$it\n") }
             "$sb".trimEnd('\n')
+        }
+        is AlgebraicDeferredDataMatrix<*> -> {
+            if (op.infix) "${left.self()}${op.op}${right.self(true)}"
+            else "${op.op}(${left.self()}, ${right.self()})"
         }
         is DataMatrix<*> -> {
             if (rows == 1 && columns == 1) {

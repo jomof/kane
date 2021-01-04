@@ -81,29 +81,6 @@ private fun lookup(table : Array<Byte>, byte : Byte) = table[byte + 128]
 
 val QuarterPrecisionAlgebraicType = object : AlgebraicType<Byte>(Byte::class.java) {
     override val simpleName = "8-bit float"
-    override fun unary(op : UnaryOp, value : Byte) : Byte = run {
-        val result = when(op) {
-            NEGATE ->
-                (-value).toByte()
-            LOGIT ->
-                lookup(logitTable, value)
-            RELU ->
-                lookup(reluTable, value)
-            LRELU ->
-                lookup(lreluTable, value)
-            STEP ->
-                lookup(stepTable, value)
-            LSTEP ->
-                lookup(lstepTable, value)
-            EXP ->
-                lookup(expTable, value)
-            TANH ->
-                lookup(tanhTable, value)
-            D -> zero
-            else -> error("$op")
-        }
-        result
-    }
     override fun compare(left: Byte, right: Byte) =
         doubleLookup[left+128].compareTo(doubleLookup[right+128])
     override fun allocArray(size: Int, init: (Int) -> Byte) = Array(size, init)
