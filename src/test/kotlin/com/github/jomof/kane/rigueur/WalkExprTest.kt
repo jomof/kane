@@ -1,5 +1,6 @@
 package com.github.jomof.kane.rigueur
 
+import com.github.jomof.kane.rigueur.functions.plus
 import org.junit.Test
 
 class WalkExprTest {

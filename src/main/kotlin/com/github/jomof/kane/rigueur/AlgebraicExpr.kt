@@ -445,49 +445,12 @@ fun <E:Number, T : ScalarExpr<E>> tanh(expr : T) : ScalarExpr<E> = UnaryScalar(T
 fun <E:Number, T : MatrixExpr<E>> tanh(expr : T) : MatrixExpr<E> = UnaryMatrix(TANH, expr)
 fun tanh(value : Double) : Double = (exp(2.0 * value) - 1.0) / (exp(2.0 * value) + 1.0)
 fun tanh(value : Float) : Float = (exp(2.0f * value) - 1.0f) / (exp(2.0f * value) + 1.0f)
-// Times
-operator fun <E:Number> ScalarExpr<E>.times(right : E) = multiply(this, right)
-operator fun <E:Number> E.times(right : ScalarExpr<E>) = multiply(this, right)
-operator fun <E:Number> ScalarExpr<E>.times(right : ScalarExpr<E>) = multiply(this, right)
-operator fun <E:Number> MatrixExpr<E>.times(right : E) = multiply(this, right)
-operator fun <E:Number> MatrixExpr<E>.times(right : ScalarExpr<E>) = multiply(this, right)
-operator fun <E:Number> E.times(right : MatrixExpr<E>) = multiply(this, right)
-operator fun <E:Number> ScalarExpr<E>.times(right : MatrixExpr<E>) = multiply(this, right)
-operator fun <E:Number> MatrixExpr<E>.times(right : MatrixExpr<E>) = multiply(this, right)
 
 // Cross Product
 infix fun <E:Number> MatrixExpr<E>.cross(right : MatrixExpr<E>) = run {
     BinaryMatrix(CROSS, right.columns, rows, this, right)
 }
 
-// Div
-operator fun <E:Number> ScalarExpr<E>.div(right : E) = divide(this, right)
-operator fun <E:Number> E.div(right : ScalarExpr<E>) = divide(this, right)
-operator fun <E:Number> ScalarExpr<E>.div(right : ScalarExpr<E>) = divide(this, right)
-operator fun <E:Number> MatrixExpr<E>.div(right : E) = divide(this, right)
-operator fun <E:Number> MatrixExpr<E>.div(right : ScalarExpr<E>) = divide(this, right)
-operator fun <E:Number> E.div(right : MatrixExpr<E>) = divide(this, right)
-operator fun <E:Number> ScalarExpr<E>.div(right : MatrixExpr<E>) = divide(this, right)
-operator fun <E:Number> MatrixExpr<E>.div(right : MatrixExpr<E>) = divide(this, right)
-
-// Plus
-operator fun <E:Number> ScalarExpr<E>.plus(right : E) = add(this, right)
-operator fun <E:Number> E.plus(right : ScalarExpr<E>) = add(this, right)
-operator fun <E:Number> ScalarExpr<E>.plus(right : ScalarExpr<E>) = add(this, right)
-operator fun <E:Number> MatrixExpr<E>.plus(right : E) = add(this, right)
-operator fun <E:Number> MatrixExpr<E>.plus(right : ScalarExpr<E>) = add(this, right)
-operator fun <E:Number> E.plus(right : MatrixExpr<E>) = add(this, right)
-operator fun <E:Number> ScalarExpr<E>.plus(right : MatrixExpr<E>) = add(this, right)
-operator fun <E:Number> MatrixExpr<E>.plus(right : MatrixExpr<E>) = add(this, right)
-// Minus
-operator fun <E:Number> ScalarExpr<E>.minus(right : E) = subtract(this, right)
-operator fun <E:Number> E.minus(right : ScalarExpr<E>) = subtract(this, right)
-operator fun <E:Number> ScalarExpr<E>.minus(right : ScalarExpr<E>) = subtract(this, right)
-operator fun <E:Number> MatrixExpr<E>.minus(right : E) = subtract(this, right)
-operator fun <E:Number> MatrixExpr<E>.minus(right : ScalarExpr<E>) = subtract(this, right)
-operator fun <E:Number> E.minus(right : MatrixExpr<E>) = subtract(this, right)
-operator fun <E:Number> ScalarExpr<E>.minus(right : MatrixExpr<E>) = subtract(this, right)
-operator fun <E:Number> MatrixExpr<E>.minus(right : MatrixExpr<E>) = subtract(this, right)
 // Unary minus
 operator fun <E:Number> ScalarExpr<E>.unaryMinus() : ScalarExpr<E> = negate(this)
 operator fun <E:Number> MatrixExpr<E>.unaryMinus() = UnaryMatrix(NEGATE, this)

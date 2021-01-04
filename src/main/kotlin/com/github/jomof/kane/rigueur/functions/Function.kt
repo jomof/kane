@@ -21,6 +21,8 @@ interface AlgebraicBinaryScalarFunction {
         AlgebraicBinaryScalar(this, p1, p2)
     operator fun <E:Number> invoke(p1 : UntypedScalar, p2 : ScalarExpr<E>) : ScalarExpr<E> =
         AlgebraicBinaryScalar(this, CoerceScalar(p1, p2.type), p2)
+    operator fun <E:Number> invoke(p1 : ScalarExpr<E>, p2 : UntypedScalar) : ScalarExpr<E> =
+        AlgebraicBinaryScalar(this, p1, CoerceScalar(p2, p1.type))
     operator fun <E:Number> invoke(p1 : UntypedScalar, p2 : E) : ScalarExpr<E> =
         AlgebraicBinaryScalar(this, CoerceScalar(p1, p2.javaClass.kaneType), constant(p2))
     operator fun <E:Number> invoke(p1 : MatrixExpr<E>, p2 : ScalarExpr<E>) : MatrixExpr<E> =

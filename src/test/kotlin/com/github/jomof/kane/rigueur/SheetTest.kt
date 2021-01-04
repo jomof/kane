@@ -1,6 +1,8 @@
 package com.github.jomof.kane.rigueur
 
 import com.github.jomof.kane.rigueur.functions.AlgebraicBinaryScalar
+import com.github.jomof.kane.rigueur.functions.minus
+import com.github.jomof.kane.rigueur.functions.plus
 import com.github.jomof.kane.rigueur.functions.pow
 import com.github.jomof.kane.rigueur.types.dollars
 import org.junit.Test

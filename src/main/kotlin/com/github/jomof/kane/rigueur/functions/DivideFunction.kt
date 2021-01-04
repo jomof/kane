@@ -46,3 +46,17 @@ private class DivideFunction : AlgebraicBinaryScalarFunction {
 }
 
 val divide : AlgebraicBinaryScalarFunction = DivideFunction()
+
+
+// Div
+operator fun <E:Number> ScalarExpr<E>.div(right : E) = divide(this, right)
+operator fun <E:Number> E.div(right : ScalarExpr<E>) = divide(this, right)
+operator fun <E:Number> ScalarExpr<E>.div(right : ScalarExpr<E>) = divide(this, right)
+operator fun <E:Number> MatrixExpr<E>.div(right : E) = divide(this, right)
+operator fun <E:Number> MatrixExpr<E>.div(right : ScalarExpr<E>) = divide(this, right)
+operator fun <E:Number> E.div(right : MatrixExpr<E>) = divide(this, right)
+operator fun <E:Number> ScalarExpr<E>.div(right : MatrixExpr<E>) = divide(this, right)
+operator fun <E:Number> MatrixExpr<E>.div(right : MatrixExpr<E>) = divide(this, right)
+operator fun <E:Number> ScalarExpr<E>.div(right : UntypedScalar) = divide(this, right)
+operator fun <E:Number> UntypedScalar.div(right : ScalarExpr<E>) = divide(this, right)
+operator fun <E:Number> UntypedScalar.div(right : E) = divide(this, right)

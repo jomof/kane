@@ -75,3 +75,16 @@ private class MultiplyFunction : AlgebraicBinaryScalarFunction {
 }
 
 val multiply : AlgebraicBinaryScalarFunction = MultiplyFunction()
+
+// Times
+operator fun <E:Number> ScalarExpr<E>.times(right : E) = multiply(this, right)
+operator fun <E:Number> E.times(right : ScalarExpr<E>) = multiply(this, right)
+operator fun <E:Number> ScalarExpr<E>.times(right : ScalarExpr<E>) = multiply(this, right)
+operator fun <E:Number> MatrixExpr<E>.times(right : E) = multiply(this, right)
+operator fun <E:Number> MatrixExpr<E>.times(right : ScalarExpr<E>) = multiply(this, right)
+operator fun <E:Number> E.times(right : MatrixExpr<E>) = multiply(this, right)
+operator fun <E:Number> ScalarExpr<E>.times(right : MatrixExpr<E>) = multiply(this, right)
+operator fun <E:Number> MatrixExpr<E>.times(right : MatrixExpr<E>) = multiply(this, right)
+operator fun <E:Number> ScalarExpr<E>.times(right : UntypedScalar) = multiply(this, right)
+operator fun <E:Number> UntypedScalar.times(right : ScalarExpr<E>) = multiply(this, right)
+operator fun <E:Number> UntypedScalar.times(right : E) = multiply(this, right)

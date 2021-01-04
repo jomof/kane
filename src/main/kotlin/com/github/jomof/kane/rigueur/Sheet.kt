@@ -1,13 +1,14 @@
 package com.github.jomof.kane.rigueur
 
 import com.github.jomof.kane.rigueur.Direction.*
+import com.github.jomof.kane.rigueur.functions.div
+import com.github.jomof.kane.rigueur.functions.minus
+import com.github.jomof.kane.rigueur.functions.multiply
 import com.github.jomof.kane.rigueur.types.AlgebraicType
 import com.github.jomof.kane.rigueur.types.KaneType
 import com.github.jomof.kane.rigueur.types.StringType
-import com.github.jomof.kane.rigueur.types.kaneType
 import java.lang.Integer.max
 import kotlin.math.abs
-import kotlin.math.pow
 import kotlin.reflect.KProperty
 
 interface CellReferenceExpr : Expr
@@ -249,7 +250,7 @@ fun Sheet.minimize(
 
     // Assign back variables updated by a delta of their respective derivative
     val assignBacks = (resolvedVariables.values zip diffs).map { (variable, diff) ->
-        NamedScalarAssign("update(${variable.name})", variable, variable - 0.01 * diff).reduceArithmetic()
+        NamedScalarAssign("update(${variable.name})", variable, variable - multiply(0.01, diff)).reduceArithmetic()
     }
 
     // Create the model, allocate space for it, and iterate. Break when the target didn't move much
@@ -399,12 +400,3 @@ private fun replaceRelativeCellReferences(coordinate : Coordinate, value : Any) 
         else -> error("${value.javaClass}")
     }
 }
-
-// Plus
-inline operator fun <reified E:Number> ScalarExpr<E>.plus(right : UntypedScalar) = this + CoerceScalar(right, type)
-inline operator fun <reified E:Number> UntypedScalar.plus(right : ScalarExpr<E>) = CoerceScalar(this, right.type) + right
-inline operator fun <reified E:Number> UntypedScalar.plus(right : E) = CoerceScalar(this, E::class.java.kaneType) + right
-// Pow
-//inline fun <reified E:Number> pow(left : ScalarExpr<E>, right : UntypedCellReference) : ScalarExpr<E> = pow(left, CoerceScalar(right, left.type))
-//inline fun <reified E:Number> pow(left : UntypedScalar, right : ScalarExpr<E>) : ScalarExpr<E> = pow(CoerceScalar(left, right.type), right)
-//inline fun <reified E:Number> pow(left : UntypedCellReference, right : E) : ScalarExpr<E> = pow(CoerceScalar(left, E::class.java.kaneType), right)
