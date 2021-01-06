@@ -7,9 +7,9 @@ import com.github.jomof.kane.rigueur.types.kaneType
 interface AlgebraicBinaryScalarFunction {
     val meta : BinaryOp
     operator fun <E:Number> invoke(p1 : E, p2 : E) : E = when(p1) {
-        is Double -> doubleOp(p1, p2 as Double)
-        is Float -> floatOp(p1, p2 as Float)
-        is Int -> intOp(p1, p2 as Int)
+        is Double -> doubleOp(p1, (p2 as Number).toDouble())
+        is Float -> floatOp(p1, (p2 as Number).toFloat())
+        is Int -> intOp(p1, (p2 as Number).toInt())
         else -> error("${p1.javaClass}")
     } as E
     operator fun invoke(p1 : Double, p2 : Double) = doubleOp(p1, p2)
@@ -25,6 +25,8 @@ interface AlgebraicBinaryScalarFunction {
         AlgebraicBinaryScalar(this, p1, CoerceScalar(p2, p1.type))
     operator fun <E:Number> invoke(p1 : UntypedScalar, p2 : E) : ScalarExpr<E> =
         AlgebraicBinaryScalar(this, CoerceScalar(p1, p2.javaClass.kaneType), constant(p2))
+    operator fun <E:Number> invoke(p1 : E, p2 : UntypedScalar) : ScalarExpr<E> =
+        AlgebraicBinaryScalar(this, constant(p1), CoerceScalar(p2, p1.javaClass.kaneType))
     operator fun <E:Number> invoke(p1 : MatrixExpr<E>, p2 : ScalarExpr<E>) : MatrixExpr<E> =
         AlgebraicBinaryMatrixScalar(this, p1.columns, p1.rows, p1, p2)
     operator fun <E:Number> invoke(p1 : E, p2 : MatrixExpr<E>) : MatrixExpr<E> =
@@ -103,6 +105,7 @@ interface AlgebraicUnaryScalarFunction {
     operator fun <E:Number> invoke(value : E) : E = when(value) {
         is Double -> doubleOp(value)
         is Float -> floatOp(value)
+        is Int -> doubleOp(value.toDouble())
         else -> error("${value.javaClass}")
     } as E
     operator fun invoke(value : Double) = doubleOp(value)

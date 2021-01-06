@@ -2,6 +2,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "1.4.10"
+    id("org.openjfx.javafxplugin") version "0.0.9"
+
 }
 group = "me.jomof"
 version = "1.0-SNAPSHOT"

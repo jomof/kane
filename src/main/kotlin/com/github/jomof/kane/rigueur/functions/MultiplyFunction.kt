@@ -88,3 +88,4 @@ operator fun <E:Number> MatrixExpr<E>.times(right : MatrixExpr<E>) = multiply(th
 operator fun <E:Number> ScalarExpr<E>.times(right : UntypedScalar) = multiply(this, right)
 operator fun <E:Number> UntypedScalar.times(right : ScalarExpr<E>) = multiply(this, right)
 operator fun <E:Number> UntypedScalar.times(right : E) = multiply(this, right)
+operator fun <E:Number> E.times(right : UntypedScalar) = multiply(this, right)

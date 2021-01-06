@@ -60,3 +60,4 @@ operator fun <E:Number> MatrixExpr<E>.div(right : MatrixExpr<E>) = divide(this, 
 operator fun <E:Number> ScalarExpr<E>.div(right : UntypedScalar) = divide(this, right)
 operator fun <E:Number> UntypedScalar.div(right : ScalarExpr<E>) = divide(this, right)
 operator fun <E:Number> UntypedScalar.div(right : E) = divide(this, right)
+operator fun <E:Number> E.div(right : UntypedScalar) = divide(this, right)

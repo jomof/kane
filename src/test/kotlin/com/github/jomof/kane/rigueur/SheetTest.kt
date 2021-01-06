@@ -1,9 +1,6 @@
 package com.github.jomof.kane.rigueur
 
-import com.github.jomof.kane.rigueur.functions.AlgebraicBinaryScalar
-import com.github.jomof.kane.rigueur.functions.minus
-import com.github.jomof.kane.rigueur.functions.plus
-import com.github.jomof.kane.rigueur.functions.pow
+import com.github.jomof.kane.rigueur.functions.*
 import com.github.jomof.kane.rigueur.types.dollars
 import org.junit.Test
 
@@ -83,8 +80,8 @@ class SheetTest {
     @Test
     fun `columnOf sheet`() {
         val sheet = sheetOf("dollars") {
-            val a1 by columnOf(2020, 2021, 2022, "2023")
-            val b2 by columnOf(2020, 2021, 2022, "2023")
+            val a1 by columnOf(2020, 2021, 2022, 2023)
+            val b2 by columnOf(2020, 2021, 2022, 2023)
             val c3 by columnOf(up + 1, up + 2, up + 3, up + 4)
             add(a1, b2, c3)
         }
@@ -152,5 +149,59 @@ class SheetTest {
                 }
             }
         result.assertString("expr=v-v")
+    }
+
+    @Test
+    fun `empty sheet can still print`() {
+        val sheet = sheetOf {
+        }
+        println(sheet)
+    }
+
+    @Test
+    fun `optimize stock-bond split based on trailing Shiller PE`() {
+        val startYear = 1928
+        val endYear = 1949 // 2019
+        val totalYears = endYear - startYear + 1
+        val rollingWindow = 2
+        val sheet = sheetOf {
+            val a1 by constant("m")
+            val b1 by constant(0.0)
+            val a2 by constant("b")
+            val b2 by constant(0.5)
+            val a3 by constant("YEAR")
+            val a4 by columnOf(startYear .. endYear)
+            val b3 by constant("Shiller PE")
+            val b4 by shillerPE(a4)
+            val c3 by constant("S&P 500")
+            val c4 by sp500(a4)
+            val d3 by constant("BAA Corp Bonds")
+            val d4 by baaCorporateBond(a4)
+
+            val g3 by constant("stock(%)")
+            val g4 by columnOf((0 until totalYears - rollingWindow).map { logit(b1/left(5) + b2) })
+            val h3 by constant("bond(%)")
+            val h4 by columnOf((0 until totalYears - rollingWindow).map { 1.0 - left })
+
+            val compositeCumulative = (0 until rollingWindow).fold(dollars(100.00)) { prior, current ->
+                prior * (1.0 + left(6).down(current))*left(2).down(current) +
+                prior * (1.0 + left(5).down(current))*left(1).down(current)
+            }
+            val i3 by constant("Mix($)")
+            val i4 by columnOf((0 until totalYears - rollingWindow * 2).map { compositeCumulative } )
+
+            val j3 by dollars(0.0)
+            val j4 by columnOf((0 until totalYears - rollingWindow * 2).map { dollars(0.0) + up + left } )
+
+            val j1 by pow(200_000.00 - down(totalYears-rollingWindow*2+2),2.0)
+            add(g4, a1, a2, b1, b2, a3, a4, b4, b3, c3, c4, d3,
+                d4, g3, h3, h4, i3, i4, j3, j4, j1)
+        }
+        println(sheet.eval())
+        val min = sheet.minimize("J1", "B1", "B2").eval()
+        println(min.eval())
+        min["G4"].assertString("1")
+        min["H4"].assertString("0")
+
     }
 }

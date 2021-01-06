@@ -22,6 +22,14 @@ data class AbsoluteCellReferenceExpr(
 
 data class UntypedRelativeCellReference(val offset : Coordinate) : UntypedScalar {
     override fun toString() = "ref$offset"
+    fun up(move : Int = 1) = UntypedRelativeCellReference(offset + Coordinate(column = 0, row = -move))
+    fun down(move : Int = 1) = UntypedRelativeCellReference(offset + Coordinate(column = 0, row = move))
+    fun left(move : Int = 1) = UntypedRelativeCellReference(offset + Coordinate(column = -move, row = 0))
+    fun right(move : Int = 1) = UntypedRelativeCellReference(offset + Coordinate(column = move, row = 0))
+    val up get() = up()
+    val down get() = down()
+    val left get() = left()
+    val right get() = right()
     operator fun getValue(nothing: Nothing?, property: KProperty<*>) = run {
         val name = property.name.toUpperCase()
         val source = cellNameToCoordinate(name)
@@ -69,22 +77,6 @@ data class SheetBuilder(
     val down get() = down()
     val left get() = left()
     val right get() = right()
-    //fun <E:Number> constant(value : E) = ScalarVariable(value, value.javaClass.kaneType)
-    //inline fun <reified E:Any> constant(value : E) = ValueExpr(value, object : KaneType<E>(E::class.java) { })
-    fun columnOf(vararg values : Any) = ColumnExpr(values.toList().map {
-        when(it) {
-            is Expr -> it
-            //is Number -> ScalarVariable(it, it.javaClass.kaneType)
-            else -> constant(it)
-           //     error("${it.javaClass}")
-          //      ValueExpr(it, object : KaneType(it.javaClass) { })
-        }
-    })
-
-    data class NamedColumnExpr(override val name : String, val exprs : List<Expr>) : NamedExpr
-    data class ColumnExpr(val exprs : List<Expr>) : Expr {
-        operator fun getValue(nothing: Nothing?, property: KProperty<*>) = NamedColumnExpr(property.name, exprs)
-    }
 
     fun add(vararg added : NamedExpr) {
         val remaining = added.toList().toMutableSet()
@@ -97,7 +89,8 @@ data class SheetBuilder(
             when(named) {
                 is NamedScalar<*> -> {
                     val expr = named.scalar
-                    val typed = replaceRelativeCellReferences(coordinate, expr).replaceExpr {
+                    val cellRefs = replaceRelativeCellReferences(coordinate, expr)
+                    val typed = cellRefs.replaceExpr {
                         when(it) {
                             is NamedScalarVariable<*> -> {
                                 val name = it.name.toUpperCase()
@@ -129,10 +122,10 @@ data class SheetBuilder(
                 is NamedValueExpr<*> -> {
                     cells[name] = ValueExpr(named.value, named.type as KaneType<Any>)
                 }
-                is NamedColumnExpr -> {
-                    for(i in named.exprs.indices) {
-                        val coordinate = coordinate.copy(row = coordinate.row + i)
-                        cells[coordinateToCellName(coordinate)] = replaceRelativeCellReferences(coordinate, named.exprs[i])
+                is NamedMatrix<*> -> {
+                    named.matrix.coordinates.forEach { target ->
+                        val coordinate = coordinate + target
+                        cells[coordinateToCellName(coordinate)] = replaceRelativeCellReferences(coordinate, named.matrix[target])
                     }
                 }
                 is NamedUntypedAbsoluteCellReference -> {
@@ -200,7 +193,8 @@ fun Sheet.minimize(
         val reduced = when(val value = cells.getValue(cell)) {
             is AlgebraicExpr<*> ->
                 value.memoizeAndReduceArithmetic()
-            else -> error("${value.javaClass}")
+            else ->
+                error("${value.javaClass}")
         }
         val variable = when(reduced) {
             is ConstantScalar -> NamedScalarVariable(cell, reduced.value as Double, reduced.type as AlgebraicType<Double>)
@@ -215,7 +209,7 @@ fun Sheet.minimize(
     var done = false
     while(!done) {
         done = true
-        targetExpr = targetExpr.replaceExpr {
+        val next = targetExpr.replaceExpr {
             when(it) {
                 is CoerceScalar<*> -> {
                     when(it.value) {
@@ -236,11 +230,13 @@ fun Sheet.minimize(
                 else -> it
             }
         } as ScalarExpr<Double>
+        targetExpr = next
     }
     if (targetExpr !is ScalarExpr<*>) {
         error("'$target' was not a numeric expression")
     }
-    val namedTarget : NamedScalarExpr<Double> = NamedScalar(target, targetExpr as ScalarExpr<Double>)
+    val reduced = (targetExpr as ScalarExpr<Double>).reduceArithmetic()
+    val namedTarget : NamedScalarExpr<Double> = NamedScalar(target, reduced)
 
     // Differentiate target with respect to each variable
     val diffs = resolvedVariables.map { (name, variable) ->
@@ -282,6 +278,7 @@ fun Sheet.minimize(
 }
 
 fun Sheet.render() : String {
+    if (cells.isEmpty()) return ""
     val sb = StringBuilder()
     val widths = Array(columns + 1) { 0 }
 
@@ -392,6 +389,10 @@ private fun replaceRelativeCellReferences(coordinate : Coordinate, value : Any) 
     return when (value) {
         is Expr -> value.replaceExpr(TOP_DOWN) {
             when(it) {
+                is NamedScalar<*> -> {
+                    val coordinate = cellNameToCoordinate(it.name.toUpperCase())
+                    CoerceScalar(AbsoluteCellReferenceExpr(coordinate), it.type)
+                }
                 is UntypedRelativeCellReference -> it.toAbsolute(coordinate)
                 else -> it
             }

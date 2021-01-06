@@ -638,7 +638,7 @@ class KaneTest {
 
             if (totalError < lastError) {
 
-                val file = File("/Users/jomof/IdeaProjects/KotlinRegression/src/test/kotlin/com/github/jomof/kane/rigueur/distribution.txt")
+               // val file = File("/Users/jomof/IdeaProjects/KotlinRegression/src/test/kotlin/com/github/jomof/kane/rigueur/distribution.txt")
 
                 val func = layout.toFunc(space, h2, output)
                 val result = mutableListOf<Pair<Double,String>>()
@@ -648,11 +648,11 @@ class KaneTest {
 
                     result.add(predicted to "$bits")
                 }
-                if (file.isFile) file.delete()
-                file.appendText("$totalError\n")
-                result.sortedBy { (predicted,_) -> predicted}.forEach { (predicted,bits) ->
-                    file.appendText("$predicted = $bits\n")
-                }
+                //if (file.isFile) file.delete()
+                //file.appendText("$totalError\n")
+//                result.sortedBy { (predicted,_) -> predicted}.forEach { (predicted,bits) ->
+//                    file.appendText("$predicted = $bits\n")
+//                }
                 lastError = totalError
             }
 
@@ -666,58 +666,6 @@ class KaneTest {
             }
 
         }
-    }
-
-    @Test
-    fun `quarter precision`() {
-        ieeeBasis(0).assertString("0.125")
-        ieeeBasis(1).assertString("0.125")
-        ieeeBasis(7).assertString("0.125")
-        ieeeBasis(8).assertString("0.125")
-        ieeeBasis(16).assertString("0.25")
-        ieeeBasis(24).assertString("0.5")
-        ieeeBasis(128+24).assertString("0.5")
-        ieeeSignificand(0).assertString("0")
-        ieeeSignificand(7).assertString("7")
-        ieeeSignificand(8).assertString("0")
-        ieeeExponent(9).assertString("1")
-        ieeeExponent(16).assertString("2")
-        ieeeExponent(0).assertString("0")
-        ieeeExponent(7).assertString("0")
-        ieeeExponent(8).assertString("1")
-        ieeeExponent(9).assertString("1")
-        ieeeExponent(16).assertString("2")
-        ieeeSign(0).assertString("0")
-        ieeeSign(1).assertString("0")
-        ieeeSign(127).assertString("0")
-        ieeeSign(128).assertString("1")
-        ieeeSign(255).assertString("1")
-        ieeeBasis(23).assertString("0.25")
-        ieeeSignificand(23).assertString("7")
-        ieeeExponent(23).assertString("2")
-        ieeeStart(23).assertString("2.0")
-        ieeeAdd(23).assertString("1.75")
-
-
-        ieee(23).assertString("3.75")
-        ieee(24).assertString("4.0")
-        ieee(25).assertString("4.5")
-        ieee(8).assertString("1.0")
-        ieee(16).assertString("2.0")
-        ieee(17).assertString("2.25")
-        ieee(0).assertString("0.0")
-        ieee(1).assertString("0.125")
-
-        ieee(255-8).assertString("-15360.0")
-
-        ieeeExponent(15 * 8).assertString("15")
-        ieeeSignificand(15 * 8).assertString("0")
-        ieee(15 * 8).assertString("Infinity")
-        ieee(128 + 15 * 8).assertString("-Infinity")
-        ieee(15 * 8 + 1).assertString("NaN")
-        ieee(128 + 15 * 8 + 1).assertString("NaN")
-
-        doubleToByteIndex(0.0).assertString("-128")
     }
 
     @Test
@@ -1041,5 +989,7 @@ class KaneTest {
         val gradientW0 by d(error) / d(w0)
         differentiate(gradientW0)
     }
+
+
 }
 

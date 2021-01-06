@@ -58,3 +58,4 @@ operator fun <E:Number> MatrixExpr<E>.minus(right : MatrixExpr<E>) = subtract(th
 operator fun <E:Number> ScalarExpr<E>.minus(right : UntypedScalar) = subtract(this, right)
 operator fun <E:Number> UntypedScalar.minus(right : ScalarExpr<E>) = subtract(this, right)
 operator fun <E:Number> UntypedScalar.minus(right : E) = subtract(this, right)
+operator fun <E:Number> E.minus(right : UntypedScalar) = subtract(this, right)

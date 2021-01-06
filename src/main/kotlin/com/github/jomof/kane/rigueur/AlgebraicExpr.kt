@@ -332,7 +332,7 @@ inline fun <reified E:Number> matrixVariable(columns : Int, rows : Int, type : A
 inline fun <reified E:Number> variable(initial : E = defaultOf(), type : AlgebraicType<E> = E::class.kaneType) = ScalarVariable(initial, type)
 // Constant
 fun <E:Number> constant(value : E, type : AlgebraicType<*>) : ScalarExpr<E> = ConstantScalar(value, type as AlgebraicType<E>)
-fun <E:Number> constant(value : E) = ConstantScalar(value, value.javaClass.kaneType)
+fun <E:Number> constant(value : E) : ScalarExpr<E> = ConstantScalar(value, value.javaClass.kaneType)
 inline fun <reified E:Any> constant(value : E) = ValueExpr(value, object : KaneType<E>(E::class.java) { })
 
 // Tableau
@@ -387,8 +387,12 @@ private fun <E:Number> diff(expr : ScalarExpr<E>, variable : ScalarExpr<E>) : Sc
         is ScalarVariableExpr -> ConstantScalar(expr.type.zero, expr.type)
         is ConstantScalar -> ConstantScalar(expr.type.zero, expr.type)
         is AlgebraicUnaryScalar -> {
-            val vd = expr.value.self()
-            expr.op.differentiate(expr.value, vd, variable)
+            val reduced = expr.op.reduceArithmetic(expr.value)
+            if (reduced != null) reduced.self()
+            else {
+                val vd = expr.value.self()
+                expr.op.differentiate(expr.value, vd, variable)
+            }
         }
         is AlgebraicBinaryScalar -> {
             val p1d = expr.left.self()
@@ -454,17 +458,7 @@ fun <E:Number> differentiate(expr : ScalarExpr<E>) : ScalarExpr<E> = (differenti
 fun <E:Number> differentiate(expr : MatrixExpr<E>) : MatrixExpr<E> = (differentiate(expr as AlgebraicExpr<E>) as MatrixExpr<E>).reduceArithmetic()
 
 // Data matrix
-inline fun <reified E:Number> matrixOf(columns: Int, rows: Int, vararg elements : E) = DataMatrix(
-    columns,
-    rows,
-    elements.map { ConstantScalar(it, elements[0].javaClass.kaneType) }.toList()
-)
-fun <E:Number> matrixOf(columns: Int, rows: Int, action:(Coordinate)->ScalarExpr<E>) :DataMatrix<E> =
-    DataMatrix(
-        columns,
-        rows,
-        coordinatesOf(columns, rows).map(action).toList()
-    )
+
 fun <E:Number> MatrixExpr<E>.toDataMatrix() : MatrixExpr<E> = when(this) {
     is DataMatrix -> this
     is NamedMatrix -> copy(matrix = matrix.toDataMatrix())

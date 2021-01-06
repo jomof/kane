@@ -56,3 +56,4 @@ operator fun <E:Number> MatrixExpr<E>.plus(right : MatrixExpr<E>) = add(this, ri
 operator fun <E:Number> ScalarExpr<E>.plus(right : UntypedScalar) = add(this, right)
 operator fun <E:Number> UntypedScalar.plus(right : ScalarExpr<E>) = add(this, right)
 operator fun <E:Number> UntypedScalar.plus(right : E) = add(this, right)
+operator fun <E:Number> E.plus(right : UntypedScalar) = add(this, right)
