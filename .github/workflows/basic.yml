@@ -22,4 +22,6 @@ jobs:
         java-version: '11'
     - name: Build with Gradle
       run: ./gradlew assemble
+    - name: Run Tests
+      run: ./gradlew :test
       
