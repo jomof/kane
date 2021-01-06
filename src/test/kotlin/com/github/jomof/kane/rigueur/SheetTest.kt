@@ -42,11 +42,10 @@ class SheetTest {
             val a4 by down + 3.0
             val a5 by right + 5.0
             val b5 by constant(7.0)
-            add(a2, a3, b1, a4, a5, b5)
+            add(a1, a2, a3, b1, a4, a5, b5)
         }
         println(sheet)
-// Need to fix this
-//        sheet["A1"]!!.assertString("1")
+        sheet["A1"]!!.assertString("1")
         sheet["A2"]!!.assertString("A1+1")
         sheet["A3"]!!.assertString("A2+$1.10")
         sheet["A4"]!!.assertString("A5+3")
