@@ -16,6 +16,7 @@ private fun Expr.unsafeReplace(
 
 private fun Expr.dispatchExpr(self: ExprFunction): Expr {
     return when (this) {
+        is NamedUntypedAbsoluteCellReference,
         is UntypedRelativeCellReference,
         is Slot<*>,
         is NamedMatrixVariable<*>,
@@ -23,6 +24,7 @@ private fun Expr.dispatchExpr(self: ExprFunction): Expr {
         is ScalarVariable<*>,
         is ConstantScalar<*>,
         is ValueExpr<*>,
+        is NamedValueExpr<*>,
         is AbsoluteCellReferenceExpr,
         is NamedScalarVariable<*> -> this
         is CoerceScalar<*> -> mapChildren(self)
@@ -51,6 +53,7 @@ fun TypedExpr<*>.replaceTyped(direction : Direction = BOTTOM_UP, f: (TypedExpr<*
     unsafeReplace(direction, ExprFunction { f(it as TypedExpr<*>) }) as TypedExpr<*>
 fun <E:Number> ScalarExpr<E>.replace(direction : Direction = BOTTOM_UP, f: (ScalarExpr<E>) -> ScalarExpr<E>) =
     unsafeReplace(direction, ExprFunction { f(it as ScalarExpr<E>) }) as ScalarExpr<E>
+
 
 fun <S:Any, E:Number> AlgebraicExpr<E>.foldTopDown(state: S, f: (state : S, expr : AlgebraicExpr<E>) -> S) : S {
     var prior = state

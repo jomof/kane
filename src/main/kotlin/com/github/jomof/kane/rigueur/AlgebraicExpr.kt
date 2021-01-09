@@ -108,6 +108,7 @@ data class NamedValueExpr<E: Any>(
         assert(value !is Expr)
         track()
     }
+    fun toValueExpr() = ValueExpr(value, type)
     override fun toString() = value.toString()
 }
 
@@ -359,30 +360,8 @@ private fun <E:Number> diff(expr : ScalarExpr<E>, variable : ScalarExpr<E>) : Sc
     fun ScalarExpr<E>.self() = diff(this, variable)
     val result : ScalarExpr<E> = when (expr) {
         variable -> ConstantScalar(expr.type.one, expr.type)
-//        is UnaryScalar -> when(expr.op) {
-////            LOGIT -> logit(expr.value) * (ConstantScalar(expr.type.one, expr.type) - logit(expr.value)) * expr.value.self()
-////            RELU -> step(expr.value) * expr.value.self()
-////            LRELU -> lstep(expr.value) * expr.value.self()
-////            EXP -> {
-////                val result = exp(expr.value) * expr.value.self()
-////                result
-////            }
-////            TANH -> ConstantScalar(expr.type.one, expr.type) - pow(tanh(expr.value), expr.type.two) * expr.value.self()
-////            NEGATE -> -expr.value.self()
-//            else -> error("${expr.op}")
-//        }
         is NamedScalar -> expr.scalar.self()
         is AlgebraicUnaryMatrixScalar -> expr.reduceArithmetic().self()
-//        is UnaryMatrixScalar -> when(expr.op) {
-//            SUMMATION -> {
-//                expr.value.foldCoordinates(null) { prior, (column, row) ->
-//                    val result = expr.value[column, row].self()
-//                    if (prior == null) result
-//                    else prior + result
-//                }!!
-//            }
-//            else -> error("${expr.op}")
-//        }
         is MatrixVariableElement -> ConstantScalar(expr.type.zero, expr.type)
         is ScalarVariableExpr -> ConstantScalar(expr.type.zero, expr.type)
         is ConstantScalar -> ConstantScalar(expr.type.zero, expr.type)
@@ -783,24 +762,6 @@ fun tryConvertToSuperscript(value : String) : String? {
             'l' -> 'ˡ'
             's' -> 'ˢ'
             'x' -> 'ˣ'
-            'A' -> 'ᴬ'
-            'B' -> 'ᴮ'
-            'D' -> 'ᴰ'
-            'E' -> 'ᴱ'
-            'G' -> 'ᴳ'
-            'H' -> 'ᴴ'
-            'I' -> 'ᴵ'
-            'J' -> 'ᴶ'
-            'K' -> 'ᴷ'
-            'L' -> 'ᴸ'
-            'M' -> 'ᴹ'
-            'N' -> 'ᴺ'
-            'O' -> 'ᴼ'
-            'P' -> 'ᴾ'
-            'R' -> 'ᴿ'
-            'T' -> 'ᵀ'
-            'U' -> 'ᵁ'
-            'W' -> 'ᵂ'
             'b' -> 'ᵇ'
             'd' -> 'ᵈ'
             'e' -> 'ᵉ'
@@ -848,6 +809,18 @@ fun Expr.render(entryPoint : Boolean = true) : String {
             type.render(initial)
         is NamedScalarAssign<*> -> "${left.self()} <- ${right.self()}"
         is NamedMatrixAssign<*> -> "${left.self()} <- ${right.self()}"
+        is AlgebraicUnaryMatrix<*> -> when {
+            op == exp -> {
+                val rightSuper = tryConvertToSuperscript(value.self())
+                if (rightSuper == null) "${op.meta.op}(${value.self()})"
+                else "e$rightSuper"
+            }
+            op == d && value is NamedMatrixVariable -> "${op.meta.op}${value.self()}"
+            op == negate &&
+                    (value is NamedMatrixVariable ||
+                    value is AlgebraicBinaryMatrix && value.op == multiply) -> "${op.meta.op}${value.self()}"
+            else -> "${op.meta.op}(${value.self()})"
+        }
         is AlgebraicBinaryScalar<*> -> {
             when {
                 op == pow -> {

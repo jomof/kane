@@ -890,10 +890,9 @@ class KaneTest {
         val a by variable<Double>()
         val b by variable<Double>()
         val x by variable<Double>()
-        val M by variable<Double>()
+
         (pow(a, -1.0)).reduceArithmetic().assertString("a⁻¹")
         (pow(a, b)).reduceArithmetic().assertString("aᵇ")
-        (pow(a, M)).reduceArithmetic().assertString("aᴹ")
         (pow(a, -b)).reduceArithmetic().assertString("a⁻ᵇ")
         (pow(a, b-b)).reduceArithmetic().assertString("a⁽ᵇ⁻ᵇ⁾")
         (exp(x)).reduceArithmetic().assertString("eˣ")

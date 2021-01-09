@@ -1,13 +1,8 @@
 package com.github.jomof.kane.rigueur
 
 import com.github.jomof.kane.rigueur.Direction.*
-import com.github.jomof.kane.rigueur.functions.d
-import com.github.jomof.kane.rigueur.functions.div
-import com.github.jomof.kane.rigueur.functions.minus
-import com.github.jomof.kane.rigueur.functions.multiply
+import com.github.jomof.kane.rigueur.functions.*
 import com.github.jomof.kane.rigueur.types.AlgebraicType
-import com.github.jomof.kane.rigueur.types.KaneType
-import com.github.jomof.kane.rigueur.types.StringType
 import java.lang.Integer.max
 import kotlin.math.abs
 import kotlin.reflect.KProperty
@@ -49,26 +44,40 @@ data class CoerceScalar<T:Number>(
     val value : Expr,
     override val type : AlgebraicType<T>
 ) : ScalarExpr<T> {
+    init {
+        assert(value !is CoerceScalar<*>) {
+            "coerce of coerce?"
+        }
+        assert(value !is TypedExpr<*> || type != value.type) {
+            "coerce to same type? ${type.simpleName}"
+        }
+    }
     override fun toString() = "$value"
     fun mapChildren(f : ExprFunction) = copy(value = f(value))
 }
 
 interface Sheet {
-    val name : String
     val cells : Map<String, Expr>
     val columns : Int
     val rows : Int
     operator fun get(cell : String) = cells[cell]
 }
 
-interface MutableSheet : Sheet
+data class EmptySheet(
+    override val cells: Map<String, Expr> = mapOf(),
+    override val columns: Int = 0,
+    override val rows: Int = 0) : Sheet
 
-data class SheetBuilder(
-    override var name : String = "",
-    override val cells : MutableMap<String, Expr> = mutableMapOf()
-) : MutableSheet {
-    override val columns get() = cells.map { cellNameToCoordinate(it.key).column }.maxOrNull()!! + 1
-    override val rows get() = cells.map { cellNameToCoordinate(it.key).row }.maxOrNull()!! + 1
+data class SheetImpl(
+    override val cells: Map<String, Expr>,
+) : Sheet {
+    override val columns : Int = cells.map { cellNameToCoordinate(it.key).column }.maxOrNull()!! + 1
+    override val rows : Int = cells.map { cellNameToCoordinate(it.key).row }.maxOrNull()!! + 1
+    override fun toString() = render()
+}
+
+class SheetBuilder {
+    private val added : MutableList<NamedExpr> = mutableListOf()
     fun up(offset : Int = 1) = UntypedRelativeCellReference(Coordinate(column = 0, row = -offset))
     fun down(offset : Int = 1) = UntypedRelativeCellReference(Coordinate(column = 0, row = offset))
     fun left(offset : Int = 1) = UntypedRelativeCellReference(Coordinate(column = -offset, row = 0))
@@ -78,64 +87,196 @@ data class SheetBuilder(
     val left get() = left()
     val right get() = right()
 
-    fun add(vararg added : NamedExpr) {
-        val remaining = added.toList().toMutableSet()
-        while(remaining.isNotEmpty()) {
-            val named = remaining.first()
-            remaining -= named
-            val name = named.name.toUpperCase()
-            if (cells.containsKey(name)) continue
-            val coordinate = cellNameToCoordinate(name)
-            when(named) {
-                is NamedScalar<*> -> {
-                    val expr = named.scalar
-                    val cellRefs = replaceRelativeCellReferences(coordinate, expr)
-                    val typed = cellRefs.replaceExpr {
-                        when(it) {
-                            is NamedScalarVariable<*> -> {
-                                val name = it.name.toUpperCase()
-                                val coordinate = cellNameToCoordinate(name) // Check name is valid cell name
-                                cells[name] = variable(it.initial, it.type as AlgebraicType<Number>)
-                                CoerceScalar(AbsoluteCellReferenceExpr(coordinate), it.type)
-                            }
-                            is NamedScalar<*> -> {
-                                remaining += it
-                                when {
-                                    it.scalar is ConstantScalar<*> -> {
-                                        val name = it.name.toUpperCase()
-                                        val coordinate = cellNameToCoordinate(name) // Check name is valid cell name
-                                        cells[name] = variable(it.scalar.value, it.type as AlgebraicType<Number>)
-                                        CoerceScalar(AbsoluteCellReferenceExpr(coordinate), it.type)
-                                    }
-                                    else -> it
-                                }
-                            }
-                            else ->
-                                it
-                        }
-                    }
-                    cells[name] = typed
-                }
-                is NamedScalarVariable<*> -> {
-                    cells[name] = variable(named.initial, named.type as AlgebraicType<Number>)
-                }
-                is NamedValueExpr<*> -> {
-                    cells[name] = ValueExpr(named.value, named.type as KaneType<Any>)
-                }
-                is NamedMatrix<*> -> {
-                    named.matrix.coordinates.forEach { target ->
-                        val coordinate = coordinate + target
-                        cells[coordinateToCellName(coordinate)] = replaceRelativeCellReferences(coordinate, named.matrix[target])
-                    }
-                }
-                is NamedUntypedAbsoluteCellReference -> {
-                    cells[name] = AbsoluteCellReferenceExpr(named.coordinate)
-                }
-                else -> error("${named.javaClass}")
+    private fun getImmediateNamedExprs() : Map<String, NamedExpr> {
+        val cells = mutableMapOf<String, NamedExpr>()
+
+        // Add immediate named expressions
+        added.forEach { namedExpr ->
+            when(namedExpr) {
+                is NamedExpr -> cells[namedExpr.name] = namedExpr
+                else ->
+                    error("${namedExpr.javaClass}")
             }
         }
+
+        return cells
     }
-    override fun toString() = render()
+
+    private fun getEmbeddedNamedExprs(cells : Map<String, NamedExpr>) : Map<String, NamedExpr> {
+        val result = cells.toMutableMap()
+        var done = false
+        while(!done) {
+            done = true
+            result.values.toList().forEach {
+                it.visit { child ->
+                    when(child) {
+                        is NamedExpr -> {
+                            if (!result.containsKey(child.name)) {
+                                done = false
+                                result[child.name] = child
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return result
+    }
+
+    private fun replaceRelativeReferences(cells : Map<String, NamedExpr>) : Map<String, NamedExpr> {
+        return cells
+            .map { (name, expr) -> expr.replaceRelativeCellReferences() }
+            .map { it.name to it }.toMap()
+    }
+
+    private fun convertCellNamesToUpperCase(cells : Map<String, NamedExpr>) : Map<String, NamedExpr> {
+        return cells
+            .map { (name, expr) -> expr.replaceExpr {
+                when(it) {
+                    is NamedExpr -> {
+                        val upper = it.name.toUpperCase()
+                        if (looksLikeCellName(upper)) {
+                            when (it) {
+                                is NamedMatrix<*> -> it.copy(name = upper)
+                                is NamedScalar<*> -> it.copy(name = upper)
+                                is NamedValueExpr<*> -> it.copy(name = upper)
+                                is NamedUntypedAbsoluteCellReference -> it.copy(name = upper)
+                                else -> error("${it.javaClass}")
+                            }
+                        } else it
+                    }
+                    else -> it
+                }
+            } as NamedExpr }
+            .map { it.name to it }.toMap()
+    }
+
+    private fun <E:Number> extractScalarizedMatrixElement(
+        matrix : MatrixExpr<E>,
+        coordinate : Coordinate) : ScalarExpr<E> {
+        return when(matrix) {
+            is AlgebraicBinaryMatrixScalar -> {
+                val left = extractScalarizedMatrixElement(matrix.left, coordinate)
+                AlgebraicBinaryScalar(matrix.op, left, matrix.right)
+            }
+            is AlgebraicBinaryScalarMatrix -> {
+                val right = extractScalarizedMatrixElement(matrix.right, coordinate)
+                AlgebraicBinaryScalar(matrix.op, matrix.left, right)
+            }
+            is AlgebraicUnaryMatrix -> {
+                val value = extractScalarizedMatrixElement(matrix.value, coordinate)
+                AlgebraicUnaryScalar(matrix.op, value)
+            }
+            is NamedMatrix -> {
+                assert(looksLikeCellName(matrix.name))
+                val baseCoordinate = cellNameToCoordinate(matrix.name)
+                val offsetCoordinate = baseCoordinate + coordinate
+                val offsetCellName = coordinateToCellName(offsetCoordinate)
+                val unnamed = matrix[coordinate]
+                NamedScalar(name = offsetCellName, unnamed)
+            }
+            is DataMatrix -> matrix[coordinate]
+            else ->
+                error("${matrix.javaClass}")
+        }
+    }
+
+    private fun scalarizeMatrixes(cells : Map<String, NamedExpr>) : Map<String, NamedExpr> {
+        val result = cells.toMutableMap()
+        var done = false
+        while(!done) {
+            done = true
+            result.toList().forEach { (name, expr) ->
+                if (expr is NamedMatrix<*> && looksLikeCellName(name)) {
+                    val upperLeft = cellNameToCoordinate(name)
+                    expr.matrix.coordinates.map { offset ->
+                        val finalCoordinate = upperLeft + offset
+                        val finalCellName = coordinateToCellName(finalCoordinate)
+                        val extracted = extractScalarizedMatrixElement(expr.matrix, offset)
+                        result[finalCellName] = NamedScalar(finalCellName, extracted)
+                    }
+                    done = false
+                }
+            }
+        }
+
+        return result
+    }
+
+
+    private fun expandUnaryOperationMatrixes(cells : Map<String, NamedExpr>) : Map<String, NamedExpr> {
+        return cells
+            .map { (name, expr) -> expr.replaceExpr {
+                when(it) {
+                    is AlgebraicUnaryMatrixScalar<*> -> {
+                        val data = DataMatrix(it.value.columns, it.value.rows, it.value.coordinates.map { offset ->
+                            val extracted = extractScalarizedMatrixElement(it.value, offset)
+                            extracted as ScalarExpr<*>
+                        })
+                        val reduced = it.op.reduceArithmetic(data) as ScalarExpr<*>
+                        reduced
+                    }
+                    else -> it
+                }
+            } as NamedExpr }
+            .map { it.name to it }.toMap()
+    }
+
+    private fun splitNames(cells : Map<String, Expr>) : Map<String, Expr> {
+        return cells
+            .map { (name, expr) ->
+                name to when(expr) {
+                    is NamedScalar<*> -> when(expr.scalar) {
+                        is NamedScalar<*> -> expr.scalar
+                        is NamedExpr -> error("${expr.scalar.javaClass}")
+                        else -> expr.scalar
+                    }
+                    is NamedExpr -> error("${expr.javaClass}")
+                    else ->
+                        expr
+                }
+            }
+            .toMap()
+    }
+
+    private fun replaceNamesWithCellReferences(cells : Map<String, NamedExpr>) : Map<String, Expr> {
+        return cells
+            .map { (name, expr) ->
+                name to when(expr) {
+                    is NamedScalar<*> -> {
+                        val replaced = expr.replaceExpr {
+                            when {
+                                it is NamedScalar<*> && it.name != name ->
+                                    CoerceScalar(AbsoluteCellReferenceExpr(cellNameToCoordinate(it.name)), it.type)
+                                else -> it
+                            }
+                        } as ScalarExpr<*>
+                        replaced
+                    }
+                    is NamedValueExpr<*> -> expr.toValueExpr()
+                    is NamedUntypedAbsoluteCellReference -> AbsoluteCellReferenceExpr(expr.coordinate)
+                    else -> error("${expr.javaClass}")
+                }
+            }
+            .toMap()
+    }
+
+    fun build() : Sheet {
+        if (added.isEmpty()) return EmptySheet()
+        val immediate = getImmediateNamedExprs()
+        val withEmbedded = getEmbeddedNamedExprs(immediate)
+        val upperCased = convertCellNamesToUpperCase(withEmbedded)
+        val scalarized = scalarizeMatrixes(upperCased)
+        val relativeReferencesReplaced = replaceRelativeReferences(scalarized)
+        val unaryMatrixesExpanded = expandUnaryOperationMatrixes(relativeReferencesReplaced)
+        val namesReplaced = replaceNamesWithCellReferences(unaryMatrixesExpanded)
+        val splitNamed = splitNames(namesReplaced)
+        return SheetImpl(splitNamed)
+    }
+
+    fun add(vararg add : NamedExpr) {
+        added += add
+    }
 }
 
 fun Sheet.eval() : Sheet {
@@ -156,14 +297,29 @@ fun Sheet.eval() : Sheet {
         --remainingDepth
         if (remainingDepth == 0) break
         for ((cell, expr) in cells) {
-            val replaced = expr.replaceExpr(BOTTOM_UP) {
+            val replaced = expr.replaceExpr(TOP_DOWN) {
                 when {
-                    it is CellReferenceExpr -> {
-                        val tag = "$it"
-                        val lookup = cells[tag]
-                        if (lookup != null) done = false
-                        lookup ?: it
+                    it is CoerceScalar<*> -> {
+                        when(it.value) {
+                            is CellReferenceExpr -> {
+                                val tag = "${it.value}"
+                                val result = when(val lookup = cells[tag]) {
+                                    null -> it
+                                    is AbsoluteCellReferenceExpr -> it
+                                    is TypedExpr<*> -> {
+                                        if (lookup.type == it.type) lookup
+                                        else (CoerceScalar(lookup, it.type))
+                                    }
+                                    else -> error("${lookup.javaClass}")
+                                }
+                                result
+                            }
+                            else -> it
+                        }
                     }
+                    it is AbsoluteCellReferenceExpr -> it
+                    it is CellReferenceExpr ->
+                        error("Not covered by coerce above?")
                     else -> it
                 }
             }
@@ -180,7 +336,7 @@ fun Sheet.eval() : Sheet {
             else -> expr
         }
     }
-    return SheetBuilder(name = name, cells = cells)
+    return SheetImpl(cells)
 }
 
 fun Sheet.minimize(
@@ -209,7 +365,7 @@ fun Sheet.minimize(
     var done = false
     while(!done) {
         done = true
-        val next = targetExpr.replaceExpr {
+        val next = targetExpr.replaceExpr(TOP_DOWN) {
             when(it) {
                 is CoerceScalar<*> -> {
                     when(it.value) {
@@ -218,6 +374,13 @@ fun Sheet.minimize(
                             constant(it.value.initial)
                         }
                         is ScalarExpr<*> -> it.value
+                        is AbsoluteCellReferenceExpr -> {
+                            val ref = "$it"
+                            val result = resolvedVariables[ref]?:cells.getValue(ref)
+                            done = false
+                            if (result is TypedExpr<*> && result.type == it.type) result
+                            else it.copy(value = result)
+                        }
                         else -> error("${it.value.javaClass}")
                     }
                 }
@@ -274,7 +437,7 @@ fun Sheet.minimize(
         assert(new.containsKey(it.name))
         new[it.name] = variable(value.value, (cells[it.name] as AlgebraicExpr<Double>).type)
     }
-    return SheetBuilder(name, new)
+    return SheetImpl(new)
 }
 
 fun Sheet.render() : String {
@@ -324,10 +487,10 @@ fun Sheet.render() : String {
 }
 
 // Construction
-fun sheetOf(name : String = "", init : SheetBuilder.() -> Unit) : Sheet {
-    val sheet = SheetBuilder(name = name)
+fun sheetOf(init : SheetBuilder.() -> Unit) : Sheet {
+    val sheet = SheetBuilder()
     init(sheet)
-    return sheet
+    return sheet.build()
 }
 
 
@@ -359,7 +522,15 @@ fun indexToColumnName(column : Int) : String {
     }
 }
 
+fun looksLikeCellName(tag : String) : Boolean {
+    if (tag.length < 2) return false
+    if (tag[0] !in 'A'..'Z') return false
+    if (tag.last() !in '0'..'9') return false
+    return true
+}
+
 fun cellNameToCoordinate(tag : String) : Coordinate {
+    assert(looksLikeCellName(tag))
     val column = StringBuilder()
     val row = StringBuilder()
     for(i in tag.indices) {
@@ -384,21 +555,58 @@ fun cellNameToCoordinate(tag : String) : Coordinate {
 }
 
 
-// Coercion
-private fun replaceRelativeCellReferences(coordinate : Coordinate, value : Any) : Expr {
-    return when (value) {
-        is Expr -> value.replaceExpr(TOP_DOWN) {
-            when(it) {
-                is NamedScalar<*> -> {
-                    val coordinate = cellNameToCoordinate(it.name.toUpperCase())
-                    CoerceScalar(AbsoluteCellReferenceExpr(coordinate), it.type)
-                }
-                is UntypedRelativeCellReference -> it.toAbsolute(coordinate)
-                else -> it
+
+private fun <E:Number> MatrixExpr<E>.replaceRelativeCellReferencesInMatrix(coordinate : Coordinate) : MatrixExpr<E> {
+   return replaceRelativeCellReferences(coordinate, type) as MatrixExpr<E>
+}
+private fun <E:Number> ScalarExpr<E>.replaceRelativeCellReferencesInScalar(coordinate : Coordinate) : ScalarExpr<E> {
+    return replaceRelativeCellReferences(coordinate, type) as ScalarExpr<E>
+}
+
+private fun Expr.replaceRelativeCellReferences(coordinate : Coordinate, type : AlgebraicType<*>) : Expr =
+    replaceExpr(TOP_DOWN) {
+        when(it) {
+            is NamedMatrix<*> -> {
+                val coordinate = cellNameToCoordinate(it.name.toUpperCase())
+                NamedMatrix(name = it.name, matrix = it.matrix.replaceRelativeCellReferencesInMatrix(coordinate))
             }
+            is NamedScalar<*> -> {
+                val coordinate = cellNameToCoordinate(it.name.toUpperCase())
+                NamedScalar(name = it.name, scalar =  it.scalar.replaceRelativeCellReferencesInScalar(coordinate))
+            }
+            is CoerceScalar<*> ->
+                when(it.value) {
+                    is UntypedRelativeCellReference -> {
+                        CoerceScalar(AbsoluteCellReferenceExpr(coordinate + it.value.offset), type)
+                    }
+                    is AbsoluteCellReferenceExpr -> it
+                    else -> error("${it.value.javaClass}")
+                }
+
+            is UntypedRelativeCellReference ->
+                // Should be caught when there is a type context
+                error("${it.javaClass}")
+            else -> it
         }
-        is Number -> constant(value)
-        is String -> ValueExpr(value, StringType.kaneType)
-        else -> error("${value.javaClass}")
+    }
+
+private fun Expr.replaceRelativeCellReferences() : Expr {
+    return replaceExpr(TOP_DOWN) {
+        when(it) {
+            is NamedMatrix<*> -> {
+                val coordinate = cellNameToCoordinate(it.name.toUpperCase())
+                it.replaceRelativeCellReferences(coordinate, it.type)
+            }
+            is NamedScalar<*> -> {
+                val coordinate = cellNameToCoordinate(it.name.toUpperCase())
+                it.replaceRelativeCellReferences(coordinate, it.type)
+            }
+            is UntypedRelativeCellReference ->
+                error("untyped relative cell reference")
+            else -> it
+        }
     }
 }
+
+private fun NamedExpr.replaceRelativeCellReferences() : NamedExpr =
+    (this as Expr).replaceRelativeCellReferences() as NamedExpr

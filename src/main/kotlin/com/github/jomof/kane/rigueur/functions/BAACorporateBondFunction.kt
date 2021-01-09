@@ -104,10 +104,10 @@ private val baaCorporateBondMap = mapOf(
 private fun baaCorporateBond(year : Int) : Double {
     return baaCorporateBondMap[year]!!
 }
-private val SP500 by UnaryOp()
+private val BAACORPORATEBOND by UnaryOp()
 
 private class BAACorporateBondFunctionFunction : AlgebraicUnaryScalarFunction {
-    override val meta = SP500
+    override val meta = BAACORPORATEBOND
     override fun doubleOp(value: Double) = baaCorporateBond(value.toInt())
     override fun floatOp(value: Float) = baaCorporateBond(value.toInt()).toFloat()
 

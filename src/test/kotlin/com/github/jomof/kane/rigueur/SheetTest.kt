@@ -34,7 +34,7 @@ class SheetTest {
 
     @Test
     fun `basic sheet`() {
-        val sheet = sheetOf("basics") {
+        val sheet = sheetOf {
             val a1 by constant(1)
             val b1 by left + 8
             val a2 by a1 + 1
@@ -65,7 +65,7 @@ class SheetTest {
 
     @Test
     fun `recursive sheet`() {
-        val sheet = sheetOf("dollars") {
+        val sheet = sheetOf {
             val a1 by down
             val a2 by up + 1
             add(a1, a2)
@@ -79,7 +79,7 @@ class SheetTest {
 
     @Test
     fun `columnOf sheet`() {
-        val sheet = sheetOf("dollars") {
+        val sheet = sheetOf {
             val a1 by columnOf(2020, 2021, 2022, 2023)
             val b2 by columnOf(2020, 2021, 2022, 2023)
             val c3 by columnOf(up + 1, up + 2, up + 3, up + 4)
@@ -90,13 +90,14 @@ class SheetTest {
 
     @Test
     fun `types in sheet`() {
-        val sheet = sheetOf("dollars") {
+        val sheet = sheetOf {
             val a1 by constant("My String")
             val a2 by dollars(1.23)
             add(a1, a2)
         }
         println("$sheet\n")
-        sheet["A1"]!!.assertString("My String")
+        sheet["A1"].assertString("My String")
+        sheet["A2"].assertString("$1.23")
     }
 
     @Test
@@ -159,9 +160,60 @@ class SheetTest {
     }
 
     @Test
+    fun `sum of relative references`() {
+        val sheet = sheetOf {
+            val a1 by columnOf(1.0, 1.0)
+            val b1 by columnOf(left + 1.0, left + 2.0)
+            val b3 by summation(b1)
+            add(a1, b1, b3)
+        }
+        println(sheet)
+
+        sheet["A1"].assertString("1")
+        sheet["A2"].assertString("1")
+        sheet["B1"].assertString("A1+1")
+        sheet["B2"].assertString("A2+2")
+        sheet["B3"].assertString("B1+B2")
+        println(sheet.eval())
+        sheet.eval()["B3"].assertString("5")
+    }
+
+    @Test
+    fun `softmax`() {
+        val sheet = sheetOf {
+            val a1 by columnOf(1.0, 1.0)
+            val b1 by columnOf(left + 1.0, left + 2.0)
+            val c1 by softmax(b1)
+            add(a1, b1, c1)
+        }
+        println(sheet)
+        sheet["A1"].assertString("1")
+        sheet["A2"].assertString("1")
+        sheet["B1"].assertString("A1+1")
+        sheet["B2"].assertString("A2+2")
+        sheet["C1"].assertString("exp(B1)/(exp(B1)+exp(B2))")
+        sheet["C2"].assertString("exp(B2)/(exp(B1)+exp(B2))")
+        println(sheet.eval())
+
+    }
+
+    @Test
+    fun `transitive reference`() {
+        val sheet = sheetOf {
+            val a1 by columnOf(0.2, 1.3)
+            val b1 by columnOf((left(1) + 0.0)*left(1), (left(1) + 0.0)*left(1))
+            val d1 by softmax(b1)
+            val b3 by summation(b1)
+            add(d1, b3, a1)
+        }
+        println(sheet)
+        println(sheet.eval())
+    }
+
+    @Test
     fun `optimize stock-bond split based on trailing Shiller PE`() {
         val startYear = 1928
-        val endYear = 1949 // 2019
+        val endYear = 1978 // 2019
         val totalYears = endYear - startYear + 1
         val rollingWindow = 2
         val sheet = sheetOf {
@@ -190,12 +242,12 @@ class SheetTest {
             val i3 by constant("Mix($)")
             val i4 by columnOf((0 until totalYears - rollingWindow * 2).map { compositeCumulative } )
 
-            val j3 by dollars(0.0)
-            val j4 by columnOf((0 until totalYears - rollingWindow * 2).map { dollars(0.0) + up + left } )
-
-            val j1 by pow(200_000.00 - down(totalYears-rollingWindow*2+2),2.0)
+            val i1 by constant("error")
+            val j1 by pow(200_000.00 - summation(i4),2.0)
+            val j2 by summation(i4)
+            val j4 by softmax(i4)
             add(g4, a1, a2, b1, b2, a3, a4, b4, b3, c3, c4, d3,
-                d4, g3, h3, h4, i3, i4, j3, j4, j1)
+                d4, g3, h3, h4, i3, i4, i1, j1, j2, j4)
         }
         println(sheet.eval())
         val min = sheet.minimize("J1", "B1", "B2").eval()
