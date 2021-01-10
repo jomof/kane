@@ -12,10 +12,12 @@ interface CellReferenceExpr : Expr
 data class AbsoluteCellReferenceExpr(
     private val coordinate : Coordinate
 ) : CellReferenceExpr {
+    init { track() }
     override fun toString() = coordinateToCellName(coordinate)
 }
 
 data class UntypedRelativeCellReference(val offset : Coordinate) : UntypedScalar {
+    init { track() }
     override fun toString() = "ref$offset"
     fun up(move : Int = 1) = UntypedRelativeCellReference(offset + Coordinate(column = 0, row = -move))
     fun down(move : Int = 1) = UntypedRelativeCellReference(offset + Coordinate(column = 0, row = move))
@@ -37,6 +39,7 @@ data class UntypedRelativeCellReference(val offset : Coordinate) : UntypedScalar
 data class NamedUntypedAbsoluteCellReference(
     override val name : String,
     val coordinate : Coordinate) : UntypedScalar, NamedExpr {
+    init { track() }
     override fun toString() = "$name=${coordinateToCellName(coordinate)}"
 }
 
@@ -51,9 +54,14 @@ data class CoerceScalar<T:Number>(
         assert(value !is TypedExpr<*> || type != value.type) {
             "coerce to same type? ${type.simpleName}"
         }
+        track()
     }
     override fun toString() = "$value"
-    fun mapChildren(f : ExprFunction) = copy(value = f(value))
+    fun mapChildren(f: ExprFunction) : ScalarExpr<T> {
+        val value = f(value)
+        return if (value !== this.value) copy(value = value)
+        else this
+    }
 }
 
 interface Sheet {
@@ -163,6 +171,11 @@ class SheetBuilder {
                 val right = extractScalarizedMatrixElement(matrix.right, coordinate)
                 AlgebraicBinaryScalar(matrix.op, matrix.left, right)
             }
+            is AlgebraicBinaryMatrix -> {
+                val left = extractScalarizedMatrixElement(matrix.left, coordinate)
+                val right = extractScalarizedMatrixElement(matrix.right, coordinate)
+                AlgebraicBinaryScalar(matrix.op, left, right)
+            }
             is AlgebraicUnaryMatrix -> {
                 val value = extractScalarizedMatrixElement(matrix.value, coordinate)
                 AlgebraicUnaryScalar(matrix.op, value)
@@ -238,6 +251,16 @@ class SheetBuilder {
             }
             .toMap()
     }
+
+//    private fun Expr.replaceNamedScalarWithCellReference(outerName : String) : Expr {
+//        fun <E:Number> ScalarExpr<E>.self() = replaceNamedScalarWithCellReference(outerName) as ScalarExpr<E>
+//        return when {
+//            this is NamedScalar<*> && name != outerName ->
+//                CoerceScalar(AbsoluteCellReferenceExpr(cellNameToCoordinate(name)), type)
+//            this is NamedScalar<*> -> copy(scalar = )
+//            else -> error("$javaClass")
+//        }
+//    }
 
     private fun replaceNamesWithCellReferences(cells : Map<String, NamedExpr>) : Map<String, Expr> {
         return cells
@@ -341,7 +364,7 @@ fun Sheet.eval() : Sheet {
 
 fun Sheet.minimize(
     target : String,
-    vararg variables : String) : Sheet {
+    variables : List<String>) : Sheet {
     val resolvedVariables = mutableMapOf<String, NamedScalarVariable<Double>>()
 
     // Turn each 'variable' into a NamedScalarVariable
@@ -361,6 +384,7 @@ fun Sheet.minimize(
     }
 
     // Follow all expressions from 'target'
+    println("Expanding target expression")
     var targetExpr = cells.getValue(target)
     var done = false
     while(!done) {
@@ -402,6 +426,7 @@ fun Sheet.minimize(
     val namedTarget : NamedScalarExpr<Double> = NamedScalar(target, reduced)
 
     // Differentiate target with respect to each variable
+    println("Differentiating target expression with respect to change variables")
     val diffs = resolvedVariables.map { (name, variable) ->
         val name = "d$target/d${variable.name}"
         val derivative = differentiate(d(namedTarget)/d(variable)).reduceArithmetic()
@@ -414,9 +439,11 @@ fun Sheet.minimize(
     }
 
     // Create the model, allocate space for it, and iterate. Break when the target didn't move much
+    println("Linearizing equations")
     val model = Tableau(resolvedVariables.values + diffs + namedTarget + assignBacks).linearize()
     val space = model.allocateSpace()
     var priorTarget = model.shape(namedTarget).ref(space).value
+    println("Minimizing")
     for(i in 0 until 100000) {
         val sb = StringBuilder()
         sb.append(resolvedVariables.values.joinToString(" ") {

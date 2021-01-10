@@ -588,7 +588,7 @@ class KaneTest {
         val adw1 by assign(dw1 to sumdw1)
         val adw2 by assign(dw2 to sumdw2)
         val adw3 by assign(dw3 to sumdw3)
-        val tab = tableauOf(output,error,dw0,dw1,dw2,dw3,adw0,adw1,adw2,adw3)
+        val tab = tableauOf(output,error,dw0,dw1,dw2,dw3,h2,adw0,adw1,adw2,adw3)
         val layout = tab.linearize()
         println(layout)
         val space = layout.allocateSpace()
@@ -637,8 +637,6 @@ class KaneTest {
             w3ref -= sumdw3ref
 
             if (totalError < lastError) {
-
-               // val file = File("/Users/jomof/IdeaProjects/KotlinRegression/src/test/kotlin/com/github/jomof/kane/rigueur/distribution.txt")
 
                 val func = layout.toFunc(space, h2, output)
                 val result = mutableListOf<Pair<Double,String>>()

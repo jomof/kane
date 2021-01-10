@@ -18,25 +18,6 @@ interface AlgebraicExpr<E:Number> : TypedExpr<E> {
 }
 interface ScalarExpr<T:Number> : AlgebraicExpr<T>
 
-class ExprFunction(
-    private val unsafe : (Expr) -> Expr) {
-    operator fun invoke(expr : Expr) = unsafe(expr)
-    operator fun <S:Number> invoke(expr : ScalarExpr<S>) : ScalarExpr<S> = run {
-        val result = unsafe(expr)
-        try {
-            result as ScalarExpr<S>
-        } catch (e: Throwable) {
-            unsafe(expr)
-            throw e
-        }
-    }
-    operator fun <M:Number> invoke(expr : TypedExpr<M>) : TypedExpr<M> = unsafe(expr) as TypedExpr<M>
-    operator fun <M:Number> invoke(expr : MatrixExpr<M>) : MatrixExpr<M> = unsafe(expr) as MatrixExpr<M>
-    operator fun <N:Number> invoke(expr : NamedAlgebraicExpr<N>) : NamedAlgebraicExpr<N> = unsafe(expr) as NamedAlgebraicExpr<N>
-    operator fun <N:Number> invoke(expr : NamedScalarExpr<N>) : NamedScalarExpr<N> = unsafe(expr) as NamedScalarExpr<N>
-    fun wrap(new : (Expr) -> Expr) = ExprFunction { new(it) }
-}
-
 interface ParentExpr<T:Any> : TypedExpr<T> {
     val children : Iterable<TypedExpr<T>>
     fun mapChildren(f : ExprFunction) : ParentExpr<T>
@@ -169,7 +150,11 @@ data class NamedScalar<E:Number>(
     override val type get() = scalar.type
     override val children get() = listOf(scalar)
     override fun toString() = render()
-    override fun mapChildren(f: ExprFunction) = copy(scalar = f(scalar))
+    override fun mapChildren(f: ExprFunction) : ParentExpr<E> {
+        val scalar = f(scalar)
+        return if (scalar !== this.scalar) copy(scalar = f(scalar))
+        else this
+    }
 }
 data class NamedMatrix<E:Number>(
     override val name : String,
@@ -180,7 +165,11 @@ data class NamedMatrix<E:Number>(
     override val type get() = matrix.type
     override fun get(column: Int, row: Int) = matrix[column,row]
     override fun toString() = render()
-    override fun mapChildren(f: ExprFunction) = copy(matrix = f(matrix))
+    override fun mapChildren(f: ExprFunction) : ParentExpr<E> {
+        val matrix = f(matrix)
+        return if (matrix !== this.matrix) copy(matrix = f(matrix))
+        else this
+    }
 }
 data class MatrixVariableElement<E:Number>(
     val column : Int,
@@ -280,7 +269,11 @@ data class NamedScalarAssign<E:Number>(
     init { track() }
     override fun toString() = render()
     override val children = listOf(right)
-    override fun mapChildren(f: ExprFunction) : NamedScalarAssign<E> = copy(right = f(right))
+    override fun mapChildren(f: ExprFunction) : ParentExpr<E> {
+        val right = f(right)
+        return if (right !== this.right) copy(right = f(right))
+        else this
+    }
 }
 
 data class NamedMatrixAssign<E:Number>(
@@ -302,11 +295,12 @@ data class NamedMatrixAssign<E:Number>(
     }
     override fun toString() = render()
     override val children = listOf(right)
-    override fun mapChildren(f: ExprFunction) : NamedMatrixAssign<E> = copy(right = f(right))
+    override fun mapChildren(f: ExprFunction) : ParentExpr<E> {
+        val right = f(right)
+        return if (right !== this.right) copy(right = f(right))
+        else this
+    }
 }
-
-// Softmax
-fun <E:Number> softmax(expr : MatrixExpr<E>) : MatrixExpr<E> = exp(expr) / summation(exp(expr))
 
 // Assign
 inline fun <reified E:Number> assign(assignment : Pair<ScalarExpr<E>, NamedScalarVariable<E>>) = ScalarAssign(assignment.second, assignment.first)
@@ -531,11 +525,26 @@ private fun trackImpl() {
         val stack = try {
             error("")
         } catch (e: Exception) {
-            e.stackTrace.toList()
-                .drop(1)
-                .filter { it.fileName?.contains("Kane")?:false }
-                .filter { it.lineNumber > 1}
-                .take(15)
+            val original = e.stackTrace.toList()
+            val noJomof = original.filter { it.toString().contains("jomof") }
+            val no1Line = noJomof.filter { it.lineNumber > 1 }
+            var result = no1Line.drop(1)
+            for(dropText in listOf(".mapChildren(", ".dispatchExpr(", ".unsafeReplace(", "\$unsafeReplace\$", "\$wrap\$1", ".invoke(")) {
+                if (result.size < 4) break
+                result = result.filter { !it.toString().contains(dropText) }
+            }
+            if (result.size == 2) {
+                var check = no1Line.drop(1)
+                for(dropText in listOf(".mapChildren(", ".dispatchExpr(", ".unsafeReplace(", "\$unsafeReplace\$", "\$wrap\$1", ".invoke(")) {
+                    if (check.size < 4)
+                        break
+                    val reduced = check.filter { !it.toString().contains(dropText) }
+                    if (reduced.size < 4)
+                        break
+                    check = reduced
+                }
+            }
+            result
         }
         traceMap[stack] = traceMap.computeIfAbsent(stack) { 0 } + 1
         val count = traceMap[stack]!!

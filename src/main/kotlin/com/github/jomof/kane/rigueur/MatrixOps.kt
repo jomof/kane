@@ -21,4 +21,4 @@ fun <E:Number> matrixOf(columns: Int, rows: Int, action:(Coordinate)->ScalarExpr
 inline fun <reified E:Number> columnOf(vararg elements : E) : MatrixExpr<E> = matrixOf(1, elements.size, *elements)
 inline fun <reified E:Number> columnOf(vararg elements : ScalarExpr<E>) : MatrixExpr<E> = matrixOf(1, elements.size, *elements)
 inline fun <reified E:Number> columnOf(elements : List<ScalarExpr<E>>) : MatrixExpr<E> = matrixOf(1, elements.size, *(elements.toTypedArray()))
-fun columnOf(range : IntRange) : MatrixExpr<Int> = columnOf(*range.map { it }.toTypedArray())
+fun columnOf(range : IntRange) : MatrixExpr<Double> = columnOf(*range.map { it.toDouble() }.toTypedArray())

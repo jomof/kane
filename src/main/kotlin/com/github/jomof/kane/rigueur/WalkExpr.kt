@@ -3,10 +3,12 @@ package com.github.jomof.kane.rigueur
 
 import com.github.jomof.kane.rigueur.Direction.BOTTOM_UP
 import com.github.jomof.kane.rigueur.Direction.TOP_DOWN
+import com.github.jomof.kane.rigueur.functions.ExprFunction
 
 private fun Expr.unsafeReplace(
     direction : Direction,
-    f : ExprFunction) : Expr {
+    f : ExprFunction
+) : Expr {
     val self = f.wrap { it.unsafeReplace(direction, f) }
     return when(direction) {
         TOP_DOWN -> f(this).dispatchExpr(self)
@@ -64,9 +66,23 @@ fun <S:Any, E:Number> AlgebraicExpr<E>.foldTopDown(state: S, f: (state : S, expr
     return prior
 }
 
+
 fun Expr.visit(f: (expr : Expr) -> Unit) {
-    unsafeReplace(TOP_DOWN, ExprFunction {
-        f(it)
-        it // This defeats replacement so this whole operation becomes a visit instead
-    })
+    f(this)
+    when(this) {
+        is NamedUntypedAbsoluteCellReference,
+        is UntypedRelativeCellReference,
+        is Slot<*>,
+        is NamedMatrixVariable<*>,
+        is MatrixVariableElement<*>,
+        is ScalarVariable<*>,
+        is ConstantScalar<*>,
+        is ValueExpr<*>,
+        is NamedValueExpr<*>,
+        is AbsoluteCellReferenceExpr,
+        is NamedScalarVariable<*> -> {}
+        is CoerceScalar<*> -> value.visit(f)
+        is ParentExpr<*> -> children.forEach { it.visit(f) }
+        else -> error("$javaClass")
+    }
 }

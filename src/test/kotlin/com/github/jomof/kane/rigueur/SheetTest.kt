@@ -111,7 +111,9 @@ class SheetTest {
             add(a1,a2,b1,a3,a4)
         }
         println("$sheet\n")
-        val minimized = sheet.minimize("A4", "A1", "B1", "A2")
+        val minimized = sheet.minimize(
+            target = "A4",
+            variables = listOf("A1", "B1", "A2"))
         println("$minimized\n")
         minimized["A1"].assertString("0")
         minimized["A2"].assertString("4")
@@ -130,7 +132,9 @@ class SheetTest {
             add(a1,a2,b1,a3,a4)
         }
         println("$sheet\n")
-        val minimized = sheet.minimize("A4", "A1", "A2") // Does not include B1
+        val minimized = sheet.minimize(
+            target = "A4",
+            variables = listOf("A1", "A2")) // Does not include B1
         println("$minimized\n")
         minimized["A1"].assertString("0")
         minimized["A2"].assertString("10")
@@ -202,8 +206,22 @@ class SheetTest {
         val sheet = sheetOf {
             val a1 by columnOf(0.2, 1.3)
             val b1 by columnOf((left(1) + 0.0)*left(1), (left(1) + 0.0)*left(1))
-            val d1 by softmax(b1)
+            val d1 by softmax(b1, constant(0.1))
+            val e1 by softmin(b1, constant(0.1))
             val b3 by summation(b1)
+            add(d1, b3, a1, e1)
+        }
+        println(sheet)
+        println(sheet.eval())
+    }
+
+    @Test
+    fun `summation of inline expression`() {
+        val sheet = sheetOf {
+            val a1 by columnOf(0.2, 1.3)
+            val b1 by columnOf((left(1) + 0.0)*left(1), (left(1) + 0.0)*left(1))
+            val d1 by softmax(10_000.00 - b1)
+            val b3 by summation( b1)
             add(d1, b3, a1)
         }
         println(sheet)
@@ -211,24 +229,46 @@ class SheetTest {
     }
 
     @Test
+    fun `statistical functions`() {
+        val sheet = sheetOf {
+            val a1 by columnOf(7 .. 12)
+            val d1 by constant("mean")
+            val e1 by mean(a1)
+            val d2 by constant("stdev")
+            val e2 by stddev(a1)
+            val d3 by constant("count")
+            val e3 by count(a1)
+
+            add(a1, d1, e1, d2, e2, d3, e3)
+        }
+        println(sheet)
+        println(sheet.eval())
+        sheet.eval()["E1"].assertString("9.5")
+        sheet.eval()["E2"].assertString("4.1833")
+        sheet.eval()["E3"].assertString("6")
+    }
+
+ //   @Test
     fun `optimize stock-bond split based on trailing Shiller PE`() {
         val startYear = 1928
-        val endYear = 1978 // 2019
+        val endYear = 2019 // 2019
         val totalYears = endYear - startYear + 1
         val rollingWindow = 2
         val sheet = sheetOf {
             val a1 by constant("m")
             val b1 by constant(0.0)
             val a2 by constant("b")
-            val b2 by constant(0.5)
+            val b2 by constant(0.9)
             val a3 by constant("YEAR")
             val a4 by columnOf(startYear .. endYear)
             val b3 by constant("Shiller PE")
             val b4 by shillerPE(a4)
             val c3 by constant("S&P 500")
             val c4 by sp500(a4)
+            val c2 by stddev(c4)
             val d3 by constant("BAA Corp Bonds")
             val d4 by baaCorporateBond(a4)
+            val d2 by stddev(d4)
 
             val g3 by constant("stock(%)")
             val g4 by columnOf((0 until totalYears - rollingWindow).map { logit(b1/left(5) + b2) })
@@ -241,19 +281,22 @@ class SheetTest {
             }
             val i3 by constant("Mix($)")
             val i4 by columnOf((0 until totalYears - rollingWindow * 2).map { compositeCumulative } )
+            val i2 by stddev(i4) / mean(i4)
 
             val i1 by constant("error")
-            val j1 by pow(200_000.00 - summation(i4),2.0)
             val j2 by summation(i4)
-            val j4 by softmax(i4)
-            add(g4, a1, a2, b1, b2, a3, a4, b4, b3, c3, c4, d3,
-                d4, g3, h3, h4, i3, i4, i1, j1, j2, j4)
+
+            val j1 by pow(1.80 - i2,2.0)
+            add(g4, a1, a2, b1, b2, a3, a4, b4, b3, c2, c3, c4, d3,
+                d4, g3, h3, h4, i3, i4, i1, j1, j2, d2, i2)
         }
         println(sheet.eval())
-        val min = sheet.minimize("J1", "B1", "B2").eval()
+        val min = sheet.minimize(
+            target = "J1",
+            variables = listOf("B1", "B2")).eval()
         println(min.eval())
-        min["G4"].assertString("1")
-        min["H4"].assertString("0")
+        min["G4"].assertString("0")
+        min["H4"].assertString("1")
 
     }
 }

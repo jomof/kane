@@ -129,7 +129,8 @@ class LinearModel<E:Number>(val type : AlgebraicType<E>) {
     fun setValue(expr : ScalarExpr<E>, slot : Slot<E>) { map[expr] = slot }
     fun shape(expr : NamedScalarExpr<E>) = EmbeddedScalarShape(namedScalars.getValue(expr.name).slot)
     fun shape(expr : NamedMatrixVariable<E>) = namedMatrixShapes.getValue(expr.name)
-    fun shape(expr : NamedMatrixExpr<E>) = namedMatrixShapes.getValue(expr.name)
+    fun shape(expr : NamedMatrixExpr<E>) =
+        namedMatrixShapes.getValue(expr.name)
 
     fun eval(space : Array<E>) {
         assignments.forEach { (output, expr) ->
@@ -318,25 +319,26 @@ private fun <E:Number> AlgebraicExpr<E>.eval(space : Array<E>) : E {
 }
 
 private fun <E:Number> AlgebraicExpr<E>.gatherLeafExpressions() : List<ScalarExpr<E>> {
-    fun AlgebraicExpr<E>.terminal() : Boolean = when(this) {
-        is ConstantScalar -> true
-        is Slot -> true
-        is NamedScalarVariable -> true
-        is MatrixVariableElement -> true
-        is AlgebraicBinaryScalar -> false
-        is AlgebraicUnaryScalar -> false
+    fun Expr.terminal() : Boolean = when(this) {
+        is ConstantScalar<*> -> true
+        is Slot<*> -> true
+        is NamedScalarVariable<*> -> true
+        is MatrixVariableElement<*> -> true
+        is AlgebraicBinaryScalar<*> -> false
+        is AlgebraicUnaryScalar<*> -> false
         else -> error("$javaClass")
     }
 
-    return foldTopDown(listOf()) { prior, current ->
-        prior + when {
-            current is AlgebraicUnaryScalar && current.value.terminal() ->
-                listOf(current)
-            current is AlgebraicBinaryScalar && current.left.terminal() && current.right.terminal() ->
-                listOf(current)
-            else -> listOf()
+    val leafs = mutableListOf<ScalarExpr<E>>()
+    visit { current ->
+        when {
+            current is AlgebraicUnaryScalar<*> && current.value.terminal() ->
+                leafs.add(current as ScalarExpr<E>)
+            current is AlgebraicBinaryScalar<*> && current.left.terminal() && current.right.terminal() ->
+                leafs.add(current as ScalarExpr<E>)
         }
     }
+    return leafs
 }
 
 
@@ -392,12 +394,37 @@ private fun <E:Number> AlgebraicExpr<E>.linearizeExprs(
         is NamedScalarVariable -> this
         is NamedMatrixVariable -> this
         is Slot -> this
-        is NamedScalarAssign -> copy(right = right.self())
-        is NamedMatrixAssign -> copy(right = right.self())
-        is NamedMatrix -> copy(matrix = matrix.self())
-        is NamedScalar -> copy(scalar = scalar.self())
-        is AlgebraicUnaryScalar -> copy(value = value.self())
-        is AlgebraicBinaryScalar -> copy(left = left.self(), right = right.self())
+        is NamedScalarAssign -> {
+            val right = right.self()
+            if (this.right !== right) copy(right = right)
+            else this
+        }
+        is NamedMatrixAssign -> {
+            val right = right.self()
+            if (this.right !== right) copy(right = right)
+            else this
+        }
+        is NamedMatrix -> {
+            val matrix = matrix.self()
+            if (this.matrix !== matrix) copy(matrix = matrix)
+            else this
+        }
+        is NamedScalar -> {
+            val scalar = scalar.self()
+            if (this.scalar !== scalar) copy(scalar = scalar)
+            else this
+        }
+        is AlgebraicUnaryScalar -> {
+            val value = value.self()
+            if (this.value !== value) copy(value = value)
+            else this
+        }
+        is AlgebraicBinaryScalar -> {
+            val left = left.self()
+            val right = right.self()
+            if (this.left !== left || this.right !== right) copy(left = left, right = right)
+            else this
+        }
         is DataMatrix -> map { it.self() }
         is Tableau -> copy(children = children.map { child -> child.self() })
         else -> error("$javaClass")
@@ -419,9 +446,7 @@ fun <E:Number> AlgebraicExpr<E>.linearize() : LinearModel<E> {
                 .map { it.first to it.second.size }
                 .sortedByDescending { it.second }
             if (leafs.isEmpty()) break
-            val max = leafs.first().second
-            val maxes = leafs.filter { it.second == max }.map { it.first }.toSet()
-            stripped = stripped.linearizeExprs(maxes, model)
+            stripped = stripped.linearizeExprs(leafs.map { it.first }.toSet(), model)
         }
         stripped.linearizeExpr(model)
         return model
