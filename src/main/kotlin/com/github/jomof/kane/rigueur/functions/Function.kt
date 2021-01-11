@@ -2,6 +2,7 @@ package com.github.jomof.kane.rigueur.functions
 
 import com.github.jomof.kane.rigueur.*
 import com.github.jomof.kane.rigueur.types.kaneType
+import java.sql.Ref
 
 // f(scalar,scalar)->scalar (extended to matrix 1<->1 mapping)
 interface AlgebraicBinaryScalarFunction {
@@ -53,6 +54,8 @@ data class AlgebraicBinaryScalar<E:Number>(
     val op : AlgebraicBinaryScalarFunction,
     val left : ScalarExpr<E>,
     val right : ScalarExpr<E>) : ScalarExpr<E>, ParentExpr<E> {
+    private val hashCode by lazy { op.hashCode() * 3 + left.hashCode() * 7 + right.hashCode() * 9 }
+    override fun hashCode() = hashCode
     init { track() }
     override val type get() = left.type
     override val children get() = listOf(left, right)
@@ -60,7 +63,8 @@ data class AlgebraicBinaryScalar<E:Number>(
     override fun mapChildren(f: ExprFunction) : ParentExpr<E> {
         val left = f(left)
         val right = f(right)
-        return if (left !== this.left || right !== this.right) copy(left = f(left), right = f(right))
+        return if (left !== this.left || right !== this.right)
+                copy(left = f(left), right = f(right))
             else this
     }
 }

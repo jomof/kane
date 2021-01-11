@@ -112,7 +112,7 @@ private class SP500Function : AlgebraicUnaryScalarFunction {
         val constValue = value.tryFindConstant()
         return when {
             constValue != null -> constant(sp500(constValue.toInt()) as E)
-            else -> error("${value.javaClass}")
+            else -> value
         }
     }
 

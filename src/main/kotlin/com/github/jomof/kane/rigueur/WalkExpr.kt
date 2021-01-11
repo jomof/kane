@@ -3,6 +3,7 @@ package com.github.jomof.kane.rigueur
 
 import com.github.jomof.kane.rigueur.Direction.BOTTOM_UP
 import com.github.jomof.kane.rigueur.Direction.TOP_DOWN
+import com.github.jomof.kane.rigueur.functions.AlgebraicBinaryScalar
 import com.github.jomof.kane.rigueur.functions.ExprFunction
 
 private fun Expr.unsafeReplace(
@@ -81,6 +82,10 @@ fun Expr.visit(f: (expr : Expr) -> Unit) {
         is NamedValueExpr<*>,
         is AbsoluteCellReferenceExpr,
         is NamedScalarVariable<*> -> {}
+        is AlgebraicBinaryScalar<*> -> {
+            left.visit(f)
+            right.visit(f)
+        }
         is CoerceScalar<*> -> value.visit(f)
         is ParentExpr<*> -> children.forEach { it.visit(f) }
         else -> error("$javaClass")

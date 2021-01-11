@@ -360,8 +360,17 @@ private fun <E:Number> AlgebraicExpr<E>.stripNames() : AlgebraicExpr<E> {
         is NamedMatrixVariable -> this
         is NamedMatrix -> matrix.self()
         is NamedScalar -> scalar.self()
-        is AlgebraicUnaryScalar -> copy(value = value.self())
-        is AlgebraicBinaryScalar -> copy(left = left.self(), right = right.self())
+        is AlgebraicUnaryScalar -> {
+            val value = value.self()
+            if (this.value !== value) copy(value = value)
+            else this
+        }
+        is AlgebraicBinaryScalar -> {
+            val left = left.self()
+            val right = right.self()
+            if (this.left !== left || this.right !== right) copy(left = left, right = right)
+            else this
+        }
         is DataMatrix -> map { it.self() }
         is Tableau -> copy(children= children.map { child ->
             when(child) {
@@ -437,7 +446,9 @@ fun <E:Number> AlgebraicExpr<E>.linearize() : LinearModel<E> {
         val model = LinearModel<E>(type)
         claimMatrixVariables(model)
         claimScalarVariables(model)
+        println("Stripping names")
         var stripped = stripNames()
+        println("Done stripping names")
         while (true) {
             val leafs = stripped
                 .gatherLeafExpressions()

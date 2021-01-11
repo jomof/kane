@@ -115,7 +115,7 @@ private class BAACorporateBondFunctionFunction : AlgebraicUnaryScalarFunction {
         val constValue = value.tryFindConstant()
         return when {
             constValue != null -> constant(baaCorporateBond(constValue.toInt()) as E)
-            else -> error("${value.javaClass}")
+            else -> value
         }
     }
     override fun <E : Number> differentiate(

@@ -29,3 +29,5 @@ fun stddev(expr : MatrixExpr<Double>) : ScalarExpr<Double> {
     val mean = mean(expr)
     return pow(summation(pow(expr-mean, 2.0)), 0.5)
 }
+
+fun covar(expr : MatrixExpr<Double>) = stddev(expr) / mean(expr)

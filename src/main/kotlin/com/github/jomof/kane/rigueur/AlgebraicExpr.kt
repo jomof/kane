@@ -301,6 +301,13 @@ data class NamedMatrixAssign<E:Number>(
         else this
     }
 }
+//
+//data class Differentiate<E:Number>(
+//    val expr : ScalarExpr<E>,
+//    val variable : ScalarExpr<E>
+//) : ScalarExpr<E> {
+//    override val type get() = expr.type
+//}
 
 // Assign
 inline fun <reified E:Number> assign(assignment : Pair<ScalarExpr<E>, NamedScalarVariable<E>>) = ScalarAssign(assignment.second, assignment.first)
@@ -349,7 +356,7 @@ val <E:Number> MatrixExpr<E>.coordinates get() = coordinatesOf(columns, rows)
 inline val <E:Number, reified M:MatrixExpr<E>> M.elements get() = coordinates.map { get(it) }
 
 // Differentiation
-private fun <E:Number> diff(expr : ScalarExpr<E>, variable : ScalarExpr<E>) : ScalarExpr<E> {
+fun <E:Number> diff(expr : ScalarExpr<E>, variable : ScalarExpr<E>) : ScalarExpr<E> {
     if (variable is NamedScalar) return diff(expr, variable.scalar)
     fun ScalarExpr<E>.self() = diff(this, variable)
     val result : ScalarExpr<E> = when (expr) {
@@ -372,7 +379,8 @@ private fun <E:Number> diff(expr : ScalarExpr<E>, variable : ScalarExpr<E>) : Sc
             val p2d = expr.right.self()
             expr.op.differentiate(expr.left, p1d, expr.right, p2d, variable)
         }
-        else -> error("${expr.javaClass}")
+        else ->
+            error("${expr.javaClass}")
     }
     return result
 }
@@ -407,24 +415,80 @@ fun <E:Number> differentiate(expr : AlgebraicExpr<E>) : AlgebraicExpr<E> {
             diff(dleft, dright[column, row])
         }
     }
-    return expr.replaceExprTopDown {
-        when(it) {
-            is NamedScalar -> {
-                val diff = it.scalar.diffOr()
-                if (diff != null) it.copy(name = "${it.name}'", scalar = diff)
-                else it
+    fun ScalarExpr<E>.self() = differentiate(this) as ScalarExpr
+    fun MatrixExpr<E>.self() = differentiate(this) as MatrixExpr
+    with(expr) {
+        return when (this) {
+            is NamedScalarAssign -> {
+                val right = right.self()
+                if (this.right !== right) copy(right = right)
+                else expr
+            }
+            is NamedMatrixAssign -> {
+                val right = right.self()
+                if (this.right !== right) copy(right = right)
+                else this
             }
             is NamedMatrix -> {
-                val diff = it.matrix.diffOr()
-                if (diff != null) it.copy(name = "${it.name}'", matrix = diff)
-                else it
+                val diff = matrix.diffOr()
+                if (diff != null) copy(name = "${name}'", matrix = diff)
+                else {
+                    val matrix = matrix.self()
+                    if (this.matrix !== matrix) copy(matrix = matrix)
+                    else this
+                }
             }
-            is AlgebraicBinaryScalar<E> ->
-                it.diffOr() ?: it
-            is AlgebraicBinaryScalarMatrix<E> -> it.diffOr() ?: it
-            else -> it
+            is NamedScalar -> {
+                val diff = scalar.diffOr()
+                if (diff != null) copy(name = "${name}'", scalar = diff)
+                else {
+                    val scalar = scalar.self()
+                    if (this.scalar !== scalar) copy(scalar = scalar)
+                    else this
+                }
+            }
+            is AlgebraicUnaryScalar -> {
+                val value = value.self()
+                if (this.value !== value) copy(value = value)
+                else this
+            }
+            is AlgebraicBinaryScalar -> {
+                diffOr() ?: run {
+                    val left = left.self()
+                    val right = right.self()
+                    if (this.left !== left || this.right !== right) copy(left = left, right = right)
+                        else this
+                }
+            }
+            is AlgebraicBinaryScalarMatrix<E> -> {
+                diffOr() ?: run {
+                    val left = left.self()
+                    val right = right.self()
+                    if (this.left !== left || this.right !== right) copy(left = left, right = right)
+                    else this
+                }
+            }
+            else -> error("${expr.javaClass}")
         }
     }
+//    return expr.replaceExprTopDown {
+//        when(it) {
+//            is NamedScalar -> {
+//                val diff = it.scalar.diffOr()
+//                if (diff != null) it.copy(name = "${it.name}'", scalar = diff)
+//                else it
+//            }
+//            is NamedMatrix -> {
+//                val diff = it.matrix.diffOr()
+//                if (diff != null) it.copy(name = "${it.name}'", matrix = diff)
+//                else it
+//            }
+//            is AlgebraicBinaryScalar<E> ->
+//                it.diffOr() ?: it
+//            is AlgebraicBinaryScalarMatrix<E> -> it.diffOr() ?: it
+//            else -> it
+//        }
+//    }
 }
 
 fun <E:Number> differentiate(expr : ScalarExpr<E>) : ScalarExpr<E> = (differentiate(expr as AlgebraicExpr<E>) as ScalarExpr<E>).reduceArithmetic()
