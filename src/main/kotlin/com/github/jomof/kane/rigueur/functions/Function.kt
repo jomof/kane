@@ -2,13 +2,13 @@ package com.github.jomof.kane.rigueur.functions
 
 import com.github.jomof.kane.rigueur.*
 import com.github.jomof.kane.rigueur.types.kaneType
-import java.sql.Ref
 
 // f(scalar,scalar)->scalar (extended to matrix 1<->1 mapping)
 interface AlgebraicBinaryScalarFunction {
     val meta : BinaryOp
     operator fun <E:Number> invoke(p1 : E, p2 : E) : E = when(p1) {
-        is Double -> doubleOp(p1, (p2 as Number).toDouble())
+        is Double ->
+            doubleOp(p1, (p2 as Number).toDouble())
         is Float -> floatOp(p1, (p2 as Number).toFloat())
         is Int -> intOp(p1, (p2 as Number).toInt())
         else -> error("${p1.javaClass}")

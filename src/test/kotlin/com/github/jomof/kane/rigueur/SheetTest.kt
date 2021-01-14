@@ -303,7 +303,7 @@ class SheetTest {
         val startYear = 1928
         val endYear = 2019 // 2019
         val totalYears = endYear - startYear + 1
-        val rollingWindow = 1
+        val rollingWindow = 2
         // expected(#years, %stock) [then 5% and 95% confidence]
         val sheet = sheetOf {
             val a1 by constant("m")
@@ -337,14 +337,15 @@ class SheetTest {
             val i1 by constant("error")
             val j2 by summation(i4)
 
-            val j1 by pow(2.00 - i2,2.0)
+            val j1 by pow(1.45 - i2,2.0)
             add(g4, a1, a2, b1, b2, a3, a4, b4, b3, c2, c3, c4, d3,
                 d4, g3, h3, h4, i3, i4, i1, j1, j2, d2, i2)
         }
         println(sheet.eval())
-        val min = sheet.minimize(
-            target = "J1",
-            variables = listOf("B1", "B2")).eval()
+            val min = sheet.minimize(
+                target = "J1",
+                variables = listOf("B1", "B2")
+            ).eval()
         println(min.eval())
 //        min["G4"].assertString("0")
 //        min["H4"].assertString("1")

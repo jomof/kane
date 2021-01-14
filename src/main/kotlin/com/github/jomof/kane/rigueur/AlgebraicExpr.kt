@@ -189,6 +189,8 @@ data class DataMatrix<E:Number>(
         assert(columns * rows == elements.size) {
             "found ${elements.size} elements but needed ${rows * columns} for $columns by $rows matrix"
         }
+        assert(columns > 0)
+        assert(rows > 0)
     }
     override val type: AlgebraicType<E> get() = elements[0].type
     private fun coordinateToIndex(column: Int, row: Int) = row * columns + column
@@ -315,6 +317,9 @@ fun <E:Number> repeated(columns : Int, rows : Int, value : ScalarExpr<E>) : Matr
 fun <E:Number> ScalarExpr<E>.tryFindConstant() : E? = when(this) {
     is ConstantScalar -> value
     is NamedScalar -> scalar.tryFindConstant()
+    is CoerceScalar<*> ->
+        if (value is ScalarExpr<*> && type.java == value.type.java) value.tryFindConstant() as E?
+        else null
     else -> null
 }
 

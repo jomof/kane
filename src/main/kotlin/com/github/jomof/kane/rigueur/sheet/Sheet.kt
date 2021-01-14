@@ -152,11 +152,18 @@ class SheetBuilder {
             result.toList().forEach { (name, expr) ->
                 if (expr is NamedMatrix<*> && looksLikeCellName(name)) {
                     val upperLeft = cellNameToCoordinate(name)
+                    var replacedOurName = false
                     expr.matrix.coordinates.map { offset ->
                         val finalCoordinate = upperLeft + offset
                         val finalCellName = coordinateToCellName(finalCoordinate)
                         val extracted = extractScalarizedMatrixElement(expr.matrix, offset)
+                        if (finalCellName == name) {
+                            replacedOurName = true
+                        }
                         result[finalCellName] = NamedScalar(finalCellName, extracted)
+                    }
+                    assert(replacedOurName) {
+                        "Should have replaced our own name"
                     }
                     done = false
                 }
