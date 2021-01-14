@@ -1,6 +1,5 @@
 package com.github.jomof.kane.rigueur
 
-import com.github.jomof.kane.rigueur.Direction.*
 import com.github.jomof.kane.rigueur.functions.*
 import com.github.jomof.kane.rigueur.sheet.*
 import com.github.jomof.kane.rigueur.types.AlgebraicType
@@ -58,11 +57,9 @@ data class CoerceScalar<T:Number>(
         track()
     }
     override fun toString() = "$value"
-    fun mapChildren(f: ExprFunction) : ScalarExpr<T> {
-        if (value !is ScalarExpr<*>) return this
-        val value = f(value)
-        return if (value !== this.value) copy(value = value)
-        else this
+    fun copy(value : Expr) : CoerceScalar<T> {
+        return if (value === this.value) this
+            else CoerceScalar(value, type)
     }
 }
 

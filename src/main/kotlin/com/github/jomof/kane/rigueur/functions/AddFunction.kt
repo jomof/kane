@@ -19,6 +19,7 @@ private class AddFunction : AlgebraicBinaryScalarFunction {
             rightConst == p2.type.zero -> p1
             rightConst == p2.type.negativeZero -> p1
             leftConst != null && rightConst == null -> p2 + p1
+            leftConst != null && rightConst != null -> constant(invoke(leftConst, rightConst), p1.type)
             leftConst != null && p2 is AlgebraicBinaryScalar && p2.op == add && p2.left is ConstantScalar && p2.right !is ConstantScalar -> {
                 p2.right + (leftConst + p2.left)
             }
@@ -27,9 +28,6 @@ private class AddFunction : AlgebraicBinaryScalarFunction {
             }
             else ->
                 null
-        }
-        assert(result != p1*p2) {
-            "Should be null"
         }
         return result
     }

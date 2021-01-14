@@ -26,7 +26,7 @@ private class MultiplyFunction : AlgebraicBinaryScalarFunction {
             leftConst == p1.type.one -> p2
             leftConst == p1.type.negativeOne -> -p2
             rightConst == p2.type.negativeOne -> -p1
-            rightConst != null -> p2 * p1
+            leftConst != null && rightConst != null -> constant(invoke(leftConst, rightConst), p1.type)
             p1 is AlgebraicUnaryScalar && p1.op == negate -> {
                 // -(x*y)*z -> -(x*y*z)
                 -(p1.value * p2)
@@ -54,13 +54,11 @@ private class MultiplyFunction : AlgebraicBinaryScalarFunction {
                 // (24*x)*y -> 24*(x*y)
                 p1.left * (p1.right * p2)
             }
-
+            rightConst != null -> p2 * p1
             else ->
                 null
         }
-        assert(result != p1*p2) {
-            "Should be null"
-        }
+
         return result
     }
     override fun <E : Number> differentiate(

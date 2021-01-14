@@ -318,7 +318,7 @@ class KaneTest {
         val e1 by errors[0,1]
 
         val substituted = h0.substituteInitial()
-        substituted.assertString("h0=logit(0.15*0.05+0.2*0.1+0.35)")
+        substituted.assertString("h0=logit(0.3775)")
         substituted.reduceArithmetic().assertString("h0=0.59327")
 //        h1.substituteInitial().assertString("h1=logit(0.25*0.05+0.3*0.1+0.35)")
         h1.substituteInitial().reduceArithmetic().assertString("h1=0.59688")

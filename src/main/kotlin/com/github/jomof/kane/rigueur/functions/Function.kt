@@ -50,22 +50,39 @@ interface AlgebraicBinaryScalarFunction {
 }
 
 
+fun <E:Number> binaryScalar(op : AlgebraicBinaryScalarFunction,
+                            left : ScalarExpr<E>,
+                            right : ScalarExpr<E>) : ScalarExpr<E> {
+    return op.reduceArithmetic(left, right) ?: AlgebraicBinaryScalar(op, left, right)
+}
+
 data class AlgebraicBinaryScalar<E:Number>(
     val op : AlgebraicBinaryScalarFunction,
     val left : ScalarExpr<E>,
     val right : ScalarExpr<E>) : ScalarExpr<E>, ParentExpr<E> {
-    private val hashCode by lazy { op.hashCode() * 3 + left.hashCode() * 7 + right.hashCode() * 9 }
+    private val hashCode = op.hashCode() * 3 + left.hashCode() * 7 + right.hashCode() * 9
     override fun hashCode() = hashCode
-    init { track() }
+    init {
+        track()
+    }
     override val type get() = left.type
     override val children get() = listOf(left, right)
     override fun toString() = render()
-    override fun mapChildren(f: ExprFunction) : ParentExpr<E> {
-        val left = f(left)
-        val right = f(right)
-        return if (left !== this.left || right !== this.right)
-                copy(left = f(left), right = f(right))
-            else this
+    fun copy(
+             left : ScalarExpr<E> = this.left,
+             right : ScalarExpr<E> = this.right) : AlgebraicBinaryScalar<E> {
+        if (this.left === left && this.right === right) return this
+//        val reduced = op.reduceArithmetic(left, right)
+//        assert(reduced == null) {
+//            "should use copyReduce"
+//        }
+        return AlgebraicBinaryScalar(op, left, right)
+    }
+    fun copyReduce(
+        left : ScalarExpr<E> = this.left,
+        right : ScalarExpr<E> = this.right) : ScalarExpr<E> {
+        if (this.left === left && this.right === right) return this
+        return binaryScalar(op, left, right)
     }
 }
 
@@ -79,12 +96,6 @@ data class AlgebraicBinaryMatrixScalar<E:Number>(
     override val type get() = left.type
     override fun get(column: Int, row: Int) = AlgebraicBinaryScalar(op, left[column, row], right)
     override fun toString() = render()
-    override fun mapChildren(f: ExprFunction) : ParentExpr<E> {
-        val left = f(left)
-        val right = f(right)
-        return if (left !== this.left || right !== this.right) copy(left = f(left), right = f(right))
-        else this
-    }
 }
 
 data class AlgebraicBinaryScalarMatrix<E:Number>(
@@ -97,12 +108,6 @@ data class AlgebraicBinaryScalarMatrix<E:Number>(
     override val type get() = left.type
     override fun get(column: Int, row: Int) = AlgebraicBinaryScalar(op, left, right[column, row])
     override fun toString() = render()
-    override fun mapChildren(f: ExprFunction) : ParentExpr<E> {
-        val left = f(left)
-        val right = f(right)
-        return if (left !== this.left || right !== this.right) copy(left = f(left), right = f(right))
-        else this
-    }
 }
 
 data class AlgebraicBinaryMatrix<E:Number>(
@@ -115,12 +120,6 @@ data class AlgebraicBinaryMatrix<E:Number>(
     override val type get() = left.type
     override fun get(column: Int, row: Int) = AlgebraicBinaryScalar(op, left[column, row], right[column, row])
     override fun toString() = render()
-    override fun mapChildren(f: ExprFunction) : ParentExpr<E> {
-        val left = f(left)
-        val right = f(right)
-        return if (left !== this.left || right !== this.right) copy(left = f(left), right = f(right))
-        else this
-    }
 }
 
 // f(scalar)->scalar
@@ -150,10 +149,9 @@ data class AlgebraicUnaryScalar<E:Number>(
     override val type get() = value.type
     override val children get() = listOf(value)
     override fun toString() = render()
-    override fun mapChildren(f: ExprFunction) : ParentExpr<E> {
-        val value = f(value)
-        return if (value !== this.value) copy(value = value)
-        else this
+    fun copy(value : ScalarExpr<E>) : AlgebraicUnaryScalar<E> {
+        return if (value === this.value) return this
+            else AlgebraicUnaryScalar(op, value)
     }
 }
 
@@ -166,11 +164,6 @@ data class AlgebraicUnaryMatrix<E:Number>(
     override val type get() = value.type
     override fun get(column: Int, row: Int) = AlgebraicUnaryScalar(op, value[column,row])
     override fun toString() = render()
-    override fun mapChildren(f: ExprFunction) : ParentExpr<E> {
-        val value = f(value)
-        return if (value !== this.value) copy(value = value)
-        else this
-    }
 }
 
 // f(matrix)->scalar
@@ -187,11 +180,6 @@ data class AlgebraicUnaryMatrixScalar<E:Number>(
     override val type get() = value.type
     override val children : Iterable<ScalarExpr<E>> get() = value.elements.asIterable()
     override fun toString() = render()
-    override fun mapChildren(f: ExprFunction) : ParentExpr<E> {
-        val value = f(value)
-        return if (value !== this.value) copy(value = value)
-        else this
-    }
 }
 
 // f(expr, expr) -> matrix
@@ -203,31 +191,26 @@ data class AlgebraicDeferredDataMatrix<E:Number>(
 ) : MatrixExpr<E> {
     init { track() }
     override val type = data.type
-    override fun mapChildren(f: ExprFunction) = copy(
-        left = f(left),
-        right = f(right),
-        data = data.mapChildren(f))
     override val columns = data.columns
     override val rows = data.rows
     override fun get(column: Int, row: Int) = data[column, row]
     override fun toString() = render()
 }
-
-class ExprFunction(
-    private val unsafe : (Expr) -> Expr) {
-    operator fun invoke(expr : Expr) = unsafe(expr)
-    operator fun <S:Number> invoke(expr : ScalarExpr<S>) : ScalarExpr<S> = run {
-        val result = unsafe(expr)
-        try {
-            result as ScalarExpr<S>
-        } catch (e: Throwable) {
-            unsafe(expr)
-            throw e
-        }
-    }
-    operator fun <M:Number> invoke(expr : TypedExpr<M>) : TypedExpr<M> = unsafe(expr) as TypedExpr<M>
-    operator fun <M:Number> invoke(expr : MatrixExpr<M>) : MatrixExpr<M> = unsafe(expr) as MatrixExpr<M>
-    operator fun <N:Number> invoke(expr : NamedAlgebraicExpr<N>) : NamedAlgebraicExpr<N> = unsafe(expr) as NamedAlgebraicExpr<N>
-    operator fun <N:Number> invoke(expr : NamedScalarExpr<N>) : NamedScalarExpr<N> = unsafe(expr) as NamedScalarExpr<N>
-    fun wrap(new : (Expr) -> Expr) = ExprFunction { new(it) }
-}
+//
+//class ExprFunction(
+//    private val unsafe : (Expr) -> Expr) {
+//    operator fun invoke(expr : Expr) = unsafe(expr)
+//    operator fun <S:Number> invoke(expr : ScalarExpr<S>) : ScalarExpr<S> = run {
+//        val result = unsafe(expr)
+//        try {
+//            result as ScalarExpr<S>
+//        } catch (e: Throwable) {
+//            unsafe(expr)
+//            throw e
+//        }
+//    }
+//    operator fun <M:Number> invoke(expr : TypedExpr<M>) : TypedExpr<M> = unsafe(expr) as TypedExpr<M>
+//    operator fun <M:Number> invoke(expr : MatrixExpr<M>) : MatrixExpr<M> = unsafe(expr) as MatrixExpr<M>
+//    operator fun <N:Number> invoke(expr : NamedAlgebraicExpr<N>) : NamedAlgebraicExpr<N> = unsafe(expr) as NamedAlgebraicExpr<N>
+//    operator fun <N:Number> invoke(expr : NamedScalarExpr<N>) : NamedScalarExpr<N> = unsafe(expr) as NamedScalarExpr<N>
+//}

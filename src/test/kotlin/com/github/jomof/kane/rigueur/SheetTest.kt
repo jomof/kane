@@ -3,6 +3,8 @@ package com.github.jomof.kane.rigueur
 import com.github.jomof.kane.rigueur.functions.*
 import com.github.jomof.kane.rigueur.types.dollars
 import org.junit.Test
+import kotlin.math.min
+import kotlin.math.round
 
 class SheetTest {
 
@@ -30,6 +32,22 @@ class SheetTest {
         cellNameToCoordinate("A25").assertString("[0,24]")
 
         coordinateToCellName(0,0).assertString("A1")
+    }
+
+    @Test
+    fun `don't expand constants initially`() {
+        val sheet = sheetOf {
+            val a1 by constant(1)
+            val a2 by a1 + 1
+            add(a1, a2)
+        }
+        println(sheet)
+        sheet["A1"]!!.assertString("1")
+        sheet["A2"]!!.assertString("A1+1")
+        val evaluated = sheet.eval()
+        println(evaluated)
+        evaluated["A1"]!!.assertString("1")
+        evaluated["A2"]!!.assertString("2")
     }
 
     @Test
@@ -143,20 +161,6 @@ class SheetTest {
     }
 
     @Test
-    fun `replace expr`() {
-        val v by variable(0.0)
-        val expr by v + v
-        val result = expr
-            .replaceBottomUp {
-                when(it) {
-                    is AlgebraicBinaryScalar -> it.left - it.right
-                    else -> it
-                }
-            }
-        result.assertString("expr=v-v")
-    }
-
-    @Test
     fun `empty sheet can still print`() {
         val sheet = sheetOf {
         }
@@ -248,17 +252,64 @@ class SheetTest {
         sheet.eval()["E3"].assertString("6")
     }
 
+   // @Test
+    fun `build table of expected`() {
+        fun expected(years : Int, stock : Double, percentile : Double) : Double {
+            val minYear = 1928
+            val maxYear = 2019
+            val population = mutableListOf<Double>()
+
+            for (startYear in minYear..maxYear) {
+                var total = 1.00 // One dollar
+                for (year in 0 until years) {
+                    val inspectionYear =
+                        if (year + startYear <= maxYear) year + startYear
+                        else year + startYear - (maxYear - minYear) + 1
+
+                    val stockReturn = sp500(inspectionYear.toDouble())
+                    val bondReturn = baaCorporateBond(inspectionYear.toDouble())
+                    val stockIncrease = stockReturn * total * stock
+                    val bondIncrease = bondReturn * total * (1.0 - stock)
+                    total += stockIncrease + bondIncrease
+                }
+                // Convert to annual percentage (1-annual)^years = total
+                // annual total^(1/years) - 1
+                val annual = pow(total, 1.0 / years) - 1.0
+                population += annual
+            }
+
+            val sorted = population.sorted()
+            val percentile = sorted[min(sorted.size, round((sorted.size - 1.0) * percentile).toInt())]
+
+            return percentile
+        }
+
+        for (years in 1 .. 30) {
+            for (stock in 0 .. 100 step 5) {
+                for (percentile in 0 .. 100 step 5) {
+                    val stockpct = stock.toDouble() / 100.0
+                    val percentilepct = percentile.toDouble() / 100.0
+                    val result = expected(years, stockpct, percentilepct)
+                    println("$years, $stockpct, $percentilepct, $result")
+                }
+            }
+        }
+
+        println(expected(30, 0.7, 0.05))
+    }
+
     @Test
     fun `optimize stock-bond split based on trailing Shiller PE`() {
         val startYear = 1928
-        val endYear = 1978 // 2019
+        val endYear = 2019 // 2019
         val totalYears = endYear - startYear + 1
-        val rollingWindow = 2
+        val rollingWindow = 1
+        // expected(#years, %stock) [then 5% and 95% confidence]
         val sheet = sheetOf {
             val a1 by constant("m")
             val b1 by constant(0.0)
             val a2 by constant("b")
-            val b2 by constant(0.9)
+            val b2 by constant(0.0)
             val a3 by constant("YEAR")
             val a4 by columnOf(startYear .. endYear)
             val b3 by constant("Shiller PE")
@@ -286,7 +337,7 @@ class SheetTest {
             val i1 by constant("error")
             val j2 by summation(i4)
 
-            val j1 by pow(1.50 - i2,2.0)
+            val j1 by pow(2.00 - i2,2.0)
             add(g4, a1, a2, b1, b2, a3, a4, b4, b3, c2, c3, c4, d3,
                 d4, g3, h3, h4, i3, i4, i1, j1, j2, d2, i2)
         }

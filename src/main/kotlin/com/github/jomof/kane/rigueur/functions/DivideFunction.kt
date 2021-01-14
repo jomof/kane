@@ -20,12 +20,10 @@ private class DivideFunction : AlgebraicBinaryScalarFunction {
         val result = when {
             leftConst == p1.type.zero -> p1
             rightConst == p2.type.one -> p1
+            leftConst != null && rightConst != null -> constant(invoke(leftConst, rightConst), p1.type)
             p1 is AlgebraicUnaryScalar && p1.op == negate && p2 is AlgebraicUnaryScalar && p2.op == negate -> p1.value / p2.value
             p2 is AlgebraicBinaryScalar && p2.op == pow -> p1 * pow(p2.left, -p2.right)
             else -> null
-        }
-        assert(result != p1/p2) {
-            "Should be null"
         }
         return result
     }

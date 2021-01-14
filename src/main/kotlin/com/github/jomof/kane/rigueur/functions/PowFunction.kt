@@ -24,12 +24,10 @@ private class PowFunction : AlgebraicBinaryScalarFunction {
             rightConst == p2.type.one -> p1
             rightConst == p2.type.zero -> ConstantScalar(p1.type.one, p1.type)
             rightConst == p2.type.negativeZero -> ConstantScalar(p1.type.one, p1.type)
+            leftConst != null && rightConst != null -> constant(invoke(leftConst, rightConst), p1.type)
             p1 is AlgebraicBinaryScalar && p1.op == pow ->
                 pow(p1.left, p2 * p1.right)
             else -> null
-        }
-        assert(result != pow(p1,p2)) {
-            "Should be null"
         }
         return result
     }

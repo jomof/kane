@@ -23,15 +23,13 @@ private class SubtractFunction : AlgebraicBinaryScalarFunction {
             leftConst == p1.type.negativeZero -> -p2
             rightConst == p2.type.zero -> p1
             rightConst == p2.type.negativeZero -> p1
+            leftConst != null && rightConst != null -> constant(invoke(leftConst, rightConst), p1.type)
             rightConst != null && p1 is AlgebraicBinaryScalar && p1.op == add && p1.right is ConstantScalar -> {
                 p1.left + (p1.right - rightConst)
             }
             p2 is AlgebraicUnaryScalar && p2.op == negate -> p1 + p2.value
             else ->
                 null
-        }
-        assert(result != p1*p2) {
-            "Should be null"
         }
         return result
     }

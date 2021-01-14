@@ -19,7 +19,7 @@ private fun <E:Number> AlgebraicExpr<E>.reduceArithmeticImpl(
         is AlgebraicUnaryScalar -> copy(value = value.self() ?: return null)
         is AlgebraicUnaryMatrix -> copy(value = value.self() ?: return null)
         is AlgebraicUnaryMatrixScalar -> copy(value = value.self() ?: return null)
-        is AlgebraicBinaryScalar -> copy(left = left.self() ?: return null, right = right.self() ?: return null)
+        is AlgebraicBinaryScalar -> copyReduce(left = left.self() ?: return null, right = right.self() ?: return null)
         is CoerceScalar -> {
             val result: ScalarExpr<E>? = when (value) {
                 is ScalarVariable<*> -> {
