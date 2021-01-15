@@ -3,7 +3,6 @@ package com.github.jomof.kane.rigueur.functions
 import com.github.jomof.kane.rigueur.MatrixExpr
 import com.github.jomof.kane.rigueur.ScalarExpr
 import com.github.jomof.kane.rigueur.constant
-import com.sun.jdi.DoubleType
 
 fun <E:Number> softmax(expr : MatrixExpr<E>) = exp(expr) / summation(exp(expr))
 fun <E:Number> softmax(expr : MatrixExpr<E>, sigma : ScalarExpr<E>) : MatrixExpr<E> {
