@@ -4,9 +4,9 @@ plugins {
     kotlin("jvm") version "1.4.10"
     id("maven-publish")
 }
-group = "com.github.jomof"
-version = project.property("version") ?: "0.1-SNAPSHOT"
-println("---------$version------------")
+//group = "com.github.jomof"
+//version = project.property("version") ?: "0.1-SNAPSHOT"
+//println("---------$version------------")
 
 repositories {
     mavenCentral()
@@ -25,4 +25,16 @@ compileKotlin.kotlinOptions {
 val compileTestKotlin: KotlinCompile by tasks
 compileTestKotlin.kotlinOptions {
     jvmTarget = "1.8"
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = "com.github.jomof"
+            artifactId = "kane"
+            version = project.property("version")?.toString() ?: "0.1-SNAPSHOT"
+
+            from(components["java"])
+        }
+    }
 }
