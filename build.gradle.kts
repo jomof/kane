@@ -5,7 +5,8 @@ plugins {
     id("maven-publish")
 }
 group = "com.github.jomof"
-version = "0.1-SNAPSHOT"
+version = project.property("version") ?: "0.1-SNAPSHOT"
+println("---------$version------------")
 
 repositories {
     mavenCentral()
