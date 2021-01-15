@@ -2,7 +2,12 @@ package com.github.jomof.kane.rigueur
 
 import com.github.jomof.kane.rigueur.functions.*
 import com.github.jomof.kane.rigueur.types.dollars
+import com.github.jomof.kane.rigueur.types.half
+import com.github.jomof.kane.rigueur.types.kaneType
+import com.github.jomof.kane.rigueur.types.two
 import org.junit.Test
+import java.util.*
+import kotlin.math.abs
 import kotlin.math.min
 import kotlin.math.round
 
@@ -252,7 +257,7 @@ class SheetTest {
         sheet.eval()["E3"].assertString("6")
     }
 
-   // @Test
+    //@Test
     fun `build table of expected`() {
         fun expected(years : Int, stock : Double, percentile : Double) : Double {
             val minYear = 1928
@@ -268,9 +273,11 @@ class SheetTest {
 
                     val stockReturn = sp500(inspectionYear.toDouble())
                     val bondReturn = baaCorporateBond(inspectionYear.toDouble())
+                    val inflationReturn = usInflation(inspectionYear.toDouble())
                     val stockIncrease = stockReturn * total * stock
                     val bondIncrease = bondReturn * total * (1.0 - stock)
-                    total += stockIncrease + bondIncrease
+                    val inflationIncrease = inflationReturn * total
+                    total += stockIncrease + bondIncrease - inflationIncrease
                 }
                 // Convert to annual percentage (1-annual)^years = total
                 // annual total^(1/years) - 1
@@ -281,21 +288,147 @@ class SheetTest {
             val sorted = population.sorted()
             val percentile = sorted[min(sorted.size, round((sorted.size - 1.0) * percentile).toInt())]
 
+
             return percentile
         }
 
+        val data = mutableMapOf<Triple<Double, Double, Double>, Double>()
         for (years in 1 .. 30) {
-            for (stock in 0 .. 100 step 5) {
-                for (percentile in 0 .. 100 step 5) {
+            for (stock in 0 .. 100 step 2) {
+                for (percentile in 0 .. 100 step 2) {
                     val stockpct = stock.toDouble() / 100.0
                     val percentilepct = percentile.toDouble() / 100.0
                     val result = expected(years, stockpct, percentilepct)
-                    println("$years, $stockpct, $percentilepct, $result")
+                    data[Triple(years / 100.0, stockpct, percentilepct)] = result
                 }
             }
         }
 
-        println(expected(30, 0.7, 0.05))
+        println("Training ${data.size} points")
+
+        val random = Random(3)
+        val learningRate = 1.0
+        val batchSize = 100000.0
+        val inputs = 3
+        //val count0 = 2
+        val count1 = 3
+        val count2 = 3
+        val outputs = 1
+        val input by matrixVariable(1, inputs) { 0.0001 }
+        //val w0 by matrixVariable(input.rows, count0) { random.nextGaussian() }
+
+        //val h1 by lrelu(w0 cross input)
+        val w1 by matrixVariable(input.rows, count1) { random.nextGaussian() }
+        val b1 by variable(0.0)
+        val b2 by variable(0.0)
+        val b3 by variable(0.0)
+        val h2 by logit(w1 cross input) + b1
+        val w2 by matrixVariable(h2.rows, count2) { random.nextGaussian() }
+
+        val h3 by (w2 cross h2) + b2
+        val w3 by matrixVariable(h3.rows, outputs) { random.nextGaussian() }
+
+        val output by logit(w3 cross h3) + b3
+
+        val target by matrixVariable(output.columns, output.rows) { 0.0 }
+        val error by summation(0.5 * pow(target - output, 2.0))
+        //val sumdw0 by matrixVariable(w0.columns,w0.rows) { 0.0 }
+        val sumdw1 by matrixVariable(w1.columns,w1.rows) { 0.0 }
+        val sumdw2 by matrixVariable(w2.columns,w2.rows) { 0.0 }
+        val sumdw3 by matrixVariable(w3.columns,w3.rows) { 0.0 }
+        val sumb1 by variable(0.0)
+        val sumb2 by variable(0.0)
+        val sumb3 by variable(0.0)
+        //val dw0 by sumdw0 + learningRate/batchSize * differentiate(d(error) / d(w0))
+        val dw1 by sumdw1 + learningRate/batchSize * differentiate(d(error) / d(w1))
+        val dw2 by sumdw2 + learningRate/batchSize * differentiate(d(error) / d(w2))
+        val dw3 by sumdw3 + learningRate/batchSize * differentiate(d(error) / d(w3))
+        val db1 by sumb1 + learningRate/batchSize * differentiate(d(error) / d(b1))
+        val db2 by sumb2 + learningRate/batchSize * differentiate(d(error) / d(b2))
+        val db3 by sumb3 + learningRate/batchSize * differentiate(d(error) / d(b3))
+        //val adw0 by assign(dw0 to sumdw0)
+        val adw1 by assign(dw1 to sumdw1)
+        val adw2 by assign(dw2 to sumdw2)
+        val adw3 by assign(dw3 to sumdw3)
+        val adb1 by assign(db1 to sumb1)
+        val adb2 by assign(db2 to sumb2)
+        val adb3 by assign(db3 to sumb3)
+        val tab = tableauOf(output,error,dw2,dw3,adw2,adw3,adw1,adb1,adb2,adb3)
+        val layout = tab.linearize()
+        //println(layout)
+        val space = layout.allocateSpace()
+        val targetRef = layout.shape(target).ref(space)
+        val errorRef = layout.shape(error).ref(space)
+        val outputRef = layout.shape(output).ref(space)
+        val inputRef = layout.shape(input).ref(space)
+        //val w0ref = layout.shape(w0).ref(space)
+        val w1ref = layout.shape(w1).ref(space)
+        val w2ref = layout.shape(w2).ref(space)
+        val w3ref = layout.shape(w3).ref(space)
+        val b1ref = layout.shape(b1).ref(space)
+        val b2ref = layout.shape(b2).ref(space)
+        val b3ref = layout.shape(b3).ref(space)
+        //val sumdw0ref = layout.shape(sumdw0).ref(space)
+        val sumdw1ref = layout.shape(sumdw1).ref(space)
+        val sumdw2ref = layout.shape(sumdw2).ref(space)
+        val sumdw3ref = layout.shape(sumdw3).ref(space)
+        val sumb1ref = layout.shape(sumb1).ref(space)
+        val sumb2ref = layout.shape(sumb2).ref(space)
+        val sumb3ref = layout.shape(sumb3).ref(space)
+
+        val keys = data.keys.toTypedArray()
+        fun train() : Any {
+            val roll = abs(random.nextInt(data.size))
+            val key = keys[roll]
+            val (years, stock, percentile) = key
+            val result = data[key]!!
+            if (abs(result) > 3.0)
+               assert(false)
+            inputRef[0, 0] = years
+            inputRef[0, 1] = stock
+            inputRef[0, 2] = percentile
+            targetRef.set(result)
+            layout.eval(space)
+            return result
+        }
+
+        var lastError = 1000.0
+        repeat(100000) {
+            //sumdw0ref.zero()
+            sumdw1ref.zero()
+            sumdw2ref.zero()
+            sumdw3ref.zero()
+            sumb1ref.set(0.0)
+            sumb2ref.set(0.0)
+            sumb3ref.set(0.0)
+            var totalError = 0.0
+            repeat(batchSize.toInt()) {
+                train()
+                totalError += errorRef.value
+            }
+            totalError /= batchSize
+            if(lastError > totalError) {
+                lastError = totalError
+                repeat(4) {
+                    val train = train()
+                    println("b1=$b1ref b2=$b2ref b3=$b3ref : $train -> $outputRef")
+                }
+                println("error=$totalError")
+            }
+
+            //w0ref -= sumdw0ref
+            w1ref -= sumdw1ref
+            w2ref -= sumdw2ref
+            w3ref -= sumdw3ref
+            b1ref.set(b1ref.value - sumb1ref.value)
+            b2ref.set(b2ref.value - sumb2ref.value)
+            b3ref.set(b3ref.value - sumb3ref.value)
+            if (it % 1000 == 999) {
+                if (abs(totalError) < 0.0001)
+                    return
+            }
+
+        }
     }
 
     @Test

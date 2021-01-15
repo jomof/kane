@@ -29,7 +29,13 @@ class LinearMatrixRef<E:Number>(
     private fun coordinateToIndex(column : Int, row : Int) = row * columns + column
     override fun toString() = render()
     override fun get(column: Int, row: Int) = array[coordinateToIndex(column, row) + offset]
-    override fun set(column: Int, row: Int, value: E) { array[coordinateToIndex(column, row) + offset] = value }
+    override fun set(column: Int, row: Int, value: E) {
+        assert(column >= 0)
+        assert(row >= 0)
+        assert(column <= columns)
+        assert(row <= rows)
+        array[coordinateToIndex(column, row) + offset] = value
+    }
 }
 
 data class LookupMatrixShape<E:Number>(
