@@ -79,7 +79,8 @@ data class ValueExpr<E: Any>(
         track()
     }
     override fun toString() = value.toString()
-    operator fun getValue(e: E?, property: KProperty<*>) = NamedValueExpr(property.name, value, type)
+    operator fun getValue(e: E?, property: KProperty<*>) = toNamed(property.name)
+    fun toNamed(name : String) = NamedValueExpr(name, value, type)
 }
 data class NamedValueExpr<E: Any>(
     override val name: String,

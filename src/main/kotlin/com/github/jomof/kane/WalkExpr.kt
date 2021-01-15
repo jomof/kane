@@ -43,8 +43,7 @@ fun Expr.visit(f: (expr : Expr) -> Unit) {
         is DataMatrix<*> -> elements.forEach { it.visit(f) }
         is AlgebraicDeferredDataMatrix<*> -> data.visit(f)
         is Tableau<*> -> children.forEach { it.visit(f) }
-//        is ParentExpr<*> ->
-//            children.forEach { it.visit(f) }
+        is NamedTiling<*> -> { }
         else -> error("$javaClass")
     }
 }

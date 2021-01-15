@@ -150,22 +150,33 @@ class SheetBuilder {
         while(!done) {
             done = true
             result.toList().forEach { (name, expr) ->
-                if (expr is NamedMatrix<*> && looksLikeCellName(name)) {
+                if (looksLikeCellName(name)) {
                     val upperLeft = cellNameToCoordinate(name)
-                    var replacedOurName = false
-                    expr.matrix.coordinates.map { offset ->
-                        val finalCoordinate = upperLeft + offset
-                        val finalCellName = coordinateToCellName(finalCoordinate)
-                        val extracted = extractScalarizedMatrixElement(expr.matrix, offset)
-                        if (finalCellName == name) {
-                            replacedOurName = true
+                    when {
+                        expr is NamedMatrix<*> -> {
+                            var replacedOurName = false
+                            expr.matrix.coordinates.map { offset ->
+                                val finalCoordinate = upperLeft + offset
+                                val finalCellName = coordinateToCellName(finalCoordinate)
+                                val extracted = extractScalarizedMatrixElement(expr.matrix, offset)
+                                if (finalCellName == name) {
+                                    replacedOurName = true
+                                }
+                                result[finalCellName] = NamedScalar(finalCellName, extracted)
+                            }
+                            assert(replacedOurName) {
+                                "Should have replaced our own name"
+                            }
+                            done = false
                         }
-                        result[finalCellName] = NamedScalar(finalCellName, extracted)
+                        expr is NamedTiling<*> -> {
+                            coordinatesOf(expr.tiling.columns, expr.tiling.rows).map { offset ->
+                                val finalCoordinate = upperLeft + offset
+                                val finalCellName = coordinateToCellName(finalCoordinate)
+                                result[finalCellName] = expr.tiling.getNamedElement(finalCellName, offset)
+                            }
+                        }
                     }
-                    assert(replacedOurName) {
-                        "Should have replaced our own name"
-                    }
-                    done = false
                 }
             }
         }
@@ -203,21 +214,6 @@ class SheetBuilder {
         return cells
             .map { (name, expr) ->
                 name to expr.replaceNamesWithCellReferences(name)
-//                name to when(expr) {
-//                    is NamedScalar<*> -> {
-//                        val replaced = expr.replaceExpr {
-//                            when {
-//                                it is NamedScalar<*> && it.name != name ->
-//                                    CoerceScalar(AbsoluteCellReferenceExpr(cellNameToCoordinate(it.name)), it.type)
-//                                else -> it
-//                            }
-//                        } as ScalarExpr<*>
-//                        replaced
-//                    }
-//                    is NamedValueExpr<*> -> expr.toValueExpr()
-//                    is NamedUntypedAbsoluteCellReference -> AbsoluteCellReferenceExpr(expr.coordinate)
-//                    else -> error("${expr.javaClass}")
-//                }
             }
             .toMap()
     }

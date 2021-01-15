@@ -1,7 +1,5 @@
 package com.github.jomof.kane
 
-import com.github.jomof.kane.Coordinate
-import com.github.jomof.kane.coordinatesOf
 import com.github.jomof.kane.types.kaneType
 
 inline fun <reified E:Number> matrixOf(columns: Int, rows: Int, vararg elements : E) = DataMatrix(
@@ -20,7 +18,6 @@ fun <E:Number> matrixOf(columns: Int, rows: Int, action:(Coordinate)->ScalarExpr
         rows,
         coordinatesOf(columns, rows).map(action).toList()
     )
-inline fun <reified E:Number> columnOf(vararg elements : E) : MatrixExpr<E> = matrixOf(1, elements.size, *elements)
-inline fun <reified E:Number> columnOf(vararg elements : ScalarExpr<E>) : MatrixExpr<E> = matrixOf(1, elements.size, *elements)
-inline fun <reified E:Number> columnOf(elements : List<ScalarExpr<E>>) : MatrixExpr<E> = matrixOf(1, elements.size, *(elements.toTypedArray()))
-fun columnOf(range : IntRange) : MatrixExpr<Double> = columnOf(*range.map { it.toDouble() }.toTypedArray())
+
+
+

@@ -32,6 +32,7 @@ private fun Expr.expandUnaryOperationMatrixes() : Expr {
         is AbsoluteCellReferenceExpr -> this
         is NamedValueExpr<*> -> this
         is NamedUntypedAbsoluteCellReference -> this
+        is NamedTiling<*> -> this
         else -> error("$javaClass")
     }
 }

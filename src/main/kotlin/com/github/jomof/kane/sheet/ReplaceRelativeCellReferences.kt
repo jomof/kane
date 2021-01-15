@@ -56,6 +56,7 @@ private fun Expr.replaceRelativeCellReferences() : Expr {
         }
         is NamedValueExpr<*> -> this
         is NamedUntypedAbsoluteCellReference -> this
+        is NamedTiling<*> -> this
         else -> error("$javaClass")
     }
 }

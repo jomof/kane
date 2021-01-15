@@ -13,34 +13,34 @@ class SheetTest {
 
     @Test
     fun `test column tags`() {
-        com.github.jomof.kane.indexToColumnName(0).assertString("A")
-        com.github.jomof.kane.indexToColumnName(25).assertString("Z")
-        com.github.jomof.kane.indexToColumnName(26).assertString("AA")
-        com.github.jomof.kane.indexToColumnName(27).assertString("AB")
-        com.github.jomof.kane.indexToColumnName(51).assertString("AZ")
-        com.github.jomof.kane.indexToColumnName(52).assertString("BA")
-        com.github.jomof.kane.indexToColumnName(701).assertString("ZZ")
-        com.github.jomof.kane.indexToColumnName(702).assertString("AAA")
+        indexToColumnName(0).assertString("A")
+        indexToColumnName(25).assertString("Z")
+        indexToColumnName(26).assertString("AA")
+        indexToColumnName(27).assertString("AB")
+        indexToColumnName(51).assertString("AZ")
+        indexToColumnName(52).assertString("BA")
+        indexToColumnName(701).assertString("ZZ")
+        indexToColumnName(702).assertString("AAA")
 
-        com.github.jomof.kane.columnNameToIndex("A").assertString("0")
-        com.github.jomof.kane.columnNameToIndex("Z").assertString("25")
-        com.github.jomof.kane.columnNameToIndex("AA").assertString("26")
-        com.github.jomof.kane.columnNameToIndex("AZ").assertString("51")
-        com.github.jomof.kane.columnNameToIndex("BA").assertString("52")
-        com.github.jomof.kane.columnNameToIndex("ZZ").assertString("701")
-        com.github.jomof.kane.columnNameToIndex("AAA").assertString("702")
+        columnNameToIndex("A").assertString("0")
+        columnNameToIndex("Z").assertString("25")
+        columnNameToIndex("AA").assertString("26")
+        columnNameToIndex("AZ").assertString("51")
+        columnNameToIndex("BA").assertString("52")
+        columnNameToIndex("ZZ").assertString("701")
+        columnNameToIndex("AAA").assertString("702")
 
-        com.github.jomof.kane.cellNameToCoordinate("A1").assertString("[0,0]")
-        com.github.jomof.kane.cellNameToCoordinate("Z1").assertString("[25,0]")
-        com.github.jomof.kane.cellNameToCoordinate("A25").assertString("[0,24]")
+        cellNameToCoordinate("A1").assertString("[0,0]")
+        cellNameToCoordinate("Z1").assertString("[25,0]")
+        cellNameToCoordinate("A25").assertString("[0,24]")
 
-        com.github.jomof.kane.coordinateToCellName(0, 0).assertString("A1")
+        coordinateToCellName(0, 0).assertString("A1")
     }
 
     @Test
     fun `don't expand constants initially`() {
-        val sheet = com.github.jomof.kane.sheetOf {
-            val a1 by com.github.jomof.kane.constant(1)
+        val sheet = sheetOf {
+            val a1 by constant(1)
             val a2 by a1 + 1
             add(a1, a2)
         }
@@ -55,14 +55,14 @@ class SheetTest {
 
     @Test
     fun `basic sheet`() {
-        val sheet = com.github.jomof.kane.sheetOf {
-            val a1 by com.github.jomof.kane.constant(1)
+        val sheet = sheetOf {
+            val a1 by constant(1)
             val b1 by left + 8
             val a2 by a1 + 1
             val a3 by up + dollars(1.1)
             val a4 by down + 3.0
             val a5 by right + 5.0
-            val b5 by com.github.jomof.kane.constant(7.0)
+            val b5 by constant(7.0)
             add(a1, a2, a3, b1, a4, a5, b5)
         }
         println(sheet)
@@ -86,7 +86,7 @@ class SheetTest {
 
     @Test
     fun `recursive sheet`() {
-        val sheet = com.github.jomof.kane.sheetOf {
+        val sheet = sheetOf {
             val a1 by down
             val a2 by up + 1
             add(a1, a2)
@@ -100,10 +100,10 @@ class SheetTest {
 
     @Test
     fun `columnOf sheet`() {
-        val sheet = com.github.jomof.kane.sheetOf {
-            val a1 by com.github.jomof.kane.columnOf(2020, 2021, 2022, 2023)
-            val b2 by com.github.jomof.kane.columnOf(2020, 2021, 2022, 2023)
-            val c3 by com.github.jomof.kane.columnOf(up + 1, up + 2, up + 3, up + 4)
+        val sheet = sheetOf {
+            val a1 by columnOf(2020, 2021, 2022, 2023)
+            val b2 by columnOf(2020, 2021, 2022, 2023)
+            val c3 by columnOf(up + 1, up + 2, up + 3, up + 4)
             add(a1, b2, c3)
         }
         println(sheet)
@@ -111,8 +111,8 @@ class SheetTest {
 
     @Test
     fun `types in sheet`() {
-        val sheet = com.github.jomof.kane.sheetOf {
-            val a1 by com.github.jomof.kane.constant("My String")
+        val sheet = sheetOf {
+            val a1 by constant("My String")
             val a2 by dollars(1.23)
             add(a1, a2)
         }
@@ -123,10 +123,10 @@ class SheetTest {
 
     @Test
     fun `find minimum`() {
-        val sheet = com.github.jomof.kane.sheetOf {
-            val a1 by com.github.jomof.kane.constant(2.0)
-            val b1 by com.github.jomof.kane.constant(11.0)
-            val a2 by com.github.jomof.kane.constant(-2.0)
+        val sheet = sheetOf {
+            val a1 by constant(2.0)
+            val b1 by constant(11.0)
+            val a2 by constant(-2.0)
             val a3 by b1 - a2 - 1.0
             val a4 by pow(a1, 2.0) + pow(up, 2.0) + 1.0
             add(a1, a2, b1, a3, a4)
@@ -144,10 +144,10 @@ class SheetTest {
 
     @Test
     fun `find minimum but keep a variable constant`() {
-        val sheet = com.github.jomof.kane.sheetOf {
-            val a1 by com.github.jomof.kane.constant(2.0)
-            val b1 by com.github.jomof.kane.constant(11.0)
-            val a2 by com.github.jomof.kane.constant(-2.0)
+        val sheet = sheetOf {
+            val a1 by constant(2.0)
+            val b1 by constant(11.0)
+            val a2 by constant(-2.0)
             val a3 by b1 - a2 - 1.0
             val a4 by pow(a1, 2.0) + pow(up, 2.0) + 1.0
             add(a1, a2, b1, a3, a4)
@@ -165,16 +165,16 @@ class SheetTest {
 
     @Test
     fun `empty sheet can still print`() {
-        val sheet = com.github.jomof.kane.sheetOf {
+        val sheet = sheetOf {
         }
         println(sheet)
     }
 
     @Test
     fun `sum of relative references`() {
-        val sheet = com.github.jomof.kane.sheetOf {
-            val a1 by com.github.jomof.kane.columnOf(1.0, 1.0)
-            val b1 by com.github.jomof.kane.columnOf(left + 1.0, left + 2.0)
+        val sheet = sheetOf {
+            val a1 by columnOf(1.0, 1.0)
+            val b1 by columnOf(left + 1.0, left + 2.0)
             val b3 by summation(b1)
             add(a1, b1, b3)
         }
@@ -191,9 +191,9 @@ class SheetTest {
 
     @Test
     fun `softmax`() {
-        val sheet = com.github.jomof.kane.sheetOf {
-            val a1 by com.github.jomof.kane.columnOf(1.0, 1.0)
-            val b1 by com.github.jomof.kane.columnOf(left + 1.0, left + 2.0)
+        val sheet = sheetOf {
+            val a1 by columnOf(1.0, 1.0)
+            val b1 by columnOf(left + 1.0, left + 2.0)
             val c1 by softmax(b1)
             add(a1, b1, c1)
         }
@@ -210,11 +210,11 @@ class SheetTest {
 
     @Test
     fun `transitive reference`() {
-        val sheet = com.github.jomof.kane.sheetOf {
-            val a1 by com.github.jomof.kane.columnOf(0.2, 1.3)
-            val b1 by com.github.jomof.kane.columnOf((left(1) + 0.0) * left(1), (left(1) + 0.0) * left(1))
-            val d1 by softmax(b1, com.github.jomof.kane.constant(0.1))
-            val e1 by softmin(b1, com.github.jomof.kane.constant(0.1))
+        val sheet = sheetOf {
+            val a1 by columnOf(0.2, 1.3)
+            val b1 by columnOf((left(1) + 0.0) * left(1), (left(1) + 0.0) * left(1))
+            val d1 by softmax(b1, constant(0.1))
+            val e1 by softmin(b1, constant(0.1))
             val b3 by summation(b1)
             add(d1, b3, a1, e1, b1)
         }
@@ -224,9 +224,9 @@ class SheetTest {
 
     @Test
     fun `summation of inline expression`() {
-        val sheet = com.github.jomof.kane.sheetOf {
-            val a1 by com.github.jomof.kane.columnOf(0.2, 1.3)
-            val b1 by com.github.jomof.kane.columnOf((left(1) + 0.0) * left(1), (left(1) + 0.0) * left(1))
+        val sheet = sheetOf {
+            val a1 by columnOf(0.2, 1.3)
+            val b1 by columnOf((left(1) + 0.0) * left(1), (left(1) + 0.0) * left(1))
             val d1 by softmax(10_000.00 - b1)
             val b3 by summation(b1)
             add(d1, b3, b1, a1)
@@ -236,14 +236,41 @@ class SheetTest {
     }
 
     @Test
+    fun `tiling operations`() {
+        val sheet = sheetOf {
+            val a2 by columnOf("three", "blind", "mice")
+            val b1 by rowOf("see", "how", "they", "run")
+            val b2 by rowOf("x", 92.2, "y", 102.2)
+            val b3 by columnOf("m", 11.2, "b", 7.1)
+            val c3 by rowOf(dollars(1.11), dollars(1.23))
+            val c4 by rowOf(11 .. 13)
+            val b7 by constant(1492.0)
+            val c5 by rowOf((1..4).map { logit(b7) })
+            add(a2, b1, b2, b3, c3, c4, c5)
+        }
+        println(sheet)
+        sheet.assertString("""
+                A     B      C         D         E         F     
+              ----- ---- --------- --------- --------- --------- 
+            1        see       how      they       run           
+            2 three    x      92.2         y     102.2           
+            3 blind    m     ${'$'}1.11     ${'$'}1.23                     
+            4  mice 11.2        11        12        13           
+            5          b logit(B7) logit(B7) logit(B7) logit(B7) 
+            6        7.1                                         
+            7       1492                                         
+        """.trimIndent())
+    }
+
+    @Test
     fun `statistical functions`() {
-        val sheet = com.github.jomof.kane.sheetOf {
-            val a1 by com.github.jomof.kane.columnOf(7..12)
-            val d1 by com.github.jomof.kane.constant("mean")
+        val sheet = sheetOf {
+            val a1 by columnOf(7..12)
+            val d1 by constant("mean")
             val e1 by mean(a1)
-            val d2 by com.github.jomof.kane.constant("stdev")
+            val d2 by constant("stdev")
             val e2 by stddev(a1)
-            val d3 by com.github.jomof.kane.constant("count")
+            val d3 by constant("count")
             val e3 by count(a1)
 
             add(a1, d1, e1, d2, e2, d3, e3)
@@ -312,46 +339,46 @@ class SheetTest {
         val count1 = 3
         val count2 = 3
         val outputs = 1
-        val input by com.github.jomof.kane.matrixVariable(1, inputs) { 0.0001 }
+        val input by matrixVariable(1, inputs) { 0.0001 }
         //val w0 by matrixVariable(input.rows, count0) { random.nextGaussian() }
 
         //val h1 by lrelu(w0 cross input)
-        val w1 by com.github.jomof.kane.matrixVariable(input.rows, count1) { random.nextGaussian() }
-        val b1 by com.github.jomof.kane.variable(0.0)
-        val b2 by com.github.jomof.kane.variable(0.0)
-        val b3 by com.github.jomof.kane.variable(0.0)
+        val w1 by matrixVariable(input.rows, count1) { random.nextGaussian() }
+        val b1 by variable(0.0)
+        val b2 by variable(0.0)
+        val b3 by variable(0.0)
         val h2 by logit(w1 cross input) + b1
-        val w2 by com.github.jomof.kane.matrixVariable(h2.rows, count2) { random.nextGaussian() }
+        val w2 by matrixVariable(h2.rows, count2) { random.nextGaussian() }
 
         val h3 by (w2 cross h2) + b2
-        val w3 by com.github.jomof.kane.matrixVariable(h3.rows, outputs) { random.nextGaussian() }
+        val w3 by matrixVariable(h3.rows, outputs) { random.nextGaussian() }
 
         val output by logit(w3 cross h3) + b3
 
-        val target by com.github.jomof.kane.matrixVariable(output.columns, output.rows) { 0.0 }
+        val target by matrixVariable(output.columns, output.rows) { 0.0 }
         val error by summation(0.5 * pow(target - output, 2.0))
         //val sumdw0 by matrixVariable(w0.columns,w0.rows) { 0.0 }
-        val sumdw1 by com.github.jomof.kane.matrixVariable(w1.columns, w1.rows) { 0.0 }
-        val sumdw2 by com.github.jomof.kane.matrixVariable(w2.columns, w2.rows) { 0.0 }
-        val sumdw3 by com.github.jomof.kane.matrixVariable(w3.columns, w3.rows) { 0.0 }
-        val sumb1 by com.github.jomof.kane.variable(0.0)
-        val sumb2 by com.github.jomof.kane.variable(0.0)
-        val sumb3 by com.github.jomof.kane.variable(0.0)
+        val sumdw1 by matrixVariable(w1.columns, w1.rows) { 0.0 }
+        val sumdw2 by matrixVariable(w2.columns, w2.rows) { 0.0 }
+        val sumdw3 by matrixVariable(w3.columns, w3.rows) { 0.0 }
+        val sumb1 by variable(0.0)
+        val sumb2 by variable(0.0)
+        val sumb3 by variable(0.0)
         //val dw0 by sumdw0 + learningRate/batchSize * differentiate(d(error) / d(w0))
-        val dw1 by sumdw1 + learningRate/batchSize * com.github.jomof.kane.differentiate(d(error) / d(w1))
-        val dw2 by sumdw2 + learningRate/batchSize * com.github.jomof.kane.differentiate(d(error) / d(w2))
-        val dw3 by sumdw3 + learningRate/batchSize * com.github.jomof.kane.differentiate(d(error) / d(w3))
-        val db1 by sumb1 + learningRate/batchSize * com.github.jomof.kane.differentiate(d(error) / d(b1))
-        val db2 by sumb2 + learningRate/batchSize * com.github.jomof.kane.differentiate(d(error) / d(b2))
-        val db3 by sumb3 + learningRate/batchSize * com.github.jomof.kane.differentiate(d(error) / d(b3))
+        val dw1 by sumdw1 + learningRate/batchSize * differentiate(d(error) / d(w1))
+        val dw2 by sumdw2 + learningRate/batchSize * differentiate(d(error) / d(w2))
+        val dw3 by sumdw3 + learningRate/batchSize * differentiate(d(error) / d(w3))
+        val db1 by sumb1 + learningRate/batchSize * differentiate(d(error) / d(b1))
+        val db2 by sumb2 + learningRate/batchSize * differentiate(d(error) / d(b2))
+        val db3 by sumb3 + learningRate/batchSize * differentiate(d(error) / d(b3))
         //val adw0 by assign(dw0 to sumdw0)
-        val adw1 by com.github.jomof.kane.assign(dw1 to sumdw1)
-        val adw2 by com.github.jomof.kane.assign(dw2 to sumdw2)
-        val adw3 by com.github.jomof.kane.assign(dw3 to sumdw3)
-        val adb1 by com.github.jomof.kane.assign(db1 to sumb1)
-        val adb2 by com.github.jomof.kane.assign(db2 to sumb2)
-        val adb3 by com.github.jomof.kane.assign(db3 to sumb3)
-        val tab = com.github.jomof.kane.tableauOf(output, error, dw2, dw3, adw2, adw3, adw1, adb1, adb2, adb3)
+        val adw1 by assign(dw1 to sumdw1)
+        val adw2 by assign(dw2 to sumdw2)
+        val adw3 by assign(dw3 to sumdw3)
+        val adb1 by assign(db1 to sumb1)
+        val adb2 by assign(db2 to sumb2)
+        val adb3 by assign(db3 to sumb3)
+        val tab = tableauOf(output, error, dw2, dw3, adw2, adw3, adw1, adb1, adb2, adb3)
         val layout = tab.linearize()
         //println(layout)
         val space = layout.allocateSpace()
@@ -436,42 +463,38 @@ class SheetTest {
         val totalYears = endYear - startYear + 1
         val rollingWindow = 2
         // expected(#years, %stock) [then 5% and 95% confidence]
-        val sheet = com.github.jomof.kane.sheetOf {
-            val a1 by com.github.jomof.kane.constant("m")
-            val b1 by com.github.jomof.kane.constant(0.0)
-            val a2 by com.github.jomof.kane.constant("b")
-            val b2 by com.github.jomof.kane.constant(0.0)
-            val a3 by com.github.jomof.kane.constant("YEAR")
-            val a4 by com.github.jomof.kane.columnOf(startYear..endYear)
-            val b3 by com.github.jomof.kane.constant("Shiller PE")
+        val sheet = sheetOf {
+            val a1 by constant("m")
+            val b1 by constant(0.0)
+            val a2 by constant("b")
+            val b2 by constant(0.0)
+            val a3 by constant("YEAR")
+            val a4 by columnOf(startYear..endYear)
+            val b3 by constant("Shiller PE")
             val b4 by shillerPE(a4)
-            val c3 by com.github.jomof.kane.constant("S&P 500")
+            val c3 by constant("S&P 500")
             val c4 by sp500(a4)
             val c2 by stddev(c4)
-            val d3 by com.github.jomof.kane.constant("BAA Corp Bonds")
+            val d3 by constant("BAA Corp Bonds")
             val d4 by baaCorporateBond(a4)
             val d2 by stddev(d4)
 
-            val g3 by com.github.jomof.kane.constant("stock(%)")
-            val g4 by com.github.jomof.kane.columnOf((0 until totalYears - rollingWindow).map {
-                logit(
-                    b1 / left(
-                        5
-                    ) + b2
-                )
+            val g3 by constant("stock(%)")
+            val g4 by columnOf((0 until totalYears - rollingWindow).map {
+                logit(b1 / left(5) + b2)
             })
-            val h3 by com.github.jomof.kane.constant("bond(%)")
-            val h4 by com.github.jomof.kane.columnOf((0 until totalYears - rollingWindow).map { 1.0 - left })
+            val h3 by constant("bond(%)")
+            val h4 by columnOf((0 until totalYears - rollingWindow).map { 1.0 - left })
 
             val compositeCumulative = (0 until rollingWindow).fold(dollars(1.00)) { prior, current ->
                 prior * (1.0 + left(6).down(current)) * left(2).down(current) +
                         prior * (1.0 + left(5).down(current)) * left(1).down(current)
             }
-            val i3 by com.github.jomof.kane.constant("Mix($)")
-            val i4 by com.github.jomof.kane.columnOf((0 until totalYears - rollingWindow * 2).map { compositeCumulative })
+            val i3 by constant("Mix($)")
+            val i4 by columnOf((0 until totalYears - rollingWindow * 2).map { compositeCumulative })
             val i2 by covar(i4)
 
-            val i1 by com.github.jomof.kane.constant("error")
+            val i1 by constant("error")
             val j2 by summation(i4)
 
             val j1 by pow(1.45 - i2, 2.0)
