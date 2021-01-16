@@ -1,6 +1,5 @@
 package com.github.jomof.kane
 
-import com.github.jomof.kane.*
 import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.types.dollars
 import com.github.jomof.kane.types.percent
@@ -160,41 +159,7 @@ class SheetTest {
         println(min.eval())
     }
 
-    @Test
-    fun `planning`() {
-        val growth = percent(0.07)
-        val inflation = percent(0.02)
-        val start = 2021
-        val end = 2069
-        val retireYear = 2023
-        val four01k = dollars(26_000.00)
-        val retire = sheetOf {
-            val a1 by rowOf("year", "j's age", "k's age", "post-tax", "pre-tax", "total", "post-tax-app", "pre-tax-app", "j-pre-tax-contr", "k-pre-tax-contr", "expenses", "college")
-            val a2 by rowOf("----", "-------", "-------", "--------", "-------", "-----", "-----------", "------------", "---------------", "---------------", "--------", "-------")
-            val a3 by columnOf(start.toDouble() to end.toDouble())
-            val b3 by a3 - 1969.0
-            val c3 by a3 - 1972.0
-            val d3 by dollars(10_500.00 + 37_536.00 + 11_552.00 + 20_000.00 + 730_000.00 + 50_000.00 + 934_000.00 + 270_000.00)
-            val d4 by columnOf((start+1 .. end).map { dollars(0.0) + up + up.right(3) - up.right(7) / 2.0 - up.right(8)} )
-            val e3 by dollars(837_000.00 + 458_000.00 + 244_000.00 + 89_443.00 + 180_000 + 60_167)
-            val e4 by columnOf((start+1 .. end).map { dollars(0.0) + up + up.right(3) + up.right(4) + up.right(5) - up.right(6) / 2.0} )
-            val f3 by columnOf((start+1 .. end + 1).map { 0.0 + left + left(2) } )
-            val g3 by columnOf((start+1 .. end + 1).map { left(3) * (growth - inflation) } )
-            val h3 by columnOf((start+1 .. end + 1).map { left(3) * (growth - inflation) } )
-            val i3 by columnOf((start+1 .. retireYear).map { four01k } )
-            val j3 by columnOf((start+1 .. retireYear).map { four01k } )
-            val l3 by columnOf((0 until 4).map { dollars(70_000) } )
-            val l8 by columnOf((0 until 4).map { dollars(35_000) } )
-            val a52 by constant("spend")
-            val b52 by dollars(200_000.00)
-//            val a53 by constant("error")
-//            val b53 by dollars(0.0) + pow(up(28).right(4), 2.0)
-            val k5 by columnOf((retireYear .. end).map { b52 } )
 
-            add(a1, a2, a3, b3, c3, d3, d4, e3, e4, f3, g3, h3, i3, j3, k5, a52, l3, l8)
-        }
-        println(retire.eval())
-    }
 
     @Test
     fun `types in sheet`() {

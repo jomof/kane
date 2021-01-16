@@ -15,6 +15,7 @@ private fun AlgebraicExpr.reduceArithmeticImpl(
     if (depth > 1000)
         return null
     val result = when(this) {
+        is NamedScalar-> copy(scalar = scalar.self() ?: return null)
         is NamedMatrix -> copy(matrix = matrix.self() ?: return null)
         is AlgebraicUnaryScalar -> copy(value = value.self() ?: return null)
         is AlgebraicUnaryMatrix -> copy(value = value.self() ?: return null)

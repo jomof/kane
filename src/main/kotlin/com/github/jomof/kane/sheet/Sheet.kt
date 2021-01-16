@@ -78,8 +78,12 @@ data class EmptySheet(
 data class SheetImpl(
     override val cells: Map<String, Expr>,
 ) : Sheet {
-    override val columns : Int = cells.map { cellNameToCoordinate(it.key).column }.maxOrNull()!! + 1
-    override val rows : Int = cells.map { cellNameToCoordinate(it.key).row }.maxOrNull()!! + 1
+    override val columns : Int = cells
+        .filter { looksLikeCellName(it.key)}
+        .map { cellNameToCoordinate(it.key).column }.maxOrNull()!! + 1
+    override val rows : Int = cells
+        .filter { looksLikeCellName(it.key)}
+        .map { cellNameToCoordinate(it.key).row }.maxOrNull()!! + 1
     override fun toString() = render()
 }
 
@@ -380,6 +384,14 @@ fun Sheet.render() : String {
             sb.append(padLeft(value, widths[column + 1]) + " ")
         }
         if (row != rows - 1) sb.append("\n")
+    }
+
+    // Non-cell data
+    val nonCells = cells.filter { !looksLikeCellName(it.key) }
+    if (nonCells.isNotEmpty()) {
+        nonCells.toList().sortedBy { it.first }.forEach {
+            sb.append("\n${it.first}=${it.second}")
+        }
     }
     return "$sb"
 }

@@ -13,8 +13,12 @@ private fun AlgebraicExpr.replaceRelativeCellReferences(
         replaceRelativeCellReferences(coordinate) as ScalarExpr
     return when(this) {
         is NamedScalar -> {
-            val new = cellNameToCoordinate(name.toUpperCase())
-            copy(scalar = scalar.self(new))
+            val upper = name.toUpperCase()
+            val result : AlgebraicExpr = if (looksLikeCellName(upper)) {
+                val new = cellNameToCoordinate(upper)
+                copy(scalar = scalar.self(new))
+            } else copy(scalar = scalar.self(coordinate))
+            result
         }
         is NamedMatrix -> {
             val new = cellNameToCoordinate(name.toUpperCase())
@@ -54,8 +58,11 @@ private fun AlgebraicExpr.replaceRelativeCellReferences(
 private fun Expr.replaceRelativeCellReferences() : Expr {
     return when(this) {
         is NamedScalar -> {
-            val coordinate = cellNameToCoordinate(name.toUpperCase())
-            replaceRelativeCellReferences(coordinate)
+            val upper = name.toUpperCase()
+            if (looksLikeCellName(upper)) {
+                val coordinate = cellNameToCoordinate(name.toUpperCase())
+                replaceRelativeCellReferences(coordinate)
+            } else this
         }
         is NamedValueExpr<*> -> this
         is NamedUntypedAbsoluteCellReference -> this

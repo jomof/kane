@@ -8,9 +8,9 @@ private fun AlgebraicExpr.replaceNamesWithCellReferencesAlgebraic(excluding : St
     fun ScalarExpr.self() = replaceNamesWithCellReferencesAlgebraic(excluding) as ScalarExpr
     return when(this) {
         is NamedScalar ->
-            if (name != excluding) {
+            if (name != excluding && looksLikeCellName(name)) {
                 CoerceScalar(AbsoluteCellReferenceExpr(cellNameToCoordinate(name)), type)
-            } else copy(scalar = scalar.self())
+            } else scalar.self()
         is NamedMatrix ->
             if (name != excluding) {
                 CoerceScalar(AbsoluteCellReferenceExpr(cellNameToCoordinate(name)), type)
