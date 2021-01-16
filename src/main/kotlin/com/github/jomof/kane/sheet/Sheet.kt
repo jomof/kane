@@ -93,6 +93,8 @@ class SheetBuilder {
     fun down(offset : Int = 1) = UntypedRelativeCellReference(Coordinate(column = 0, row = offset))
     fun left(offset : Int = 1) = UntypedRelativeCellReference(Coordinate(column = -offset, row = 0))
     fun right(offset : Int = 1) = UntypedRelativeCellReference(Coordinate(column = offset, row = 0))
+    fun cell(columnsRight : Int, rowsDown : Int) =
+        UntypedRelativeCellReference(Coordinate(column = columnsRight, row = rowsDown))
     val up get() = up()
     val down get() = down()
     val left get() = left()
@@ -201,6 +203,7 @@ class SheetBuilder {
                 name to when(expr) {
                     is NamedScalar -> when(expr.scalar) {
                         is NamedScalar -> expr.scalar
+                        is NamedScalarVariable -> expr.scalar
                         is NamedExpr -> error("${expr.scalar.javaClass}")
                         else -> expr.scalar
                     }
@@ -290,7 +293,7 @@ fun Sheet.minimize(
     // Follow all expressions from 'target'
     val reducedArithmetic = reduceArithmetic(variables.toSet())
     println("Expanding target expression")
-    val lookup = cells + resolvedVariables
+    val lookup = reducedArithmetic.cells + resolvedVariables
     var targetExpr = reducedArithmetic.cells.getValue(target).expandNamedCells(lookup)
     println("count = ${targetExpr.count()}")
     if (targetExpr !is ScalarExpr) {

@@ -18,6 +18,7 @@ private fun AlgebraicExpr.convertCellNamesToUpperCase() : AlgebraicExpr {
         is AlgebraicBinaryMatrixScalar -> copy(left = left.self(), right = right.self())
         is AlgebraicBinaryScalarMatrix -> copy(left = left.self(), right = right.self())
         is AlgebraicBinaryMatrix -> copy(left = left.self(), right = right.self())
+        is AlgebraicDeferredDataMatrix -> copy(left = left, right = right, data = data.self() as DataMatrix)
         is ConstantScalar -> this
         is DataMatrix -> map { it.self() }
         is CoerceScalar -> this

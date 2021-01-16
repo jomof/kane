@@ -368,13 +368,14 @@ class SheetTest {
         }
 
         val data = mutableMapOf<Triple<Double, Double, Double>, Double>()
-        for (years in 1 .. 30) {
-            for (stock in 0 .. 100 step 2) {
-                for (percentile in 0 .. 100 step 2) {
+        for (years in 5 .. 30) {
+            for (stock in 64 .. 74 step 2) {
+                for (percentile in 48 .. 52 step 2) {
                     val stockpct = stock.toDouble() / 100.0
                     val percentilepct = percentile.toDouble() / 100.0
                     val result = expected(years, stockpct, percentilepct)
                     data[Triple(years / 100.0, stockpct, percentilepct)] = result
+                    println("years=$years stock=$stock percentile=$percentile -> $result")
                 }
             }
         }

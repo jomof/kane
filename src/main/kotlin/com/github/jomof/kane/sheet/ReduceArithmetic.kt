@@ -35,6 +35,7 @@ private fun AlgebraicExpr.reduceArithmeticImpl(
                         when {
                             result is ConstantScalar && result.type.java == type.java -> result as ScalarExpr
                             result is ConstantScalar -> constant(type.coerceFrom(result.value), type)
+                            result is NamedScalarVariable -> result
                             else -> this
                         }
                     }
@@ -58,6 +59,10 @@ private fun AlgebraicExpr.reduceArithmeticImpl(
             copy(elements = scalars)
         }
         is ScalarVariable -> ConstantScalar(initial, type)
+        is NamedScalarVariable -> {
+            if(variables.contains(name)) this
+            else cells[name] as AlgebraicExpr
+        }
         else ->
             error("$javaClass")
     }

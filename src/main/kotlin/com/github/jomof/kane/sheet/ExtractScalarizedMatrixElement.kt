@@ -34,6 +34,7 @@ fun extractScalarizedMatrixElement(
             val unnamed = matrix[coordinate]
             NamedScalar(name = offsetCellName, unnamed)
         }
+        is AlgebraicDeferredDataMatrix -> extractScalarizedMatrixElement(matrix.data, coordinate)
         is DataMatrix -> matrix[coordinate]
         else ->
             error("${matrix.javaClass}")
