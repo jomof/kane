@@ -14,6 +14,8 @@ repositories {
 dependencies {
     testImplementation(kotlin("test-junit"))
     implementation(kotlin("stdlib-jdk8"))
+    implementation("com.github.doyaaaaaken:kotlin-csv-jvm:0.15.0")
+    testImplementation("com.github.doyaaaaaken:kotlin-csv-jvm:0.15.0")
 }
 tasks.withType<KotlinCompile>() {
     kotlinOptions.jvmTarget = "1.8"
