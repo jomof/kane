@@ -1,7 +1,7 @@
 package com.github.jomof.kane.functions
 
 import com.github.jomof.kane.*
-import com.github.jomof.kane.types.kaneType
+import com.github.jomof.kane.types.DoubleAlgebraicType
 
 // f(scalar,scalar)->scalar (extended to matrix 1<->1 mapping)
 interface AlgebraicBinaryScalarFunction {
@@ -15,9 +15,9 @@ interface AlgebraicBinaryScalarFunction {
     operator fun  invoke(p1 : ScalarExpr, p2 : UntypedScalar) : ScalarExpr =
         AlgebraicBinaryScalar(this, p1, CoerceScalar(p2, p1.type))
     operator fun  invoke(p1 : UntypedScalar, p2 : Double) : ScalarExpr =
-        AlgebraicBinaryScalar(this, CoerceScalar(p1, p2.javaClass.kaneType), constant(p2))
+        AlgebraicBinaryScalar(this, CoerceScalar(p1, DoubleAlgebraicType.kaneType), constant(p2))
     operator fun  invoke(p1 : Double, p2 : UntypedScalar) : ScalarExpr =
-        AlgebraicBinaryScalar(this, constant(p1), CoerceScalar(p2, p1.javaClass.kaneType))
+        AlgebraicBinaryScalar(this, constant(p1), CoerceScalar(p2, DoubleAlgebraicType.kaneType))
     operator fun  invoke(p1 : MatrixExpr, p2 : ScalarExpr) : MatrixExpr =
         AlgebraicBinaryMatrixScalar(this, p1.columns, p1.rows, p1, p2)
     operator fun  invoke(p1 : Double, p2 : MatrixExpr) : MatrixExpr =

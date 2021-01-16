@@ -1,16 +1,15 @@
 package com.github.jomof.kane
 
-import com.github.jomof.kane.types.kaneType
 
 fun matrixOf(columns: Int, rows: Int, elements : List<Double>) = DataMatrix(
     columns,
     rows,
-    elements.map { ConstantScalar(it, elements[0].javaClass.kaneType) }.toList()
+    elements.map { constant(it) }.toList()
 )
 fun matrixOf(columns: Int, rows: Int, vararg elements : Double) = DataMatrix(
     columns,
     rows,
-    elements.map { ConstantScalar(it, elements[0].javaClass.kaneType) }.toList()
+    elements.map { constant(it) }.toList()
 )
 fun matrixOf(columns: Int, rows: Int, vararg elements : ScalarExpr) = DataMatrix(
     columns,

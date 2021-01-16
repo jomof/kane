@@ -504,7 +504,7 @@ class KaneTest {
 
     @Test
     fun `autoencode gaussian random into 8 bits`() {
-        val type = Double::class.java.kaneType
+        val type = DoubleAlgebraicType.kaneType
         val random = Random(3)
         val learningRate = 0.1
         val batchSize = 100.0

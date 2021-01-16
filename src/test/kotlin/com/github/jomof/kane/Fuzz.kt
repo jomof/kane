@@ -3,7 +3,6 @@ package com.github.jomof.kane
 import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.types.AlgebraicType
 import com.github.jomof.kane.types.DoubleAlgebraicType
-import com.github.jomof.kane.types.kaneType
 import kotlin.random.Random
 
 private val interestingTypes = listOf(
@@ -220,13 +219,13 @@ fun Random.nextExpr() : Expr {
 }
 
 fun Random.nextMatrixExpr(columns : Int, rows : Int) =
-    nextMatrixExpr(columns, rows, Double::class.kaneType)
+    nextMatrixExpr(columns, rows, DoubleAlgebraicType.kaneType)
 
 fun Random.nextNamedScalarExpr() =
-    nextNamedScalarExpr(Double::class.kaneType)
+    nextNamedScalarExpr(DoubleAlgebraicType.kaneType)
 
 fun Random.nextNamedAlgebraicExpr() =
-    nextNamedAlgebraicExpr(Double::class.kaneType)
+    nextNamedAlgebraicExpr(DoubleAlgebraicType.kaneType)
 
 fun Random.nextAlgebraicExpr() =
-    nextAlgebraicExpr(Double::class.kaneType)
+    nextAlgebraicExpr(DoubleAlgebraicType.kaneType)

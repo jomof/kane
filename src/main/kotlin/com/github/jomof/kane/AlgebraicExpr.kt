@@ -284,19 +284,19 @@ fun assign(assignment : Pair<ScalarExpr, NamedScalarVariable>) = ScalarAssign(as
 fun assign(assignment : Pair<MatrixExpr, NamedMatrixVariable>) = MatrixAssign(assignment.second, assignment.first)
 
 // Variables
-fun matrixVariable(columns : Int, rows : Int) = matrixVariable(Double::class.java.kaneType, columns, rows)
+fun matrixVariable(columns : Int, rows : Int) = matrixVariable(DoubleAlgebraicType.kaneType, columns, rows)
 fun matrixVariable(type : AlgebraicType, columns : Int, rows : Int) =
     MatrixVariable(columns, rows, type, (0 until rows * columns).map { 0.0 })
 fun matrixVariable(columns : Int, rows : Int, vararg elements : Double) =
-    MatrixVariable(columns, rows, Double::class.java.kaneType, elements.toList().map { it })
+    MatrixVariable(columns, rows, DoubleAlgebraicType.kaneType, elements.toList().map { it })
 fun matrixVariable(columns : Int, rows : Int, init : (Coordinate) -> Double) =
-    MatrixVariable(columns, rows, Double::class.java.kaneType, coordinatesOf(columns, rows).toList().map { init(it) })
+    MatrixVariable(columns, rows, DoubleAlgebraicType.kaneType, coordinatesOf(columns, rows).toList().map { init(it) })
 fun matrixVariable(columns : Int, rows : Int, type : AlgebraicType, init : (Coordinate) -> Double) =
     MatrixVariable(columns, rows, type, coordinatesOf(columns, rows).toList().map { type.coerceFrom(init(it)) })
-fun variable(initial : Double = 0.0, type : AlgebraicType = Double::class.kaneType) = ScalarVariable(initial, type)
+fun variable(initial : Double = 0.0, type : AlgebraicType = DoubleAlgebraicType.kaneType) = ScalarVariable(initial, type)
 // Constant
-fun constant(value : Double, type : AlgebraicType) : ScalarExpr = ConstantScalar(value, type as AlgebraicType)
-fun constant(value : Double) : ScalarExpr = ConstantScalar(value, value.javaClass.kaneType)
+fun constant(value : Double, type : AlgebraicType) : ScalarExpr = ConstantScalar(value, type)
+fun constant(value : Double) : ScalarExpr = ConstantScalar(value, DoubleAlgebraicType.kaneType)
 fun constant(value : Int) : ScalarExpr = constant(value.toDouble())
 inline fun <reified E:Any> constant(value : E) = ValueExpr(value, object : KaneType<E>(E::class.java) { })
 

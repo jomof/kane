@@ -73,11 +73,11 @@ fun Matrix.render(): String {
 
 
 fun valueMatrixOf(columns : Int, rows : Int, vararg values : Double) =
-    ValueMatrix(columns, rows, Double::class.java.kaneType, values.toList())
+    ValueMatrix(columns, rows, DoubleAlgebraicType.kaneType, values.toList())
 fun DoubleArray.toColumnMatrix() =
-    ValueMatrix(1, size, Double::class.java.kaneType, toList())
+    ValueMatrix(1, size, DoubleAlgebraicType.kaneType, toList())
 fun DoubleArray.toRowMatrix() =
-    ValueMatrix(size, 1, Double::class.java.kaneType, toList())
+    ValueMatrix(size, 1, DoubleAlgebraicType.kaneType, toList())
 
 data class ValueMatrix(
     override val columns: Int,
