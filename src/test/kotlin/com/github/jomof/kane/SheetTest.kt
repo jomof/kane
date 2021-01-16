@@ -46,12 +46,12 @@ class SheetTest {
             add(a1, a2)
         }
         println(sheet)
-        sheet["A1"]!!.assertString("1")
-        sheet["A2"]!!.assertString("A1+1")
+        sheet["A1"].assertString("1")
+        sheet["A2"].assertString("A1+1")
         val evaluated = sheet.eval()
         println(evaluated)
-        evaluated["A1"]!!.assertString("1")
-        evaluated["A2"]!!.assertString("2")
+        evaluated["A1"].assertString("1")
+        evaluated["A2"].assertString("2")
     }
 
     @Test
@@ -67,22 +67,22 @@ class SheetTest {
             add(a1, a2, a3, b1, a4, a5, b5)
         }
         println(sheet)
-        sheet["A1"]!!.assertString("1")
-        sheet["A2"]!!.assertString("A1+1")
-        sheet["A3"]!!.assertString("A2+$1.10")
-        sheet["A4"]!!.assertString("A5+3")
-        sheet["A5"]!!.assertString("B5+5")
-        sheet["B1"]!!.assertString("A1+8")
-        sheet["B5"]!!.assertString("7")
+        sheet["A1"].assertString("1")
+        sheet["A2"].assertString("A1+1")
+        sheet["A3"].assertString("A2+$1.10")
+        sheet["A4"].assertString("A5+3")
+        sheet["A5"].assertString("B5+5")
+        sheet["B1"].assertString("A1+8")
+        sheet["B5"].assertString("7")
         val evaluated = sheet.eval()
         println(evaluated)
-        evaluated["A1"]!!.assertString("1")
-        evaluated["A2"]!!.assertString("2")
-        evaluated["A3"]!!.assertString("\$3.10")
-        evaluated["A4"]!!.assertString("15")
-        evaluated["A5"]!!.assertString("12")
-        evaluated["B1"]!!.assertString("9")
-        evaluated["B5"]!!.assertString("7")
+        evaluated["A1"].assertString("1")
+        evaluated["A2"].assertString("2")
+        evaluated["A3"].assertString("\$3.10")
+        evaluated["A4"].assertString("15")
+        evaluated["A5"].assertString("12")
+        evaluated["B1"].assertString("9")
+        evaluated["B5"].assertString("7")
     }
 
     @Test
@@ -95,8 +95,8 @@ class SheetTest {
         println(sheet)
         val evaluated = sheet.eval()
         println(evaluated)
-        evaluated["A1"]!!.assertString("A2")
-        evaluated["A2"]!!.assertString("A1+1")
+        evaluated["A1"].assertString("A2")
+        evaluated["A2"].assertString("A1+1")
     }
 
     @Test
