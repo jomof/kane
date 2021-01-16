@@ -1,10 +1,8 @@
 package com.github.jomof.kane
 
-import com.github.jomof.kane.*
 import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.types.AlgebraicType
 import com.github.jomof.kane.types.DoubleAlgebraicType
-import com.github.jomof.kane.types.FloatAlgebraicType
 import com.github.jomof.kane.types.kaneType
 import kotlin.random.Random
 
@@ -44,9 +42,9 @@ private val interfaceSpecs = interestingTypes
 
 fun <E:Any> Random.chooseOne(choices : List<E>) = choices[nextInt(choices.count())]
 
-fun <E:Number> Random.nextAlgebraic(type : AlgebraicType<E>) : E = nextInstance(type.java)
-fun Random.nextAlgebraicType() : AlgebraicType<*> =
-    chooseOne(listOf(DoubleAlgebraicType.kaneType, FloatAlgebraicType.kaneType))
+fun Random.nextAlgebraic(type : AlgebraicType) : Double = nextInstance(type.java)
+fun Random.nextAlgebraicType() : AlgebraicType =
+    chooseOne(listOf(DoubleAlgebraicType.kaneType))
 
 fun Random.nextIdentifier() = chooseOne(listOf("a", "b", "c")) + nextInt(0, 2000)
 
@@ -66,20 +64,20 @@ fun Random.nextAlgebraicUnaryOp() = chooseOne(listOf(negate, exp, logit, tanh, r
 fun Random.nextBinaryOp() = chooseOne(listOf())
 fun Random.nextAlgebraicBinaryScalarOp() = chooseOne(listOf(pow, multiply, divide, add, subtract))
 
-fun <E:Number> Random.nextAlgebraicUnaryScalar(type : AlgebraicType<E>) = AlgebraicUnaryScalar(nextAlgebraicUnaryOp(), nextScalarExpr(type))
+fun Random.nextAlgebraicUnaryScalar(type : AlgebraicType) = AlgebraicUnaryScalar(nextAlgebraicUnaryOp(), nextScalarExpr(type))
 
-fun <E:Number> Random.nextAlgebraicBinaryScalar(type : AlgebraicType<E>) : AlgebraicBinaryScalar<E> =
+fun Random.nextAlgebraicBinaryScalar(type : AlgebraicType) : AlgebraicBinaryScalar =
     AlgebraicBinaryScalar(nextAlgebraicBinaryScalarOp(), nextScalarExpr(type), nextScalarExpr(type))
 
-fun <E:Number> Random.nextAlgebraicUnaryMatrixScalar(type : AlgebraicType<E>) : AlgebraicUnaryMatrixScalar<E> =
+fun Random.nextAlgebraicUnaryMatrixScalar(type : AlgebraicType) : AlgebraicUnaryMatrixScalar =
     AlgebraicUnaryMatrixScalar(
         nextAlgebraicUnaryMatrixScalarOp(),
         nextMatrixExpr(nextInt(1,5), nextInt(1,5), type))
 
-fun <E:Number> Random.nextAlgebraicBinaryMatrixScalar(
+fun Random.nextAlgebraicBinaryMatrixScalar(
     columns : Int = nextInt(1, 5),
     rows : Int = nextInt(1,5),
-    type : AlgebraicType<E>) : AlgebraicBinaryMatrixScalar<E> {
+    type : AlgebraicType) : AlgebraicBinaryMatrixScalar {
     return AlgebraicBinaryMatrixScalar(
         nextAlgebraicBinaryScalarOp(),
         columns,
@@ -89,10 +87,10 @@ fun <E:Number> Random.nextAlgebraicBinaryMatrixScalar(
     )
 }
 
-fun <E:Number> Random.nextAlgebraicBinaryScalarMatrix(
+fun Random.nextAlgebraicBinaryScalarMatrix(
      columns : Int = nextInt(1, 5),
      rows : Int = nextInt(1,5),
-     type : AlgebraicType<E>) : AlgebraicBinaryScalarMatrix<E> {
+     type : AlgebraicType) : AlgebraicBinaryScalarMatrix {
     return AlgebraicBinaryScalarMatrix(
         nextAlgebraicBinaryScalarOp(),
         columns,
@@ -102,13 +100,13 @@ fun <E:Number> Random.nextAlgebraicBinaryScalarMatrix(
     )
 }
 
-fun <E:Number> Random.nextScalarExpr(type : AlgebraicType<E>) : ScalarExpr<E> {
+fun Random.nextScalarExpr(type : AlgebraicType) : ScalarExpr {
     if (nextDouble(0.0, 1.0) < 0.4) return constant(nextAlgebraic(type))
     val method = chooseOne(interfaceSpecs.getValue(ScalarExpr::class.java))
-    return dispatchExpr(method, type) as ScalarExpr<E>
+    return dispatchExpr(method, type) as ScalarExpr
 }
 
-fun <E:Number> Random.nextMatrixExpr(columns : Int, rows : Int, type : AlgebraicType<E>) : MatrixExpr<E> {
+fun Random.nextMatrixExpr(columns : Int, rows : Int, type : AlgebraicType) : MatrixExpr {
     if (nextDouble(0.0, 1.0) < 0.4) return matrixOf(columns, rows) { constant(nextAlgebraic(type)) }
     val method = chooseOne(interfaceSpecs.getValue(MatrixExpr::class.java))
     val result = when(method) {
@@ -125,46 +123,46 @@ fun <E:Number> Random.nextMatrixExpr(columns : Int, rows : Int, type : Algebraic
     return result
 }
 
-fun <E:Number> Random.nextNamedMatrixVariable(
+fun Random.nextNamedMatrixVariable(
     columns : Int = nextInt(1, 5),
     rows : Int = nextInt(1, 5),
-    type : AlgebraicType<E>) : NamedMatrixVariable<E> {
+    type : AlgebraicType) : NamedMatrixVariable {
     return NamedMatrixVariable(nextIdentifier(), columns, type, (0 until rows * columns).map { nextInstance(type.java) })
 }
 
-fun <E:Number> Random.nextNamedScalarVariable(type : AlgebraicType<E>) =
+fun Random.nextNamedScalarVariable(type : AlgebraicType) =
     NamedScalarVariable(nextIdentifier(), nextInstance(type.java), type)
 
-fun <E:Number> Random.nextScalarVariable(type : AlgebraicType<E>) =
+fun Random.nextScalarVariable(type : AlgebraicType) =
     ScalarVariable(nextInstance(type.java), type)
 
-fun <E:Number> Random.nextNamedScalar(type : AlgebraicType<E>) =
+fun Random.nextNamedScalar(type : AlgebraicType) =
     NamedScalar(nextIdentifier(), nextScalarExpr(type))
 
-fun <E:Number> Random.nextNamedMatrix(
+fun Random.nextNamedMatrix(
     columns : Int = nextInt(1, 5),
     rows : Int = nextInt(1,5),
-    type : AlgebraicType<E>) =
+    type : AlgebraicType) =
     NamedMatrix(nextIdentifier(), nextMatrixExpr(
         columns,
         rows,
         type))
 
-fun <E:Number> Random.nextNamedScalarExpr(type : AlgebraicType<E>) : NamedScalarExpr<E> {
+fun Random.nextNamedScalarExpr(type : AlgebraicType) : NamedScalarExpr {
     val method = chooseOne(interfaceSpecs.getValue(NamedScalarExpr::class.java))
-    return dispatchExpr(method, nextAlgebraicType()) as NamedScalarExpr<E>
+    return dispatchExpr(method, nextAlgebraicType()) as NamedScalarExpr
 }
 
-fun <E:Number> Random.nextNamedScalarAssign(type : AlgebraicType<E>) =
+fun Random.nextNamedScalarAssign(type : AlgebraicType) =
     NamedScalarAssign(
         "assign_scalar_" + nextInt(0, 1000000),
         nextNamedScalarVariable(type),
         nextScalarExpr(type))
 
-fun <E:Number> Random.nextNamedMatrixAssign(
+fun Random.nextNamedMatrixAssign(
     columns : Int = nextInt(1, 5),
     rows : Int = nextInt(1, 5),
-    type : AlgebraicType<E>) : NamedMatrixAssign<E> {
+    type : AlgebraicType) : NamedMatrixAssign {
     return NamedMatrixAssign(
         "assign_matrix_" + nextInt(0, 1000000),
         nextNamedMatrixVariable(columns, rows, type),
@@ -172,27 +170,27 @@ fun <E:Number> Random.nextNamedMatrixAssign(
     )
 }
 
-fun <E:Number> Random.nextTableau(type : AlgebraicType<E>) =
+fun Random.nextTableau(type : AlgebraicType) =
     Tableau((0 until nextInt(0, 10)).map { nextNamedAlgebraicExpr(type) })
 
-fun <E:Number> Random.nextNamedAlgebraicExpr(type : AlgebraicType<E>) : NamedAlgebraicExpr<E> {
+fun Random.nextNamedAlgebraicExpr(type : AlgebraicType) : NamedAlgebraicExpr {
     val method = chooseOne(interfaceSpecs.getValue(NamedAlgebraicExpr::class.java))
-    return dispatchExpr(method, type) as NamedAlgebraicExpr<E>
+    return dispatchExpr(method, type) as NamedAlgebraicExpr
 }
 
-fun <E:Number> Random.nextAlgebraicExpr(type : AlgebraicType<E>) : AlgebraicExpr<E> {
+fun Random.nextAlgebraicExpr(type : AlgebraicType) : AlgebraicExpr {
     val method = chooseOne(interfaceSpecs.getValue(AlgebraicExpr::class.java))
-    return dispatchExpr(method, type) as AlgebraicExpr<E>
+    return dispatchExpr(method, type) as AlgebraicExpr
 }
 
-private fun <E:Number> Random.dispatchExpr(exprType : Class<*>, type : AlgebraicType<E>) : Expr {
+private fun Random.dispatchExpr(exprType : Class<*>, type : AlgebraicType) : Expr {
     val result = when(exprType) {
         ConstantScalar::class.java -> {
-            val constant = nextInstance<E>(type.java)
+            val constant = nextInstance<Double>(type.java)
             ConstantScalar(constant, type)
         }
         ValueExpr::class.java -> {
-            val constant = nextInstance<E>(type.java)
+            val constant = nextInstance<Double>(type.java)
             ValueExpr(constant, type)
         }
         ScalarVariable::class.java -> nextScalarVariable(type)
@@ -221,15 +219,14 @@ fun Random.nextExpr() : Expr {
     return dispatchExpr(exprType, nextAlgebraicType())
 }
 
+fun Random.nextMatrixExpr(columns : Int, rows : Int) =
+    nextMatrixExpr(columns, rows, Double::class.kaneType)
 
-inline fun <reified E:Number> Random.nextMatrixExpr(columns : Int, rows : Int) =
-    nextMatrixExpr(columns, rows, E::class.kaneType)
+fun Random.nextNamedScalarExpr() =
+    nextNamedScalarExpr(Double::class.kaneType)
 
-inline fun <reified E:Number> Random.nextNamedScalarExpr() =
-    nextNamedScalarExpr( E::class.kaneType)
+fun Random.nextNamedAlgebraicExpr() =
+    nextNamedAlgebraicExpr(Double::class.kaneType)
 
-inline fun <reified E:Number> Random.nextNamedAlgebraicExpr() =
-    nextNamedAlgebraicExpr( E::class.kaneType)
-
-inline fun <reified E:Number> Random.nextAlgebraicExpr() =
-    nextAlgebraicExpr( E::class.kaneType)
+fun Random.nextAlgebraicExpr() =
+    nextAlgebraicExpr(Double::class.kaneType)

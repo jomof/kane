@@ -6,12 +6,12 @@ import com.github.jomof.kane.functions.AlgebraicUnaryMatrix
 import com.github.jomof.kane.functions.AlgebraicUnaryMatrixScalar
 import com.github.jomof.kane.functions.AlgebraicUnaryScalar
 
-private fun <E:Number> AlgebraicExpr<E>.reduceArithmeticImpl(
+private fun AlgebraicExpr.reduceArithmeticImpl(
     cells : Map<String, Expr>,
     variables : Set<String>,
-    depth : Int) : AlgebraicExpr<E>? {
-    fun <E:Number> ScalarExpr<E>.self() = reduceArithmeticImpl(cells, variables, depth + 1) as ScalarExpr<E>?
-    fun <E:Number> MatrixExpr<E>.self() = reduceArithmeticImpl(cells, variables, depth + 1) as MatrixExpr<E>?
+    depth : Int) : AlgebraicExpr? {
+    fun ScalarExpr.self() = reduceArithmeticImpl(cells, variables, depth + 1) as ScalarExpr?
+    fun MatrixExpr.self() = reduceArithmeticImpl(cells, variables, depth + 1) as MatrixExpr?
     if (depth > 1000)
         return null
     val result = when(this) {
@@ -21,26 +21,26 @@ private fun <E:Number> AlgebraicExpr<E>.reduceArithmeticImpl(
         is AlgebraicUnaryMatrixScalar -> copy(value = value.self() ?: return null)
         is AlgebraicBinaryScalar -> copyReduce(left = left.self() ?: return null, right = right.self() ?: return null)
         is CoerceScalar -> {
-            val result: ScalarExpr<E>? = when (value) {
-                is ScalarVariable<*> -> {
+            val result: ScalarExpr? = when (value) {
+                is ScalarVariable -> {
                     // This variable is not being optimized so treat it as constant
-                    ConstantScalar(value.initial as E, type)
+                    ConstantScalar(value.initial, type)
                 }
                 is AbsoluteCellReferenceExpr -> {
                     val ref = "$value"
                     if (variables.contains(ref)) this
                     else {
-                        val result = cells.getValue(ref).reduceArithmeticImpl(cells, variables, depth + 1)
+                        val result = cells[ref] ?: constant(0.0)
                         when {
-                            result == null -> null
-                            result is TypedExpr<*> && result.type == type -> result as ScalarExpr<E>
-                            else -> copy(value = result).self()
+                            result is ConstantScalar && result.type.java == type.java -> result as ScalarExpr
+                            result is ConstantScalar -> constant(type.coerceFrom(result.value), type)
+                            else -> this
                         }
                     }
                 }
-                is AlgebraicExpr<*> -> {
+                is AlgebraicExpr -> {
                     val result = value.reduceArithmeticImpl(cells, variables, depth + 1)
-                    if (value.type == type) value as ScalarExpr<E>
+                    if (value.type == type) value as ScalarExpr
                     else copy(value = result as Expr)
                 }
                 else -> error("${value.javaClass}")
@@ -49,7 +49,7 @@ private fun <E:Number> AlgebraicExpr<E>.reduceArithmeticImpl(
         }
         is ConstantScalar -> this
         is DataMatrix -> {
-            val scalars = mutableListOf<ScalarExpr<E>>()
+            val scalars = mutableListOf<ScalarExpr>()
             for(element in elements) {
                 val result = element.self() ?: return null
                 scalars += result
@@ -64,7 +64,7 @@ private fun <E:Number> AlgebraicExpr<E>.reduceArithmeticImpl(
 }
 private fun Expr.reduceArithmeticImpl(cells : Map<String, Expr>, variables : Set<String>, depth : Int) : Expr? {
     return when(this) {
-        is AlgebraicExpr<*> -> reduceArithmeticImpl(cells, variables, depth + 1)?.memoizeAndReduceArithmetic()
+        is AlgebraicExpr -> reduceArithmeticImpl(cells, variables, depth + 1)?.memoizeAndReduceArithmetic()
         is ValueExpr<*> -> this
         is AbsoluteCellReferenceExpr -> this
         else -> error("$javaClass")

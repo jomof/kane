@@ -9,20 +9,20 @@ private class NegateFunction : AlgebraicUnaryScalarFunction {
     override fun doubleOp(value: Double) = -value
     override fun floatOp(value: Float) = -value
 
-    override fun <E : Number> reduceArithmetic(value: ScalarExpr<E>): ScalarExpr<E>? {
+    override fun reduceArithmetic(value: ScalarExpr): ScalarExpr? {
         if (value is AlgebraicUnaryScalar && value.op == negate) return value.value
         return null
     }
 
-    override fun <E : Number> differentiate(
-        expr: ScalarExpr<E>,
-        exprd: ScalarExpr<E>,
-        variable: ScalarExpr<E>
+    override fun differentiate(
+        expr: ScalarExpr,
+        exprd: ScalarExpr,
+        variable: ScalarExpr
     ) = -exprd
 }
 
 val negate : AlgebraicUnaryScalarFunction = NegateFunction()
 
 // Unary minus
-operator fun <E:Number> ScalarExpr<E>.unaryMinus() = negate(this)
-operator fun <E:Number> MatrixExpr<E>.unaryMinus() = negate(this)
+operator fun ScalarExpr.unaryMinus() = negate(this)
+operator fun MatrixExpr.unaryMinus() = negate(this)

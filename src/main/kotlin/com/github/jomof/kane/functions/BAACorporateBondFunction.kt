@@ -111,17 +111,17 @@ private class BAACorporateBondFunctionFunction : AlgebraicUnaryScalarFunction {
     override fun doubleOp(value: Double) = baaCorporateBond(value.toInt())
     override fun floatOp(value: Float) = baaCorporateBond(value.toInt()).toFloat()
 
-    override fun <E : Number> reduceArithmetic(value: ScalarExpr<E>): ScalarExpr<E>? {
+    override fun reduceArithmetic(value: ScalarExpr): ScalarExpr? {
         val constValue = value.tryFindConstant()
         return when {
-            constValue != null -> constant(baaCorporateBond(constValue.toInt()) as E)
+            constValue != null -> constant(baaCorporateBond(constValue.toInt()))
             else -> value
         }
     }
-    override fun <E : Number> differentiate(
-        expr : ScalarExpr<E>,
-        exprd : ScalarExpr<E>,
-        variable : ScalarExpr<E>
+    override fun differentiate(
+        expr : ScalarExpr,
+        exprd : ScalarExpr,
+        variable : ScalarExpr
     ) = error("not differentiable")
 }
 

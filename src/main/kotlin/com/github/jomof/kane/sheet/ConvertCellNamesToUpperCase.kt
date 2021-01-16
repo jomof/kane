@@ -4,9 +4,9 @@ import com.github.jomof.kane.*
 import com.github.jomof.kane.functions.*
 
 
-private fun <E:Number> AlgebraicExpr<E>.convertCellNamesToUpperCase() : AlgebraicExpr<E> {
-    fun <E:Number> MatrixExpr<E>.self() = convertCellNamesToUpperCase() as MatrixExpr<E>
-    fun <E:Number> ScalarExpr<E>.self() = convertCellNamesToUpperCase() as ScalarExpr<E>
+private fun AlgebraicExpr.convertCellNamesToUpperCase() : AlgebraicExpr {
+    fun MatrixExpr.self() = convertCellNamesToUpperCase() as MatrixExpr
+    fun ScalarExpr.self() = convertCellNamesToUpperCase() as ScalarExpr
     fun String.upper() = if (looksLikeCellName(toUpperCase())) toUpperCase() else this
     return when(this) {
         is NamedMatrix -> copy(name = name.upper(), matrix = matrix.self())
@@ -27,7 +27,7 @@ private fun <E:Number> AlgebraicExpr<E>.convertCellNamesToUpperCase() : Algebrai
 private fun Expr.convertCellNamesToUpperCase() : Expr {
     fun String.upper() = if (looksLikeCellName(toUpperCase())) toUpperCase() else this
     return when(this) {
-        is AlgebraicExpr<*> -> convertCellNamesToUpperCase()
+        is AlgebraicExpr -> convertCellNamesToUpperCase()
         is NamedValueExpr<*> -> copy(name = name.upper())
         is NamedUntypedAbsoluteCellReference -> copy(name = name.upper())
         is NamedTiling<*> -> copy(name = name.upper())

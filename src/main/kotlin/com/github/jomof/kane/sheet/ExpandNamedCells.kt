@@ -4,21 +4,25 @@ import com.github.jomof.kane.*
 import com.github.jomof.kane.functions.AlgebraicBinaryScalar
 import com.github.jomof.kane.functions.AlgebraicUnaryScalar
 
-private fun <E:Number> AlgebraicExpr<E>.expandNamedCells(lookup : Map<String, Expr>): AlgebraicExpr<E> {
-    fun <E : Number> ScalarExpr<E>.self() = expandNamedCells(lookup) as ScalarExpr<E>
-    fun <E : Number> MatrixExpr<E>.self() = expandNamedCells(lookup) as MatrixExpr<E>
+private fun AlgebraicExpr.expandNamedCells(lookup : Map<String, Expr>): AlgebraicExpr {
+    fun ScalarExpr.self() = expandNamedCells(lookup) as ScalarExpr
+    fun MatrixExpr.self() = expandNamedCells(lookup) as MatrixExpr
     val result = when(this) {
         is NamedScalarVariable -> this
         is AlgebraicUnaryScalar -> copy(value = value.self())
-        is AlgebraicBinaryScalar -> copy(left = left.self(), right = right.self())
-        is CoerceScalar<*> -> {
-            val result : ScalarExpr<E> = when(value) {
-                is ScalarVariable<*> -> constant(value.initial as E)
-                is ScalarExpr<*> -> value.self() as ScalarExpr<E>
+        is AlgebraicBinaryScalar -> {
+            val changed = copy(left = left.self(), right = right.self())
+            if (changed !== this) changed.memoizeAndReduceArithmetic()
+            else this
+        }
+        is CoerceScalar -> {
+            val result : ScalarExpr = when(value) {
+                is ScalarVariable -> constant(value.initial)
+                is ScalarExpr -> value.self() as ScalarExpr
                 is AbsoluteCellReferenceExpr -> {
                     val ref = "$value"
-                    val result = lookup.getValue(ref).expandNamedCells(lookup)
-                    result as ScalarExpr<E>
+                    val result = (lookup[ref]?:constant(0.0)) as ScalarExpr
+                    result.self()
                 }
                 else -> error("${value.javaClass}")
             }
@@ -27,7 +31,7 @@ private fun <E:Number> AlgebraicExpr<E>.expandNamedCells(lookup : Map<String, Ex
 //        is AbsoluteCellReferenceExpr -> {
 //            val ref = "$this"
 //            val result = lookup.getValue(ref).expandNamedCells(lookup)
-//            result as ScalarExpr<E>
+//            result as ScalarExpr
 //        }
         is ConstantScalar -> this
         else -> error("$javaClass")
@@ -36,7 +40,7 @@ private fun <E:Number> AlgebraicExpr<E>.expandNamedCells(lookup : Map<String, Ex
 }
 fun Expr.expandNamedCells(lookup : Map<String, Expr>) : Expr {
     return when(this) {
-        is AlgebraicExpr<*> -> expandNamedCells(lookup)
+        is AlgebraicExpr -> expandNamedCells(lookup)
         else -> error("$javaClass")
     }
 }

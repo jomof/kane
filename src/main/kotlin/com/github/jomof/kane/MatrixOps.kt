@@ -2,17 +2,22 @@ package com.github.jomof.kane
 
 import com.github.jomof.kane.types.kaneType
 
-inline fun <reified E:Number> matrixOf(columns: Int, rows: Int, vararg elements : E) = DataMatrix(
+fun matrixOf(columns: Int, rows: Int, elements : List<Double>) = DataMatrix(
     columns,
     rows,
     elements.map { ConstantScalar(it, elements[0].javaClass.kaneType) }.toList()
 )
-inline fun <reified E:Number> matrixOf(columns: Int, rows: Int, vararg elements : ScalarExpr<E>) = DataMatrix(
+fun matrixOf(columns: Int, rows: Int, vararg elements : Double) = DataMatrix(
+    columns,
+    rows,
+    elements.map { ConstantScalar(it, elements[0].javaClass.kaneType) }.toList()
+)
+fun matrixOf(columns: Int, rows: Int, vararg elements : ScalarExpr) = DataMatrix(
     columns,
     rows,
     elements.toList()
 )
-fun <E:Number> matrixOf(columns: Int, rows: Int, action:(Coordinate)->ScalarExpr<E>) : DataMatrix<E> =
+fun matrixOf(columns: Int, rows: Int, action:(Coordinate)->ScalarExpr) : DataMatrix =
     DataMatrix(
         columns,
         rows,

@@ -3,9 +3,9 @@ package com.github.jomof.kane.sheet
 import com.github.jomof.kane.*
 import com.github.jomof.kane.functions.*
 
-private fun <E:Number> AlgebraicExpr<E>.replaceNamesWithCellReferencesAlgebraic(excluding : String) : AlgebraicExpr<E> {
-    fun <E:Number> MatrixExpr<E>.self() = replaceNamesWithCellReferencesAlgebraic(excluding) as MatrixExpr<E>
-    fun <E:Number> ScalarExpr<E>.self() = replaceNamesWithCellReferencesAlgebraic(excluding) as ScalarExpr<E>
+private fun AlgebraicExpr.replaceNamesWithCellReferencesAlgebraic(excluding : String) : AlgebraicExpr {
+    fun MatrixExpr.self() = replaceNamesWithCellReferencesAlgebraic(excluding) as MatrixExpr
+    fun ScalarExpr.self() = replaceNamesWithCellReferencesAlgebraic(excluding) as ScalarExpr
     return when(this) {
         is NamedScalar ->
             if (name != excluding) {
@@ -28,7 +28,7 @@ private fun <E:Number> AlgebraicExpr<E>.replaceNamesWithCellReferencesAlgebraic(
             left = left.self(),
             right = right.self())
         is CoerceScalar -> {
-            val result : AlgebraicExpr<E> = when (value) {
+            val result : AlgebraicExpr = when (value) {
                 is AbsoluteCellReferenceExpr -> this
                 else -> error("${value.javaClass}")
             }
@@ -42,7 +42,7 @@ private fun <E:Number> AlgebraicExpr<E>.replaceNamesWithCellReferencesAlgebraic(
 
 private fun Expr.replaceNamesWithCellReferences(excluding : String) : Expr {
     return when(this) {
-        is NamedScalar<*> -> replaceNamesWithCellReferencesAlgebraic(excluding)
+        is NamedScalar -> replaceNamesWithCellReferencesAlgebraic(excluding)
         is NamedValueExpr<*> -> toValueExpr()
         is NamedUntypedAbsoluteCellReference -> AbsoluteCellReferenceExpr(coordinate)
         else -> error("$javaClass")

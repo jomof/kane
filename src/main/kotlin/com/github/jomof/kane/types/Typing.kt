@@ -9,19 +9,19 @@ import kotlin.reflect.KClass
 abstract class KaneType<E:Any>(val java : Class<E>) {
     open val simpleName : String get() = java.simpleName
 }
-abstract class AlgebraicType<E:Number>(java : Class<E>) : KaneType<E>(java) {
+abstract class AlgebraicType(java : Class<Double>) : KaneType<Double>(java) {
     abstract fun render(value : Number) : String
-    abstract fun compare(left : E, right : E) : Int
-    abstract fun allocArray(size : Int, init: (Int) -> E) : Array<E>
-    abstract fun allocNullableArray(size : Int, init: (Int) -> E?) : Array<E?>
-    abstract fun coerceFrom(value : Number) : E
+    abstract fun compare(left : Double, right : Double) : Int
+    abstract fun allocArray(size : Int, init: (Int) -> Double) : Array<Double>
+    abstract fun allocNullableArray(size : Int, init: (Int) -> Double?) : Array<Double?>
+    abstract fun coerceFrom(value : Number) : Double
 }
 
 class DoubleAlgebraicType(
     val prefix : String = "",
     val trimLeastSignificantZeros : Boolean = true,
     val precision : Int = 5
-) : AlgebraicType<Double>(Double::class.java) {
+) : AlgebraicType(Double::class.java) {
     override val simpleName = "double"
     override fun compare(left: Double, right: Double) = left.compareTo(right)
     override fun allocArray(size: Int, init: (Int) -> Double) = Array(size, init)
@@ -41,56 +41,19 @@ class DoubleAlgebraicType(
         val kaneType = DoubleAlgebraicType()
     }
 }
-
-class FloatAlgebraicType : AlgebraicType<Float>(Float::class.java) {
-    override val simpleName = "float"
-    override fun compare(left: Float, right: Float) = left.compareTo(right)
-    override fun allocArray(size: Int, init: (Int) -> Float) = Array<Float>(size, init)
-    override fun allocNullableArray(size: Int, init: (Int) -> Float?) = Array(size, init)
-    override fun render(value: Number): String {
-        if (value.toFloat().isInfinite()) return "Infinite"
-        if (value.toFloat().isNaN()) return "NaN"
-        val result = BigDecimal(value.toDouble()).setScale(5, RoundingMode.HALF_EVEN).toString()
-        return if (result.contains(".")) result.trimEnd('0').trimEnd('.')
-        else result
-    }
-    override fun coerceFrom(value : Number) = value.toFloat()
-
-    companion object {
-        val kaneType = FloatAlgebraicType()
-    }
-}
-
-class IntAlgebraicType : AlgebraicType<Int>(Int::class.java) {
-    override val simpleName = "int"
-    override fun compare(left: Int, right: Int) = left.compareTo(right)
-    override fun allocArray(size: Int, init: (Int) -> Int) = Array(size, init)
-    override fun allocNullableArray(size: Int, init: (Int) -> Int?) = Array(size, init)
-    override fun render(value: Number) = value.toString()
-    override fun coerceFrom(value : Number) = value.toInt()
-
-    companion object {
-        val kaneType = IntAlgebraicType()
-    }
-}
-
-val <E:Number> Class<E>.kaneType : AlgebraicType<E>
+val Class<Double>.kaneType : AlgebraicType
     get() = when(this) {
     Double::class.java,
     java.lang.Double::class.java -> DoubleAlgebraicType.kaneType
-    Float::class.java,
-    java.lang.Float::class.java -> FloatAlgebraicType.kaneType
-    Int::class.java,
-    java.lang.Integer::class.java -> IntAlgebraicType.kaneType
     else ->
         error("$this")
-} as AlgebraicType<E>
+}
 
-val <E:Number> KClass<E>.kaneType get() = java.kaneType
+val KClass<Double>.kaneType get() = java.kaneType
 
-val <E:Number> AlgebraicType<E>.zero : E get() = coerceFrom(0.0)
-val <E:Number> AlgebraicType<E>.one : E get() = coerceFrom(1.0)
-val <E:Number> AlgebraicType<E>.two : E get() = coerceFrom(2.0)
-val <E:Number> AlgebraicType<E>.half : E get() = coerceFrom(0.5)
-val <E:Number> AlgebraicType<E>.negativeOne : E get() = coerceFrom(-1.0)
-val <E:Number> AlgebraicType<E>.negativeZero : E get() = coerceFrom(-0.0)
+//val AlgebraicType.zero : Double get() = coerceFrom(0.0)
+//val AlgebraicType.one : Double get() = coerceFrom(1.0)
+//val AlgebraicType.two : Double get() = coerceFrom(2.0)
+//val AlgebraicType.half : Double get() = coerceFrom(0.5)
+//val AlgebraicType.negativeOne : Double get() = coerceFrom(-1.0)
+//val AlgebraicType.negativeZero : Double get() = coerceFrom(-0.0)

@@ -1,7 +1,6 @@
 @file:Suppress("UNCHECKED_CAST")
 package com.github.jomof.kane
 
-import com.github.jomof.kane.*
 import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.types.*
 import org.junit.Test
@@ -38,7 +37,7 @@ class KaneTest {
             1|2|3
             4|5|6
         """.trimIndent())
-        val mvar2 by matrixVariable<Double>(3, 4)
+        val mvar2 by matrixVariable(3, 4)
         val m2 by mvar2.toDataMatrix()
         m2.assertString("""
             m2
@@ -74,18 +73,18 @@ class KaneTest {
 
     @Test
     fun `multiplication bug`() {
-        val input by matrixVariable<Double>(1, 1)
-        val w0 by matrixVariable<Double>(input.rows + 1, 1)
+        val input by matrixVariable(1, 1)
+        val w0 by matrixVariable(input.rows + 1, 1)
         val h1 by logit(w0 cross (input stack 1.0))
         h1.toDataMatrix().reduceArithmetic().assertString("h1=[logit(w0[0,0]*input[0,0]+w0[1,0])]")
     }
 
     @Test
     fun `repro tiny diff problem`() {
-        val x by variable<Double>()
-        val m by variable<Double>()
-        val b by variable<Double>()
-        val t by variable<Double>()
+        val x by variable()
+        val m by variable()
+        val b by variable()
+        val t by variable()
         val error by 0.5 * pow(t - ((m * x) + b), 2.0)
         val dm by differentiate(d(error)/d(m))
         dm.assertString("dm=-(t-(m*x+b))*x")
@@ -93,12 +92,12 @@ class KaneTest {
 
     @Test
     fun `render formulas`() {
-        val r by variable<Double>()
-        val x by variable<Double>()
-        val m by variable<Double>()
-        val b by variable<Double>()
+        val r by variable()
+        val x by variable()
+        val m by variable()
+        val b by variable()
         val y by m * x + b
-        val target by variable<Double>()
+        val target by variable()
         val error by pow(target - y, 2.0)
         val dm by -1.0 * r * differentiate(d(error)/d(m))
         val db by -1.0 * r * differentiate(d(error)/d(b))
@@ -110,11 +109,11 @@ class KaneTest {
 
     @Test
     fun `tiny relu regression`() {
-        val x by variable<Double>()
+        val x by variable()
         val m by variable(0.1)
         val b by variable(0.2)
         val y by relu(m * x + b)
-        val target by variable<Double>()
+        val target by variable()
         val error by pow(target - y, 2.0)
         val dm by m - 0.1 * differentiate(d(error)/d(m))
         val db by b - 0.1 * differentiate(d(error)/d(b))
@@ -162,12 +161,12 @@ class KaneTest {
 
     @Test
     fun `tiny relu regression with matrix`() {
-        val s by matrixVariable<Double>(1,2)
-        val x by variable<Double>()
+        val s by matrixVariable(1,2)
+        val x by variable()
         val m by s[0,0]
         val b by s[0,1]
         val y by relu(m * x + b)
-        val target by variable<Double>()
+        val target by variable()
         val error by pow(target - y, 2.0)
         val ds by s - 0.1 * differentiate(d(error)/d(s))
         val ass by assign(ds to s)
@@ -195,12 +194,12 @@ class KaneTest {
 
     @Test
     fun `tiny linear regression`() {
-        val r by variable<Double>()
-        val x by variable<Double>()
-        val m by variable<Double>()
-        val b by variable<Double>()
+        val r by variable()
+        val x by variable()
+        val m by variable()
+        val b by variable()
         val y by m * x + b
-        val target by variable<Double>()
+        val target by variable()
         val error by pow(target - y, 2.0)
         val dm by -1.0 * r * differentiate(d(error)/d(m))
         val db by -1.0 * r * differentiate(d(error)/d(b))
@@ -230,7 +229,7 @@ class KaneTest {
 
     @Test
     fun `assign-back basics`() {
-        val r by variable<Double>()
+        val r by variable()
         val a1 by assign(r + 1.0 - 1.0 to r)
         a1.assertString("r <- r+1-1")
         a1.memoizeAndReduceArithmetic().assertString("r <- r")
@@ -238,13 +237,13 @@ class KaneTest {
 
     @Test
     fun `tiny linear regression with assign-back backed by matrix with bound holes`() {
-        val a by matrixVariable<Double>(1, 2)
-        val r by variable<Double>()
-        val x by variable<Double>()
+        val a by matrixVariable(1, 2)
+        val r by variable()
+        val x by variable()
         val m by a[0,0]
         val b by a[0,1]
         val y by m * x + b
-        val target by variable<Double>()
+        val target by variable()
         val error by 0.5 * pow(target - y, 2.0)
         val da by a - r * differentiate(d(error)/d(a))
         val aa by assign(da to a)
@@ -348,71 +347,20 @@ class KaneTest {
     }
 
     @Test
-    fun `follow logistic example short`() {
-        // https://mattmazur.com/2015/03/17/a-step-by-step-backpropagation-example/
-        val inputs by matrixVariable(1, 2, 0.05f, 0.1f)
-        val w0 by matrixVariable(2,2,
-            0.15f, 0.2f,
-            0.25f, 0.3f)
-        val w1 by matrixVariable(2,2,
-            0.4f, 0.45f,
-            0.5f, 0.55f)
-        val b1 by variable(0.35f)
-        val b2 by variable(0.6f)
-        val h by logit((w0 cross inputs) + b1)
-        val output by logit((w1 cross h) + b2)
-        val target by matrixVariable(1, 2, 0.01f, 0.99f)
-        val errors by 0.5f * pow(target-output, 2.0f)
-        val error by summation(errors)
-        val learningRate = 0.5f
-        val dw1 by w1 - learningRate * differentiate(d(error)/d(w1))
-        val dw0 by w0 - learningRate * differentiate(d(error)/d(w0))
-        val h0 by h[0,0]
-        val h1 by h[0,1]
-        val o0 by output[0,0]
-        val o1 by output[0,1]
-        val e0 by errors[0,0]
-        val e1 by errors[0,1]
-
-        h0.substituteInitial().reduceArithmetic().assertString("h0=0.59327")
-        h1.substituteInitial().reduceArithmetic().assertString("h1=0.59688")
-
-        o0.substituteInitial().reduceArithmetic().assertString("o0=0.75137")
-        o1.substituteInitial().reduceArithmetic().assertString("o1=0.77293")
-
-        e0.substituteInitial().reduceArithmetic().assertString("e0=0.27481")
-        e1.substituteInitial().reduceArithmetic().assertString("e1=0.02356")
-
-        error.substituteInitial().reduceArithmetic().assertString("error=0.29837")
-        dw1.substituteInitial().reduceArithmetic().assertString("""
-            dw1
-            ------
-            0.35892|0.40867
-            0.5113|0.56137
-        """.trimIndent())
-        dw0.substituteInitial().reduceArithmetic().assertString("""
-            dw0
-            ------
-            0.14978|0.19956
-            0.24975|0.2995
-        """.trimIndent())
-    }
-
-    @Test
     fun `learn xor with relu`() {
         val random = Random(1)
         val learningRate = 0.3
         val inputs = 2
         val count0 = 3
         val outputs = 1
-        val input by matrixVariable<Double>(1, inputs)
+        val input by matrixVariable(1, inputs)
         val left by input[0,0]
         val right by input[0,1]
         val w0 by matrixVariable(input.rows, count0) { abs(random.nextGaussian()) / 3.0 }
         val h1 by lrelu(w0 cross input)
         val w1 by matrixVariable(w0.rows, outputs) { abs(random.nextGaussian()) / 3.0 }
         val output by lrelu(w1 cross h1)
-        val target by matrixVariable<Double>(output.columns, output.rows)
+        val target by matrixVariable(output.columns, output.rows)
         val error by summation(0.5 * pow(target - output, 2.0))
         val dw0 by w0 - learningRate * differentiate(d(error) / d(w0))
         val dw1 by w1 - learningRate * differentiate(d(error) / d(w1))
@@ -499,7 +447,7 @@ class KaneTest {
 
     @Test
     fun `exp`() {
-        val x by variable<Double>()
+        val x by variable()
         val e2x by exp(x * x)
         val e2xprime by differentiate(d(e2x)/d(x))
         println(e2x)
@@ -508,7 +456,7 @@ class KaneTest {
 
     @Test
     fun `divide`() {
-        val x by variable<Double>()
+        val x by variable()
         val fx by 4.0 / pow(x, 6.0)
         val dfx by differentiate(d(fx)/d(x))
         fx.reduceArithmetic().assertString("fx=4*x⁻⁶")
@@ -517,9 +465,9 @@ class KaneTest {
 
     @Test
     fun `bits in matrixes`() {
-        bitsToArray<Double>(3, 8).toList().assertString("[1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]")
-        bitsToArray<Double>(3, 8).toRowMatrix().assertString("1|1|0|0|0|0|0|0")
-        bitsToArray<Double>(3, 8).toColumnMatrix().assertString("[1|1|0|0|0|0|0|0]ᵀ")
+        bitsToArray(3, 8).toList().assertString("[1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]")
+        bitsToArray(3, 8).toRowMatrix().assertString("1|1|0|0|0|0|0|0")
+        bitsToArray(3, 8).toColumnMatrix().assertString("[1|1|0|0|0|0|0|0]ᵀ")
         bitsToArray(3, 8, -1.0, 1.0).toList().assertString("[1.0, 1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]")
     }
 
@@ -535,8 +483,8 @@ class KaneTest {
         val range = 1.0
         val steepnessNearZero = 1.0
         val limitSlope = 0.01
-        fun squarsh(x : MatrixExpr<Double>) = (2.0 * range / (1.0 + exp(-steepnessNearZero*x)) - range) + x*limitSlope
-        fun squarsh(x : ScalarExpr<Double>) = (2.0 * range / (1.0 + exp(-steepnessNearZero*x)) - range) + x*limitSlope
+        fun squarsh(x : MatrixExpr) = (2.0 * range / (1.0 + exp(-steepnessNearZero*x)) - range) + x*limitSlope
+        fun squarsh(x : ScalarExpr) = (2.0 * range / (1.0 + exp(-steepnessNearZero*x)) - range) + x*limitSlope
         val x by variable(100.0)
         val y by squarsh(x)
         val dy by (differentiate(d(y)/d(x)))
@@ -580,7 +528,7 @@ class KaneTest {
         val output by w3 cross h3
 
         val target by matrixVariable(output.columns, output.rows, type) { 0.0 }
-        val error by summation(type.half * pow(target - output, type.two))
+        val error by summation(0.5 * pow(target - output, 2.0))
         val sumdw0 by matrixVariable(w0.columns,w0.rows,type) { 0.0 }
         val sumdw1 by matrixVariable(w1.columns,w1.rows,type) { 0.0 }
         val sumdw2 by matrixVariable(w2.columns,w2.rows,type) { 0.0 }
@@ -646,7 +594,7 @@ class KaneTest {
                 val func = layout.toFunc(space, h2, output)
                 val result = mutableListOf<Pair<Double,String>>()
                 (0 until 256).map { value ->
-                    val bits = bitsToArray(value, 8, type).toColumnMatrix()
+                    val bits = bitsToArray(value, 8).toColumnMatrix()
                     val predicted = func(bits)[0,0]
 
                     result.add(predicted to "$bits")
@@ -696,7 +644,6 @@ class KaneTest {
         val tab = tableauOf(left,right,targetElement,error,answer,aw0,aw1,dw0,dw1)
         val layout = tab.linearize()
         println(layout)
-        layout.check()
 
         val space = layout.allocateSpace()
         val leftRef = layout.shape(left).ref(space)
@@ -740,12 +687,12 @@ class KaneTest {
 
     @Test
     fun `repro multiplication bug`() {
-        val input by matrixVariable<Double>(1, 1)
-        val w0 by matrixVariable<Double>(input.rows + 1, 3)
+        val input by matrixVariable(1, 1)
+        val w0 by matrixVariable(input.rows + 1, 3)
         val h1 by logit(w0 cross (input stack 1.0))
-        val w1 by matrixVariable<Double>(w0.rows + 1, 1)
+        val w1 by matrixVariable(w0.rows + 1, 1)
         val output by logit(w1 cross (h1 stack 1.0))
-        val target by matrixVariable<Double>(output.columns, output.rows)
+        val target by matrixVariable(output.columns, output.rows)
         val error by summation(0.5 * pow(target - output, 2.0))
         val gradientW0 by d(error) / d(w0)
         differentiate(gradientW0)
@@ -753,24 +700,24 @@ class KaneTest {
 
     @Test
     fun `summation expands on element access`() {
-        val a by matrixVariable<Double>(1,3)
-        val b by matrixVariable<Double>(3,2)
+        val a by matrixVariable(1,3)
+        val b by matrixVariable(3,2)
         val s by summation(a) / b
         s[0,0].reduceArithmetic().assertString("(a[0,0]+a[0,1]+a[0,2])/b[0,0]")
     }
 
     @Test
     fun `matrix element rendering`() {
-        val m by matrixVariable<Double>(2,3)
+        val m by matrixVariable(2,3)
         val e by m[1,1]
         e.assertString("e=m[1,1]")
-        (matrixVariable<Double>(2,3)).assertString("matrixVariable(2x3)")
+        (matrixVariable(2,3)).assertString("matrixVariable(2x3)")
         val p by pow(m, 2.0)
         p.assertString("p=pow(m,2)")
         val pe by p[1,2]
         pe.assertString("pe=m[1,2]²")
         p[1,2].assertString("m[1,2]²")
-        val column by matrixVariable<Double>(1,3)
+        val column by matrixVariable(1,3)
         val s by 1.0 stack column
         s.assertString("s=1 stack column")
         s[0,0].assertString("1")
@@ -825,11 +772,10 @@ class KaneTest {
 
     @Test
     fun `variable rendering`() {
-        variable<Double>().assertString("0")
-        variable<Int>().assertString("0")
-        val a by variable<Double>()
+        variable().assertString("0")
+        val a by variable()
         a.assertString("a")
-        val b by variable<Double>()
+        val b by variable()
         (a + b).assertString("a+b")
         val c by a + b
         c.assertString("c=a+b")
@@ -856,8 +802,8 @@ class KaneTest {
         ((a - a) - b).assertString("a-a-b")
         (a - (a - b)).assertString("a-(a-b)")
         (a - -b).reduceArithmetic().assertString("a+b")
-        val m : MatrixExpr<Double> by matrixVariable<Double>(5, 2)
-        val n : MatrixExpr<Double> by matrixVariable<Double>(3, 5)
+        val m : MatrixExpr by matrixVariable(5, 2)
+        val n : MatrixExpr by matrixVariable(3, 5)
         m.assertString("m")
         n.assertString("n")
         val z by m
@@ -876,8 +822,8 @@ class KaneTest {
 
     @Test
     fun `variable negation rendering`() {
-        val a by variable<Double>()
-        val b by variable<Double>()
+        val a by variable()
+        val b by variable()
         (-b * -b * -a).reduceArithmetic().assertString("-a*b²")
         (-b * -b).reduceArithmetic().assertString("b²")
         (-b * -a * -b).reduceArithmetic().assertString("-a*b²")
@@ -890,9 +836,9 @@ class KaneTest {
 
     @Test
     fun `superscript rendering`() {
-        val a by variable<Double>()
-        val b by variable<Double>()
-        val x by variable<Double>()
+        val a by variable()
+        val b by variable()
+        val x by variable()
 
         (pow(a, -1.0)).reduceArithmetic().assertString("a⁻¹")
         (pow(a, b)).reduceArithmetic().assertString("aᵇ")
@@ -904,7 +850,7 @@ class KaneTest {
 
     @Test
     fun `matrix chain rule case 8668`() {
-        val m by matrixVariable<Double>(1, 2)
+        val m by matrixVariable(1, 2)
         val x by m[0, 0]
         val y by m[0, 1]
         val f1 by pow(x, 2.0) + pow(y, 3.0)
@@ -914,7 +860,7 @@ class KaneTest {
 
     @Test
     fun `matrix chain rule`() {
-        val m by matrixVariable<Double>(1, 2)
+        val m by matrixVariable(1, 2)
         val x by m[0,0]
         val y by m[0,1]
         val f1 by pow(x, 2.0) + pow(y, 3.0)
@@ -947,8 +893,8 @@ class KaneTest {
 
     @Test
     fun `chain rule`() {
-        val x by variable<Double>()
-        val y by variable<Double>()
+        val x by variable()
+        val y by variable()
         val f1 by pow(x, 2.0) + pow(y, 3.0)
         f1.assertString("f1=x²+y³")
         val d1 by d(f1) / d(x)
@@ -981,12 +927,12 @@ class KaneTest {
     @Test
     fun `test differentiate case 774036348`() {
         val learningRate = 0.1
-        val input by matrixVariable<Double>(1, 2)
-        val w0 by matrixVariable<Double>(input.rows + 1, 2)
+        val input by matrixVariable(1, 2)
+        val w0 by matrixVariable(input.rows + 1, 2)
         val h1 by logit(w0 cross (input stack 1.0))
-        val w1 by matrixVariable<Double>(w0.rows + 1, 2)
+        val w1 by matrixVariable(w0.rows + 1, 2)
         val output by logit(w1 cross (h1 stack 1.0))
-        val target by matrixVariable<Double>(output.columns, output.rows)
+        val target by matrixVariable(output.columns, output.rows)
         val error by summation(learningRate * pow(target - output, 2.0))
         val gradientW0 by d(error) / d(w0)
         differentiate(gradientW0)

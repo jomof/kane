@@ -10,14 +10,14 @@ private class LReluFunction : AlgebraicUnaryScalarFunction {
     override fun doubleOp(value: Double) = max(0.1 * value, value)
     override fun floatOp(value: Float) =  max(0.1f * value, value)
 
-    override fun <E : Number> reduceArithmetic(value: ScalarExpr<E>): ScalarExpr<E>? {
+    override fun reduceArithmetic(value: ScalarExpr): ScalarExpr? {
         return null
     }
 
-    override fun <E : Number> differentiate(
-        expr : ScalarExpr<E>,
-        exprd : ScalarExpr<E>,
-        variable : ScalarExpr<E>): ScalarExpr<E> {
+    override fun differentiate(
+        expr : ScalarExpr,
+        exprd : ScalarExpr,
+        variable : ScalarExpr): ScalarExpr {
         return lstep(expr) * exprd
     }
 }

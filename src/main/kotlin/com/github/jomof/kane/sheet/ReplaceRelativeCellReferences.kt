@@ -4,13 +4,13 @@ import com.github.jomof.kane.*
 import com.github.jomof.kane.functions.*
 
 
-private fun <E:Number> AlgebraicExpr<E>.replaceRelativeCellReferences(
+private fun AlgebraicExpr.replaceRelativeCellReferences(
     coordinate : Coordinate
-) : AlgebraicExpr<E> {
-    fun <E:Number> MatrixExpr<E>.self(coordinate : Coordinate) =
-        replaceRelativeCellReferences(coordinate) as MatrixExpr<E>
-    fun <E:Number> ScalarExpr<E>.self(coordinate : Coordinate) =
-        replaceRelativeCellReferences(coordinate) as ScalarExpr<E>
+) : AlgebraicExpr {
+    fun MatrixExpr.self(coordinate : Coordinate) =
+        replaceRelativeCellReferences(coordinate) as MatrixExpr
+    fun ScalarExpr.self(coordinate : Coordinate) =
+        replaceRelativeCellReferences(coordinate) as ScalarExpr
     return when(this) {
         is NamedScalar -> {
             val new = cellNameToCoordinate(name.toUpperCase())
@@ -34,7 +34,7 @@ private fun <E:Number> AlgebraicExpr<E>.replaceRelativeCellReferences(
             right = right.self(coordinate))
         is ConstantScalar -> this
         is CoerceScalar -> {
-            val result : AlgebraicExpr<E> = when (value) {
+            val result : AlgebraicExpr = when (value) {
                 is UntypedRelativeCellReference -> {
                     copy(value = AbsoluteCellReferenceExpr(coordinate + value.offset))
                 }
@@ -50,7 +50,7 @@ private fun <E:Number> AlgebraicExpr<E>.replaceRelativeCellReferences(
 
 private fun Expr.replaceRelativeCellReferences() : Expr {
     return when(this) {
-        is NamedScalar<*> -> {
+        is NamedScalar -> {
             val coordinate = cellNameToCoordinate(name.toUpperCase())
             replaceRelativeCellReferences(coordinate)
         }

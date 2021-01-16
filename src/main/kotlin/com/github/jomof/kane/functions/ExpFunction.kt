@@ -11,14 +11,14 @@ private class ExpFunction : AlgebraicUnaryScalarFunction {
     override fun doubleOp(value: Double) = exp(value)
     override fun floatOp(value: Float) = exp(value)
 
-    override fun <E : Number> reduceArithmetic(value: ScalarExpr<E>): ScalarExpr<E>? {
+    override fun reduceArithmetic(value: ScalarExpr): ScalarExpr? {
         return null
     }
 
-    override fun <E : Number> differentiate(
-        expr : ScalarExpr<E>,
-        exprd : ScalarExpr<E>,
-        variable : ScalarExpr<E>
+    override fun differentiate(
+        expr : ScalarExpr,
+        exprd : ScalarExpr,
+        variable : ScalarExpr
     ) = exp(expr) * exprd
 }
 

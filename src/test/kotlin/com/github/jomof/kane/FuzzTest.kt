@@ -1,6 +1,5 @@
 package com.github.jomof.kane
 
-import com.github.jomof.kane.*
 import com.github.jomof.kane.functions.plus
 import org.junit.Test
 import kotlin.random.Random
@@ -10,7 +9,7 @@ class FuzzTest {
     fun `fuzz matrix expr`() {
         val random = Random(9L)
         repeat(10000) {
-            val expr = random.nextMatrixExpr<Double>(3, 3)
+            val expr = random.nextMatrixExpr(3, 3)
 //            print("$it-->")
 //            println("$expr")
             expr.render()
@@ -23,7 +22,7 @@ class FuzzTest {
     fun `fuzz matrix float expr`() {
         val random = Random(9L)
         repeat(10000) {
-            val expr = random.nextMatrixExpr<Float>(3, 3)
+            val expr = random.nextMatrixExpr(3, 3)
             expr.render()
             expr.reduceArithmetic()
         }
@@ -33,7 +32,7 @@ class FuzzTest {
     fun `fuzz named scalar expr`() {
         val random = Random(9L)
         repeat(10000) {
-            val expr = random.nextNamedScalarExpr<Double>()
+            val expr = random.nextNamedScalarExpr()
             expr.render()
             expr.reduceArithmetic()
         }
@@ -43,7 +42,7 @@ class FuzzTest {
     fun `fuzz named algebraic expr`() {
         val random = Random(9L)
         repeat(10000) {
-            val expr = random.nextNamedAlgebraicExpr<Double>()
+            val expr = random.nextNamedAlgebraicExpr()
             expr.render()
             val reduced = expr.reduceArithmetic()
             val tab = tableauOf(reduced)
@@ -74,7 +73,7 @@ class FuzzTest {
     fun `fuzz algebraic expr`() {
         val random = Random(9L)
         repeat(10000) {
-            val expr = random.nextAlgebraicExpr<Double>()
+            val expr = random.nextAlgebraicExpr()
             expr.render()
             try {
                 expr.memoizeAndReduceArithmetic()
@@ -117,7 +116,7 @@ class FuzzTest {
 
     @Test
     fun `linearize constant matrix assign failure`() {
-        val a by matrixVariable<Double>(1,2) { -1.0 }
+        val a by matrixVariable(1,2) { -1.0 }
         val ax by assign(matrixOf(1,2, 17.0, 19.0) to a)
         println(ax.linearize())
     }

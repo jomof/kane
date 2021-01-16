@@ -4,10 +4,10 @@ import com.github.jomof.kane.*
 import com.github.jomof.kane.functions.*
 
 
-fun <E:Number> extractScalarizedMatrixElement(
-    matrix : MatrixExpr<E>,
+fun extractScalarizedMatrixElement(
+    matrix : MatrixExpr,
     coordinate : Coordinate
-) : ScalarExpr<E> {
+) : ScalarExpr {
     return when(matrix) {
         is AlgebraicBinaryMatrixScalar -> {
             val left = extractScalarizedMatrixElement(matrix.left, coordinate)

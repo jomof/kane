@@ -122,17 +122,17 @@ private class USInflationFunction : AlgebraicUnaryScalarFunction {
     override fun doubleOp(value: Double) = usInflation(value.toInt())
     override fun floatOp(value: Float) = usInflation(value.toInt()).toFloat()
 
-    override fun <E : Number> reduceArithmetic(value: ScalarExpr<E>): ScalarExpr<E>? {
+    override fun reduceArithmetic(value: ScalarExpr): ScalarExpr? {
         val constValue = value.tryFindConstant()
         return when {
-            constValue != null -> constant(usInflation(constValue.toInt()) as E)
+            constValue != null -> constant(usInflation(constValue.toInt()))
             else -> value
         }
     }
-    override fun <E : Number> differentiate(
-        expr : ScalarExpr<E>,
-        exprd : ScalarExpr<E>,
-        variable : ScalarExpr<E>
+    override fun differentiate(
+        expr : ScalarExpr,
+        exprd : ScalarExpr,
+        variable : ScalarExpr
     ) = error("not differentiable")
 }
 

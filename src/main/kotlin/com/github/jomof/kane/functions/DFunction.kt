@@ -10,14 +10,14 @@ private class DFunction : AlgebraicUnaryScalarFunction {
     override fun doubleOp(value: Double) = error("")
     override fun floatOp(value: Float) = error("")
 
-    override fun <E : Number> reduceArithmetic(value: ScalarExpr<E>): ScalarExpr<E>? {
+    override fun reduceArithmetic(value: ScalarExpr): ScalarExpr? {
         return null
     }
 
-    override fun <E : Number> differentiate(
-        expr : ScalarExpr<E>,
-        exprd : ScalarExpr<E>,
-        variable : ScalarExpr<E>
+    override fun differentiate(
+        expr : ScalarExpr,
+        exprd : ScalarExpr,
+        variable : ScalarExpr
     ) = error("")
 }
 

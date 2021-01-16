@@ -3,9 +3,9 @@ package com.github.jomof.kane.sheet
 import com.github.jomof.kane.*
 import com.github.jomof.kane.functions.*
 
-private fun <E:Number> AlgebraicExpr<E>.expandUnaryOperationMatrixes() : AlgebraicExpr<E> {
-    fun <E:Number> MatrixExpr<E>.self() = expandUnaryOperationMatrixes() as MatrixExpr<E>
-    fun <E:Number> ScalarExpr<E>.self() = expandUnaryOperationMatrixes() as ScalarExpr<E>
+private fun AlgebraicExpr.expandUnaryOperationMatrixes() : AlgebraicExpr {
+    fun MatrixExpr.self() = expandUnaryOperationMatrixes() as MatrixExpr
+    fun ScalarExpr.self() = expandUnaryOperationMatrixes() as ScalarExpr
     val result  = when(this) {
         is NamedMatrix -> copy(matrix = matrix.self())
         is NamedScalar -> copy(scalar = scalar.self())
@@ -28,7 +28,7 @@ private fun <E:Number> AlgebraicExpr<E>.expandUnaryOperationMatrixes() : Algebra
 }
 private fun Expr.expandUnaryOperationMatrixes() : Expr {
     return when(this) {
-        is AlgebraicExpr<*> -> expandUnaryOperationMatrixes()
+        is AlgebraicExpr -> expandUnaryOperationMatrixes()
         is AbsoluteCellReferenceExpr -> this
         is NamedValueExpr<*> -> this
         is NamedUntypedAbsoluteCellReference -> this

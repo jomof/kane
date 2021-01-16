@@ -108,18 +108,18 @@ private class SP500Function : AlgebraicUnaryScalarFunction {
     override fun doubleOp(value: Double) = sp500(value.toInt())
     override fun floatOp(value: Float) = sp500(value.toInt()).toFloat()
 
-    override fun <E : Number> reduceArithmetic(value: ScalarExpr<E>) : ScalarExpr<E>? {
+    override fun reduceArithmetic(value: ScalarExpr) : ScalarExpr? {
         val constValue = value.tryFindConstant()
         return when {
-            constValue != null -> constant(sp500(constValue.toInt()) as E)
+            constValue != null -> constant(sp500(constValue.toInt()))
             else -> value
         }
     }
 
-    override fun <E : Number> differentiate(
-        expr : ScalarExpr<E>,
-        exprd : ScalarExpr<E>,
-        variable : ScalarExpr<E>
+    override fun differentiate(
+        expr : ScalarExpr,
+        exprd : ScalarExpr,
+        variable : ScalarExpr
     ) = error("not differentiable")
 }
 

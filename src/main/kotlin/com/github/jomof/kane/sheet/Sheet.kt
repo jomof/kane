@@ -43,12 +43,12 @@ data class NamedUntypedAbsoluteCellReference(
     override fun toString() = "$name=${coordinateToCellName(coordinate)}"
 }
 
-data class CoerceScalar<T:Number>(
+data class CoerceScalar(
     val value : Expr,
-    override val type : AlgebraicType<T>
-) : ScalarExpr<T> {
+    override val type : AlgebraicType
+) : ScalarExpr {
     init {
-        assert(value !is CoerceScalar<*>) {
+        assert(value !is CoerceScalar) {
             "coerce of coerce?"
         }
         assert(value !is TypedExpr<*> || type != value.type) {
@@ -57,7 +57,7 @@ data class CoerceScalar<T:Number>(
         track()
     }
     override fun toString() = "$value"
-    fun copy(value : Expr) : CoerceScalar<T> {
+    fun copy(value : Expr) : CoerceScalar {
         return if (value === this.value) this
             else CoerceScalar(value, type)
     }
@@ -142,8 +142,6 @@ class SheetBuilder {
             .map { it.name to it }.toMap()
     }
 
-
-
     private fun scalarizeMatrixes(cells : Map<String, NamedExpr>) : Map<String, NamedExpr> {
         val result = cells.toMutableMap()
         var done = false
@@ -153,7 +151,7 @@ class SheetBuilder {
                 if (looksLikeCellName(name)) {
                     val upperLeft = cellNameToCoordinate(name)
                     when {
-                        expr is NamedMatrix<*> -> {
+                        expr is NamedMatrix -> {
                             var replacedOurName = false
                             expr.matrix.coordinates.map { offset ->
                                 val finalCoordinate = upperLeft + offset
@@ -197,8 +195,8 @@ class SheetBuilder {
         return cells
             .map { (name, expr) ->
                 name to when(expr) {
-                    is NamedScalar<*> -> when(expr.scalar) {
-                        is NamedScalar<*> -> expr.scalar
+                    is NamedScalar -> when(expr.scalar) {
+                        is NamedScalar -> expr.scalar
                         is NamedExpr -> error("${expr.scalar.javaClass}")
                         else -> expr.scalar
                     }
@@ -241,16 +239,16 @@ fun Sheet.eval() : Sheet {
     return SheetImpl(reduced.cells)
 }
 
-private fun Sheet.variable(cell : String) : NamedScalarVariable<Double> {
+private fun Sheet.variable(cell : String) : NamedScalarVariable {
     val reduced = when(val value = cells.getValue(cell)) {
-        is AlgebraicExpr<*> ->
+        is AlgebraicExpr ->
             value.memoizeAndReduceArithmetic()
         else ->
             error("${value.javaClass}")
     }
     return when(reduced) {
-        is ConstantScalar -> NamedScalarVariable(cell, reduced.value as Double, reduced.type as AlgebraicType<Double>)
-        is ScalarVariable -> NamedScalarVariable(cell, reduced.initial as Double, reduced.type as AlgebraicType<Double>)
+        is ConstantScalar -> NamedScalarVariable(cell, reduced.value, reduced.type)
+        is ScalarVariable -> NamedScalarVariable(cell, reduced.initial, reduced.type)
         else -> error("$cell (${cells.getValue(cell)}) is not a constant")
     }
 }
@@ -258,10 +256,16 @@ private fun Sheet.variable(cell : String) : NamedScalarVariable<Double> {
 fun Sheet.reduceArithmetic(variables : Set<String>) : Sheet {
     var new = cells
     var done = false
+
     while (!done) {
         done = true
         new = new.map { (name, expr) ->
-            name to expr.reduceArithmetic(new, variables)
+            val reduced = expr.reduceArithmetic(new, variables)
+            if (reduced != expr) {
+                //println("Reduced $name: $expr -> $reduced")
+                done = false
+            }
+            name to reduced
         }.toMap()
     }
 
@@ -270,8 +274,9 @@ fun Sheet.reduceArithmetic(variables : Set<String>) : Sheet {
 
 fun Sheet.minimize(
     target : String,
-    variables : List<String>) : Sheet {
-    val resolvedVariables = mutableMapOf<String, NamedScalarVariable<Double>>()
+    variables : List<String>,
+    learningRate : Double = 0.001) : Sheet {
+    val resolvedVariables = mutableMapOf<String, NamedScalarVariable>()
 
     // Turn each 'variable' into a NamedScalarVariable
     variables.forEach { cell ->
@@ -283,11 +288,12 @@ fun Sheet.minimize(
     println("Expanding target expression")
     val lookup = cells + resolvedVariables
     var targetExpr = reducedArithmetic.cells.getValue(target).expandNamedCells(lookup)
-    if (targetExpr !is ScalarExpr<*>) {
+    println("count = ${targetExpr.count()}")
+    if (targetExpr !is ScalarExpr) {
         error("'$target' was not a numeric expression")
     }
-    val reduced = (targetExpr as ScalarExpr<Double>).reduceArithmetic()
-    val namedTarget : NamedScalarExpr<Double> = NamedScalar(target, reduced)
+    val reduced = targetExpr.reduceArithmetic()
+    val namedTarget : NamedScalarExpr = NamedScalar(target, reduced)
 
     // Differentiate target with respect to each variable
     println("Differentiating target expression with respect to change variables")
@@ -299,7 +305,7 @@ fun Sheet.minimize(
 
     // Assign back variables updated by a delta of their respective derivative
     val assignBacks = (resolvedVariables.values zip diffs).map { (variable, diff) ->
-        NamedScalarAssign("update(${variable.name})", variable, variable - multiply(0.01, diff)).reduceArithmetic()
+        NamedScalarAssign("update(${variable.name})", variable, variable - multiply(learningRate, diff)).reduceArithmetic()
     }
 
     // Create the model, allocate space for it, and iterate. Break when the target didn't move much
@@ -309,11 +315,12 @@ fun Sheet.minimize(
     var priorTarget = model.shape(namedTarget).ref(space).value
     println("Minimizing")
     for(i in 0 until 100000) {
-        val sb = StringBuilder()
-        sb.append(resolvedVariables.values.joinToString(" ") {
-            val value = model.shape(it).ref(space)
-            "${it.name}: $value"
-        })
+//        val sb = StringBuilder()
+//        sb.append(resolvedVariables.values.joinToString(" ") {
+//            val value = model.shape(it).ref(space)
+//            "${it.name}: $value"
+//        })
+//        println(sb)
         model.eval(space)
         val newTarget = model.shape(namedTarget).ref(space).value
         if (abs(newTarget-priorTarget) < 0.0000000000001)
@@ -326,7 +333,7 @@ fun Sheet.minimize(
     resolvedVariables.values.forEach {
         val value = model.shape(it).ref(space)
         assert(new.containsKey(it.name))
-        new[it.name] = variable(value.value, (cells[it.name] as AlgebraicExpr<Double>).type)
+        new[it.name] = variable(value.value, (cells[it.name] as AlgebraicExpr).type)
     }
     return SheetImpl(new)
 }
