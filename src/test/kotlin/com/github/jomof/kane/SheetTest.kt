@@ -159,8 +159,6 @@ class SheetTest {
         println(min.eval())
     }
 
-
-
     @Test
     fun `types in sheet`() {
         val sheet = sheetOf {

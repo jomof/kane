@@ -3,6 +3,7 @@ package com.github.jomof.kane.functions
 import com.github.jomof.kane.*
 import com.github.jomof.kane.types.AlgebraicType
 import com.github.jomof.kane.types.DollarAlgebraicType
+import com.github.jomof.kane.types.DollarsAndCentsAlgebraicType
 import com.github.jomof.kane.types.DoubleAlgebraicType
 
 // f(scalar,scalar)->scalar (extended to matrix 1<->1 mapping)
@@ -36,6 +37,8 @@ interface AlgebraicBinaryScalarFunction {
         return when {
             left == DollarAlgebraicType.kaneType -> DollarAlgebraicType.kaneType
             right == DollarAlgebraicType.kaneType -> DollarAlgebraicType.kaneType
+            left == DollarsAndCentsAlgebraicType.kaneType -> DollarsAndCentsAlgebraicType.kaneType
+            right == DollarsAndCentsAlgebraicType.kaneType -> DollarsAndCentsAlgebraicType.kaneType
             else -> left
         }
     }

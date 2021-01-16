@@ -8,7 +8,7 @@ import java.text.NumberFormat
 import java.util.*
 import kotlin.math.abs
 
-class DollarAlgebraicType : AlgebraicType(Double::class.java) {
+class DollarsAndCentsAlgebraicType : AlgebraicType(Double::class.java) {
     override val simpleName = "double"
     override fun render(value: Double): String {
         if (value.isInfinite()) return "Infinite"
@@ -19,8 +19,23 @@ class DollarAlgebraicType : AlgebraicType(Double::class.java) {
     override fun coerceFrom(value : Number) = value.toDouble()
 
     companion object {
+        val kaneType = DollarsAndCentsAlgebraicType()
+    }
+}
+
+class DollarAlgebraicType : AlgebraicType(Double::class.java) {
+    override val simpleName = "double"
+    override fun render(value: Double): String {
+        if (value.isInfinite()) return "Infinite"
+        if (value.isNaN()) return "NaN"
+        val result = NumberFormat.getCurrencyInstance(Locale.US).format(abs(value)).substringBefore(".")
+        return if (value < 0.0) "($result)" else result
+    }
+    override fun coerceFrom(value : Number) = value.toDouble()
+
+    companion object {
         val kaneType = DollarAlgebraicType()
     }
 }
-fun dollars(value : Double) : ScalarExpr = ConstantScalar(value, DollarAlgebraicType.kaneType)
+fun dollars(value : Double) : ScalarExpr = ConstantScalar(value, DollarsAndCentsAlgebraicType.kaneType)
 fun dollars(value : Int) : ScalarExpr = ConstantScalar(value.toDouble(), DollarAlgebraicType.kaneType)
