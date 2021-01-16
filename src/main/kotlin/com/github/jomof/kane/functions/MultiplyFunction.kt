@@ -25,8 +25,8 @@ private class MultiplyFunction : AlgebraicBinaryScalarFunction {
             leftConst == -1.0 -> -p2
             rightConst == -1.0 -> -p1
             leftConst != null && rightConst != null -> when {
-                leftConst is Double && rightConst is Double -> constant(leftConst * rightConst, p1.type)
-                else -> constant(invoke(leftConst, rightConst), p1.type)
+                leftConst is Double && rightConst is Double -> constant(leftConst * rightConst, type(p1.type, p2.type))
+                else -> constant(invoke(leftConst, rightConst), type(p1.type, p2.type))
             } as ScalarExpr
             p1 is AlgebraicUnaryScalar && p1.op == negate -> {
                 // -(x*y)*z -> -(x*y*z)

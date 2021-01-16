@@ -3,6 +3,7 @@ package com.github.jomof.kane
 import com.github.jomof.kane.*
 import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.types.dollars
+import com.github.jomof.kane.types.percent
 import org.junit.Test
 import java.util.*
 import kotlin.math.abs
@@ -77,7 +78,7 @@ class SheetTest {
         println(evaluated)
         evaluated["A1"]!!.assertString("1")
         evaluated["A2"]!!.assertString("2")
-        //evaluated["A3"]!!.assertString("\$3.10") TODO: should be dollars
+        evaluated["A3"]!!.assertString("\$3.10")
         evaluated["A4"]!!.assertString("15")
         evaluated["A5"]!!.assertString("12")
         evaluated["B1"]!!.assertString("9")
@@ -110,12 +111,62 @@ class SheetTest {
     }
 
     @Test
+    fun `percent of dollars`() {
+        val sheet = sheetOf {
+            val a1 by percent(0.15)
+            val a2 by dollars(1_234.00)
+            val a3 by a1 * a2
+            val a4 by up(3) * a2
+            val a5 by a1 * up(3)
+            add(a3, a4, a5)
+        }
+        val evaluated = sheet.eval()
+        println(evaluated)
+        evaluated["A1"].assertString("15%")
+        evaluated["A2"].assertString("\$1,234.00")
+        evaluated["A3"].assertString("\$185.10")
+        evaluated["A4"].assertString("\$185.10")
+        evaluated["A5"].assertString("\$185.10")
+    }
+
+    @Test
+    fun `shiller PE to following year return`() {
+        val startYear = 1928
+        val endYear = 2019 // 2019
+        val totalYears = endYear - startYear + 1
+        val rollingWindow = 2
+        // expected(#years, %stock) [then 5% and 95% confidence]
+        val sheet = sheetOf {
+            val a1 by constant("m")
+            val b1 by constant(1.0)
+            val a2 by constant("b")
+            val b2 by constant(0.0)
+            val a3 by constant("YEAR")
+            val a4 by columnOf(startYear.toDouble() to endYear.toDouble())
+            val b3 by constant("Shiller PE")
+            val b4 by shillerPE(a4)
+            val c3 by constant("S&P 500")
+            val c4 by sp500(a4)
+            val d4 by b4 * b1 + b2
+            val c1 by constant("error")
+            val d1 by summation(pow(d4 - c4, 2.0))
+
+            add(
+                a1, a2, b1, b2, a3, a4, b4, b3, c3, c4, d1, c1, d4
+            )
+        }
+        println(sheet.eval())
+        val min = sheet.minimize("D1", listOf("B1", "B2"), learningRate = 0.00001)
+        println(min.eval())
+    }
+
+    @Test
     fun `planning`() {
-        val growth = 0.07
-        val inflation = 0.02
+        val growth = percent(0.07)
+        val inflation = percent(0.02)
         val start = 2021
         val end = 2069
-        val retireYear = 2022
+        val retireYear = 2023
         val four01k = dollars(26_000.00)
         val retire = sheetOf {
             val a1 by rowOf("year", "j's age", "k's age", "post-tax", "pre-tax", "total", "post-tax-app", "pre-tax-app", "j-pre-tax-contr", "k-pre-tax-contr", "expenses", "college")
@@ -127,9 +178,9 @@ class SheetTest {
             val d4 by columnOf((start+1 .. end).map { dollars(0.0) + up + up.right(3) - up.right(7) / 2.0 - up.right(8)} )
             val e3 by dollars(837_000.00 + 458_000.00 + 244_000.00 + 89_443.00 + 180_000 + 60_167)
             val e4 by columnOf((start+1 .. end).map { dollars(0.0) + up + up.right(3) + up.right(4) + up.right(5) - up.right(6) / 2.0} )
-            val f3 by columnOf((start+1 .. end + 1).map { dollars(0.0) + left + left(2) } )
-            val g3 by columnOf((start+1 .. end + 1).map { left(3) * dollars(growth - inflation) } )
-            val h3 by columnOf((start+1 .. end + 1).map { left(3) * dollars(growth - inflation) } )
+            val f3 by columnOf((start+1 .. end + 1).map { 0.0 + left + left(2) } )
+            val g3 by columnOf((start+1 .. end + 1).map { left(3) * (growth - inflation) } )
+            val h3 by columnOf((start+1 .. end + 1).map { left(3) * (growth - inflation) } )
             val i3 by columnOf((start+1 .. retireYear).map { four01k } )
             val j3 by columnOf((start+1 .. retireYear).map { four01k } )
             val l3 by columnOf((0 until 4).map { dollars(70_000) } )
@@ -138,9 +189,9 @@ class SheetTest {
             val b52 by dollars(200_000.00)
 //            val a53 by constant("error")
 //            val b53 by dollars(0.0) + pow(up(28).right(4), 2.0)
-            val k4 by columnOf((retireYear .. end).map { b52 } )
+            val k5 by columnOf((retireYear .. end).map { b52 } )
 
-            add(a1, a2, a3, b3, c3, d3, d4, e3, e4, f3, g3, h3, i3, j3, k4, a52, l3, l8)
+            add(a1, a2, a3, b3, c3, d3, d4, e3, e4, f3, g3, h3, i3, j3, k5, a52, l3, l8)
         }
         println(retire.eval())
     }

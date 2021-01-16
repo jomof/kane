@@ -32,6 +32,9 @@ private fun AlgebraicExpr.replaceRelativeCellReferences(
         is AlgebraicBinaryMatrixScalar -> copy(
             left = left.self(coordinate),
             right = right.self(coordinate))
+        is AlgebraicBinaryMatrix -> copy(
+            left = left.self(coordinate),
+            right = right.self(coordinate))
         is ConstantScalar -> this
         is CoerceScalar -> {
             val result : AlgebraicExpr = when (value) {

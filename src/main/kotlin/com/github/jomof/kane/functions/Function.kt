@@ -1,6 +1,8 @@
 package com.github.jomof.kane.functions
 
 import com.github.jomof.kane.*
+import com.github.jomof.kane.types.AlgebraicType
+import com.github.jomof.kane.types.DollarAlgebraicType
 import com.github.jomof.kane.types.DoubleAlgebraicType
 
 // f(scalar,scalar)->scalar (extended to matrix 1<->1 mapping)
@@ -30,6 +32,13 @@ interface AlgebraicBinaryScalarFunction {
         AlgebraicBinaryMatrixScalar(this, p1.columns, p1.rows, p1, constant(p2))
     operator fun  invoke(p1 : Double, p2 : ScalarExpr) : ScalarExpr = invoke(constant(p1), p2)
     operator fun  invoke(p1 : ScalarExpr, p2 : Double) : ScalarExpr = invoke(p1, constant(p2))
+    fun type(left : AlgebraicType, right : AlgebraicType) : AlgebraicType {
+        return when {
+            left == DollarAlgebraicType.kaneType -> DollarAlgebraicType.kaneType
+            right == DollarAlgebraicType.kaneType -> DollarAlgebraicType.kaneType
+            else -> left
+        }
+    }
     fun  reduceArithmetic(p1 : ScalarExpr, p2 : ScalarExpr) : ScalarExpr?
     fun  differentiate(
         p1 : ScalarExpr,
@@ -55,7 +64,7 @@ data class AlgebraicBinaryScalar(
     init {
         track()
     }
-    override val type get() = left.type
+    override val type get() = op.type(left.type, right.type)
     override val children get() = listOf(left, right)
     override fun toString() = render()
     fun copy(
@@ -79,7 +88,7 @@ data class AlgebraicBinaryMatrixScalar(
     val left : MatrixExpr,
     val right : ScalarExpr) : MatrixExpr {
     init { track() }
-    override val type get() = left.type
+    override val type get() = op.type(left.type, right.type)
     override fun get(column: Int, row: Int) = AlgebraicBinaryScalar(op, left[column, row], right)
     override fun toString() = render()
 }
@@ -91,7 +100,7 @@ data class AlgebraicBinaryScalarMatrix(
     val left : ScalarExpr,
     val right : MatrixExpr) : MatrixExpr {
     init { track() }
-    override val type get() = left.type
+    override val type get() = op.type(left.type, right.type)
     override fun get(column: Int, row: Int) = AlgebraicBinaryScalar(op, left, right[column, row])
     override fun toString() = render()
 }
@@ -103,7 +112,7 @@ data class AlgebraicBinaryMatrix(
     val left : MatrixExpr,
     val right : MatrixExpr) : MatrixExpr {
     init { track() }
-    override val type get() = left.type
+    override val type get() = op.type(left.type, right.type)
     override fun get(column: Int, row: Int) = AlgebraicBinaryScalar(op, left[column, row], right[column, row])
     override fun toString() = render()
 }
