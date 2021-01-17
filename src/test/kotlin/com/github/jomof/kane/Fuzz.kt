@@ -3,6 +3,7 @@ package com.github.jomof.kane
 import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.types.AlgebraicType
 import com.github.jomof.kane.types.DoubleAlgebraicType
+import com.github.jomof.kane.types.kaneType
 import kotlin.random.Random
 
 private val interestingTypes = listOf(
@@ -49,7 +50,7 @@ fun Random.nextIdentifier() = chooseOne(listOf("a", "b", "c")) + nextInt(0, 2000
 
 fun <E:Any> Random.nextInstance(type : Class<*>) : E {
     return when(type) {
-        java.lang.Double::class.java -> nextDouble()
+//        java.lang.Double::class.java -> nextDouble()
         Double::class.java -> nextDouble()
         Float::class.java -> nextDouble().toFloat()
         Int::class.java -> nextInt()
@@ -190,7 +191,7 @@ private fun Random.dispatchExpr(exprType : Class<*>, type : AlgebraicType) : Exp
         }
         ValueExpr::class.java -> {
             val constant = nextInstance<Double>(type.java)
-            ValueExpr(constant, type)
+            ValueExpr(constant, constant.javaClass.kaneType)
         }
         ScalarVariable::class.java -> nextScalarVariable(type)
         NamedScalarVariable::class.java -> nextNamedScalarVariable(type)

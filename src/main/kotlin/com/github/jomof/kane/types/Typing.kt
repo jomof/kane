@@ -5,11 +5,44 @@ import java.math.RoundingMode
 
 abstract class KaneType<E:Any>(val java : Class<E>) {
     open val simpleName : String get() = java.simpleName
+    abstract fun render(value : E) : String
 }
 abstract class AlgebraicType(java : Class<Double>) : KaneType<Double>(java) {
-    abstract fun render(value : Double) : String
     abstract fun coerceFrom(value : Number) : Double
 }
+
+class StringKaneType : KaneType<String>(String::class.java) {
+    override fun render(value: String) = value
+    companion object {
+        val kaneType = StringKaneType()
+    }
+}
+
+class IntegerKaneType : KaneType<Integer>(Integer::class.java) {
+    override fun render(value: Integer) = "$value"
+    companion object {
+        val kaneType = IntegerKaneType()
+    }
+}
+
+class ObjectKaneType : KaneType<Object>(Object::class.java) {
+    override fun render(value: Object) = "$value"
+    companion object {
+        val kaneType = StringKaneType()
+    }
+}
+
+val <T:Any> Class<T>.kaneType: KaneType<T>
+    get() {
+        return when(this) {
+            Double::class.java -> DoubleAlgebraicType.kaneType
+            String::class.java -> StringKaneType.kaneType
+            Integer::class.java -> IntegerKaneType.kaneType
+            Object::class.java -> ObjectKaneType.kaneType
+            else ->
+                error("$this")
+        } as KaneType<T>
+    }
 
 class DoubleAlgebraicType(
     val prefix : String = "",

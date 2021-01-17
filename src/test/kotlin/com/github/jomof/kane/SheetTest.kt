@@ -2,6 +2,8 @@ package com.github.jomof.kane
 
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
 import com.github.jomof.kane.functions.*
+import com.github.jomof.kane.sheet.analyzeDataTypes
+import com.github.jomof.kane.sheet.readCsvAsSheet
 import com.github.jomof.kane.types.dollars
 import com.github.jomof.kane.types.percent
 import org.junit.Test
@@ -297,7 +299,18 @@ class SheetTest {
         val csv = File("./src/test/kotlin/com/github/jomof/kane/SP500toGDP.csv").absoluteFile
         val rows: List<Map<String, String>> = csvReader().readAllWithHeader(csv)
         assert(csv.isFile)
-        println(rows)
+        println(analyzeDataTypes(rows))
+        val sheet = readCsvAsSheet(csv)
+        println(sheet)
+    }
+
+    @Test
+    fun `sheet with named columns`() {
+        val sheet = sheetOf {
+            column(0, "Column 0")
+            column(1, "Column 1")
+        }
+        println(sheet)
     }
 
     @Test

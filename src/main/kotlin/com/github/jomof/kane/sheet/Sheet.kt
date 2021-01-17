@@ -3,6 +3,7 @@ package com.github.jomof.kane
 import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.sheet.*
 import com.github.jomof.kane.types.AlgebraicType
+import com.github.jomof.kane.types.KaneType
 import java.lang.Integer.max
 import kotlin.math.abs
 import kotlin.reflect.KProperty
@@ -63,31 +64,44 @@ data class CoerceScalar(
     }
 }
 
+data class ColumnDescriptor(val name : String)
+
 interface Sheet {
+    val columnDescriptors : Map<Int, ColumnDescriptor>
     val cells : Map<String, Expr>
     val columns : Int
     val rows : Int
     operator fun get(cell : String) = cells[cell]
-}
+    companion object {
+        private data class SheetImpl(
+            override val columnDescriptors : Map<Int, ColumnDescriptor>,
+            override val cells: Map<String, Expr>,
+            override val columns : Int,
+            override val rows : Int
+        ) : Sheet {
+            override fun toString() = render()
 
-data class EmptySheet(
-    override val cells: Map<String, Expr> = mapOf(),
-    override val columns: Int = 0,
-    override val rows: Int = 0) : Sheet
+        }
+        private val emptySheet = SheetImpl(mapOf(), mapOf(), 0, 0)
+        fun of(columnDescriptors : Map<Int, ColumnDescriptor>, cells : Map<String, Expr>) : Sheet {
+            if (cells.isEmpty() && columnDescriptors.isEmpty()) return emptySheet
+            if (cells.isEmpty()) return SheetImpl(columnDescriptors, cells, 0, 0)
 
-data class SheetImpl(
-    override val cells: Map<String, Expr>,
-) : Sheet {
-    override val columns : Int = cells
-        .filter { looksLikeCellName(it.key)}
-        .map { cellNameToCoordinate(it.key).column }.maxOrNull()!! + 1
-    override val rows : Int = cells
-        .filter { looksLikeCellName(it.key)}
-        .map { cellNameToCoordinate(it.key).row }.maxOrNull()!! + 1
-    override fun toString() = render()
+            val columnsFromCells : Int = cells
+                .filter { looksLikeCellName(it.key)}
+                .map { cellNameToCoordinate(it.key).column }.maxOrNull()!! + 1
+            val columnsColumnDescriptors : Int = columnDescriptors
+                .map { it.key }.maxOrNull()?:0 + 1
+            val rows : Int = cells
+                .filter { looksLikeCellName(it.key)}
+                .map { cellNameToCoordinate(it.key).row }.maxOrNull()!! + 1
+            return SheetImpl(columnDescriptors, cells, max(columnsFromCells, columnsColumnDescriptors), rows)
+        }
+    }
 }
 
 class SheetBuilder {
+    private val columnDescriptors : MutableMap<Int, ColumnDescriptor> = mutableMapOf()
     private val added : MutableList<NamedExpr> = mutableListOf()
     fun up(offset : Int = 1) = UntypedRelativeCellReference(Coordinate(column = 0, row = -offset))
     fun down(offset : Int = 1) = UntypedRelativeCellReference(Coordinate(column = 0, row = offset))
@@ -105,11 +119,7 @@ class SheetBuilder {
 
         // Add immediate named expressions
         added.forEach { namedExpr ->
-            when(namedExpr) {
-                is NamedExpr -> cells[namedExpr.name] = namedExpr
-                else ->
-                    error("${namedExpr.javaClass}")
-            }
+            cells[namedExpr.name] = namedExpr
         }
 
         return cells
@@ -224,7 +234,6 @@ class SheetBuilder {
     }
 
     fun build() : Sheet {
-        if (added.isEmpty()) return EmptySheet()
         val immediate = getImmediateNamedExprs()
         val withEmbedded = getEmbeddedNamedExprs(immediate)
         val upperCased = convertCellNamesToUpperCase(withEmbedded)
@@ -233,17 +242,28 @@ class SheetBuilder {
         val unaryMatrixesExpanded = expandUnaryOperationMatrixes(relativeReferencesReplaced)
         val namesReplaced = replaceNamesWithCellReferences(unaryMatrixesExpanded)
         val splitNamed = splitNames(namesReplaced)
-        return SheetImpl(splitNamed)
+        return Sheet.of(columnDescriptors, splitNamed)
     }
 
     fun add(vararg add : NamedExpr) {
         added += add
     }
+
+    fun set(cell : Coordinate, value : Any, type : KaneType<*>) {
+        val name = coordinateToCellName(cell)
+        add(if (value is Double) NamedScalar(name, constant(value, type as AlgebraicType))
+            else NamedValueExpr(name, value, type as KaneType<Any>))
+    }
+
+    fun column(index : Int, name : String) {
+        columnDescriptors[index] = ColumnDescriptor(name)
+
+    }
 }
 
 fun Sheet.eval() : Sheet {
     val reduced = reduceArithmetic(setOf())
-    return SheetImpl(reduced.cells)
+    return Sheet.of(columnDescriptors, reduced.cells)
 }
 
 private fun Sheet.variable(cell : String) : NamedScalarVariable {
@@ -268,15 +288,14 @@ fun Sheet.reduceArithmetic(variables : Set<String>) : Sheet {
         done = true
         new = new.map { (name, expr) ->
             val reduced = expr.reduceArithmetic(new, variables)
-            if (reduced != expr) {
-                //println("Reduced $name: $expr -> $reduced")
+            if (!done || reduced != expr) {
                 done = false
             }
             name to reduced
         }.toMap()
     }
 
-    return SheetImpl(new)
+    return Sheet.of(columnDescriptors, new)
 }
 
 fun Sheet.minimize(
@@ -342,14 +361,15 @@ fun Sheet.minimize(
         assert(new.containsKey(it.name))
         new[it.name] = variable(value.value, (cells[it.name] as AlgebraicExpr).type)
     }
-    return SheetImpl(new)
+    return Sheet.of(columnDescriptors, new)
 }
 
 fun Sheet.render() : String {
     if (cells.isEmpty()) return ""
     val sb = StringBuilder()
-    val widths = Array(columns + 1) { 0 }
-
+    val widths = Array(columns + 1) {
+        if (it > 0) columnDescriptors[it-1]?.name?.length?:0 else 0
+    }
 
     // Calculate widths
     for(row in 0 until rows) {
@@ -366,7 +386,10 @@ fun Sheet.render() : String {
     widths.indices.forEach { index ->
         val width = widths[index]
         if (index == 0) sb.append(" ".repeat(width) + " ")
-        else sb.append(padCenter(indexToColumnName(index - 1), width) + " ")
+        else {
+            val columnName = columnDescriptors[index-1]?.name ?: indexToColumnName(index - 1)
+            sb.append(padCenter(columnName, width) + " ")
+        }
     }
     sb.append("\n")
 
