@@ -2,6 +2,8 @@ package com.github.jomof.kane
 
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
 import com.github.jomof.kane.functions.*
+import com.github.jomof.kane.sheet.analyzeDataTypes
+import com.github.jomof.kane.sheet.readCsvAsSheet
 import com.github.jomof.kane.types.dollars
 import com.github.jomof.kane.types.percent
 import org.junit.Test
@@ -162,57 +164,6 @@ class SheetTest {
     }
 
     @Test
-    fun `budget calculator`() {
-        val growth by percent(0.078)
-        val inflation by percent(0.02)
-        val start = 2021
-        val end = 2068
-        val retireYear = 2023
-        val four01k by dollars(26_000)
-        val retirementSpend by dollars(200_000)
-        val fcollege by dollars(70_000)
-        val ncollege by dollars(35_000)
-        val wealthFrontIRA by dollars(837_000)
-        val google401k by dollars(458_000)
-        val s8profitSharing by dollars(244_000)
-        val affirma401K by dollars(180_408)
-        val f529plan by dollars(89_443)
-        val n529plan by dollars(60_167)
-        val wealthFrontCash by dollars(10_500)
-        val capitalOne by dollars(49_000)
-        val chase by dollars(20_000)
-        val wealthFrontBrokerage by dollars(730_000)
-        val wealthFrontRoth by dollars(50_000)
-        val homeEquity by dollars(934_000)
-        val coinbase by dollars(270_000)
-        val retire = sheetOf {
-            val a1 by rowOf("year",  "J",  "K", "post-tax", "pre-tax", "total", "post-tax Δ", "pre-tax Δ", "j-401k", "k-401k", "expenses", "college")
-            val a2 by rowOf("----", "--", "--", "--------", "-------", "-----", "----------", "---------", "------", "------", "--------", "-------")
-            val a3 by columnOf(start.toDouble() to end.toDouble())
-            val b3 by a3 - 1969.0
-            val c3 by a3 - 1972.0
-            val initialPostTax by wealthFrontCash + capitalOne + chase + wealthFrontBrokerage + wealthFrontRoth + homeEquity + coinbase
-            val initialPreTax by wealthFrontIRA + google401k + s8profitSharing + affirma401K + f529plan + n529plan
-            val d3 by initialPostTax stack columnOf((start+1 .. end).map { dollars(0.0) + up + up.right(3) - up.right(7) / 2.0 - up.right(8)} )
-            val e3 by initialPreTax stack columnOf((start+1 .. end).map { dollars(0.0) + up + cell(3, -1) + cell(4, -1) + cell(5, -1) - cell(6, -1) / 2.0} )
-            val f3 by columnOf((start+1 .. end + 1).map { 0.0 + left + left(2) } )
-            val g3 by d3 * (growth - inflation)
-            val h3 by e3 * (growth - inflation)
-            val i3 by columnOf((start+1 .. retireYear).map { four01k } )
-            val j3 by columnOf((start+1 .. retireYear).map { four01k } )
-            val l3 by columnOf(fcollege, fcollege, fcollege, fcollege)
-            val l8 by columnOf(ncollege, ncollege, ncollege, ncollege)
-            val k5 by columnOf((retireYear .. end).map { retirementSpend } )
-            val f51 by pow(up(35), 2.0)
-
-            add(a1, a2, a3, b3, c3, d3, e3, f3, g3, h3, i3, j3, k5, l3, l8, f51)
-        }
-        println(retire.eval())
-        val min = retire.minimize("F51", listOf("retirementSpend"))
-        println(min.eval())
-    }
-
-    @Test
     fun `types in sheet`() {
         val sheet = sheetOf {
             val a1 by constant("My String")
@@ -297,7 +248,18 @@ class SheetTest {
         val csv = File("./src/test/kotlin/com/github/jomof/kane/SP500toGDP.csv").absoluteFile
         val rows: List<Map<String, String>> = csvReader().readAllWithHeader(csv)
         assert(csv.isFile)
-        println(rows)
+        println(analyzeDataTypes(rows))
+        val sheet = readCsvAsSheet(csv)
+        println(sheet)
+    }
+
+    @Test
+    fun `sheet with named columns`() {
+        val sheet = sheetOf {
+            column(0, "Column 0")
+            column(1, "Column 1")
+        }
+        println(sheet)
     }
 
     @Test

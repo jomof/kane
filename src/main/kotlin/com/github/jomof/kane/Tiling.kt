@@ -1,7 +1,10 @@
 package com.github.jomof.kane
 
 import com.github.jomof.kane.types.KaneType
+import com.github.jomof.kane.types.kaneType
 import kotlin.reflect.KProperty
+
+
 
 data class Tiling<E:Any>(
     val columns : Int,
@@ -17,10 +20,10 @@ data class Tiling<E:Any>(
     operator fun getValue(e: Any?, property: KProperty<*>) = NamedTiling(property.name, this)
     fun getNamedElement(name : String, coordinate: Coordinate) : NamedExpr {
         val element = data[coordinate.row * columns + coordinate.column]
-        return when {
-            element is ScalarExpr -> NamedScalar(name, element)
-            element is Double -> NamedScalar(name, constant(element))
-            else -> NamedValueExpr(name, element, object : KaneType<E>(element.javaClass) { })
+        return when (element) {
+            is ScalarExpr -> NamedScalar(name, element)
+            is Double -> NamedScalar(name, constant(element))
+            else -> NamedValueExpr(name, element, element.javaClass.kaneType)
         }
     }
 }
@@ -47,7 +50,7 @@ fun columnOf(range : Pair<Double, Double>, step : Double = 1.0) : MatrixExpr {
 }
 
 inline fun <reified E:Any> columnOf(vararg elements : E) : Tiling<E> {
-    val valueType = object : KaneType<E>(E::class.java) { }
+    val valueType = E::class.java.kaneType
     return Tiling(1, elements.size, elements.toList(), valueType)
 }
 
@@ -65,7 +68,7 @@ fun rowOf(range : Pair<Double, Double>, step : Double = 1.0) : MatrixExpr {
     return matrixOf(elements.size, 1, elements)
 }
 inline fun <reified E:Any> rowOf(vararg elements : E) : Tiling<E> {
-    val valueType = object : KaneType<E>(E::class.java) { }
+    val valueType = E::class.java.kaneType
     return Tiling(elements.size, 1, elements.toList(), valueType)
 }
 

@@ -75,7 +75,7 @@ data class ValueExpr<E: Any>(
         }
         track()
     }
-    override fun toString() = value.toString()
+    override fun toString() = type.render(value)
     operator fun getValue(e: E?, property: KProperty<*>) = toNamed(property.name)
     fun toNamed(name : String) = NamedValueExpr(name, value, type)
 }
@@ -89,7 +89,7 @@ data class NamedValueExpr<E: Any>(
         track()
     }
     fun toValueExpr() = ValueExpr(value, type)
-    override fun toString() = value.toString()
+    override fun toString() = type.render(value)
 }
 
 data class ScalarVariable(
@@ -298,7 +298,8 @@ fun variable(initial : Double = 0.0, type : AlgebraicType = DoubleAlgebraicType.
 fun constant(value : Double, type : AlgebraicType) : ScalarExpr = ConstantScalar(value, type)
 fun constant(value : Double) : ScalarExpr = ConstantScalar(value, DoubleAlgebraicType.kaneType)
 fun constant(value : Int) : ScalarExpr = constant(value.toDouble())
-inline fun <reified E:Any> constant(value : E) = ValueExpr(value, object : KaneType<E>(E::class.java) { })
+fun constant(value : String) = ValueExpr(value, StringKaneType.kaneType)
+//inline fun <reified E:Any> constant(value : E) = ValueExpr(value, object : KaneType<E>(E::class.java) { })
 
 // Tableau
 fun tableauOf(vararg elements : NamedAlgebraicExpr) : Tableau = Tableau(elements.toList())
