@@ -93,6 +93,19 @@ class SheetTest {
     }
 
     @Test
+    fun `weird case where % was not converted to dollar`() {
+        val stock = percent(0.7)
+        val start = dollars(100)
+        val plan = sheetOf {
+            val a1 by sp500(constant(1988))
+            val b1 by (start * a1 * stock + start * a1 * (1.0 - stock))
+            add(b1)
+        }.eval()
+        println(plan)
+        plan["B1"].assertString("$16")
+    }
+
+    @Test
     fun `basic define column`() {
         val sheet = sheetOf {
             val increasing by range("B")
@@ -500,7 +513,7 @@ class SheetTest {
         val adb1 by assign(db1 to sumb1)
         val adb2 by assign(db2 to sumb2)
         val adb3 by assign(db3 to sumb3)
-        val tab = tableauOf(output, error, dw2, dw3, adw2, adw3, adw1, adb1, adb2, adb3)
+        val tab = tableauOf(output.type,output, error, dw2, dw3, adw2, adw3, adw1, adb1, adb2, adb3)
         val layout = tab.linearize()
         //println(layout)
         val space = layout.allocateSpace()

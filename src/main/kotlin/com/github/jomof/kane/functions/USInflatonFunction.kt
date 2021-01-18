@@ -126,7 +126,7 @@ private class USInflationFunction : AlgebraicUnaryScalarFunction {
         val constValue = value.tryFindConstant()
         return when {
             constValue != null -> constant(usInflation(constValue.toInt()))
-            else -> value
+            else -> null
         }
     }
     override fun differentiate(

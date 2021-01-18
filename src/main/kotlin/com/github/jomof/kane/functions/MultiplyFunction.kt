@@ -27,7 +27,7 @@ private class MultiplyFunction : AlgebraicBinaryScalarFunction {
             leftConst != null && rightConst != null -> when {
                 leftConst is Double && rightConst is Double -> constant(leftConst * rightConst, type(p1.type, p2.type))
                 else -> constant(invoke(leftConst, rightConst), type(p1.type, p2.type))
-            } as ScalarExpr
+            }
             p1 is AlgebraicUnaryScalar && p1.op == negate -> {
                 // -(x*y)*z -> -(x*y*z)
                 -(p1.value * p2)
@@ -44,7 +44,7 @@ private class MultiplyFunction : AlgebraicBinaryScalarFunction {
             p1 is AlgebraicBinaryScalar && p1.op == multiply && p1.left == p2 -> p1.right * pow(p2, 2.0)
             leftConst != null && p2 is AlgebraicBinaryScalar && p2.op == multiply && p2.left is ConstantScalar -> {
                 // 4*3*y -> 12*y
-                p1 * p2.left.value * p2.right
+                (p1 * p2.left) * p2.right
             }
             p2 is AlgebraicBinaryScalar && p2.op == multiply && p2.left is ConstantScalar && p2.right !is ConstantScalar -> {
                 // x*(3*y) -> 3*(x*y)
@@ -87,3 +87,5 @@ operator fun ScalarExpr.times(right : UntypedScalar) = multiply(this, right)
 operator fun UntypedScalar.times(right : ScalarExpr) = multiply(this, right)
 operator fun <E:Number> UntypedScalar.times(right : E) = multiply(this, right.toDouble())
 operator fun <E:Number> E.times(right : UntypedScalar) = multiply(this.toDouble(), right)
+operator fun UntypedScalar.times(right : UntypedScalar) = multiply(this, right)
+operator fun MatrixExpr.times(right : UntypedScalar) = multiply(this, right)

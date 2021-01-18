@@ -208,9 +208,9 @@ data class DataMatrix(
 
 data class Tableau(
     override val children: List<NamedAlgebraicExpr>,
+    override val type : AlgebraicType
 ) : AlgebraicExpr, ParentExpr<Double> {
     init { track() }
-    override val type get() = children[0].type
     override fun toString() = render()
 }
 
@@ -302,7 +302,7 @@ fun constant(value : String) = ValueExpr(value, StringKaneType.kaneType)
 //inline fun <reified E:Any> constant(value : E) = ValueExpr(value, object : KaneType<E>(E::class.java) { })
 
 // Tableau
-fun tableauOf(vararg elements : NamedAlgebraicExpr) : Tableau = Tableau(elements.toList())
+fun tableauOf(type : AlgebraicType, vararg elements : NamedAlgebraicExpr) : Tableau = Tableau(elements.toList(), type)
 // Misc
 fun repeated(columns : Int, rows : Int, type : AlgebraicType, value : Double) : MatrixExpr =
     repeated(columns, rows, ConstantScalar(value, type))
@@ -673,23 +673,25 @@ fun AlgebraicExpr.memoizeAndReduceArithmetic(
             }
             is ScalarVariable -> this
             is AlgebraicBinaryScalar -> {
-                val leftSelf = left.self()
-                val rightSelf = right.self()
-                val leftAffine = left.affineName()
-                val rightAffine = right.affineName()
-                if (left != leftSelf || right != right.self()) binaryScalar(op, leftSelf, rightSelf).self()
-                else if (leftAffine != null && rightAffine != null && leftAffine.compareTo(rightAffine) == 1 && op.meta.associative) {
-                    val result : ScalarExpr = op(right, left).self()
-                    result
-                }
-                else {
-                    val leftConst = left.tryFindConstant()
-                    val rightConst = right.tryFindConstant()
-                    when {
-                        leftConst != null && rightConst != null -> ConstantScalar(op(leftConst, rightConst), type)
-                        else -> op.reduceArithmetic(left, right)?.self() ?: this
+                val result = run {
+                    val leftSelf = left.self()
+                    val rightSelf = right.self()
+                    val leftAffine = left.affineName()
+                    val rightAffine = right.affineName()
+                    if (left != leftSelf || right != right.self()) binaryScalar(op, leftSelf, rightSelf).self()
+                    else if (leftAffine != null && rightAffine != null && leftAffine.compareTo(rightAffine) == 1 && op.meta.associative) {
+                        val result: ScalarExpr = op(right, left).self()
+                        result
+                    } else {
+                        val leftConst = left.tryFindConstant()
+                        val rightConst = right.tryFindConstant()
+                        when {
+                            leftConst != null && rightConst != null -> ConstantScalar(op(leftConst, rightConst), type)
+                            else -> op.reduceArithmetic(left, right)?.self() ?: this
+                        }
                     }
                 }
+                result.withType(type)
             }
             is AlgebraicUnaryScalar -> {
                 val valueSelf = value.self()
@@ -932,5 +934,14 @@ fun Expr.render(entryPoint : Boolean = true) : String {
             }
         }
         else -> "$this"
+    }
+}
+
+fun ScalarExpr.withType(target : AlgebraicType) : ScalarExpr {
+    return when {
+        type == target -> this
+        this is AlgebraicBinaryScalar -> copy(type = target)
+        else ->
+            error("$javaClass")
     }
 }

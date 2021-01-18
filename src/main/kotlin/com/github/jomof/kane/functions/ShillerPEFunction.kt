@@ -116,7 +116,7 @@ private class ShillerPEFunction : AlgebraicUnaryScalarFunction {
         val constValue = value.tryFindConstant()
         return when {
             constValue != null -> constant(shillerPEImpl(constValue.toInt()))
-            else -> value
+            else -> null
         }
     }
 

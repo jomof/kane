@@ -350,7 +350,7 @@ fun Sheet.minimize(
 
     // Create the model, allocate space for it, and iterate. Break when the target didn't move much
     println("Linearizing equations")
-    val model = Tableau(resolvedVariables.values + diffs + namedTarget + assignBacks).linearize()
+    val model = Tableau(resolvedVariables.values + diffs + namedTarget + assignBacks, diffs[0].type).linearize()
     val space = model.allocateSpace()
     var priorTarget = model.shape(namedTarget).ref(space).value
     println("Minimizing")

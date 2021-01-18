@@ -1,6 +1,7 @@
 package com.github.jomof.kane
 
 import com.github.jomof.kane.functions.plus
+import com.github.jomof.kane.types.DoubleAlgebraicType
 import org.junit.Test
 import kotlin.random.Random
 
@@ -45,7 +46,7 @@ class FuzzTest {
             val expr = random.nextNamedAlgebraicExpr()
             expr.render()
             val reduced = expr.reduceArithmetic()
-            val tab = tableauOf(reduced)
+            val tab = tableauOf(DoubleAlgebraicType.kaneType, reduced)
 
             try {
                 val model = tab.linearize()
@@ -59,10 +60,10 @@ class FuzzTest {
             }
 
             try {
-                tableauOf(expr).linearize()
+                tableauOf(DoubleAlgebraicType.kaneType, expr).linearize()
             } catch (e : Throwable) {
-                println(tableauOf(expr))
-                tableauOf(expr).linearize()
+                println(tableauOf(DoubleAlgebraicType.kaneType, expr))
+                tableauOf(DoubleAlgebraicType.kaneType, expr).linearize()
                 throw e.cause ?: e
             }
 

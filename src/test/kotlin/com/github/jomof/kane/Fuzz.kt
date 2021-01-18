@@ -171,7 +171,7 @@ fun Random.nextNamedMatrixAssign(
 }
 
 fun Random.nextTableau(type : AlgebraicType) =
-    Tableau((0 until nextInt(0, 10)).map { nextNamedAlgebraicExpr(type) })
+    Tableau((0 until nextInt(0, 10)).map { nextNamedAlgebraicExpr(type) }, type)
 
 fun Random.nextNamedAlgebraicExpr(type : AlgebraicType) : NamedAlgebraicExpr {
     val method = chooseOne(interfaceSpecs.getValue(NamedAlgebraicExpr::class.java))

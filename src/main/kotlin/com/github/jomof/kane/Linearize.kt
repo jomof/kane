@@ -390,7 +390,7 @@ fun AlgebraicExpr.rollUpCommonSubexpressions(model : LinearModel) : AlgebraicExp
 
 fun AlgebraicExpr.linearize() : LinearModel {
     val names = gatherNamedExprs().toList().map { it.reduceArithmetic() }
-    with(Tableau(names)) {
+    with(Tableau(names, type)) {
         val model = LinearModel(type)
         claimMatrixVariables(model)
         claimScalarVariables(model)

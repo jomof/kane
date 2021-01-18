@@ -16,6 +16,8 @@ interface AlgebraicBinaryScalarFunction {
         AlgebraicBinaryScalar(this, p1, p2)
     operator fun  invoke(p1 : UntypedScalar, p2 : ScalarExpr) : ScalarExpr =
         AlgebraicBinaryScalar(this, CoerceScalar(p1, p2.type), p2)
+    operator fun  invoke(p1 : UntypedScalar, p2 : UntypedScalar) : ScalarExpr =
+        AlgebraicBinaryScalar(this, CoerceScalar(p1, DoubleAlgebraicType.kaneType), CoerceScalar(p2, DoubleAlgebraicType.kaneType))
     operator fun  invoke(p1 : ScalarExpr, p2 : UntypedScalar) : ScalarExpr =
         AlgebraicBinaryScalar(this, p1, CoerceScalar(p2, p1.type))
     operator fun  invoke(p1 : UntypedScalar, p2 : Double) : ScalarExpr =
@@ -34,6 +36,8 @@ interface AlgebraicBinaryScalarFunction {
         AlgebraicBinaryMatrixScalar(this, p1.columns, p1.rows, p1, constant(p2))
     operator fun  invoke(p1 : Double, p2 : ScalarExpr) : ScalarExpr = invoke(constant(p1), p2)
     operator fun  invoke(p1 : ScalarExpr, p2 : Double) : ScalarExpr = invoke(p1, constant(p2))
+    operator fun  invoke(p1 : MatrixExpr, p2 : UntypedScalar) : MatrixExpr =
+        AlgebraicBinaryMatrixScalar(this, p1.columns, p1.rows, p1, CoerceScalar(p2, p1.type))
     fun type(left : AlgebraicType, right : AlgebraicType) : AlgebraicType {
         return when {
             left == DollarAlgebraicType.kaneType -> DollarAlgebraicType.kaneType
@@ -62,13 +66,15 @@ fun  binaryScalar(op : AlgebraicBinaryScalarFunction,
 data class AlgebraicBinaryScalar(
     val op : AlgebraicBinaryScalarFunction,
     val left : ScalarExpr,
-    val right : ScalarExpr) : ScalarExpr, ParentExpr<Double> {
+    val right : ScalarExpr,
+    override val type: AlgebraicType = op.type(left.type, right.type),
+) : ScalarExpr, ParentExpr<Double> {
     private val hashCode = op.hashCode() * 3 + left.hashCode() * 7 + right.hashCode() * 9
     override fun hashCode() = hashCode
     init {
         track()
     }
-    override val type get() = op.type(left.type, right.type)
+    //override val type get() = op.type(left.type, right.type)
     override val children get() = listOf(left, right)
     override fun toString() = render()
     fun copy(

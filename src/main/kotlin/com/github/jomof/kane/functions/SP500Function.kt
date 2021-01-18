@@ -1,6 +1,7 @@
 package com.github.jomof.kane.functions
 
 import com.github.jomof.kane.*
+import com.github.jomof.kane.types.percent
 
 // %gain, including dividends at end of year
 private val sp500Map = mapOf(
@@ -111,8 +112,9 @@ private class SP500Function : AlgebraicUnaryScalarFunction {
     override fun reduceArithmetic(value: ScalarExpr) : ScalarExpr? {
         val constValue = value.tryFindConstant()
         return when {
-            constValue != null -> constant(sp500(constValue.toInt()))
-            else -> value
+            constValue != null ->
+                percent(sp500(constValue.toInt()))
+            else -> null
         }
     }
 

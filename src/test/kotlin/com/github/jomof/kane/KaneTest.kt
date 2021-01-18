@@ -47,7 +47,7 @@ class KaneTest {
             mvar2[0,2]|mvar2[1,2]|mvar2[2,2]
             mvar2[0,3]|mvar2[1,3]|mvar2[2,3]
         """.trimIndent())
-        val tableau = tableauOf(m1,m2)
+        val tableau = tableauOf(m1.type,m1,m2)
         tableau.assertString("""
             m1
             ------
@@ -119,7 +119,7 @@ class KaneTest {
         val db by b - 0.1 * differentiate(d(error)/d(b))
         val am by assign(dm to m)
         val ab by assign(db to b)
-        val tab = tableauOf(am,ab,dm,db)
+        val tab = tableauOf(am.type,am,ab,dm,db)
         val map = mutableMapOf(
             "b" to 0.0,
             "m" to 0.0,
@@ -170,7 +170,7 @@ class KaneTest {
         val error by pow(target - y, 2.0)
         val ds by s - 0.1 * differentiate(d(error)/d(s))
         val ass by assign(ds to s)
-        val tab = tableauOf(m, b, ass)
+        val tab = tableauOf(m.type, m, b, ass)
         val model = tab.linearize()
         val space = model.allocateSpace()
         println(model)
@@ -206,7 +206,7 @@ class KaneTest {
         println(error)
         println(dm)
         println(db)
-        val tab = tableauOf(dm,db)
+        val tab = tableauOf(dm.type, dm,db)
         val map = mutableMapOf(
             "r" to 0.1, // learning rate
             "b" to 0.0,
@@ -247,7 +247,7 @@ class KaneTest {
         val error by 0.5 * pow(target - y, 2.0)
         val da by a - r * differentiate(d(error)/d(a))
         val aa by assign(da to a)
-        val tab = tableauOf(m,b,aa)
+        val tab = tableauOf(m.type,m,b,aa)
         println(tab)
         val layout = tab.linearize()
         println("---")
@@ -342,7 +342,7 @@ class KaneTest {
             0.24975|0.2995
         """.trimIndent())
 
-        val layout = tableauOf(output, db0, db1, dw0, dw1).linearize()
+        val layout = tableauOf(output.type,output, db0, db1, dw0, dw1).linearize()
         println(layout)
     }
 
@@ -368,7 +368,7 @@ class KaneTest {
         val aw1 by assign(dw1 to w1)
         val targetElement by target[0,0]
         val answer by output[0,0]
-        val tab = tableauOf(left,right,targetElement,error,answer,aw0,aw1)
+        val tab = tableauOf(left.type,left,right,targetElement,error,answer,aw0,aw1)
         val layout = tab.linearize()
         println(layout)
         val space = layout.allocateSpace()
@@ -427,7 +427,7 @@ class KaneTest {
         val o by w cross h2
         val yhat by softmax(o)
         val step by assign(h2 to h1)
-        val model = tableauOf(yhat, o, step).linearize()
+        val model = tableauOf(yhat.type, yhat, o, step).linearize()
         val space = model.allocateSpace()
         model.eval(space)
         val yhatref = model.shape(yhat).ref(space)
@@ -541,7 +541,7 @@ class KaneTest {
         val adw1 by assign(dw1 to sumdw1)
         val adw2 by assign(dw2 to sumdw2)
         val adw3 by assign(dw3 to sumdw3)
-        val tab = tableauOf(output,error,dw0,dw1,dw2,dw3,h2,adw0,adw1,adw2,adw3)
+        val tab = tableauOf(output.type,output,error,dw0,dw1,dw2,dw3,h2,adw0,adw1,adw2,adw3)
         val layout = tab.linearize()
         println(layout)
         val space = layout.allocateSpace()
@@ -641,7 +641,7 @@ class KaneTest {
         val aw1 by assign(dw1 to w1)
         val targetElement by target[0,0]
         val answer by output[0,0]
-        val tab = tableauOf(left,right,targetElement,error,answer,aw0,aw1,dw0,dw1)
+        val tab = tableauOf(left.type,left,right,targetElement,error,answer,aw0,aw1,dw0,dw1)
         val layout = tab.linearize()
         println(layout)
 
