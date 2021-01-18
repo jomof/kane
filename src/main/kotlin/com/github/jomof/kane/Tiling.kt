@@ -38,6 +38,7 @@ data class NamedTiling<E:Any>(
 fun columnOf(vararg elements : Double) : MatrixExpr = matrixOf(1, elements.size, *elements)
 fun columnOf(vararg elements : ScalarExpr) : MatrixExpr = matrixOf(1, elements.size, *elements)
 fun columnOf(elements : List<ScalarExpr>) : MatrixExpr = matrixOf(1, elements.size, *(elements.toTypedArray()))
+fun columnOf(count : Int, init:(Int) -> ScalarExpr) : MatrixExpr = matrixOf(1, count, *(0 until count).map { init(it) }.toTypedArray())
 fun columnOf(range : Pair<Double, Double>, step : Double = 1.0) : MatrixExpr {
     val (start, stop) = range
     var current = start

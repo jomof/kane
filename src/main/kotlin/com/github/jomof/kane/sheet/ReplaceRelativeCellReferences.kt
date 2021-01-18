@@ -16,13 +16,13 @@ private fun AlgebraicExpr.replaceRelativeCellReferences(
             val upper = name.toUpperCase()
             val result : AlgebraicExpr = if (looksLikeCellName(upper)) {
                 val new = cellNameToCoordinate(upper)
-                copy(scalar = scalar.self(new))
+                copy(scalar = scalar.self(new.reduceToFixed()))
             } else copy(scalar = scalar.self(coordinate))
             result
         }
         is NamedMatrix -> {
             val new = cellNameToCoordinate(name.toUpperCase())
-            copy(matrix = matrix.self(new))
+            copy(matrix = matrix.self(new.reduceToFixed()))
         }
         is AlgebraicUnaryScalar -> copy(value = value.self(coordinate))
         is AlgebraicUnaryMatrix -> copy(value = value.self(coordinate))
@@ -42,10 +42,15 @@ private fun AlgebraicExpr.replaceRelativeCellReferences(
         is ConstantScalar -> this
         is CoerceScalar -> {
             val result : AlgebraicExpr = when (value) {
-                is UntypedRelativeCellReference -> {
-                    copy(value = AbsoluteCellReferenceExpr(coordinate + value.offset))
+                //is AbsoluteCellReferenceExpr -> this
+                is ComputableCellReference -> {
+                    val fixed = computeAbsoluteCoordinate(coordinate, value.coordinate)
+                    copy(value = value.copy(fixed))
                 }
-                is AbsoluteCellReferenceExpr -> this
+                is NamedComputableCellReference -> {
+                    val fixed = computeAbsoluteCoordinate(coordinate, value.coordinate)
+                    copy(value = ComputableCellReference(coordinate = fixed))
+                }
                 else -> error("${value.javaClass}")
             }
             result
@@ -61,12 +66,13 @@ private fun Expr.replaceRelativeCellReferences() : Expr {
             val upper = name.toUpperCase()
             if (looksLikeCellName(upper)) {
                 val coordinate = cellNameToCoordinate(name.toUpperCase())
-                replaceRelativeCellReferences(coordinate)
+                replaceRelativeCellReferences(coordinate.reduceToFixed())
             } else this
         }
         is NamedValueExpr<*> -> this
-        is NamedUntypedAbsoluteCellReference -> this
+        is NamedComputableCellReference -> copy(coordinate = computeAbsoluteCoordinate(Coordinate(0,0), coordinate))
         is NamedTiling<*> -> this
+        is NamedMatrix -> this
         else -> error("$javaClass")
     }
 }

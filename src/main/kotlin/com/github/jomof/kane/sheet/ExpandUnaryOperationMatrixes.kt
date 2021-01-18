@@ -16,6 +16,7 @@ private fun AlgebraicExpr.expandUnaryOperationMatrixes() : AlgebraicExpr {
             val result = op.reduceArithmetic(data)
             result.self()
         }
+        is DataMatrix -> map { it.self() }
         is AlgebraicUnaryScalar -> copy(value = value.self())
         is AlgebraicUnaryMatrix -> copy(value = value.self())
         is AlgebraicBinaryScalar -> copy(left = left.self(), right = right.self())
@@ -29,9 +30,9 @@ private fun AlgebraicExpr.expandUnaryOperationMatrixes() : AlgebraicExpr {
 private fun Expr.expandUnaryOperationMatrixes() : Expr {
     return when(this) {
         is AlgebraicExpr -> expandUnaryOperationMatrixes()
-        is AbsoluteCellReferenceExpr -> this
+        is ComputableCellReference -> this
         is NamedValueExpr<*> -> this
-        is NamedUntypedAbsoluteCellReference -> this
+        is NamedComputableCellReference -> this
         is NamedTiling<*> -> this
         else -> error("$javaClass")
     }

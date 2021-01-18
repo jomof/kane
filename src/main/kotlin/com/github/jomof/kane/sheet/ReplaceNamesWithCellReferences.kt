@@ -11,7 +11,7 @@ private fun AlgebraicExpr.replaceNamesWithCellReferencesAlgebraic(excluding : St
             when {
                 name == excluding -> copy(scalar = scalar.self())
                 looksLikeCellName(name) -> {
-                    CoerceScalar(AbsoluteCellReferenceExpr(cellNameToCoordinate(name)), type)
+                    CoerceScalar(ComputableCellReference(cellNameToCoordinate(name)), type)
                 }
                 scalar is ConstantScalar -> {
                     NamedScalarVariable(name, scalar.value, scalar.type)
@@ -21,7 +21,7 @@ private fun AlgebraicExpr.replaceNamesWithCellReferencesAlgebraic(excluding : St
             }
         is NamedMatrix ->
             if (name != excluding) {
-                CoerceScalar(AbsoluteCellReferenceExpr(cellNameToCoordinate(name)), type)
+                CoerceScalar(ComputableCellReference(cellNameToCoordinate(name)), type)
             } else copy(matrix = matrix.self())
         is AlgebraicUnaryScalar -> copy(value = value.self())
         is AlgebraicUnaryMatrix -> copy(value = value.self())
@@ -37,7 +37,8 @@ private fun AlgebraicExpr.replaceNamesWithCellReferencesAlgebraic(excluding : St
             right = right.self())
         is CoerceScalar -> {
             val result : AlgebraicExpr = when (value) {
-                is AbsoluteCellReferenceExpr -> this
+                is ComputableCellReference -> this
+                is NamedComputableCellReference -> this
                 else -> error("${value.javaClass}")
             }
             result
@@ -52,7 +53,8 @@ private fun Expr.replaceNamesWithCellReferences(excluding : String) : Expr {
     return when(this) {
         is NamedScalar -> replaceNamesWithCellReferencesAlgebraic(excluding)
         is NamedValueExpr<*> -> toValueExpr()
-        is NamedUntypedAbsoluteCellReference -> AbsoluteCellReferenceExpr(coordinate)
+        is NamedComputableCellReference -> ComputableCellReference(coordinate)
+        is NamedMatrix -> this
         else -> error("$javaClass")
     }
 }

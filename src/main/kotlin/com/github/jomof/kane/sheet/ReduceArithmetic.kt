@@ -1,10 +1,7 @@
 package com.github.jomof.kane.sheet
 
 import com.github.jomof.kane.*
-import com.github.jomof.kane.functions.AlgebraicBinaryScalar
-import com.github.jomof.kane.functions.AlgebraicUnaryMatrix
-import com.github.jomof.kane.functions.AlgebraicUnaryMatrixScalar
-import com.github.jomof.kane.functions.AlgebraicUnaryScalar
+import com.github.jomof.kane.functions.*
 
 private fun AlgebraicExpr.reduceArithmeticImpl(
     cells : Map<String, Expr>,
@@ -21,19 +18,33 @@ private fun AlgebraicExpr.reduceArithmeticImpl(
         is AlgebraicUnaryMatrix -> copy(value = value.self() ?: return null)
         is AlgebraicUnaryMatrixScalar -> copy(value = value.self() ?: return null)
         is AlgebraicBinaryScalar -> copyReduce(left = left.self() ?: return null, right = right.self() ?: return null)
+        is AlgebraicBinaryMatrixScalar -> copy(left = left.self() ?: return null, right = right.self() ?: return null)
         is CoerceScalar -> {
             val result: ScalarExpr? = when (value) {
                 is ScalarVariable -> {
                     // This variable is not being optimized so treat it as constant
                     ConstantScalar(value.initial, type)
                 }
-                is AbsoluteCellReferenceExpr -> {
+                is ComputableCellReference -> {
                     val ref = "$value"
                     if (variables.contains(ref)) this
                     else {
                         val result = cells[ref] ?: constant(0.0)
                         when {
-                            result is ConstantScalar && result.type.java == type.java -> result as ScalarExpr
+                            result is ConstantScalar && result.type.java == type.java -> result
+                            result is ConstantScalar -> constant(type.coerceFrom(result.value), type)
+                            result is NamedScalarVariable -> result
+                            else -> this
+                        }
+                    }
+                }
+                is NamedComputableCellReference -> {
+                    val ref = "$value"
+                    if (variables.contains(ref)) this
+                    else {
+                        val result = cells[ref] ?: constant(0.0)
+                        when {
+                            result is ConstantScalar && result.type.java == type.java -> result
                             result is ConstantScalar -> constant(type.coerceFrom(result.value), type)
                             result is NamedScalarVariable -> result
                             else -> this
@@ -72,7 +83,7 @@ private fun Expr.reduceArithmeticImpl(cells : Map<String, Expr>, variables : Set
     return when(this) {
         is AlgebraicExpr -> reduceArithmeticImpl(cells, variables, depth + 1)?.memoizeAndReduceArithmetic()
         is ValueExpr<*> -> this
-        is AbsoluteCellReferenceExpr -> this
+        is ComputableCellReference -> this
         else -> error("$javaClass")
     }
 }

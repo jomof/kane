@@ -31,7 +31,7 @@ private fun Expr.convertCellNamesToUpperCase() : Expr {
     return when(this) {
         is AlgebraicExpr -> convertCellNamesToUpperCase()
         is NamedValueExpr<*> -> copy(name = name.upper())
-        is NamedUntypedAbsoluteCellReference -> copy(name = name.upper())
+        is NamedComputableCellReference -> copy(name = name.upper())
         is NamedTiling<*> -> copy(name = name.upper())
         else -> error("$javaClass")
     }

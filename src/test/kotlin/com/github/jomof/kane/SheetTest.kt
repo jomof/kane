@@ -2,8 +2,7 @@ package com.github.jomof.kane
 
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
 import com.github.jomof.kane.functions.*
-import com.github.jomof.kane.sheet.analyzeDataTypes
-import com.github.jomof.kane.sheet.readCsvAsSheet
+import com.github.jomof.kane.sheet.*
 import com.github.jomof.kane.types.dollars
 import com.github.jomof.kane.types.percent
 import org.junit.Test
@@ -89,6 +88,32 @@ class SheetTest {
     }
 
     @Test
+    fun `cell naming`() {
+        coordinateToCellName(0,0).assertString("A1")
+    }
+
+    @Test
+    fun `basic define column`() {
+        val sheet = sheetOf {
+            val increasing by range("B")
+            val a2 by columnOf(5) { 1.1 + increasing.up }
+            val b1 by columnOf(5) { constant(1.0 + it) }
+            add(a2, b1)
+        }.eval()
+        println(sheet)
+        sheet.assertString("""
+               A  increasing 
+              --- ---------- 
+            1              1 
+            2 2.1          2 
+            3 3.1          3 
+            4 4.1          4 
+            5 5.1          5 
+            6 6.1            
+        """.trimIndent())
+    }
+
+    @Test
     fun `recursive sheet`() {
         val sheet = sheetOf {
             val a1 by down
@@ -111,6 +136,19 @@ class SheetTest {
             add(a1, b2, c3)
         }
         println(sheet)
+    }
+
+    @Test
+    fun `relative reference`() {
+        val sheet = sheetOf {
+            val a1 by dollars(0.15)
+            val a2 by up + dollars(0.35)
+            add(a1, a2)
+        }
+        val evaluated = sheet.eval()
+        println(evaluated)
+        evaluated["A1"].assertString("$0.15")
+        evaluated["A2"].assertString("$0.50")
     }
 
     @Test
@@ -263,6 +301,17 @@ class SheetTest {
     }
 
     @Test
+    fun `second element of columnOf`() {
+        val sheet = sheetOf {
+            val a1 by columnOf(1.0, 2.0)
+            add(a1)
+        }
+        println(sheet)
+        sheet["A1"].assertString("1")
+        sheet["A2"].assertString("2")
+    }
+
+    @Test
     fun `softmax`() {
         val sheet = sheetOf {
             val a1 by columnOf(1.0, 1.0)
@@ -278,7 +327,6 @@ class SheetTest {
         sheet["C1"].assertString("exp(B1)/(exp(B1)+exp(B2))")
         sheet["C2"].assertString("exp(B2)/(exp(B1)+exp(B2))")
         println(sheet.eval())
-
     }
 
     @Test

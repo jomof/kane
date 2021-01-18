@@ -3,9 +3,9 @@
 package com.github.jomof.kane
 
 import com.github.jomof.kane.functions.*
+import com.github.jomof.kane.sheet.CoerceScalar
 import com.github.jomof.kane.types.*
 import java.io.Closeable
-import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 
 interface Expr

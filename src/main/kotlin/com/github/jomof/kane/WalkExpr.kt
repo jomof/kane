@@ -1,6 +1,7 @@
 package com.github.jomof.kane
 
 import com.github.jomof.kane.functions.*
+import com.github.jomof.kane.sheet.*
 
 fun Expr.count() : Int {
     var count = 0
@@ -11,8 +12,6 @@ fun Expr.count() : Int {
 fun Expr.visit(f: (expr : Expr) -> Unit) {
     f(this)
     when(this) {
-        is NamedUntypedAbsoluteCellReference,
-        is UntypedRelativeCellReference,
         is Slot,
         is NamedMatrixVariable,
         is MatrixVariableElement,
@@ -20,7 +19,8 @@ fun Expr.visit(f: (expr : Expr) -> Unit) {
         is ConstantScalar,
         is ValueExpr<*>,
         is NamedValueExpr<*>,
-        is AbsoluteCellReferenceExpr,
+        is ComputableCellReference,
+        is NamedComputableCellReference,
         is NamedScalarVariable -> {}
         is AlgebraicBinaryScalar -> {
             left.visit(f)
@@ -50,7 +50,8 @@ fun Expr.visit(f: (expr : Expr) -> Unit) {
         is AlgebraicDeferredDataMatrix -> data.visit(f)
         is Tableau -> children.forEach { it.visit(f) }
         is NamedTiling<*> -> { }
-        else -> error("$javaClass")
+        else ->
+            error("$javaClass")
     }
 }
 

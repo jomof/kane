@@ -1,47 +1,48 @@
-package com.github.jomof.kane
+package com.github.jomof.kane.sheet
 
+import com.github.jomof.kane.*
+import com.github.jomof.kane.ComputableIndex.FixedIndex
+import com.github.jomof.kane.ComputableIndex.RelativeIndex
 import com.github.jomof.kane.functions.*
-import com.github.jomof.kane.sheet.*
+import com.github.jomof.kane.track
 import com.github.jomof.kane.types.AlgebraicType
 import com.github.jomof.kane.types.KaneType
 import java.lang.Integer.max
 import kotlin.math.abs
 import kotlin.reflect.KProperty
 
-interface CellReferenceExpr : Expr
 
-data class AbsoluteCellReferenceExpr(
-    private val coordinate : Coordinate
-) : CellReferenceExpr {
-    init { track() }
+data class ComputableCellReference(val coordinate : ComputableCoordinate) : UntypedScalar {
+    fun up(move : Int) = copy(coordinate = coordinate.up(move))
+    fun down(move : Int) = copy(coordinate = coordinate.down(move))
+    fun left(move : Int) = copy(coordinate = coordinate.left(move))
+    fun right(move : Int) = copy(coordinate = coordinate.right(move))
+    val up get() = up(1)
+    val down get() = down(1)
+    val left get() = left(1)
+    val right get() = right(1)
+    operator fun getValue(nothing: Nothing?, property: KProperty<*>) = run {
+        NamedComputableCellReference(property.name, coordinate)
+    }
+
     override fun toString() = coordinateToCellName(coordinate)
 }
 
-data class UntypedRelativeCellReference(val offset : Coordinate) : UntypedScalar {
-    init { track() }
-    override fun toString() = "ref$offset"
-    fun up(move : Int = 1) = UntypedRelativeCellReference(offset + Coordinate(column = 0, row = -move))
-    fun down(move : Int = 1) = UntypedRelativeCellReference(offset + Coordinate(column = 0, row = move))
-    fun left(move : Int = 1) = UntypedRelativeCellReference(offset + Coordinate(column = -move, row = 0))
-    fun right(move : Int = 1) = UntypedRelativeCellReference(offset + Coordinate(column = move, row = 0))
-    val up get() = up()
-    val down get() = down()
-    val left get() = left()
-    val right get() = right()
-    operator fun getValue(nothing: Nothing?, property: KProperty<*>) = run {
-        val name = property.name.toUpperCase()
-        val source = cellNameToCoordinate(name)
-        NamedUntypedAbsoluteCellReference(name, source + offset)
-    }
-
-    fun toAbsolute(source : Coordinate) = AbsoluteCellReferenceExpr(source + offset)
-}
-
-data class NamedUntypedAbsoluteCellReference(
+data class NamedComputableCellReference(
     override val name : String,
-    val coordinate : Coordinate) : UntypedScalar, NamedExpr {
+    val coordinate : ComputableCoordinate
+) : UntypedScalar, NamedExpr {
     init { track() }
     override fun toString() = "$name=${coordinateToCellName(coordinate)}"
+
+    fun up(move : Int) = copy(coordinate = coordinate.up(move))
+    fun down(move : Int) = copy(coordinate = coordinate.down(move))
+    fun left(move : Int) = copy(coordinate = coordinate.left(move))
+    fun right(move : Int) = copy(coordinate = coordinate.right(move))
+    val up get() = up(1)
+    val down get() = down(1)
+    val left get() = left(1)
+    val right get() = right(1)
 }
 
 data class CoerceScalar(
@@ -88,13 +89,13 @@ interface Sheet {
             if (cells.isEmpty()) return SheetImpl(columnDescriptors, cells, 0, 0)
 
             val columnsFromCells : Int = cells
-                .filter { looksLikeCellName(it.key)}
-                .map { cellNameToCoordinate(it.key).column }.maxOrNull()!! + 1
+                .filter { looksLikeCellName(it.key) }
+                .map { (cellNameToCoordinate(it.key).column as FixedIndex).index }.maxOrNull()!! + 1
             val columnsColumnDescriptors : Int = columnDescriptors
                 .map { it.key }.maxOrNull()?:0 + 1
             val rows : Int = cells
-                .filter { looksLikeCellName(it.key)}
-                .map { cellNameToCoordinate(it.key).row }.maxOrNull()!! + 1
+                .filter { looksLikeCellName(it.key) }
+                .map { (cellNameToCoordinate(it.key).row as FixedIndex).index }.maxOrNull()!! + 1
             return SheetImpl(columnDescriptors, cells, max(columnsFromCells, columnsColumnDescriptors), rows)
         }
     }
@@ -103,16 +104,14 @@ interface Sheet {
 class SheetBuilder {
     private val columnDescriptors : MutableMap<Int, ColumnDescriptor> = mutableMapOf()
     private val added : MutableList<NamedExpr> = mutableListOf()
-    fun up(offset : Int = 1) = UntypedRelativeCellReference(Coordinate(column = 0, row = -offset))
-    fun down(offset : Int = 1) = UntypedRelativeCellReference(Coordinate(column = 0, row = offset))
-    fun left(offset : Int = 1) = UntypedRelativeCellReference(Coordinate(column = -offset, row = 0))
-    fun right(offset : Int = 1) = UntypedRelativeCellReference(Coordinate(column = offset, row = 0))
-    fun cell(columnsRight : Int, rowsDown : Int) =
-        UntypedRelativeCellReference(Coordinate(column = columnsRight, row = rowsDown))
-    val up get() = up()
-    val down get() = down()
-    val left get() = left()
-    val right get() = right()
+    fun up(offset : Int) = ComputableCellReference(ComputableCoordinate.relative(column = 0, row = -offset))
+    fun down(offset : Int) = ComputableCellReference(ComputableCoordinate.relative(column = 0, row = offset))
+    fun left(offset : Int) = ComputableCellReference(ComputableCoordinate.relative(column = -offset, row = 0))
+    fun right(offset : Int) = ComputableCellReference(ComputableCoordinate.relative(column = offset, row = 0))
+    val up get() = up(1)
+    val down get() = down(1)
+    val left get() = left(1)
+    val right get() = right(1)
 
     private fun getImmediateNamedExprs() : Map<String, NamedExpr> {
         val cells = mutableMapOf<String, NamedExpr>()
@@ -165,7 +164,7 @@ class SheetBuilder {
             done = true
             result.toList().forEach { (name, expr) ->
                 if (looksLikeCellName(name)) {
-                    val upperLeft = cellNameToCoordinate(name)
+                    val upperLeft = cellNameToCoordinate(name).reduceToFixed()
                     when {
                         expr is NamedMatrix -> {
                             var replacedOurName = false
@@ -217,6 +216,7 @@ class SheetBuilder {
                         is NamedExpr -> error("${expr.scalar.javaClass}")
                         else -> expr.scalar
                     }
+                    is NamedMatrix -> expr.matrix
                     is NamedExpr -> error("${expr.javaClass}")
                     else ->
                         expr
@@ -228,6 +228,10 @@ class SheetBuilder {
     private fun replaceNamesWithCellReferences(cells : Map<String, NamedExpr>) : Map<String, Expr> {
         return cells
             .map { (name, expr) ->
+                if (expr is NamedComputableCellReference
+                    && expr.coordinate.column is FixedIndex) {
+                    columnDescriptors[expr.coordinate.column.index] = ColumnDescriptor(name)
+                }
                 name to expr.replaceNamesWithCellReferences(name)
             }
             .toMap()
@@ -250,14 +254,24 @@ class SheetBuilder {
     }
 
     fun set(cell : Coordinate, value : Any, type : KaneType<*>) {
-        val name = coordinateToCellName(cell)
+        val name = coordinateToCellName(ComputableCoordinate.fixed(cell))
         add(if (value is Double) NamedScalar(name, constant(value, type as AlgebraicType))
-            else NamedValueExpr(name, value, type as KaneType<Any>))
+            else NamedValueExpr(name, value, type as KaneType<Any>)
+        )
     }
 
     fun column(index : Int, name : String) {
         columnDescriptors[index] = ColumnDescriptor(name)
+    }
 
+    fun range(name : String) : ComputableCellReference {
+        val index = columnNameToIndex(name)
+        return ComputableCellReference(
+            ComputableCoordinate(
+                column = FixedIndex(index),
+                row = RelativeIndex(0)
+            )
+        )
     }
 }
 
@@ -375,7 +389,7 @@ fun Sheet.render() : String {
     for(row in 0 until rows) {
         widths[0] = max(widths[0], "$row".length)
         for(column in 0 until columns) {
-            val cell = coordinateToCellName(column, row)
+            val cell = coordinateToCellName(ComputableCoordinate.fixed(column, row))
             val value = cells[cell]?.toString() ?: ""
             widths[column + 1] = max(widths[column + 1], value.length)
             widths[column + 1] = max(widths[column + 1], indexToColumnName(column).length)
@@ -405,7 +419,7 @@ fun Sheet.render() : String {
     for(row in 0 until rows) {
         sb.append(padLeft("${row+1}", widths[0]) + " ")
         for(column in 0 until columns) {
-            val cell = coordinateToCellName(column, row)
+            val cell = coordinateToCellName(ComputableCoordinate.fixed(column, row))
             val value = cells[cell]?.toString() ?: ""
             sb.append(padLeft(value, widths[column + 1]) + " ")
         }
@@ -416,7 +430,9 @@ fun Sheet.render() : String {
     val nonCells = cells.filter { !looksLikeCellName(it.key) }
     if (nonCells.isNotEmpty()) {
         nonCells.toList().sortedBy { it.first }.forEach {
-            sb.append("\n${it.first}=${it.second}")
+            if (it.second !is ComputableCellReference) {
+                sb.append("\n${it.first}=${it.second}")
+            }
         }
     }
     return "$sb"
@@ -431,13 +447,28 @@ fun sheetOf(init : SheetBuilder.() -> Unit) : Sheet {
 
 
 // Cell naming
-fun coordinateToCellName(column : Int, row : Int) : String {
-    if (column < 0) return "#REF!"
-    if (row < 0) return "#REF!"
-    return "${indexToColumnName(column)}${row+1}"
+fun coordinateToCellName(column : ComputableIndex, row : ComputableIndex) : String {
+    return when {
+        column is FixedIndex && row is FixedIndex -> {
+            when {
+                column.index < 0 -> "#REF!"
+                row.index < 0 -> "#REF!"
+                else -> indexToColumnName(column) + "${row.index + 1}"
+            }
+        }
+        column is FixedIndex && row is RelativeIndex -> "[fixed ${column.index},${row.index}]"
+        column is RelativeIndex && row is FixedIndex -> "[${column.index},fixed ${row.index}]"
+        column is RelativeIndex && row is RelativeIndex -> "[${column.index},${row.index}]"
+        else -> error("")
+    }
 }
 
-fun coordinateToCellName(coord : Coordinate) = coordinateToCellName(coord.column, coord.row)
+fun coordinateToCellName(column : Int, row : Int) : String {
+    return coordinateToCellName(FixedIndex(column), FixedIndex(row))
+}
+
+fun coordinateToCellName(coord : ComputableCoordinate) = coordinateToCellName(coord.column, coord.row)
+fun coordinateToCellName(coord : Coordinate) = coordinateToCellName(FixedIndex(coord.column), FixedIndex(coord.row))
 
 fun columnNameToIndex(column : String) : Int {
     var result = 0
@@ -449,12 +480,21 @@ fun columnNameToIndex(column : String) : Int {
     return result - 1
 }
 
-
 fun indexToColumnName(column : Int) : String {
     assert(column >= 0)
     return when (column) {
         in 0..25 -> ('A' + column).toString()
         else -> indexToColumnName(column / 26 - 1) + indexToColumnName(column % 26)
+    }
+}
+
+fun indexToColumnName(column : ComputableIndex) : String {
+    return when(column) {
+        is FixedIndex -> {
+            val columnName = indexToColumnName(column.index)
+            columnName
+        }
+        is RelativeIndex -> "[${column.index}]"
     }
 }
 
@@ -465,7 +505,7 @@ fun looksLikeCellName(tag : String) : Boolean {
     return true
 }
 
-fun cellNameToCoordinate(tag : String) : Coordinate {
+fun cellNameToCoordinate(tag : String) : ComputableCoordinate {
     assert(looksLikeCellName(tag))
     val column = StringBuilder()
     val row = StringBuilder()
@@ -484,9 +524,9 @@ fun cellNameToCoordinate(tag : String) : Coordinate {
     assert(row.isNotEmpty()) {
         "Cell name '$tag' did not have a number row part"
     }
-    return Coordinate(
-        column = columnNameToIndex(column.toString()),
-        row = row.toString().toInt() - 1
+    return ComputableCoordinate(
+        column = FixedIndex(columnNameToIndex(column.toString())),
+        row = FixedIndex(row.toString().toInt() - 1)
     )
 }
 

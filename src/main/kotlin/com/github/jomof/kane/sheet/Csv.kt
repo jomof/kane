@@ -2,9 +2,6 @@ package com.github.jomof.kane.sheet
 
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
 import com.github.jomof.kane.Coordinate
-import com.github.jomof.kane.Sheet
-import com.github.jomof.kane.SheetBuilder
-import com.github.jomof.kane.types.kaneType
 import java.io.File
 
 fun readCsvAsSheet(csv : File) : Sheet {

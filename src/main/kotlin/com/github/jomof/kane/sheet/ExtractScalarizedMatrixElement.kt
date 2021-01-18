@@ -27,12 +27,13 @@ fun extractScalarizedMatrixElement(
             AlgebraicUnaryScalar(matrix.op, value)
         }
         is NamedMatrix -> {
-            assert(looksLikeCellName(matrix.name))
-            val baseCoordinate = cellNameToCoordinate(matrix.name)
-            val offsetCoordinate = baseCoordinate + coordinate
-            val offsetCellName = coordinateToCellName(offsetCoordinate)
-            val unnamed = matrix[coordinate]
-            NamedScalar(name = offsetCellName, unnamed)
+            if(looksLikeCellName(matrix.name)) {
+                val baseCoordinate = cellNameToCoordinate(matrix.name).reduceToFixed()
+                val offsetCoordinate = baseCoordinate + coordinate
+                val offsetCellName = coordinateToCellName(offsetCoordinate)
+                val unnamed = matrix[coordinate]
+                NamedScalar(name = offsetCellName, unnamed)
+            } else matrix[coordinate]
         }
         is AlgebraicDeferredDataMatrix -> extractScalarizedMatrixElement(matrix.data, coordinate)
         is DataMatrix -> matrix[coordinate]

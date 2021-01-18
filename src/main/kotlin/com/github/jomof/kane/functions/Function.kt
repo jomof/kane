@@ -1,6 +1,7 @@
 package com.github.jomof.kane.functions
 
 import com.github.jomof.kane.*
+import com.github.jomof.kane.sheet.CoerceScalar
 import com.github.jomof.kane.types.AlgebraicType
 import com.github.jomof.kane.types.DollarAlgebraicType
 import com.github.jomof.kane.types.DollarsAndCentsAlgebraicType
