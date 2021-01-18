@@ -120,7 +120,6 @@ private val USINFLATION by UnaryOp()
 private class USInflationFunction : AlgebraicUnaryScalarFunction {
     override val meta = USINFLATION
     override fun doubleOp(value: Double) = usInflation(value.toInt())
-    override fun floatOp(value: Float) = usInflation(value.toInt()).toFloat()
 
     override fun reduceArithmetic(value: ScalarExpr): ScalarExpr? {
         val constValue = value.tryFindConstant()

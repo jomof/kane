@@ -9,7 +9,6 @@ val EXP by UnaryOp()
 private class ExpFunction : AlgebraicUnaryScalarFunction {
     override val meta = EXP
     override fun doubleOp(value: Double) = exp(value)
-    override fun floatOp(value: Float) = exp(value)
 
     override fun reduceArithmetic(value: ScalarExpr): ScalarExpr? {
         return null

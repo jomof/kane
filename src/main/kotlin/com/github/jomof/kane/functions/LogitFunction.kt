@@ -10,7 +10,6 @@ val LOGIT by UnaryOp()
 private class LogitFunction : AlgebraicUnaryScalarFunction {
     override val meta = LOGIT
     override fun doubleOp(value: Double) = 1.0 / (1.0 + exp(-value))
-    override fun floatOp(value: Float) = 1.0f / (1.0f + exp(-value))
 
     override fun reduceArithmetic(value: ScalarExpr): ScalarExpr? {
         return null

@@ -110,7 +110,6 @@ private val BAACORPORATEBOND by UnaryOp()
 private class BAACorporateBondFunctionFunction : AlgebraicUnaryScalarFunction {
     override val meta = BAACORPORATEBOND
     override fun doubleOp(value: Double) = baaCorporateBond(value.toInt())
-    override fun floatOp(value: Float) = baaCorporateBond(value.toInt()).toFloat()
 
     override fun reduceArithmetic(value: ScalarExpr): ScalarExpr? {
         val constValue = value.tryFindConstant()

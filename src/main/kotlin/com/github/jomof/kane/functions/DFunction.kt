@@ -8,7 +8,6 @@ val D by UnaryOp()
 private class DFunction : AlgebraicUnaryScalarFunction {
     override val meta = D
     override fun doubleOp(value: Double) = error("")
-    override fun floatOp(value: Float) = error("")
 
     override fun reduceArithmetic(value: ScalarExpr): ScalarExpr? {
         return null

@@ -8,7 +8,6 @@ val RELU by UnaryOp()
 private class ReluFunction : AlgebraicUnaryScalarFunction {
     override val meta = RELU
     override fun doubleOp(value: Double) = max(0.0, value)
-    override fun floatOp(value: Float) = max(0.0f, value)
 
     override fun reduceArithmetic(value: ScalarExpr): ScalarExpr? {
         return null

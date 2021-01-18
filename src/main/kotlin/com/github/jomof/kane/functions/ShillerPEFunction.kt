@@ -110,7 +110,6 @@ private val SHILLERPE by UnaryOp()
 private class ShillerPEFunction : AlgebraicUnaryScalarFunction {
     override val meta = SHILLERPE
     override fun doubleOp(value: Double) = shillerPEImpl(value.toInt())
-    override fun floatOp(value: Float) = shillerPEImpl(value.toInt()).toFloat()
 
     override fun reduceArithmetic(value: ScalarExpr) : ScalarExpr? {
         val constValue = value.tryFindConstant()

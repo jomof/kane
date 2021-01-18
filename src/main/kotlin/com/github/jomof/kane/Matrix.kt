@@ -1,6 +1,5 @@
 package com.github.jomof.kane
 
-import com.github.jomof.kane.Coordinate
 import com.github.jomof.kane.functions.divide
 import com.github.jomof.kane.functions.multiply
 import com.github.jomof.kane.functions.subtract

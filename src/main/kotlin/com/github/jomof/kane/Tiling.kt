@@ -4,8 +4,6 @@ import com.github.jomof.kane.types.KaneType
 import com.github.jomof.kane.types.kaneType
 import kotlin.reflect.KProperty
 
-
-
 data class Tiling<E:Any>(
     val columns : Int,
     val rows : Int,
@@ -19,8 +17,7 @@ data class Tiling<E:Any>(
     }
     operator fun getValue(e: Any?, property: KProperty<*>) = NamedTiling(property.name, this)
     fun getNamedElement(name : String, coordinate: Coordinate) : NamedExpr {
-        val element = data[coordinate.row * columns + coordinate.column]
-        return when (element) {
+        return when (val element = data[coordinate.row * columns + coordinate.column]) {
             is ScalarExpr -> NamedScalar(name, element)
             is Double -> NamedScalar(name, constant(element))
             else -> NamedValueExpr(name, element, element.javaClass.kaneType)

@@ -107,7 +107,6 @@ private val SP500 by UnaryOp()
 private class SP500Function : AlgebraicUnaryScalarFunction {
     override val meta = SP500
     override fun doubleOp(value: Double) = sp500(value.toInt())
-    override fun floatOp(value: Float) = sp500(value.toInt()).toFloat()
 
     override fun reduceArithmetic(value: ScalarExpr) : ScalarExpr? {
         val constValue = value.tryFindConstant()

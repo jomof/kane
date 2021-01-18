@@ -131,9 +131,7 @@ data class AlgebraicBinaryMatrix(
 interface AlgebraicUnaryScalarFunction {
     val meta : UnaryOp
     operator fun invoke(value : Double) = doubleOp(value)
-    operator fun invoke(value : Float) = floatOp(value)
     fun doubleOp(value : Double) : Double
-    fun floatOp(value : Float) : Float
     operator fun  invoke(value : ScalarExpr) : ScalarExpr = AlgebraicUnaryScalar(this, value)
     operator fun  invoke(value : MatrixExpr) : MatrixExpr = AlgebraicUnaryMatrix(this, value)
     fun  reduceArithmetic(value : ScalarExpr) : ScalarExpr?
