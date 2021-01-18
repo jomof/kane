@@ -102,7 +102,7 @@ private val baaCorporateBondMap = mapOf(
     2019 to 0.1533,
 )
 
-private fun baaCorporateBond(year : Int) : Double {
+fun baaCorporateBond(year : Int) : Double {
     return baaCorporateBondMap[year]!!
 }
 private val BAACORPORATEBOND by UnaryOp()

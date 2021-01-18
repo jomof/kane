@@ -27,6 +27,13 @@ class KaneTest {
     }
 
     @Test
+    fun `check tanh`() {
+        tanh(0.0).assertString("0.0")
+        tanh(0.1).assertString("0.09966799462495583")
+        tanh(-0.1).assertString("-0.09966799462495585")
+    }
+
+    @Test
     fun `data matrix basics`() {
         val m1 by matrixOf(3,2,
             1.0, 2.0, 3.0,

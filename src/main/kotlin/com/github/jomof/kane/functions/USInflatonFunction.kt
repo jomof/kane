@@ -112,7 +112,7 @@ private val usInflationMap = mapOf(
     2020 to 0.012 
 )
 
-private fun usInflation(year : Int) : Double {
+fun usInflation(year : Int) : Double {
     return usInflationMap[year]!!
 }
 private val USINFLATION by UnaryOp()

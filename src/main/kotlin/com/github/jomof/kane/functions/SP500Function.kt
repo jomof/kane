@@ -99,7 +99,7 @@ private val sp500Map = mapOf(
     2019 to 0.3122 
 )
 
-private fun sp500(year : Int) : Double {
+fun sp500(year : Int) : Double {
     return sp500Map[year] ?: error("year $year was out of range")
 }
 private val SP500 by UnaryOp()

@@ -417,6 +417,135 @@ class SheetTest {
     }
 
     //@Test
+    fun `predict 5th year`() {
+        // Given last four years of stock, bond, and inflation predict fifth year
+
+        val random = Random(3)
+        val learningRate = 0.001
+        val batchSize = 100.0
+        val inputs = 15
+        val count0 = 9
+        val count1 = 7
+        val count2 = 5
+        val outputs = 3
+        val input by matrixVariable(1, inputs) { 0.0001 }
+        val w0 by matrixVariable(input.rows, count0) { random.nextGaussian() }
+        val b1 by variable(0.0)
+        val h1 by logit(w0 cross input) + b1
+        val w1 by matrixVariable(h1.rows, count1) { random.nextGaussian() }
+
+        val b2 by variable(0.0)
+        val b3 by variable(0.0)
+        val h2 by lrelu(w1 cross h1)
+        val w2 by matrixVariable(h2.rows, count2) { random.nextGaussian() }
+
+        val h3 by logit(w2 cross h2) + b2
+        val w3 by matrixVariable(h3.rows, outputs) { random.nextGaussian() }
+
+        val output by logit(w3 cross h3) + b3
+
+        val target by matrixVariable(output.columns, output.rows) { 0.0 }
+        val error by summation(0.5 * pow(target - output, 2.0))
+        val sumdw0 by matrixVariable(w0.columns,w0.rows) { 0.0 }
+        val sumdw1 by matrixVariable(w1.columns, w1.rows) { 0.0 }
+        val sumdw2 by matrixVariable(w2.columns, w2.rows) { 0.0 }
+        val sumdw3 by matrixVariable(w3.columns, w3.rows) { 0.0 }
+        val sumb1 by variable(0.0)
+        val sumb2 by variable(0.0)
+        val sumb3 by variable(0.0)
+        val dw0 by sumdw0 + learningRate/batchSize * differentiate(d(error) / d(w0))
+        val dw1 by sumdw1 + learningRate/batchSize * differentiate(d(error) / d(w1))
+        val dw2 by sumdw2 + learningRate/batchSize * differentiate(d(error) / d(w2))
+        val dw3 by sumdw3 + learningRate/batchSize * differentiate(d(error) / d(w3))
+        val db1 by sumb1 + learningRate/batchSize * differentiate(d(error) / d(b1))
+        val db2 by sumb2 + learningRate/batchSize * differentiate(d(error) / d(b2))
+        val db3 by sumb3 + learningRate/batchSize * differentiate(d(error) / d(b3))
+        val adw0 by assign(dw0 to sumdw0)
+        val adw1 by assign(dw1 to sumdw1)
+        val adw2 by assign(dw2 to sumdw2)
+        val adw3 by assign(dw3 to sumdw3)
+        val adb1 by assign(db1 to sumb1)
+        val adb2 by assign(db2 to sumb2)
+        val adb3 by assign(db3 to sumb3)
+        val tab = tableauOf(output.type,output, error, dw2, dw3, adw2, adw3, adw0, adw1, adb1, adb2, adb3)
+        val layout = tab.linearize()
+        //println(layout)
+        val space = layout.allocateSpace()
+        val targetRef = layout.shape(target).ref(space)
+        val errorRef = layout.shape(error).ref(space)
+        val outputRef = layout.shape(output).ref(space)
+        val inputRef = layout.shape(input).ref(space)
+        val w0ref = layout.shape(w0).ref(space)
+        val w1ref = layout.shape(w1).ref(space)
+        val w2ref = layout.shape(w2).ref(space)
+        val w3ref = layout.shape(w3).ref(space)
+        val b1ref = layout.shape(b1).ref(space)
+        val b2ref = layout.shape(b2).ref(space)
+        val b3ref = layout.shape(b3).ref(space)
+        val sumdw0ref = layout.shape(sumdw0).ref(space)
+        val sumdw1ref = layout.shape(sumdw1).ref(space)
+        val sumdw2ref = layout.shape(sumdw2).ref(space)
+        val sumdw3ref = layout.shape(sumdw3).ref(space)
+        val sumb1ref = layout.shape(sumb1).ref(space)
+        val sumb2ref = layout.shape(sumb2).ref(space)
+        val sumb3ref = layout.shape(sumb3).ref(space)
+
+        fun train() : Any {
+            val startYear = abs(random.nextInt(2015 - 1928) + 1928)
+            var index = 0
+            for (year in startYear until startYear + 5) {
+                inputRef[0, index++] = sp500(year)
+                inputRef[0, index++] = baaCorporateBond(year)
+                inputRef[0, index++] = usInflation(year)
+            }
+            targetRef[0, 0] = sp500(startYear + 5)
+            targetRef[0, 1] = baaCorporateBond(startYear + 4)
+            targetRef[0, 2] = usInflation(startYear + 4)
+
+            layout.eval(space)
+            return targetRef
+        }
+
+        var lastError = 1000.0
+        repeat(100000) {
+            sumdw0ref.zero()
+            sumdw1ref.zero()
+            sumdw2ref.zero()
+            sumdw3ref.zero()
+            sumb1ref.set(0.0)
+            sumb2ref.set(0.0)
+            sumb3ref.set(0.0)
+            var totalError = 0.0
+            repeat(batchSize.toInt()) {
+                train()
+                totalError += errorRef.value
+            }
+            totalError /= batchSize
+            if(lastError > totalError) {
+                lastError = totalError
+                repeat(4) {
+                    val train = train()
+                    println("b1=$b1ref b2=$b2ref b3=$b3ref : $train -> $outputRef")
+                }
+                println("error=$totalError")
+            }
+
+            w0ref -= sumdw0ref
+            w1ref -= sumdw1ref
+            w2ref -= sumdw2ref
+            w3ref -= sumdw3ref
+            b1ref.set(b1ref.value - sumb1ref.value)
+            b2ref.set(b2ref.value - sumb2ref.value)
+            b3ref.set(b3ref.value - sumb3ref.value)
+            if (it % 1000 == 999) {
+                if (abs(totalError) < 0.0001)
+                    return
+            }
+
+        }
+    }
+
+    //@Test
     fun `build table of expected`() {
         fun expected(years : Int, stock : Double, percentile : Double) : Double {
             val minYear = 1928
