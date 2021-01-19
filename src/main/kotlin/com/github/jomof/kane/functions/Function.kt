@@ -162,6 +162,40 @@ data class AlgebraicUnaryMatrix(
     override fun toString() = render()
 }
 
+// f(scalar statistic)->scalar
+interface AlgebraicUnaryScalarStatisticFunction {
+    val meta : UnaryOp
+    operator fun  invoke(value : ScalarExpr) : ScalarExpr = AlgebraicUnaryRandomVariableScalar(this, value)
+    fun  reduceArithmetic(value : ScalarStatistic) : ScalarExpr
+}
+
+data class AlgebraicUnaryRandomVariableScalar(
+    val op : AlgebraicUnaryScalarStatisticFunction,
+    val value : ScalarExpr) : ScalarExpr {
+    init { track() }
+    override val type get() = value.type
+    override fun toString() = render()
+}
+
+// f(scalar statistic, scalar)->scalar
+interface AlgebraicBinaryScalarStatisticFunction {
+    val meta : UnaryOp
+    operator fun invoke(left : ScalarExpr, right : ScalarExpr) : ScalarExpr =
+        AlgebraicBinaryScalarStatistic(this, left, right)
+    operator fun invoke(left : ScalarExpr, right : Double) : ScalarExpr =
+        AlgebraicBinaryScalarStatistic(this, left, constant(right))
+    fun  reduceArithmetic(left : ScalarStatistic, right : ScalarExpr) : ScalarExpr
+}
+
+data class AlgebraicBinaryScalarStatistic(
+    val op : AlgebraicBinaryScalarStatisticFunction,
+    val left : ScalarExpr,
+    val right : ScalarExpr) : ScalarExpr {
+    init { track() }
+    override val type get() = left.type
+    override fun toString() = render()
+}
+
 // f(matrix)->scalar
 interface AlgebraicUnaryMatrixScalarFunction {
     val meta : UnaryOp

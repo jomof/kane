@@ -636,6 +636,7 @@ fun AlgebraicExpr.memoizeAndReduceArithmetic(
             }
             is AlgebraicUnaryMatrixScalar -> op.reduceArithmetic(value).self()
             is AlgebraicDeferredDataMatrix -> data.self()
+            is DiscreteUniformRandomVariable -> this
             else ->
                 error("$javaClass")
         }

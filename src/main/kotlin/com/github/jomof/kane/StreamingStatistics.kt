@@ -7,11 +7,12 @@ import kotlin.math.pow
 /**
  * Class that accumulates statistics in a streaming manner.
  */
-class StreamingSamples {
+class StreamingSamples(
+    private val samples : MutableList<Sample> = mutableListOf()
+) {
     private val epsilon = 0.1 // Scale of maximum error
     private var s = 0.0
     private var n = 0
-    private val samples : MutableList<Sample> = mutableListOf()
     private var minSeen = 0.0
     private var maxSeen = 0.0
     // Knuth method for variance, skewness, kurtosis
@@ -19,6 +20,19 @@ class StreamingSamples {
     private var m2 = 0.0
     private var m3 = 0.0
     private var m4 = 0.0
+
+    fun copy() : StreamingSamples {
+        val copy = StreamingSamples(samples.toList().toMutableList())
+        copy.s = s
+        copy.n = n
+        copy.minSeen = minSeen
+        copy.maxSeen = maxSeen
+        copy.m1 = m1
+        copy.m2 = m2
+        copy.m3 = m3
+        copy.m4 = m4
+        return copy
+    }
 
     /**
      * Sample for streaming statistics (from https://www.cs.rutgers.edu/~muthu/bquant.pdf)
@@ -49,6 +63,7 @@ class StreamingSamples {
     val stddev : Double get() = variance.pow(0.5)
     val skewness : Double get() = n.toDouble().pow(0.5) * m3 / m2.pow(1.5)
     val kurtosis : Double get() = n*m4 / (m2*m2) - 3.0
+    val coefficientOfVariation : Double get() = stddev / mean
 
     fun insert(value : Double) {
         s += value
