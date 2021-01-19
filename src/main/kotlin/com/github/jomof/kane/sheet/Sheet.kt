@@ -11,7 +11,6 @@ import java.lang.Integer.max
 import kotlin.math.abs
 import kotlin.reflect.KProperty
 
-
 data class ComputableCellReference(val coordinate : ComputableCoordinate) : UntypedScalar {
     fun up(move : Int) = copy(coordinate = coordinate.up(move))
     fun down(move : Int) = copy(coordinate = coordinate.down(move))
@@ -275,10 +274,7 @@ class SheetBuilder {
     }
 }
 
-fun Sheet.eval() : Sheet {
-    val reduced = reduceArithmetic(setOf())
-    return Sheet.of(columnDescriptors, reduced.cells)
-}
+
 
 private fun Sheet.variable(cell : String) : NamedScalarVariable {
     val reduced = when(val value = cells.getValue(cell)) {
@@ -292,24 +288,6 @@ private fun Sheet.variable(cell : String) : NamedScalarVariable {
         is ScalarVariable -> NamedScalarVariable(cell, reduced.initial, reduced.type)
         else -> error("$cell (${cells.getValue(cell)}) is not a constant")
     }
-}
-
-fun Sheet.reduceArithmetic(variables : Set<String>) : Sheet {
-    var new = cells
-    var done = false
-
-    while (!done) {
-        done = true
-        new = new.map { (name, expr) ->
-            val reduced = expr.reduceArithmetic(new, variables)
-            if (!done || reduced != expr) {
-                done = false
-            }
-            name to reduced
-        }.toMap()
-    }
-
-    return Sheet.of(columnDescriptors, new)
 }
 
 fun Sheet.minimize(

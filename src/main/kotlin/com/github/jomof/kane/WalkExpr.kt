@@ -21,6 +21,7 @@ fun Expr.visit(f: (expr : Expr) -> Unit) {
         is NamedValueExpr<*>,
         is ComputableCellReference,
         is NamedComputableCellReference,
+        is DiscreteUniformRandomVariable,
         is NamedScalarVariable -> {}
         is AlgebraicBinaryScalar -> {
             left.visit(f)

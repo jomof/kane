@@ -87,8 +87,30 @@ private fun Expr.reduceArithmeticImpl(cells : Map<String, Expr>, variables : Set
         else -> error("$javaClass")
     }
 }
+
 fun Expr.reduceArithmetic(cells : Map<String, Expr>, variables : Set<String>) : Expr {
     return reduceArithmeticImpl(cells, variables, 1) ?: this
 }
+
 fun NamedExpr.reduceArithmetic(cells : Map<String, Expr>, variables : Set<String>) : NamedExpr =
     (this as Expr).reduceArithmetic(cells, variables) as NamedExpr
+
+fun Sheet.reduceArithmetic(variables : Set<String>) : Sheet {
+    var new = cells
+    var done = false
+
+    while (!done) {
+        done = true
+        new = new.map { (name, expr) ->
+            val reduced = expr.reduceArithmetic(new, variables)
+            if (!done || reduced != expr) {
+                done = false
+            }
+            name to reduced
+        }.toMap()
+    }
+
+    return Sheet.of(columnDescriptors, new)
+}
+
+fun Sheet.eval() = reduceArithmetic(setOf())

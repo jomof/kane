@@ -74,7 +74,6 @@ data class AlgebraicBinaryScalar(
     init {
         track()
     }
-    //override val type get() = op.type(left.type, right.type)
     override val children get() = listOf(left, right)
     override fun toString() = render()
     fun copy(

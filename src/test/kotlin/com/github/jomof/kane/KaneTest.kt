@@ -115,58 +115,6 @@ class KaneTest {
     }
 
     @Test
-    fun `tiny relu regression`() {
-        val x by variable()
-        val m by variable(0.1)
-        val b by variable(0.2)
-        val y by relu(m * x + b)
-        val target by variable()
-        val error by pow(target - y, 2.0)
-        val dm by m - 0.1 * differentiate(d(error)/d(m))
-        val db by b - 0.1 * differentiate(d(error)/d(b))
-        val am by assign(dm to m)
-        val ab by assign(db to b)
-        val tab = tableauOf(am.type,am,ab,dm,db)
-        val map = mutableMapOf(
-            "b" to 0.0,
-            "m" to 0.0,
-        )
-
-        (0 until 100).forEach {
-            (-5 until 5).forEach { point ->
-                map["x"] = point.toDouble()
-                val target = relu(10.0 * point.toDouble() + 0.2)
-                map["target"] = target
-                tab.eval(map)
-                map["b"] = map.getValue("db")
-                map["m"] = map.getValue("dm")
-            }
-        }
-        map["m"]!!.assertNear(10.0)
-        map["b"]!!.assertNear(0.2)
-
-        val model = tab.linearize()
-        val space = model.allocateSpace()
-        println(model)
-        val xSlot = model.shape(x).ref(space)
-        val mSlot = model.shape(m).ref(space)
-        val bSlot = model.shape(b).ref(space)
-        val targetSlot = model.shape(target).ref(space)
-
-        for(i in 0 until 100) {
-            (-5 until 5).forEach { point ->
-                xSlot.set(point.toDouble())
-                val target = relu(10.0 * point.toDouble() + 0.2)
-                targetSlot.set(target)
-                model.eval(space)
-            }
-        }
-
-        mSlot.value.assertNear(10.0)
-        bSlot.value.assertNear(0.2)
-    }
-
-    @Test
     fun `tiny relu regression with matrix`() {
         val s by matrixVariable(1,2)
         val x by variable()
@@ -197,41 +145,6 @@ class KaneTest {
 
         mSlot.value.assertNear(10.0)
         bSlot.value.assertNear(0.2)
-    }
-
-    @Test
-    fun `tiny linear regression`() {
-        val r by variable()
-        val x by variable()
-        val m by variable()
-        val b by variable()
-        val y by m * x + b
-        val target by variable()
-        val error by pow(target - y, 2.0)
-        val dm by -1.0 * r * differentiate(d(error)/d(m))
-        val db by -1.0 * r * differentiate(d(error)/d(b))
-        println(error)
-        println(dm)
-        println(db)
-        val tab = tableauOf(dm.type, dm,db)
-        val map = mutableMapOf(
-            "r" to 0.1, // learning rate
-            "b" to 0.0,
-            "m" to 0.0,
-        )
-
-        (0 until 50).forEach {
-            (-5 until 5).forEach { point ->
-                map["x"] = point.toDouble()
-                map["target"] = -500 * point.toDouble() + 0.2
-                tab.eval(map)
-                map["b"] = map.getValue("b") + map.getValue("db")
-                map["m"] = map.getValue("m") + map.getValue("dm")
-            }
-        }
-        map["m"]!!.assertNear(-500.0)
-        map["b"]!!.assertNear(0.2)
-        println(map)
     }
 
     @Test
