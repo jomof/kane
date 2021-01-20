@@ -784,6 +784,17 @@ fun Expr.render(entryPoint : Boolean = true) : String {
                     value is AlgebraicBinaryMatrix && value.op == multiply) -> "${op.meta.op}${value.self()}"
             else -> "${op.meta.op}(${value.self()})"
         }
+        is AlgebraicBinaryScalarStatistic -> {
+            when {
+                op == pow -> {
+                    val rightSuper = tryConvertToSuperscript(right.self())
+                    if (rightSuper == null) binary(POW, left, right)
+                    else "${left.self()}$rightSuper"
+
+                }
+                else -> binary(op.meta, left, right)
+            }
+        }
         is AlgebraicBinaryScalar -> {
             when {
                 op == pow -> {

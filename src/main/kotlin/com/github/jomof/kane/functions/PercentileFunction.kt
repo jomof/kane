@@ -2,7 +2,7 @@ package com.github.jomof.kane.functions
 
 import com.github.jomof.kane.*
 
-private val PERCENTILE by UnaryOp()
+private val PERCENTILE by BinaryOp(precedence = 7)
 
 class PercentileFunction : AlgebraicBinaryScalarStatisticFunction {
     override val meta = PERCENTILE

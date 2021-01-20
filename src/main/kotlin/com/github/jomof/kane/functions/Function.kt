@@ -179,7 +179,7 @@ data class AlgebraicUnaryRandomVariableScalar(
 
 // f(scalar statistic, scalar)->scalar
 interface AlgebraicBinaryScalarStatisticFunction {
-    val meta : UnaryOp
+    val meta : BinaryOp
     operator fun invoke(left : ScalarExpr, right : ScalarExpr) : ScalarExpr =
         AlgebraicBinaryScalarStatistic(this, left, right)
     operator fun invoke(left : ScalarExpr, right : Double) : ScalarExpr =
@@ -200,7 +200,7 @@ data class AlgebraicBinaryScalarStatistic(
 interface AlgebraicUnaryMatrixScalarFunction {
     val meta : UnaryOp
     operator fun  invoke(value : MatrixExpr) : ScalarExpr = AlgebraicUnaryMatrixScalar(this, value)
-    fun  reduceArithmetic(value : MatrixExpr) : ScalarExpr?
+    fun reduceArithmetic(value : MatrixExpr) : ScalarExpr?
 }
 
 data class AlgebraicUnaryMatrixScalar(

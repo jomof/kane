@@ -4,10 +4,8 @@ import com.github.jomof.kane.functions.AlgebraicBinaryScalar
 import com.github.jomof.kane.functions.AlgebraicBinaryScalarStatistic
 import com.github.jomof.kane.functions.AlgebraicUnaryRandomVariableScalar
 import com.github.jomof.kane.functions.stddev
-import com.github.jomof.kane.sheet.CoerceScalar
-import com.github.jomof.kane.sheet.ComputableCellReference
-import com.github.jomof.kane.sheet.Sheet
-import com.github.jomof.kane.sheet.sampleReduceArithmetic
+import com.github.jomof.kane.reduceArithmetic
+import com.github.jomof.kane.sheet.*
 import kotlin.random.Random
 
 /**
@@ -51,6 +49,7 @@ private fun Expr.convertToStatistics() : Expr {
             Sheet.of(columnDescriptors, cells)
         }
         is ComputableCellReference -> this
+        is ValueExpr<*> -> this
         is CoerceScalar -> copy(value = value.convertToStatistics())
         is DataMatrix -> map { it.self() }
         else ->
@@ -92,6 +91,7 @@ private fun Expr.accumulateStatistics(incoming : Expr) {
         this is DataMatrix && incoming is DataMatrix -> {
             (elements zip incoming.elements).forEach { (left, incoming) -> left.accumulateStatistics(incoming) }
         }
+        this is ValueExpr<*> && incoming is ValueExpr<*> -> {}
         else ->
             error("$javaClass : ${incoming.javaClass}")
     }
@@ -131,6 +131,7 @@ private fun Expr.reduceStatistics() : Expr {
             columnDescriptors,
             cells.map { (name, cell) -> name to cell.reduceStatistics() }.toMap())
         is ComputableCellReference -> this
+        is ValueExpr<*> -> this
         else -> error("$javaClass")
     }
 }
@@ -151,11 +152,14 @@ fun Sheet.reduceArithmetic(
     random : Random = Random(7),
     samples : Int = 100) : Sheet {
     val randomVariables = findRandomVariables()
-    val firstSample = sampleReduceArithmetic(variables, random)
+    val allVariables = variables.toMutableSet()
+    randomVariables.forEach { (name,_) -> allVariables.add(name) }
+    val reduced = reduceArithmeticNoSample(allVariables)
+    val firstSample = reduced.sampleReduceArithmetic(variables, random)
     if (randomVariables.isEmpty()) return firstSample
     val stats = firstSample.convertToStatistics()
     repeat(samples - 1) {
-        stats.accumulateStatistics(sampleReduceArithmetic(variables, random))
+        stats.accumulateStatistics(reduced.sampleReduceArithmetic(variables, random))
     }
     return stats.reduceStatistics() as Sheet
 }

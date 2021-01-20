@@ -45,15 +45,32 @@ class RandomVariablesTest {
 
     @Test
     fun `sheet with accumulated step`() {
-        val sheet = sheetOf {
-            val a1 by randomOf(-4.0 to 5.0)
-            val b1 by mean(a1)
-            val c1 by mean(step(a1))
+        val sample = StreamingSamples()
+        for(i in 1928 .. 2019) {
+            sample.insert(sp500(i.toDouble()))
+        }
+        println("mean=${sample.mean}")
+        println("median=${sample.median}")
 
-            add(a1, b1, c1)
+        val sheet = sheetOf {
+            val a1 by constant("random")
+            val b1 by randomOf(1928.0 to 2019.0)
+            val a2 by constant("s&p 500")
+            val b2 by sp500(b1)
+            val a3 by constant("mean")
+            val b3 by mean(b2)
+            val a4 by constant("median")
+            val b4 by median(b2)
+            val a5 by constant("positive")
+            val b5 by mean(step(b2))
+            val a6 by constant("5th percentile")
+            val b6 by percentile(b2, 0.05)
+            val a7 by constant("95th percentile")
+            val b7 by percentile(b2, 0.95)
+            add(a1, a2, b2, a3, b3, a4, b4, a5, b5, a6, b6, a7, b7)
         }
         println(sheet)
-        println(sheet.eval())
+        println(sheet.eval(samples = 1000))
     }
 
     @Test
