@@ -24,7 +24,7 @@ fun extractScalarizedMatrixElement(
         }
         is AlgebraicUnaryMatrix -> {
             val value = extractScalarizedMatrixElement(matrix.value, coordinate)
-            AlgebraicUnaryScalar(matrix.op, value)
+            AlgebraicUnaryScalar(matrix.op, value, value.type)
         }
         is NamedMatrix -> {
             if(looksLikeCellName(matrix.name)) {

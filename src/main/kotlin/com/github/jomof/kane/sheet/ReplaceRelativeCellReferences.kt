@@ -26,6 +26,7 @@ private fun AlgebraicExpr.replaceRelativeCellReferences(
         }
         is AlgebraicUnaryScalar -> copy(value = value.self(coordinate))
         is AlgebraicUnaryMatrix -> copy(value = value.self(coordinate))
+        is AlgebraicUnaryRandomVariableScalar -> copy(value = value.self(coordinate))
         is AlgebraicUnaryMatrixScalar -> copy(value = value.self(coordinate))
         is AlgebraicBinaryScalarMatrix -> copy(
             left = left.self(coordinate),
@@ -39,7 +40,11 @@ private fun AlgebraicExpr.replaceRelativeCellReferences(
         is AlgebraicBinaryMatrix -> copy(
             left = left.self(coordinate),
             right = right.self(coordinate))
+        is AlgebraicBinaryScalarStatistic -> copy(
+            left = left.self(coordinate),
+            right = right.self(coordinate))
         is ConstantScalar -> this
+        is DiscreteUniformRandomVariable -> this
         is CoerceScalar -> {
             val result : AlgebraicExpr = when (value) {
                 //is AbsoluteCellReferenceExpr -> this

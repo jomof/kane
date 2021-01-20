@@ -1,5 +1,6 @@
 package com.github.jomof.kane
 
+import com.github.jomof.kane.sheet.Sheet
 import com.github.jomof.kane.types.AlgebraicType
 import com.github.jomof.kane.types.DoubleAlgebraicType
 import kotlin.random.Random
@@ -31,7 +32,11 @@ class ScalarStatistic(
     val statistic : StreamingSamples,
     override val type : AlgebraicType
 ) : ScalarExpr {
-    override fun toString() = type.render(statistic.median)
+    override fun toString() : String {
+        return type.render(statistic.median)
+//        if (statistic.count == 1) return type.render(statistic.median)
+//        return type.render(statistic.mean) + "±" + type.render(statistic.stddev)
+    }
 }
 
 fun randomOf(range : Pair<Double, Double>, step : Double = 1.0) : DiscreteUniformRandomVariable {
@@ -49,8 +54,12 @@ fun randomOf(range : Pair<Double, Double>, step : Double = 1.0) : DiscreteUnifor
 fun Expr.findRandomVariables() : Map<String, RandomVariableExpr> {
     val result = mutableMapOf<String, RandomVariableExpr>()
     visit {
-        if (it is NamedScalar && it.scalar is RandomVariableExpr)
-            result[it.name] = it.scalar
+        when {
+            it is NamedScalar && it.scalar is RandomVariableExpr -> result[it.name] = it.scalar
+            it is Sheet -> it.cells.forEach { (name, expr) ->
+                if(expr is RandomVariableExpr) result[name] = expr
+            }
+        }
     }
     return result
 }

@@ -19,11 +19,9 @@ private fun AlgebraicExpr.replaceNamesWithCellReferencesAlgebraic(excluding : St
                 else ->
                     scalar.self()
             }
-        is NamedMatrix ->
-            if (name != excluding) {
-                CoerceScalar(ComputableCellReference(cellNameToCoordinate(name)), type)
-            } else copy(matrix = matrix.self())
+        is NamedMatrix -> copy(matrix = matrix.self())
         is AlgebraicUnaryScalar -> copy(value = value.self())
+        is AlgebraicUnaryRandomVariableScalar -> copy(value = value.self())
         is AlgebraicUnaryMatrix -> copy(value = value.self())
         is AlgebraicUnaryMatrixScalar -> copy(value = value.self())
         is AlgebraicBinaryScalarMatrix -> copy(
@@ -35,6 +33,9 @@ private fun AlgebraicExpr.replaceNamesWithCellReferencesAlgebraic(excluding : St
         is AlgebraicBinaryMatrixScalar -> copy(
             left = left.self(),
             right = right.self())
+        is AlgebraicBinaryScalarStatistic -> copy(
+            left = left.self(),
+            right = right.self())
         is CoerceScalar -> {
             val result : AlgebraicExpr = when (value) {
                 is ComputableCellReference -> this
@@ -44,6 +45,8 @@ private fun AlgebraicExpr.replaceNamesWithCellReferencesAlgebraic(excluding : St
             result
         }
         is ConstantScalar -> this
+        is DiscreteUniformRandomVariable -> this
+        is DataMatrix -> map { it.self() }
         else ->
             error("$javaClass")
     }

@@ -64,7 +64,8 @@ fun Random.nextAlgebraicUnaryOp() = chooseOne(listOf(negate, exp, logit, tanh, r
 fun Random.nextBinaryOp() = chooseOne(listOf())
 fun Random.nextAlgebraicBinaryScalarOp() = chooseOne(listOf(pow, multiply, divide, add, subtract))
 
-fun Random.nextAlgebraicUnaryScalar(type : AlgebraicType) = AlgebraicUnaryScalar(nextAlgebraicUnaryOp(), nextScalarExpr(type))
+fun Random.nextAlgebraicUnaryScalar(type : AlgebraicType) =
+    AlgebraicUnaryScalar(nextAlgebraicUnaryOp(), nextScalarExpr(type), type)
 
 fun Random.nextAlgebraicBinaryScalar(type : AlgebraicType) : AlgebraicBinaryScalar =
     AlgebraicBinaryScalar(nextAlgebraicBinaryScalarOp(), nextScalarExpr(type), nextScalarExpr(type))

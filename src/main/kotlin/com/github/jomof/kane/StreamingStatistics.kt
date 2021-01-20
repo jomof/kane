@@ -1,6 +1,5 @@
 package com.github.jomof.kane
 
-import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.pow
 
@@ -10,7 +9,7 @@ import kotlin.math.pow
 class StreamingSamples(
     private val samples : MutableList<Sample> = mutableListOf()
 ) {
-    private val epsilon = 0.1 // Scale of maximum error
+    private val epsilon = 0.001 // Scale of maximum error
     private var s = 0.0
     private var n = 0
     private var minSeen = 0.0

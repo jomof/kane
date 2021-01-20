@@ -12,9 +12,11 @@ private fun AlgebraicExpr.convertCellNamesToUpperCase() : AlgebraicExpr {
         is NamedMatrix -> copy(name = name.upper(), matrix = matrix.self())
         is NamedScalar -> copy(name = name.upper(), scalar = scalar.self())
         is AlgebraicUnaryScalar -> copy(value = value.self())
+        is AlgebraicUnaryRandomVariableScalar -> copy(value = value.self())
         is AlgebraicUnaryMatrix -> copy(value = value.self())
         is AlgebraicUnaryMatrixScalar -> copy(value = value.self())
         is AlgebraicBinaryScalar -> copy(left = left.self(), right = right.self())
+        is AlgebraicBinaryScalarStatistic -> copy(left = left.self(), right = right.self())
         is AlgebraicBinaryMatrixScalar -> copy(left = left.self(), right = right.self())
         is AlgebraicBinaryScalarMatrix -> copy(left = left.self(), right = right.self())
         is AlgebraicBinaryMatrix -> copy(left = left.self(), right = right.self())
@@ -22,6 +24,7 @@ private fun AlgebraicExpr.convertCellNamesToUpperCase() : AlgebraicExpr {
         is ConstantScalar -> this
         is DataMatrix -> map { it.self() }
         is CoerceScalar -> this
+        is DiscreteUniformRandomVariable -> this
         else -> error("$javaClass")
     }
 }

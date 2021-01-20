@@ -66,7 +66,7 @@ data class CoerceScalar(
 
 data class ColumnDescriptor(val name : String)
 
-interface Sheet {
+interface Sheet : Expr {
     val columnDescriptors : Map<Int, ColumnDescriptor>
     val cells : Map<String, Expr>
     val columns : Int

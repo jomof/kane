@@ -634,7 +634,9 @@ fun AlgebraicExpr.memoizeAndReduceArithmetic(
                     }
                 }
             }
-            is AlgebraicUnaryMatrixScalar -> op.reduceArithmetic(value).self()
+            is AlgebraicBinaryScalarStatistic -> copy(left = left.self(), right = right.self())
+            is AlgebraicUnaryRandomVariableScalar -> copy(value = value.self())
+            is AlgebraicUnaryMatrixScalar -> op.reduceArithmetic(value)?.self() ?: value
             is AlgebraicDeferredDataMatrix -> data.self()
             is DiscreteUniformRandomVariable -> this
             else ->
@@ -808,6 +810,7 @@ fun Expr.render(entryPoint : Boolean = true) : String {
         is MatrixVariableElement -> "${matrix.name}[$column,$row]"
         is ConstantScalar -> type.render(value)
         is AlgebraicUnaryMatrixScalar -> "${op.meta.op}(${value.self()})"
+        is AlgebraicUnaryRandomVariableScalar -> "${op.meta.op}(${value.self()})"
         is AlgebraicUnaryScalar -> when {
             op == exp -> {
                 val rightSuper = tryConvertToSuperscript(value.self())

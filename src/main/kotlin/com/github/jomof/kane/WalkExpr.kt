@@ -56,6 +56,7 @@ fun Expr.visit(f: (expr : Expr) -> Unit) {
         is AlgebraicDeferredDataMatrix -> data.visit(f)
         is Tableau -> children.forEach { it.visit(f) }
         is NamedTiling<*> -> { }
+        is Sheet -> cells.forEach { (_, expr) -> expr.visit(f) }
         else ->
             error("$javaClass")
     }

@@ -14,14 +14,17 @@ private fun AlgebraicExpr.expandUnaryOperationMatrixes() : AlgebraicExpr {
                 extractScalarizedMatrixElement(value, offset)
             })
             val result = op.reduceArithmetic(data)
-            result.self()
+            result?.self() ?: this
         }
         is DataMatrix -> map { it.self() }
         is AlgebraicUnaryScalar -> copy(value = value.self())
+        is AlgebraicUnaryRandomVariableScalar -> copy(value = value.self())
         is AlgebraicUnaryMatrix -> copy(value = value.self())
         is AlgebraicBinaryScalar -> copy(left = left.self(), right = right.self())
         is AlgebraicBinaryMatrixScalar -> copy(left = left.self(), right = right.self())
+        is AlgebraicBinaryScalarStatistic -> copy(left = left.self(), right = right.self())
         is ConstantScalar -> this
+        is DiscreteUniformRandomVariable -> this
         is CoerceScalar -> copy(value = value.expandUnaryOperationMatrixes())
         else -> error("$javaClass")
     }
