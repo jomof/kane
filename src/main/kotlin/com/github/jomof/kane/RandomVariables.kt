@@ -10,7 +10,7 @@ interface RandomVariableExpr : ScalarExpr {
 }
 
 class DiscreteUniformRandomVariable(
-    private val values : List<Double>,
+    val values : List<Double>,
     override val type : AlgebraicType
 ) : RandomVariableExpr, ScalarExpr {
     init { track() }
@@ -51,15 +51,10 @@ fun randomOf(range : Pair<Double, Double>, step : Double = 1.0) : DiscreteUnifor
 }
 
 
-fun Expr.findRandomVariables() : Map<String, RandomVariableExpr> {
-    val result = mutableMapOf<String, RandomVariableExpr>()
+fun Expr.findRandomVariables() : Set<RandomVariableExpr> {
+    val result = mutableSetOf<RandomVariableExpr>()
     visit {
-        when {
-            it is NamedScalar && it.scalar is RandomVariableExpr -> result[it.name] = it.scalar
-            it is Sheet -> it.cells.forEach { (name, expr) ->
-                if(expr is RandomVariableExpr) result[name] = expr
-            }
-        }
+        if (it is RandomVariableExpr) result.add(it)
     }
     return result
 }

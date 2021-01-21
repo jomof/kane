@@ -3,8 +3,6 @@ package com.github.jomof.kane
 import com.github.jomof.kane.functions.AlgebraicBinaryScalar
 import com.github.jomof.kane.functions.AlgebraicBinaryScalarStatistic
 import com.github.jomof.kane.functions.AlgebraicUnaryRandomVariableScalar
-import com.github.jomof.kane.functions.stddev
-import com.github.jomof.kane.reduceArithmetic
 import com.github.jomof.kane.sheet.*
 import kotlin.random.Random
 
@@ -12,15 +10,11 @@ import kotlin.random.Random
  * Evaluate an expression, substitute sample value for random variables.
  */
 private fun Expr.sampleEval(
-    random : Random,
-    randomVariableValues : MutableMap<RandomVariableExpr, ConstantScalar>) : Expr {
-    fun ScalarExpr.self() = sampleEval(random, randomVariableValues) as ScalarExpr
+    randomVariableValues : Map<RandomVariableExpr, ConstantScalar>) : Expr {
+    fun ScalarExpr.self() = sampleEval(randomVariableValues) as ScalarExpr
     return when(this) {
         is NamedScalar -> copy(scalar = scalar.self())
-        is RandomVariableExpr ->
-            randomVariableValues.computeIfAbsent(this) {
-                sample(random)
-            }
+        is RandomVariableExpr -> randomVariableValues.getValue(this)
         is AlgebraicBinaryScalar -> copyReduce(left = left.self(), right = right.self(),)
         is AlgebraicBinaryScalarStatistic -> copy(left = left.self(), right = right.self(),)
         is AlgebraicUnaryRandomVariableScalar -> copy(value = value.self())
@@ -136,33 +130,52 @@ private fun Expr.reduceStatistics() : Expr {
     }
 }
 
-fun Expr.eval(random : Random = Random(7), samples : Int = 100) : Expr {
+fun Expr.eval() : Expr {
     val randomVariables = findRandomVariables()
-    val firstSample = sampleEval(random, mutableMapOf())
-    if (randomVariables.isEmpty()) return firstSample
-    val stats = firstSample.convertToStatistics()
-    repeat(samples - 1) {
-        stats.accumulateStatistics(sampleEval(random, mutableMapOf()))
+    if (randomVariables.isEmpty()) return sampleEval(mutableMapOf())
+
+    var stats : Expr? = null
+    val randomVariableElements = randomVariables.map { variable ->
+        (variable as DiscreteUniformRandomVariable).values.map { value ->
+            constant(value, variable.type)
+        }
     }
-    return stats.reduceStatistics()
+    cartesianOf(randomVariableElements) { randomVariableValues ->
+        val variableValues = (randomVariables zip randomVariableValues)
+            .map { (variable, value) -> variable to (value as ConstantScalar) }
+            .toMap()
+        val sample = sampleEval(variableValues)
+        if (stats == null) {
+            stats = sample.convertToStatistics()
+        } else {
+            stats!!.accumulateStatistics(sample)
+        }
+    }
+    return stats!!.reduceStatistics()
 }
 
-fun Sheet.reduceArithmetic(
-    variables : Set<String>,
-    random : Random = Random(7),
-    samples : Int = 100) : Sheet {
+fun Sheet.reduceArithmetic(excludeVariables : Set<String>) : Sheet {
     val randomVariables = findRandomVariables()
-    val allVariables = variables.toMutableSet()
-    randomVariables.forEach { (name,_) -> allVariables.add(name) }
-    val reduced = reduceArithmeticNoSample(allVariables)
-    val firstSample = reduced.sampleReduceArithmetic(variables, random)
-    if (randomVariables.isEmpty()) return firstSample
-    val stats = firstSample.convertToStatistics()
-    repeat(samples - 1) {
-        stats.accumulateStatistics(reduced.sampleReduceArithmetic(variables, random))
+    if (randomVariables.isEmpty()) return reduceArithmeticNoSample(excludeVariables)
+    val reduced = reduceArithmeticNoSample(excludeVariables)
+    var stats : Expr? = null
+    val randomVariableElements = randomVariables.map { variable ->
+        (variable as DiscreteUniformRandomVariable).values.map { value ->
+            constant(value, variable.type)
+        }
     }
-    return stats.reduceStatistics() as Sheet
+    cartesianOf(randomVariableElements) { randomVariableValues ->
+        val variableValues = (randomVariables zip randomVariableValues)
+            .map { (variable, value) -> variable to (value as ConstantScalar) }
+            .toMap()
+        val sample = reduced.sampleReduceArithmetic(excludeVariables, variableValues)
+        if (stats == null) {
+            stats = sample.convertToStatistics() as Sheet
+        } else {
+            stats!!.accumulateStatistics(sample)
+        }
+    }
+    return stats!!.reduceStatistics() as Sheet
 }
 
-fun Sheet.eval(random : Random = Random(7), samples : Int = 100) =
-    reduceArithmetic(setOf(), random, samples)
+fun Sheet.eval() = reduceArithmetic(setOf())

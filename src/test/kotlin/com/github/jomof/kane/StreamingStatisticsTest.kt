@@ -37,6 +37,12 @@ class StreamingStatisticsTest {
         s.percentile(0.80).assertString("4.0")
         s.percentile(0.90).assertString("4.0")
         s.percentile(0.90).assertString("4.0")
+//        s.rank(2.1).assertString("0.5")
+//        s.rank(2.0).assertString("0.0")
+//        s.rank(3.0).assertString("0.5")
+//        s.rank(4.0).assertString("1.0")
+//        s.rank(3.9).assertString("1.0")
+
     }
 
     @Test
@@ -50,7 +56,11 @@ class StreamingStatisticsTest {
             s.percentile(0.10).assertString("2.0")
             s.percentile(0.50).assertString("3.0")
             s.percentile(0.90).assertString("4.0")
+
         }
+//        s.rank(2.0).assertString("0.0")
+//        s.rank(4.0).assertString("1.0")
+//        s.rank(3.0).assertString("0.5")
     }
 
     @Test
@@ -58,7 +68,7 @@ class StreamingStatisticsTest {
         var maxElements = 0
         repeat(20) { outer ->
             val s = StreamingSamples()
-            repeat(30000) { inner ->
+            repeat(300) { inner ->
                 if (inner % (outer + 1) == outer) {
                     s.compress()
                     if (s.sampleCount > maxElements) {
@@ -119,5 +129,9 @@ class StreamingStatisticsTest {
         s.stddev.assertString("5.477225575051661")
         s.skewness.assertString("0.0")
         s.kurtosis.assertString("-1.64")
+//        s.rank(13.0).assertString("0.6666666666666666")
+//        s.rank(7.0).assertString("0.3333333333333333")
+//        s.rank(4.0).assertString("0.0")
+//        s.rank(16.0).assertString("1.0")
     }
 }

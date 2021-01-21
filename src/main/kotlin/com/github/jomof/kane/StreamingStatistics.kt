@@ -1,7 +1,9 @@
 package com.github.jomof.kane
 
+import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.pow
+import kotlin.math.round
 
 /**
  * Class that accumulates statistics in a streaming manner.
@@ -71,12 +73,12 @@ class StreamingSamples(
         // Knuth approach to variance, skew, and kurtosis
         val n1 = n - 1
         val delta = value - m1
-        val delta_n = delta / n
-        val delta_n2 = delta_n * delta_n
-        val term1 = delta * delta_n * n1;
-        m1 += delta_n;
-        m4 += term1 * delta_n2 * (n*n - 3*n + 3) + 6 * delta_n2 * m2 - 4 * delta_n * m3
-        m3 += term1 * delta_n * (n - 2) - 3 * delta_n * m2
+        val deltaN = delta / n
+        val deltaN2 = deltaN * deltaN
+        val term1 = delta * deltaN * n1
+        m1 += deltaN;
+        m4 += term1 * deltaN2 * (n*n - 3*n + 3) + 6 * deltaN2 * m2 - 4 * deltaN * m3
+        m3 += term1 * deltaN * (n - 2) - 3 * deltaN * m2
         m2 += term1
 
         if (n == 1) {
@@ -142,5 +144,30 @@ class StreamingSamples(
 
         error("x")
     }
+
+//    fun rank(element : Double) : Double {
+//        if (element <= min) return 0.0
+//        if (element >= max) return 1.0
+//
+//        val maxRank = samples.sumByDouble { it.g } - 1.0
+//        var r = 0.0
+//        var lowBoundRank : Double? = null
+//        var highBoundValue : Double? = null
+//        var highBoundRank : Double? = null
+//        var lowBoundValue : Double? = null
+//        for (i in 0 until samples.size) {
+//            val sample = samples[i]
+//            if (sample.v >= element && lowBoundRank == null) {
+//                lowBoundValue = sample.v
+//                lowBoundRank = r
+//            }
+//            if (lowBoundValue != null && sample.v > lowBoundValue && highBoundRank == null) {
+//                highBoundValue = sample.v
+//                highBoundRank = r
+//            }
+//            r += sample.g
+//        }
+//        error("x")
+//    }
 }
 

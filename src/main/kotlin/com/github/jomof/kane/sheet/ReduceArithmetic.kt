@@ -10,11 +10,9 @@ import kotlin.random.Random
 private class SingleSampleReducer(
     // Set of variables to *not* expand.
     val excludeVariables : Set<String>,
-    // If null then random variables are left, otherwise they are reduce to samples
-    val random : Random?
+    // Random  variables' values, null if random variables should not be expanded
+    val randomVariableValues : Map<RandomVariableExpr, ConstantScalar>?
 ) {
-    private val randomVariableValues : MutableMap<RandomVariableExpr, ConstantScalar> = mutableMapOf()
-
     private fun AlgebraicExpr.reduceArithmeticImpl(
         cells : Map<String, Expr>,
         depth: Int
@@ -108,8 +106,7 @@ private class SingleSampleReducer(
                 else cells[name] as AlgebraicExpr
             }
             is RandomVariableExpr ->
-                if (random == null) this
-                else randomVariableValues.computeIfAbsent(this) { sample(random) }
+                randomVariableValues?.getValue(this) ?: this
             else ->
                 error("$javaClass")
         }
@@ -140,12 +137,12 @@ private class SingleSampleReducer(
 
 private fun Sheet.sampleOrReduceArithmetic(
     excludeVariables : Set<String>,
-    random : Random?
+    randomVariableValues : Map<RandomVariableExpr, ConstantScalar>?
 ) : Sheet {
     var new = cells
     var done = false
 
-    val reducer = SingleSampleReducer(excludeVariables, random)
+    val reducer = SingleSampleReducer(excludeVariables, randomVariableValues)
     while (!done) {
         done = true
         new = new.map { (name, expr) ->
@@ -160,5 +157,7 @@ private fun Sheet.sampleOrReduceArithmetic(
     return Sheet.of(columnDescriptors, new)
 }
 
-fun Sheet.reduceArithmeticNoSample(excludeVariables : Set<String>) = sampleOrReduceArithmetic(excludeVariables, null)
-fun Sheet.sampleReduceArithmetic(excludeVariables : Set<String>, random : Random) = sampleOrReduceArithmetic(excludeVariables, random)
+fun Sheet.reduceArithmeticNoSample(excludeVariables : Set<String>) =
+    sampleOrReduceArithmetic(excludeVariables, null)
+fun Sheet.sampleReduceArithmetic(excludeVariables : Set<String>, randomVariableValues : Map<RandomVariableExpr, ConstantScalar>) =
+    sampleOrReduceArithmetic(excludeVariables, randomVariableValues)
