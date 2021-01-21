@@ -68,7 +68,7 @@ class StreamingStatisticsTest {
         var maxElements = 0
         repeat(20) { outer ->
             val s = StreamingSamples()
-            repeat(300) { inner ->
+            repeat(30000) { inner ->
                 if (inner % (outer + 1) == outer) {
                     s.compress()
                     if (s.sampleCount > maxElements) {

@@ -157,7 +157,7 @@ fun Expr.eval() : Expr {
 fun Sheet.reduceArithmetic(excludeVariables : Set<String>) : Sheet {
     val randomVariables = findRandomVariables()
     if (randomVariables.isEmpty()) return reduceArithmeticNoSample(excludeVariables)
-    val reduced = reduceArithmeticNoSample(excludeVariables)
+    //val reduced = reduceArithmeticNoSample(excludeVariables)
     var stats : Expr? = null
     val randomVariableElements = randomVariables.map { variable ->
         (variable as DiscreteUniformRandomVariable).values.map { value ->
@@ -168,7 +168,7 @@ fun Sheet.reduceArithmetic(excludeVariables : Set<String>) : Sheet {
         val variableValues = (randomVariables zip randomVariableValues)
             .map { (variable, value) -> variable to (value as ConstantScalar) }
             .toMap()
-        val sample = reduced.sampleReduceArithmetic(excludeVariables, variableValues)
+        val sample = sampleReduceArithmetic(excludeVariables, variableValues)
         if (stats == null) {
             stats = sample.convertToStatistics() as Sheet
         } else {

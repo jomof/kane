@@ -100,6 +100,7 @@ private val sp500Map = mapOf(
 )
 
 fun sp500(year : Int) : Double {
+    if (year > 2019) return sp500(year - 2019 + 1928)
     return sp500Map[year] ?: error("year $year was out of range")
 }
 private val SP500 by UnaryOp()

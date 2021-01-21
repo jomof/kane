@@ -1,9 +1,7 @@
 package com.github.jomof.kane
 
-import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.pow
-import kotlin.math.round
 
 /**
  * Class that accumulates statistics in a streaming manner.
@@ -11,7 +9,7 @@ import kotlin.math.round
 class StreamingSamples(
     private val samples : MutableList<Sample> = mutableListOf()
 ) {
-    private val epsilon = 0.001 // Scale of maximum error
+    private val epsilon = 0.01 // Scale of maximum error
     private var s = 0.0
     private var n = 0
     private var minSeen = 0.0
@@ -21,19 +19,8 @@ class StreamingSamples(
     private var m2 = 0.0
     private var m3 = 0.0
     private var m4 = 0.0
-
-    fun copy() : StreamingSamples {
-        val copy = StreamingSamples(samples.toList().toMutableList())
-        copy.s = s
-        copy.n = n
-        copy.minSeen = minSeen
-        copy.maxSeen = maxSeen
-        copy.m1 = m1
-        copy.m2 = m2
-        copy.m3 = m3
-        copy.m4 = m4
-        return copy
-    }
+    // Countdown until next compress
+    private var countDown = 100
 
     /**
      * Sample for streaming statistics (from https://www.cs.rutgers.edu/~muthu/bquant.pdf)
@@ -112,8 +99,12 @@ class StreamingSamples(
             samples.add(i, Sample(value, 1.0, 0))
             return
         }
-        val add = Sample(value, 1.0, floor(f).toInt() - 1)
-        samples.add(i, add)
+        val lower = Sample(value, 1.0, floor(f).toInt() - 1)
+        samples.add(i, lower)
+        if (--countDown <= 0) {
+            compress()
+            countDown = 100
+        }
     }
 
     fun compress() {
@@ -144,30 +135,5 @@ class StreamingSamples(
 
         error("x")
     }
-
-//    fun rank(element : Double) : Double {
-//        if (element <= min) return 0.0
-//        if (element >= max) return 1.0
-//
-//        val maxRank = samples.sumByDouble { it.g } - 1.0
-//        var r = 0.0
-//        var lowBoundRank : Double? = null
-//        var highBoundValue : Double? = null
-//        var highBoundRank : Double? = null
-//        var lowBoundValue : Double? = null
-//        for (i in 0 until samples.size) {
-//            val sample = samples[i]
-//            if (sample.v >= element && lowBoundRank == null) {
-//                lowBoundValue = sample.v
-//                lowBoundRank = r
-//            }
-//            if (lowBoundValue != null && sample.v > lowBoundValue && highBoundRank == null) {
-//                highBoundValue = sample.v
-//                highBoundRank = r
-//            }
-//            r += sample.g
-//        }
-//        error("x")
-//    }
 }
 

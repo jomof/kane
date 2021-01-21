@@ -11,7 +11,8 @@ private fun AlgebraicExpr.replaceNamesWithCellReferencesAlgebraic(excluding : St
             when {
                 name == excluding -> copy(scalar = scalar.self())
                 looksLikeCellName(name) -> {
-                    CoerceScalar(ComputableCellReference(cellNameToCoordinate(name)), type)
+                    CoerceScalar(ComputableCellReference(
+                        cellNameToCoordinate(name).toComputableCoordinate()), type)
                 }
                 scalar is ConstantScalar -> {
                     NamedScalarVariable(name, scalar.value, scalar.type)

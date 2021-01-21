@@ -28,7 +28,7 @@ fun extractScalarizedMatrixElement(
         }
         is NamedMatrix -> {
             if(looksLikeCellName(matrix.name)) {
-                val baseCoordinate = cellNameToCoordinate(matrix.name).reduceToFixed()
+                val baseCoordinate = cellNameToCoordinate(matrix.name)
                 val offsetCoordinate = baseCoordinate + coordinate
                 val offsetCellName = coordinateToCellName(offsetCoordinate)
                 val unnamed = matrix[coordinate]

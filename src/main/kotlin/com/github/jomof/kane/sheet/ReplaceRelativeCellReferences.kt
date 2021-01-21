@@ -16,13 +16,13 @@ private fun AlgebraicExpr.replaceRelativeCellReferences(
             val upper = name.toUpperCase()
             val result : AlgebraicExpr = if (looksLikeCellName(upper)) {
                 val new = cellNameToCoordinate(upper)
-                copy(scalar = scalar.self(new.reduceToFixed()))
+                copy(scalar = scalar.self(new))
             } else copy(scalar = scalar.self(coordinate))
             result
         }
         is NamedMatrix -> {
             val new = cellNameToCoordinate(name.toUpperCase())
-            copy(matrix = matrix.self(new.reduceToFixed()))
+            copy(matrix = matrix.self(new))
         }
         is AlgebraicUnaryScalar -> copy(value = value.self(coordinate))
         is AlgebraicUnaryMatrix -> copy(value = value.self(coordinate))
@@ -71,7 +71,7 @@ private fun Expr.replaceRelativeCellReferences() : Expr {
             val upper = name.toUpperCase()
             if (looksLikeCellName(upper)) {
                 val coordinate = cellNameToCoordinate(name.toUpperCase())
-                replaceRelativeCellReferences(coordinate.reduceToFixed())
+                replaceRelativeCellReferences(coordinate)
             } else this
         }
         is NamedValueExpr<*> -> this

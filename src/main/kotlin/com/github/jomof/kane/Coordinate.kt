@@ -5,6 +5,7 @@ import com.github.jomof.kane.ComputableIndex.RelativeIndex
 
 data class Coordinate(val column : Int, val row : Int) {
     override fun toString() = "[$column,$row]"
+    fun toComputableCoordinate() = ComputableCoordinate(FixedIndex(column), FixedIndex(row))
 }
 
 fun coordinatesOf(columns: Int, rows: Int) = sequence {
@@ -46,12 +47,6 @@ data class ComputableCoordinate(
     val down get() = down(1)
     val left get() = left(1)
     val right get() = right(1)
-
-    fun reduceToFixed() : Coordinate {
-        if (column !is FixedIndex) error("")
-        if (row !is FixedIndex) error("")
-        return Coordinate(column.index, row.index)
-    }
     override fun toString() = "[$column,$row]"
     companion object {
         fun relative(column : Int, row : Int) =
@@ -76,3 +71,85 @@ fun computeAbsoluteCoordinate(base : Coordinate, adjustment : ComputableCoordina
     }
     return ComputableCoordinate(FixedIndex(column), FixedIndex(row))
 }
+
+
+// Cell naming
+fun coordinateToCellName(column : ComputableIndex, row : ComputableIndex) : String {
+    return when {
+        column is FixedIndex && row is FixedIndex -> {
+            when {
+                column.index < 0 -> "#REF!"
+                row.index < 0 -> "#REF!"
+                else -> indexToColumnName(column) + "${row.index + 1}"
+            }
+        }
+        column is FixedIndex && row is RelativeIndex -> "[fixed ${column.index},${row.index}]"
+        column is RelativeIndex && row is FixedIndex -> "[${column.index},fixed ${row.index}]"
+        column is RelativeIndex && row is RelativeIndex -> "[${column.index},${row.index}]"
+        else -> error("")
+    }
+}
+
+fun coordinateToCellName(column : Int, row : Int) : String {
+    return coordinateToCellName(FixedIndex(column), FixedIndex(row))
+}
+
+fun coordinateToCellName(coord : ComputableCoordinate) = coordinateToCellName(coord.column, coord.row)
+fun coordinateToCellName(coord : Coordinate) = coordinateToCellName(FixedIndex(coord.column), FixedIndex(coord.row))
+
+fun cellNameToColumnIndex(tag : String) : Int {
+    var result = 0
+    for(c in tag) {
+        if(c !in 'A'..'Z') break
+        result *= 26
+        result += (c - 'A' + 1)
+    }
+    return result - 1
+}
+
+fun cellNameToRowIndex(tag : String) : Int {
+    var index = 0
+    for(c in tag) {
+        if(c !in 'A'..'Z') break
+        ++index
+    }
+    return tag.substring(index).toInt() - 1
+}
+
+
+fun indexToColumnName(column : Int) : String {
+    assert(column >= 0)
+    return when (column) {
+        in 0..25 -> ('A' + column).toString()
+        else -> indexToColumnName(column / 26 - 1) + indexToColumnName(column % 26)
+    }
+}
+
+fun indexToColumnName(column : ComputableIndex) : String {
+    return when(column) {
+        is FixedIndex -> {
+            val columnName = indexToColumnName(column.index)
+            columnName
+        }
+        is RelativeIndex -> "[${column.index}]"
+    }
+}
+
+fun looksLikeCellName(tag : String) : Boolean {
+    if (tag.length < 2) return false
+    if (tag[0] !in 'A'..'Z') return false
+    if (tag.last() !in '0'..'9') return false
+    return true
+}
+
+fun cellNameToCoordinate(tag : String) : Coordinate {
+    assert(looksLikeCellName(tag))
+    val column = cellNameToColumnIndex(tag)
+    val row = cellNameToRowIndex(tag)
+    return Coordinate(
+        column = column,
+        row = row
+    )
+}
+
+

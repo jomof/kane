@@ -48,7 +48,7 @@ private class SingleSampleReducer(
                 right = right.self() ?: return null
             )
             is CoerceScalar -> {
-                val result: ScalarExpr? = when (value) {
+                val result: ScalarExpr = when (value) {
                     is ScalarVariable -> {
                         // This variable is not being optimized so treat it as constant
                         ConstantScalar(value.initial, type)
