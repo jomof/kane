@@ -139,6 +139,35 @@ fun analyzeDataTypes(data : List<Map<String, String>>) : DataTypeAnalysis {
         columnInfos = columnInfos)
 }
 
+fun analyzeDataTypes(
+    columnNames : List<String>,
+    data : List<List<String>>) : DataTypeAnalysis {
+    val rows = data.size
+    val columnInfos = columnNames.mapIndexed { index, name ->
+        var acceptedDataTypes = possibleDataFormats.toMutableList()
+        var maxWidth = 0
+        var minWidth = Int.MAX_VALUE
+        data.forEach { list ->
+            val value = list[index]
+            maxWidth = max(maxWidth, value.length)
+            minWidth = min(minWidth, value.length)
+            acceptedDataTypes = acceptedDataTypes
+                .filter { tryType -> tryType.tryParse(value) != null }
+                .toMutableList()
+        }
+        ColumnInfo(
+            name = name,
+            typeInfo = acceptedDataTypes.first(),
+            maxWidth = maxWidth,
+            minWidth = minWidth)
+    }
+
+    return DataTypeAnalysis(
+        columns = columnNames.size,
+        rows = rows,
+        columnInfos = columnInfos)
+}
+
 fun <T:Any> AdmissibleDataType<T>.parseToExpr(value : String) : Expr {
     return when(val parsed = tryParse(value)!!) {
         is Double -> ConstantScalar(parsed, type as AlgebraicType)

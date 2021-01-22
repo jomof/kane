@@ -194,7 +194,7 @@ private fun Sheet.sampleOrReduceArithmetic(
         }
     }
 
-    return Sheet.of(columnDescriptors, new)
+    return copy(cells = new)
 }
 
 fun Sheet.reduceArithmeticNoSample(excludeVariables : Set<String>) =

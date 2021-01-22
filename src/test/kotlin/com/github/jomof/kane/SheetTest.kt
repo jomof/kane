@@ -4,6 +4,7 @@ import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
 import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.sheet.*
 import com.github.jomof.kane.types.dollars
+import com.github.jomof.kane.types.kaneType
 import com.github.jomof.kane.types.percent
 import org.junit.Test
 import java.io.File
@@ -300,7 +301,7 @@ class SheetTest {
         val rows: List<Map<String, String>> = csvReader().readAllWithHeader(csv)
         assert(csv.isFile)
         println(analyzeDataTypes(rows))
-        val sheet = readCsvAsSheet(csv)
+        val sheet = readCsv(csv)
         println(sheet)
     }
 

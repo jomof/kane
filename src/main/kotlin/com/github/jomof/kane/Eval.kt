@@ -41,7 +41,7 @@ private fun Expr.convertToStatistics() : Expr {
         is AlgebraicBinaryScalarStatistic -> copy(left = left.self(), right = right.self())
         is Sheet -> {
             val cells = cells.map { (name, expr) -> name to expr.convertToStatistics() }.toMap()
-            Sheet.of(columnDescriptors, cells)
+            copy(cells = cells)
         }
         is ComputableCellReference -> this
         is ValueExpr<*> -> this
@@ -122,9 +122,7 @@ private fun Expr.reduceStatistics() : Expr {
             else this
         is AlgebraicBinaryScalar -> copyReduce(left = left.self(), right = right.self())
         is DataMatrix -> map { it.self() }
-        is Sheet -> Sheet.of(
-            columnDescriptors,
-            cells.map { (name, cell) -> name to cell.reduceStatistics() }.toMap())
+        is Sheet -> copy(cells = cells.map { (name, cell) -> name to cell.reduceStatistics() }.toMap())
         is ComputableCellReference -> this
         is ValueExpr<*> -> this
         else -> error("$javaClass")

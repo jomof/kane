@@ -8,8 +8,10 @@ import com.github.jomof.kane.track
 import com.github.jomof.kane.types.AlgebraicType
 import com.github.jomof.kane.types.KaneType
 import com.github.jomof.kane.types.StringKaneType
+import com.github.jomof.kane.types.kaneType
 import java.lang.Integer.max
 import kotlin.math.abs
+import kotlin.math.min
 import kotlin.reflect.KProperty
 
 data class ComputableCellReference(val coordinate : ComputableCoordinate) : UntypedScalar {
@@ -67,28 +69,39 @@ data class CoerceScalar(
     }
 }
 
-data class ColumnDescriptor(val name : String)
-
+data class ColumnDescriptor(val name : String, val type: AdmissibleDataType<*>?)
+data class RowDescriptor(val name : String)
+data class SheetDescriptor(val limitOutputLines : Int = Int.MAX_VALUE)
 interface Sheet : Expr {
     val columnDescriptors : Map<Int, ColumnDescriptor>
+    val rowDescriptors : Map<Int, RowDescriptor>
     val cells : Map<String, Expr>
+    val sheetDescriptor : SheetDescriptor
     val columns : Int
     val rows : Int
-    operator fun get(cell : String) = cells[cell]
+
     companion object {
         private data class SheetImpl(
             override val columnDescriptors : Map<Int, ColumnDescriptor>,
+            override val rowDescriptors : Map<Int, RowDescriptor>,
             override val cells: Map<String, Expr>,
+            override val sheetDescriptor : SheetDescriptor,
             override val columns : Int,
             override val rows : Int
         ) : Sheet {
             override fun toString() = render()
-
         }
-        private val emptySheet = SheetImpl(mapOf(), mapOf(), 0, 0)
-        fun of(columnDescriptors : Map<Int, ColumnDescriptor>, cells : Map<String, Expr>) : Sheet {
-            if (cells.isEmpty() && columnDescriptors.isEmpty()) return emptySheet
-            if (cells.isEmpty()) return SheetImpl(columnDescriptors, cells, 0, 0)
+        private val emptySheet = SheetImpl(mapOf(), mapOf(), mapOf(), SheetDescriptor(), 0, 0)
+        fun of(
+            columnDescriptors : Map<Int, ColumnDescriptor>,
+            rowDescriptors : Map<Int, RowDescriptor>,
+            sheetDescriptor: SheetDescriptor,
+            cells : Map<String, Expr>) : Sheet {
+            if (cells.isEmpty() &&
+                columnDescriptors.isEmpty() &&
+                rowDescriptors.isEmpty() &&
+                sheetDescriptor == SheetDescriptor()) return emptySheet
+            if (cells.isEmpty()) return SheetImpl(columnDescriptors, rowDescriptors, cells, sheetDescriptor, 0, 0)
 
             val columnsFromCells : Int = cells
                 .filter { looksLikeCellName(it.key) }
@@ -98,9 +111,21 @@ interface Sheet : Expr {
             val rows : Int = cells
                 .filter { looksLikeCellName(it.key) }
                 .map { cellNameToRowIndex(it.key) }.maxOrNull()!! + 1
-            return SheetImpl(columnDescriptors, cells, max(columnsFromCells, columnsColumnDescriptors), rows)
+            return SheetImpl(columnDescriptors, rowDescriptors, cells, sheetDescriptor, max(columnsFromCells, columnsColumnDescriptors), rows)
         }
     }
+
+    fun copy(
+        columnDescriptors : Map<Int, ColumnDescriptor> = this.columnDescriptors,
+        rowDescriptors : Map<Int, RowDescriptor> = this.rowDescriptors,
+        cells : Map<String, Expr> = this.cells,
+        sheetDescriptor : SheetDescriptor = this.sheetDescriptor
+    ) = of(columnDescriptors, rowDescriptors, sheetDescriptor, cells)
+
+    /**
+     * Limit the number of output lines when rendering the sheet
+     */
+    fun limitOutputLines(limit : Int) = copy(sheetDescriptor = sheetDescriptor.copy(limitOutputLines = limit))
 
     /**
      * Create a new sheet with cell values changed.
@@ -115,7 +140,7 @@ interface Sheet : Expr {
                 else -> error("Unsupported cell type ")
             }
         }
-        return of(columnDescriptors, new)
+        return copy(cells = new)
     }
 }
 
@@ -260,7 +285,7 @@ class SheetBuilder {
             .map { (name, expr) ->
                 if (expr is NamedComputableCellReference
                     && expr.coordinate.column is FixedIndex) {
-                    columnDescriptors[expr.coordinate.column.index] = ColumnDescriptor(name)
+                    columnDescriptors[expr.coordinate.column.index] = ColumnDescriptor(name, null)
                 }
                 name to expr.replaceNamesWithCellReferences(name)
             }
@@ -276,7 +301,7 @@ class SheetBuilder {
         val unaryMatrixesExpanded = expandUnaryOperationMatrixes(relativeReferencesReplaced)
         val namesReplaced = replaceNamesWithCellReferences(unaryMatrixesExpanded)
         val splitNamed = splitNames(namesReplaced)
-        return Sheet.of(columnDescriptors, splitNamed)
+        return Sheet.of(columnDescriptors, mapOf(), SheetDescriptor(), splitNamed)
     }
 
     fun add(vararg add : NamedExpr) {
@@ -290,8 +315,8 @@ class SheetBuilder {
         )
     }
 
-    fun column(index : Int, name : String) {
-        columnDescriptors[index] = ColumnDescriptor(name)
+    fun column(index : Int, name : String, type : AdmissibleDataType<*>? = null) {
+        columnDescriptors[index] = ColumnDescriptor(name, type)
     }
 
     fun range(name : String) : ComputableCellReference {
@@ -384,7 +409,7 @@ fun Sheet.minimize(
         assert(new.containsKey(it.name))
         new[it.name] = variable(value.value, (cells[it.name] as AlgebraicExpr).type)
     }
-    return Sheet.of(columnDescriptors, new)
+    return copy(cells = new)
 }
 
 fun Sheet.render() : String {
@@ -394,14 +419,28 @@ fun Sheet.render() : String {
         if (it > 0) columnDescriptors[it-1]?.name?.length?:0 else 0
     }
 
+    fun colName(column : Int) = columnDescriptors[column]?.name ?: indexToColumnName(column)
+    fun rowName(row : Int) = rowDescriptors[row]?.name ?: "$row"
+
+    // Effective row count for formatting
+    val rows = min(rows, sheetDescriptor.limitOutputLines)
+
+    // Calculate width of row number column
+    for(row in 0 until rows + 1) {
+        widths[0] = max(widths[0], rowName(row).length)
+    }
+
+    // Calculate widths of column headers
+    for(column in 0 until columns) {
+        widths[column + 1] = max(widths[column + 1], colName(column).length)
+    }
+
     // Calculate widths
     for(row in 0 until rows) {
-        widths[0] = max(widths[0], "$row".length)
         for(column in 0 until columns) {
             val cell = coordinateToCellName(ComputableCoordinate.fixed(column, row))
             val value = cells[cell]?.toString() ?: ""
             widths[column + 1] = max(widths[column + 1], value.length)
-            widths[column + 1] = max(widths[column + 1], indexToColumnName(column).length)
         }
     }
 
@@ -410,7 +449,7 @@ fun Sheet.render() : String {
         val width = widths[index]
         if (index == 0) sb.append(" ".repeat(width) + " ")
         else {
-            val columnName = columnDescriptors[index-1]?.name ?: indexToColumnName(index - 1)
+            val columnName = colName(index - 1)
             sb.append(padCenter(columnName, width) + " ")
         }
     }
@@ -426,13 +465,16 @@ fun Sheet.render() : String {
 
     // Data
     for(row in 0 until rows) {
-        sb.append(padLeft("${row+1}", widths[0]) + " ")
+        sb.append(padLeft(rowName(row+1), widths[0]) + " ")
         for(column in 0 until columns) {
             val cell = coordinateToCellName(ComputableCoordinate.fixed(column, row))
             val value = cells[cell]?.toString() ?: ""
             sb.append(padLeft(value, widths[column + 1]) + " ")
         }
         if (row != rows - 1) sb.append("\n")
+    }
+    if (this.rows > rows) {
+        sb.append("\n...and ${this.rows-rows} more rows")
     }
 
     // Non-cell data

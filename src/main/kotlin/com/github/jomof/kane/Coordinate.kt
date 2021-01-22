@@ -142,6 +142,13 @@ fun looksLikeCellName(tag : String) : Boolean {
     return true
 }
 
+fun looksLikeColumnName(tag : String) : Boolean {
+    for(c in tag) {
+        if(c !in 'A'..'Z') return false
+    }
+    return true
+}
+
 fun cellNameToCoordinate(tag : String) : Coordinate {
     assert(looksLikeCellName(tag))
     val column = cellNameToColumnIndex(tag)
