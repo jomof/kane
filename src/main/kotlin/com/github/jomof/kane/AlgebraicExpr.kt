@@ -547,9 +547,9 @@ fun MatrixExpr.substituteInitial() = (this as AlgebraicExpr).substituteInitial()
 
 // Reduce arithmetic
 fun AlgebraicExpr.memoizeAndReduceArithmetic(
-    entryPoint: Boolean = true,
-    memo: MutableMap<TypedExpr<*>, TypedExpr<*>> = mutableMapOf()
-) : AlgebraicExpr {
+    entryPoint : Boolean = true,
+    memo : MutableMap<TypedExpr<*>,TypedExpr<*>> = mutableMapOf(),
+    selfMemo : MutableMap<TypedExpr<*>,TypedExpr<*>> = mutableMapOf()) : AlgebraicExpr {
     if (this is ConstantScalar) return this
     if (memo.contains(this)) {
         val result = memo.getValue(this)
@@ -561,49 +561,53 @@ fun AlgebraicExpr.memoizeAndReduceArithmetic(
             is ConstantScalar -> this
             is AlgebraicBinaryMatrix -> {
                 val dm = toDataMatrix()
-                val dmself = dm.memoizeAndReduceArithmetic(false, memo) as MatrixExpr
+                val dmself = dm.memoizeAndReduceArithmetic(false, memo, selfMemo) as MatrixExpr
                 if (dm != dmself) dmself
                 else this
             }
-            is DataMatrix -> map { it.memoizeAndReduceArithmetic(false, memo) as ScalarExpr }
+            is DataMatrix -> map { it.memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr }
             is MatrixVariableElement -> copy(
                 matrix = matrix.memoizeAndReduceArithmetic(
                     false,
-                    memo
+                    memo,
+                    selfMemo
                 ) as NamedMatrixVariable
             )
             is AlgebraicUnaryMatrix -> copy(
                 value = value.memoizeAndReduceArithmetic(
                     false,
-                    memo
+                    memo,
+                    selfMemo
                 ) as MatrixExpr
             )
-            is NamedMatrix -> copy(matrix = matrix.memoizeAndReduceArithmetic(false, memo) as MatrixExpr)
+            is NamedMatrix -> copy(matrix = matrix.memoizeAndReduceArithmetic(false, memo, selfMemo) as MatrixExpr)
             is NamedScalar ->
-                if (entryPoint) copy(scalar = scalar.memoizeAndReduceArithmetic(false, memo) as ScalarExpr)
-                else scalar.memoizeAndReduceArithmetic(false, memo) as ScalarExpr
+                if (entryPoint) copy(scalar = scalar.memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr)
+                else scalar.memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr
             is NamedScalarVariable -> this
             is AlgebraicBinaryScalarMatrix -> copy(
                 left = left.memoizeAndReduceArithmetic(
                     false,
-                    memo
-                ) as ScalarExpr, right = right.memoizeAndReduceArithmetic(false, memo) as MatrixExpr
+                    memo,
+                    selfMemo
+                ) as ScalarExpr, right = right.memoizeAndReduceArithmetic(false, memo, selfMemo) as MatrixExpr
             )
             is AlgebraicBinaryMatrixScalar -> copy(
-                left = left.memoizeAndReduceArithmetic(false, memo) as MatrixExpr,
-                right = right.memoizeAndReduceArithmetic(false, memo) as ScalarExpr
+                left = left.memoizeAndReduceArithmetic(false, memo, selfMemo) as MatrixExpr,
+                right = right.memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr
             )
-            is NamedScalarAssign -> copy(right = right.memoizeAndReduceArithmetic(false, memo) as ScalarExpr)
-            is NamedMatrixAssign -> copy(right = right.memoizeAndReduceArithmetic(false, memo) as MatrixExpr)
+            is NamedScalarAssign -> copy(right = right.memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr)
+            is NamedMatrixAssign -> copy(right = right.memoizeAndReduceArithmetic(false, memo, selfMemo) as MatrixExpr)
             is Tableau -> copy(children = children.map {
                 it.memoizeAndReduceArithmetic(
                     true,
-                    memo
+                    memo,
+                    selfMemo
                 ) as NamedAlgebraicExpr
             })
             is CoerceScalar -> {
                 val value = when (value) {
-                    is AlgebraicExpr -> value.memoizeAndReduceArithmetic(false, memo)
+                    is AlgebraicExpr -> value.memoizeAndReduceArithmetic(false, memo, selfMemo)
                     else -> value
                 }
                 when {
@@ -622,21 +626,23 @@ fun AlgebraicExpr.memoizeAndReduceArithmetic(
             is ScalarVariable -> this
             is AlgebraicBinaryScalar -> {
                 val result = run {
-                    val leftSelf = left.memoizeAndReduceArithmetic(false, memo) as ScalarExpr
-                    val rightSelf = right.memoizeAndReduceArithmetic(false, memo) as ScalarExpr
+                    val leftSelf = left.memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr
+                    val rightSelf = right.memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr
                     val leftAffine = left.affineName()
                     val rightAffine = right.affineName()
                     if (left != leftSelf || right != right.memoizeAndReduceArithmetic(
                             false,
-                            memo
+                            memo,
+                            selfMemo
                         ) as ScalarExpr
                     ) binaryScalar(op, leftSelf, rightSelf).memoizeAndReduceArithmetic(
                         false,
-                        memo
+                        memo,
+                        selfMemo
                     ) as ScalarExpr
                     else if (leftAffine != null && rightAffine != null && leftAffine.compareTo(rightAffine) == 1 && op.meta.associative) {
                         val result: ScalarExpr =
-                            op(right, left).memoizeAndReduceArithmetic(false, memo) as ScalarExpr
+                            op(right, left).memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr
                         result
                     } else {
                         val leftConst = left.tryFindConstant()
@@ -644,42 +650,45 @@ fun AlgebraicExpr.memoizeAndReduceArithmetic(
                         when {
                             leftConst != null && rightConst != null -> ConstantScalar(op(leftConst, rightConst), type)
                             else -> op.reduceArithmetic(left, right)
-                                ?.let { it.memoizeAndReduceArithmetic(false, memo) as ScalarExpr } ?: this
+                                ?.let { it.memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr } ?: this
                         }
                     }
                 }
                 result.withType(type)
             }
             is AlgebraicUnaryScalar -> {
-                val valueSelf = value.memoizeAndReduceArithmetic(false, memo) as ScalarExpr
+                val valueSelf = value.memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr
                 if (value != valueSelf) copy(value = valueSelf).memoizeAndReduceArithmetic(
                     false,
-                    memo
+                    memo,
+                    selfMemo
                 ) as ScalarExpr
                 else {
                     val valueConst = value.tryFindConstant()
                     when {
                         valueConst != null -> ConstantScalar(op(valueConst), type)
                         else -> op.reduceArithmetic(value)
-                            ?.let { it.memoizeAndReduceArithmetic(false, memo) as ScalarExpr } ?: this
+                            ?.let { it.memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr } ?: this
                     }
                 }
             }
             is AlgebraicBinaryScalarStatistic -> copy(
                 left = left.memoizeAndReduceArithmetic(
                     false,
-                    memo
-                ) as ScalarExpr, right = right.memoizeAndReduceArithmetic(false, memo) as ScalarExpr
+                    memo,
+                    selfMemo
+                ) as ScalarExpr, right = right.memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr
             )
             is AlgebraicUnaryScalarStatistic -> copy(
                 value = value.memoizeAndReduceArithmetic(
                     false,
-                    memo
+                    memo,
+                    selfMemo
                 ) as ScalarExpr
             )
             is AlgebraicUnaryMatrixScalar -> op.reduceArithmetic(value)
-                ?.let { it.memoizeAndReduceArithmetic(false, memo) as ScalarExpr } ?: value
-            is AlgebraicDeferredDataMatrix -> data.memoizeAndReduceArithmetic(false, memo) as MatrixExpr
+                ?.let { it.memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr } ?: value
+            is AlgebraicDeferredDataMatrix -> data.memoizeAndReduceArithmetic(false, memo, selfMemo) as MatrixExpr
             is DiscreteUniformRandomVariable -> this
             else ->
                 error("$javaClass")

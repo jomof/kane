@@ -36,24 +36,24 @@ class StreamingSamples(
         val d : Int
     ) {
         companion object {
-            private val size = 50
+            private val size = 20
             private var next = 0
             private val recent = DoubleArray(size)
             private val lookup = Array<Sample?>(size) { null }
             private val defaults = arrayOf(
                 Sample(1.0, 1.0, 0),
-                Sample(0.5, 1.0, 0),
-                Sample(0.05, 1.0, 0),
-                Sample(0.0, 1.0, 0),)
+                Sample(0.0, 1.0, 0))
             fun create(v : Double, g : Double, d : Int) : Sample {
-                if (d == 0 || g == 0.0) {
+                if (d == 0 && g == 1.0) {
                     for (default in defaults) {
-                        if (default.v == v)
+                        if (default.v == v) {
                             return default
+                        }
                     }
                     for(i in 0 until size) {
-                        if (recent[i] == v && lookup[i] != null)
+                        if (recent[i] == v && lookup[i] != null) {
                             return lookup[i]!!
+                        }
                     }
                     val sample = Sample(v, 1.0, 0)
                     recent[next] = v

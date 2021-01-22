@@ -164,7 +164,7 @@ private class SingleSampleReducer(
             is AlgebraicExpr -> expr.reduceArithmeticImpl(
                 cells,
                 1
-            )?.memoizeAndReduceArithmetic(memo = memo) ?: expr
+            )?.memoizeAndReduceArithmetic(memo = memo, selfMemo = selfMemo) ?: expr
             is ValueExpr<*> -> expr
             is ComputableCellReference -> expr
             else -> error("$javaClass")
