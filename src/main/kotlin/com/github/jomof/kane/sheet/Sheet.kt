@@ -7,6 +7,7 @@ import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.track
 import com.github.jomof.kane.types.AlgebraicType
 import com.github.jomof.kane.types.KaneType
+import com.github.jomof.kane.types.StringKaneType
 import java.lang.Integer.max
 import kotlin.math.abs
 import kotlin.reflect.KProperty
@@ -100,6 +101,22 @@ interface Sheet : Expr {
             return SheetImpl(columnDescriptors, cells, max(columnsFromCells, columnsColumnDescriptors), rows)
         }
     }
+
+    /**
+     * Create a new sheet with cell values changed.
+     */
+    fun copy(vararg assignments : Pair<String, Any>) : Sheet {
+        val new = cells.toMutableMap()
+        assignments.forEach { (name,expr) ->
+            new[name] = when (expr) {
+                is Double -> constant(expr)
+                is String -> analyzeDataType(expr).parseToExpr(expr)
+                is ScalarExpr -> expr
+                else -> error("Unsupported cell type ")
+            }
+        }
+        return of(columnDescriptors, new)
+    }
 }
 
 class SheetBuilder {
@@ -113,6 +130,18 @@ class SheetBuilder {
     val down get() = down(1)
     val left get() = left(1)
     val right get() = right(1)
+
+    private fun parseAndNameValue(name : String, value : String) : NamedExpr {
+        val admissibleType = analyzeDataType(value)
+        return when(val parsed = analyzeDataType(value).parseToExpr(value)) {
+            is ScalarExpr -> NamedScalar(name, parsed)
+            is ValueExpr<*> -> NamedValueExpr(name, value, admissibleType.type as KaneType<Any>)
+            else -> error("${parsed.javaClass}")
+        }
+    }
+
+    operator fun String.getValue(nothing: Nothing?, property: KProperty<*>) = parseAndNameValue(property.name, this)
+    operator fun Number.getValue(nothing: Nothing?, property: KProperty<*>) = NamedScalar(property.name, constant(this.toDouble()))
 
     private fun getImmediateNamedExprs() : Map<String, NamedExpr> {
         val cells = mutableMapOf<String, NamedExpr>()

@@ -9,7 +9,6 @@ import kotlin.math.pow
 class StreamingSamples(
     private val samples : MutableList<Sample> = mutableListOf()
 ) {
-    private val epsilon = 0.01 // Scale of maximum error
     private var s = 0.0
     private var n = 0
     private var minSeen = 0.0
@@ -20,8 +19,12 @@ class StreamingSamples(
     private var m3 = 0.0
     private var m4 = 0.0
     // Countdown until next compress
-    private var countDown = 100
+    private var countDown = compressInterval
 
+    companion object {
+        private const val compressInterval = 100
+        private const val epsilon = 0.01 // Scale of maximum error
+    }
     /**
      * Sample for streaming statistics (from https://www.cs.rutgers.edu/~muthu/bquant.pdf)
      * v - is the value of this sample
@@ -66,9 +69,7 @@ class StreamingSamples(
         }
     }
 
-    private fun maxError() : Double {
-        return 2.0 * epsilon * n
-    }
+    private fun maxError() = 2.0 * epsilon * n
 
     val count : Int get() = n
     val sum : Double get() = s
@@ -133,7 +134,7 @@ class StreamingSamples(
         samples.add(i, lower)
         if (--countDown <= 0) {
             compress()
-            countDown = 100
+            countDown = compressInterval
         }
     }
 

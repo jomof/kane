@@ -1,5 +1,8 @@
 package com.github.jomof.kane.sheet
 
+import com.github.jomof.kane.ConstantScalar
+import com.github.jomof.kane.Expr
+import com.github.jomof.kane.ValueExpr
 import com.github.jomof.kane.types.*
 import java.text.NumberFormat
 import java.text.ParseException
@@ -85,7 +88,7 @@ private class DateTimeAdmissibleDataType(val formatting : String) : AdmissibleDa
     }
 }
 
-private val possibleDataTypes = listOf(
+val possibleDataFormats = listOf<AdmissibleDataType<*>>(
     DoubleAdmissibleDataType(),
     DollarsAdmissibleDataType(),
     DollarsAndCentsAdmissibleDataType(),
@@ -94,11 +97,25 @@ private val possibleDataTypes = listOf(
     StringAdmissibleDataType()
 )
 
+fun analyzeDataType(value : String) : AdmissibleDataType<*> {
+    return possibleDataFormats.first { it.tryParse(value) != null }
+}
+
+fun analyzeDataType(values : List<String>) : AdmissibleDataType<*> {
+    var acceptedDataTypes = possibleDataFormats.toMutableList()
+    values.forEach { value ->
+        acceptedDataTypes = acceptedDataTypes
+            .filter { tryType -> tryType.tryParse(value) != null }
+            .toMutableList()
+    }
+    return acceptedDataTypes.first()
+}
+
 fun analyzeDataTypes(data : List<Map<String, String>>) : DataTypeAnalysis {
     val rows = data.size
     val columns = data.flatMap { it.keys }.distinct()
     val columnInfos = columns.map { name ->
-        var acceptedDataTypes = possibleDataTypes.toMutableList()
+        var acceptedDataTypes = possibleDataFormats.toMutableList()
         var maxWidth = 0
         var minWidth = Int.MAX_VALUE
         data.forEach { map ->
@@ -109,7 +126,6 @@ fun analyzeDataTypes(data : List<Map<String, String>>) : DataTypeAnalysis {
                 .filter { tryType -> tryType.tryParse(value) != null }
                 .toMutableList()
         }
-        acceptedDataTypes
         ColumnInfo(
             name = name,
             typeInfo = acceptedDataTypes.first(),
@@ -121,4 +137,11 @@ fun analyzeDataTypes(data : List<Map<String, String>>) : DataTypeAnalysis {
         columns = columns.size,
         rows = rows,
         columnInfos = columnInfos)
+}
+
+fun <T:Any> AdmissibleDataType<T>.parseToExpr(value : String) : Expr {
+    return when(val parsed = tryParse(value)!!) {
+        is Double -> ConstantScalar(parsed, type as AlgebraicType)
+        else -> ValueExpr(parsed, type as KaneType<Any>)
+    }
 }

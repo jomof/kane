@@ -1,5 +1,6 @@
 package com.github.jomof.kane
 
+import com.github.jomof.kane.sheet.analyzeDataType
 import com.github.jomof.kane.types.KaneType
 import com.github.jomof.kane.types.kaneType
 import kotlin.reflect.KProperty
@@ -50,6 +51,9 @@ fun columnOf(range : Pair<Double, Double>, step : Double = 1.0) : MatrixExpr {
 inline fun <reified E:Any> columnOf(vararg elements : E) : Tiling<E> {
     val valueType = E::class.java.kaneType
     return Tiling(1, elements.size, elements.toList(), valueType)
+}
+inline fun columnOf(elements : List<String>) : Tiling<String> {
+    return Tiling(1, elements.size, elements.toList(), String::class.java.kaneType)
 }
 
 fun rowOf(vararg elements : Double) : MatrixExpr = matrixOf(elements.size, 1, *elements)
