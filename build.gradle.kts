@@ -16,6 +16,7 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation("com.github.doyaaaaaken:kotlin-csv-jvm:0.15.0")
     testImplementation("com.github.doyaaaaaken:kotlin-csv-jvm:0.15.0")
+    testImplementation("org.ow2.asm:asm:9.0")
 }
 tasks.withType<KotlinCompile>() {
     kotlinOptions.jvmTarget = "1.8"

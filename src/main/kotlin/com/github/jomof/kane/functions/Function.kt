@@ -165,11 +165,11 @@ data class AlgebraicUnaryMatrix(
 // f(scalar statistic)->scalar
 interface AlgebraicUnaryScalarStatisticFunction {
     val meta : UnaryOp
-    operator fun  invoke(value : ScalarExpr) : ScalarExpr = AlgebraicUnaryRandomVariableScalar(this, value)
+    operator fun  invoke(value : ScalarExpr) : ScalarExpr = AlgebraicUnaryScalarStatistic(this, value)
     fun reduceArithmetic(value : ScalarStatistic) : ScalarExpr
 }
 
-data class AlgebraicUnaryRandomVariableScalar(
+data class AlgebraicUnaryScalarStatistic(
     val op : AlgebraicUnaryScalarStatisticFunction,
     val value : ScalarExpr) : ScalarExpr {
     init { track() }

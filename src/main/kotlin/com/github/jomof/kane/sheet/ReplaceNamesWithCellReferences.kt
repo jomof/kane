@@ -22,7 +22,7 @@ private fun AlgebraicExpr.replaceNamesWithCellReferencesAlgebraic(excluding : St
             }
         is NamedMatrix -> copy(matrix = matrix.self())
         is AlgebraicUnaryScalar -> copy(value = value.self())
-        is AlgebraicUnaryRandomVariableScalar -> copy(value = value.self())
+        is AlgebraicUnaryScalarStatistic -> copy(value = value.self())
         is AlgebraicUnaryMatrix -> copy(value = value.self())
         is AlgebraicUnaryMatrixScalar -> copy(value = value.self())
         is AlgebraicBinaryScalarMatrix -> copy(

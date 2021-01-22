@@ -18,7 +18,7 @@ private fun AlgebraicExpr.expandUnaryOperationMatrixes() : AlgebraicExpr {
         }
         is DataMatrix -> map { it.self() }
         is AlgebraicUnaryScalar -> copy(value = value.self())
-        is AlgebraicUnaryRandomVariableScalar -> copy(value = value.self())
+        is AlgebraicUnaryScalarStatistic -> copy(value = value.self())
         is AlgebraicUnaryMatrix -> copy(value = value.self())
         is AlgebraicBinaryScalar -> copy(left = left.self(), right = right.self())
         is AlgebraicBinaryMatrixScalar -> copy(left = left.self(), right = right.self())

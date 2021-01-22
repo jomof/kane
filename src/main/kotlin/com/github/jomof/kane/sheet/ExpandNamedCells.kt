@@ -2,6 +2,8 @@ package com.github.jomof.kane.sheet
 
 import com.github.jomof.kane.*
 import com.github.jomof.kane.functions.AlgebraicBinaryScalar
+import com.github.jomof.kane.functions.AlgebraicBinaryScalarStatistic
+import com.github.jomof.kane.functions.AlgebraicUnaryScalarStatistic
 import com.github.jomof.kane.functions.AlgebraicUnaryScalar
 
 private fun AlgebraicExpr.expandNamedCells(lookup : Map<String, Expr>): AlgebraicExpr {
@@ -9,6 +11,8 @@ private fun AlgebraicExpr.expandNamedCells(lookup : Map<String, Expr>): Algebrai
     fun MatrixExpr.self() = expandNamedCells(lookup) as MatrixExpr
     val result = when(this) {
         is NamedScalarVariable -> this
+        is AlgebraicUnaryScalarStatistic -> copy(value = value.self())
+        is AlgebraicBinaryScalarStatistic -> copy(left = left.self(), right = right.self())
         is AlgebraicUnaryScalar -> copy(value = value.self())
         is AlgebraicBinaryScalar -> {
             val changed = copy(left = left.self(), right = right.self())
@@ -34,6 +38,7 @@ private fun AlgebraicExpr.expandNamedCells(lookup : Map<String, Expr>): Algebrai
 //            result as ScalarExpr
 //        }
         is ConstantScalar -> this
+        is DiscreteUniformRandomVariable -> this
         else -> error("$javaClass")
     }
     return result

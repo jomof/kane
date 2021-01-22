@@ -12,7 +12,7 @@ private fun AlgebraicExpr.convertCellNamesToUpperCase() : AlgebraicExpr {
         is NamedMatrix -> copy(name = name.upper(), matrix = matrix.self())
         is NamedScalar -> copy(name = name.upper(), scalar = scalar.self())
         is AlgebraicUnaryScalar -> copy(value = value.self())
-        is AlgebraicUnaryRandomVariableScalar -> copy(value = value.self())
+        is AlgebraicUnaryScalarStatistic -> copy(value = value.self())
         is AlgebraicUnaryMatrix -> copy(value = value.self())
         is AlgebraicUnaryMatrixScalar -> copy(value = value.self())
         is AlgebraicBinaryScalar -> copy(left = left.self(), right = right.self())

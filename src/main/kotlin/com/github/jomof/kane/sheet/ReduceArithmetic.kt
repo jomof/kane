@@ -2,7 +2,6 @@ package com.github.jomof.kane.sheet
 
 import com.github.jomof.kane.*
 import com.github.jomof.kane.functions.*
-import kotlin.random.Random
 
 /**
  * Functions to reduce sheet expressions where random variable samples are fixed once chosen.
@@ -13,39 +12,81 @@ private class SingleSampleReducer(
     // Random  variables' values, null if random variables should not be expanded
     val randomVariableValues : Map<RandomVariableExpr, ConstantScalar>?
 ) {
+    val memo : MutableMap<TypedExpr<*>,TypedExpr<*>> = mutableMapOf()
+    val selfMemo : MutableMap<TypedExpr<*>,TypedExpr<*>> = mutableMapOf()
     private fun AlgebraicExpr.reduceArithmeticImpl(
         cells : Map<String, Expr>,
         depth: Int
     ): AlgebraicExpr? {
-        fun ScalarExpr.self() = reduceArithmeticImpl(
-            cells,
-            depth + 1
-        ) as ScalarExpr?
 
-        fun MatrixExpr.self() = reduceArithmeticImpl(
-            cells,
-            depth + 1
-        ) as MatrixExpr?
         if (depth > 1000)
             return null
         val result = when (this) {
-            is NamedScalar -> copy(scalar = scalar.self() ?: return null)
-            is NamedMatrix -> copy(matrix = matrix.self() ?: return null)
-            is AlgebraicUnaryScalar -> copy(value = value.self() ?: return null)
-            is AlgebraicUnaryRandomVariableScalar -> copy(value = value.self() ?: return null)
-            is AlgebraicUnaryMatrix -> copy(value = value.self() ?: return null)
-            is AlgebraicUnaryMatrixScalar -> copy(value = value.self() ?: return null)
+            is NamedScalar -> copy(
+                scalar = scalar.reduceArithmeticImpl(
+                    cells,
+                    depth + 1
+                ) as ScalarExpr? ?: return null
+            )
+            is NamedMatrix -> copy(
+                matrix = matrix.reduceArithmeticImpl(
+                    cells,
+                    depth + 1
+                ) as MatrixExpr? ?: return null
+            )
+            is AlgebraicUnaryScalar -> copy(
+                value = value.reduceArithmeticImpl(
+                    cells,
+                    depth + 1
+                ) as ScalarExpr? ?: return null
+            )
+            is AlgebraicUnaryScalarStatistic -> copy(
+                value = value.reduceArithmeticImpl(
+                    cells,
+                    depth + 1
+                ) as ScalarExpr? ?: return null
+            )
+            is AlgebraicUnaryMatrix -> copy(
+                value = value.reduceArithmeticImpl(
+                    cells,
+                    depth + 1
+                ) as MatrixExpr? ?: return null
+            )
+            is AlgebraicUnaryMatrixScalar -> copy(
+                value = value.reduceArithmeticImpl(
+                    cells,
+                    depth + 1
+                ) as MatrixExpr? ?: return null
+            )
             is AlgebraicBinaryScalar -> copyReduce(
-                left = left.self() ?: return null,
-                right = right.self() ?: return null
+                left = left.reduceArithmeticImpl(
+                    cells,
+                    depth + 1
+                ) as ScalarExpr? ?: return null,
+                right = right.reduceArithmeticImpl(
+                    cells,
+                    depth + 1
+                ) as ScalarExpr? ?: return null
             )
             is AlgebraicBinaryMatrixScalar -> copy(
-                left = left.self() ?: return null,
-                right = right.self() ?: return null
+                left = left.reduceArithmeticImpl(
+                    cells,
+                    depth + 1
+                ) as MatrixExpr? ?: return null,
+                right = right.reduceArithmeticImpl(
+                    cells,
+                    depth + 1
+                ) as ScalarExpr? ?: return null
             )
             is AlgebraicBinaryScalarStatistic -> copy(
-                left = left.self() ?: return null,
-                right = right.self() ?: return null
+                left = left.reduceArithmeticImpl(
+                    cells,
+                    depth + 1
+                ) as ScalarExpr? ?: return null,
+                right = right.reduceArithmeticImpl(
+                    cells,
+                    depth + 1
+                ) as ScalarExpr? ?: return null
             )
             is CoerceScalar -> {
                 val result: ScalarExpr = when (value) {
@@ -95,7 +136,10 @@ private class SingleSampleReducer(
             is DataMatrix -> {
                 val scalars = mutableListOf<ScalarExpr>()
                 for (element in elements) {
-                    val result = element.self() ?: return null
+                    val result = element.reduceArithmeticImpl(
+                        cells,
+                        depth + 1
+                    ) as ScalarExpr? ?: return null
                     scalars += result
                 }
                 copy(elements = scalars)
@@ -113,25 +157,18 @@ private class SingleSampleReducer(
         return result
     }
 
-    private fun Expr.reduceArithmeticImpl(
-        cells: Map<String, Expr>,
-        depth: Int
-    ): Expr? {
-        return when (this) {
-            is AlgebraicExpr -> reduceArithmeticImpl(
-                cells,
-                depth + 1
-            )?.memoizeAndReduceArithmetic()
-            is ValueExpr<*> -> this
-            is ComputableCellReference -> this
-            else -> error("$javaClass")
-        }
-    }
-
     fun reduceArithmetic(
         expr : Expr,
         cells: Map<String, Expr>): Expr {
-        return expr.reduceArithmeticImpl(cells, 1) ?: expr
+        return when (expr) {
+            is AlgebraicExpr -> expr.reduceArithmeticImpl(
+                cells,
+                1
+            )?.memoizeAndReduceArithmetic(memo = memo) ?: expr
+            is ValueExpr<*> -> expr
+            is ComputableCellReference -> expr
+            else -> error("$javaClass")
+        }
     }
 }
 
@@ -139,19 +176,22 @@ private fun Sheet.sampleOrReduceArithmetic(
     excludeVariables : Set<String>,
     randomVariableValues : Map<RandomVariableExpr, ConstantScalar>?
 ) : Sheet {
-    var new = cells
+    var new = cells.toMutableMap()
     var done = false
 
     val reducer = SingleSampleReducer(excludeVariables, randomVariableValues)
+
     while (!done) {
+
         done = true
-        new = new.map { (name, expr) ->
+        new.forEach { (name, expr) ->
             val reduced = reducer.reduceArithmetic(expr, new)
             if (!done || reduced != expr) {
                 done = false
             }
-            name to reduced
-        }.toMap()
+            //name to reduced
+            new[name] = reduced
+        }
     }
 
     return Sheet.of(columnDescriptors, new)

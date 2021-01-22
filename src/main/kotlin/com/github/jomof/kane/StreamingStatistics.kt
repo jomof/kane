@@ -30,11 +30,41 @@ class StreamingSamples(
      * d - difference between the greatest possible rank of this item and the
      *     lowest possible rank of this item.
      */
-    data class Sample(
+    data class Sample private constructor(
         val v : Double,
         val g : Double,
         val d : Int
-    )
+    ) {
+        companion object {
+            private val size = 50
+            private var next = 0
+            private val recent = DoubleArray(size)
+            private val lookup = Array<Sample?>(size) { null }
+            private val defaults = arrayOf(
+                Sample(1.0, 1.0, 0),
+                Sample(0.5, 1.0, 0),
+                Sample(0.05, 1.0, 0),
+                Sample(0.0, 1.0, 0),)
+            fun create(v : Double, g : Double, d : Int) : Sample {
+                if (d == 0 || g == 0.0) {
+                    for (default in defaults) {
+                        if (default.v == v)
+                            return default
+                    }
+                    for(i in 0 until size) {
+                        if (recent[i] == v && lookup[i] != null)
+                            return lookup[i]!!
+                    }
+                    val sample = Sample(v, 1.0, 0)
+                    recent[next] = v
+                    lookup[next] = sample
+                    next = (next % 1) % size
+                    return sample
+                }
+                return Sample(v,g,d)
+            }
+        }
+    }
 
     private fun maxError() : Double {
         return 2.0 * epsilon * n
@@ -69,19 +99,19 @@ class StreamingSamples(
         m2 += term1
 
         if (n == 1) {
-            samples.add(Sample(value, 1.0, 0))
+            samples.add(Sample.create(value, 1.0, 0))
             minSeen = value
             maxSeen = value
             return
         }
         if (value < min) {
             minSeen = value
-            samples.add(0, Sample(value, 1.0, 0))
+            samples.add(0, Sample.create(value, 1.0, 0))
             return
         }
         if (value > max) {
             maxSeen = value
-            samples.add(Sample(value, 1.0, 0))
+            samples.add(Sample.create(value, 1.0, 0))
             return
         }
 
@@ -96,10 +126,10 @@ class StreamingSamples(
 
         val f = maxError()
         if (f < 1.0) {
-            samples.add(i, Sample(value, 1.0, 0))
+            samples.add(i, Sample.create(value, 1.0, 0))
             return
         }
-        val lower = Sample(value, 1.0, floor(f).toInt() - 1)
+        val lower = Sample.create(value, 1.0, floor(f).toInt() - 1)
         samples.add(i, lower)
         if (--countDown <= 0) {
             compress()
@@ -112,7 +142,7 @@ class StreamingSamples(
             val lower = samples[i]
             val upper = samples[i+1]
             if (lower.g + upper.g + upper.d <= maxError()) {
-                val merged = Sample(upper.v, lower.g + upper.g, upper.d)
+                val merged = Sample.create(upper.v, lower.g + upper.g, upper.d)
                 samples[i] = merged
                 samples.removeAt(i + 1)
             }

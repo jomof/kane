@@ -9,7 +9,11 @@ class PercentileFunction : AlgebraicBinaryScalarStatisticFunction {
     override fun reduceArithmetic(left: ScalarStatistic, right: ScalarExpr): ScalarExpr {
         return when {
             right is ConstantScalar -> constant(left.statistic.percentile(right.value), left.type)
-            else -> error("${left.javaClass} ${right.javaClass}")
+            right is ScalarStatistic -> {
+                error("${left.javaClass} ${right.javaClass}")
+            }
+            else ->
+                error("${left.javaClass} ${right.javaClass}")
         }
     }
 }

@@ -2,9 +2,9 @@ package com.github.jomof.kane
 
 import com.github.jomof.kane.functions.AlgebraicBinaryScalar
 import com.github.jomof.kane.functions.AlgebraicBinaryScalarStatistic
-import com.github.jomof.kane.functions.AlgebraicUnaryRandomVariableScalar
+import com.github.jomof.kane.functions.AlgebraicUnaryScalar
+import com.github.jomof.kane.functions.AlgebraicUnaryScalarStatistic
 import com.github.jomof.kane.sheet.*
-import kotlin.random.Random
 
 /**
  * Evaluate an expression, substitute sample value for random variables.
@@ -17,7 +17,7 @@ private fun Expr.sampleEval(
         is RandomVariableExpr -> randomVariableValues.getValue(this)
         is AlgebraicBinaryScalar -> copyReduce(left = left.self(), right = right.self(),)
         is AlgebraicBinaryScalarStatistic -> copy(left = left.self(), right = right.self(),)
-        is AlgebraicUnaryRandomVariableScalar -> copy(value = value.self())
+        is AlgebraicUnaryScalarStatistic -> copy(value = value.self())
         is ConstantScalar -> this
         else ->
             error("$javaClass")
@@ -35,7 +35,8 @@ private fun Expr.convertToStatistics() : Expr {
         }
         is NamedScalar -> copy(scalar = scalar.self())
         is NamedMatrix -> copy(matrix = matrix.self())
-        is AlgebraicUnaryRandomVariableScalar -> copy(value = value.self())
+        is AlgebraicUnaryScalarStatistic -> copy(value = value.self())
+        is AlgebraicUnaryScalar -> copy(value = value.self())
         is AlgebraicBinaryScalar -> copyReduce(left = left.self(), right = right.self())
         is AlgebraicBinaryScalarStatistic -> copy(left = left.self(), right = right.self())
         is Sheet -> {
@@ -64,7 +65,7 @@ private fun Expr.accumulateStatistics(incoming : Expr) {
         this is ScalarStatistic && incoming is ConstantScalar -> {
             statistic.insert(incoming.value)
         }
-        this is AlgebraicUnaryRandomVariableScalar && incoming is AlgebraicUnaryRandomVariableScalar -> {
+        this is AlgebraicUnaryScalarStatistic && incoming is AlgebraicUnaryScalarStatistic -> {
             value.accumulateStatistics(incoming.value)
         }
         this is AlgebraicBinaryScalar && incoming is AlgebraicBinaryScalar -> {
@@ -97,7 +98,7 @@ private fun Expr.reduceStatistics() : Expr {
     return when(this) {
         is NamedScalar -> copy(scalar = scalar.self())
         is NamedMatrix -> copy(matrix = matrix.self())
-        is AlgebraicUnaryRandomVariableScalar -> {
+        is AlgebraicUnaryScalarStatistic -> {
             when(value) {
                 is ScalarStatistic -> op.reduceArithmetic(value)
                 is NamedScalar -> {
@@ -157,7 +158,7 @@ fun Expr.eval() : Expr {
 fun Sheet.reduceArithmetic(excludeVariables : Set<String>) : Sheet {
     val randomVariables = findRandomVariables()
     if (randomVariables.isEmpty()) return reduceArithmeticNoSample(excludeVariables)
-    //val reduced = reduceArithmeticNoSample(excludeVariables)
+    val reduced = reduceArithmeticNoSample(excludeVariables)
     var stats : Expr? = null
     val randomVariableElements = randomVariables.map { variable ->
         (variable as DiscreteUniformRandomVariable).values.map { value ->
@@ -168,7 +169,7 @@ fun Sheet.reduceArithmetic(excludeVariables : Set<String>) : Sheet {
         val variableValues = (randomVariables zip randomVariableValues)
             .map { (variable, value) -> variable to (value as ConstantScalar) }
             .toMap()
-        val sample = sampleReduceArithmetic(excludeVariables, variableValues)
+        val sample = reduced.sampleReduceArithmetic(excludeVariables, variableValues)
         if (stats == null) {
             stats = sample.convertToStatistics() as Sheet
         } else {

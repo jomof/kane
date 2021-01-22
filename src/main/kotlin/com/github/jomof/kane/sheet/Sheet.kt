@@ -307,7 +307,7 @@ fun Sheet.minimize(
     val reducedArithmetic = reduceArithmetic(variables.toSet())
     println("Expanding target expression")
     val lookup = reducedArithmetic.cells + resolvedVariables
-    var targetExpr = reducedArithmetic.cells.getValue(target).expandNamedCells(lookup)
+    val targetExpr = reducedArithmetic.cells.getValue(target).expandNamedCells(lookup)
     println("count = ${targetExpr.count()}")
     if (targetExpr !is ScalarExpr) {
         error("'$target' was not a numeric expression")

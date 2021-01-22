@@ -26,7 +26,7 @@ private fun AlgebraicExpr.replaceRelativeCellReferences(
         }
         is AlgebraicUnaryScalar -> copy(value = value.self(coordinate))
         is AlgebraicUnaryMatrix -> copy(value = value.self(coordinate))
-        is AlgebraicUnaryRandomVariableScalar -> copy(value = value.self(coordinate))
+        is AlgebraicUnaryScalarStatistic -> copy(value = value.self(coordinate))
         is AlgebraicUnaryMatrixScalar -> copy(value = value.self(coordinate))
         is AlgebraicBinaryScalarMatrix -> copy(
             left = left.self(coordinate),
