@@ -73,8 +73,10 @@ private fun readCsvWithHeader(
     val sb = SheetBuilder()
     val random = Random(7)
     val rows: MutableList<Map<String, String>> = mutableListOf()
+    var totalRows = 0
     CsvReader(context).open(csv) {
         for (row in readAllWithHeaderAsSequence()) {
+            ++totalRows
             if (params.sample >= 1.0 || random.nextDouble(0.0, 1.0) < params.sample) {
                 rows += row
                     .filter { params.keep.isEmpty() || params.keep.contains(it.key) }
@@ -100,6 +102,12 @@ private fun readCsvWithHeader(
             }
         }
     }
+
+    if (params.sample < 1.0) {
+        println("Sampled ${rows.size} of $totalRows rows with ${info.columnInfos.size} columns")
+    } else {
+        println("Read ${rows.size} rows with ${info.columnInfos.size} columns")
+    }
     return sb.build()
 }
 
@@ -114,7 +122,9 @@ private fun readCsvWithoutHeader(
     if (params.keep.isNotEmpty()) {
         error("keep='${params.keep.joinToString(",")}' not allowed for CSV without headers")
     }
+    var totalRows = 0
     CsvReader(context).open(csv) {
+        ++totalRows
         for (row in readAllAsSequence()) {
             if (params.sample >= 1.0 || random.nextDouble(0.0, 1.0) < params.sample) {
                 rows += row.map { it.intern() }
@@ -138,6 +148,13 @@ private fun readCsvWithoutHeader(
             }
         }
     }
+
+    if (params.sample < 1.0) {
+        println("Sampled ${rows.size} of $totalRows rows with ${info.columnInfos.size} columns")
+    } else {
+        println("Read ${rows.size} rows with ${info.columnInfos.size} columns")
+    }
+
     return sb.build()
 }
 

@@ -90,14 +90,12 @@ class DocumentationTest {
          * This data is pretty large, so let's first read a 2% sample to see what's in
          * there.
          */
-        val peek = readCsv("data/covid.csv", sample = 0.02)
+        val peek = readCsv("data/covid.csv", sample = 0.001)
 
         /**
-         * As you can see, there are 1706 rows in our 2% sample so we can expect around
-         * 85,000+ rows in the full data set.
+         * As you can see, we sampled around 75 rows out of 87,000+ and there are 93 columns.
          *
-         * It also looks like there are a lot of columns. We can get a more readable list
-         * and see the types of those columns with the 'types' field on the sheet.
+         * We can get a more readable list of columns with the 'types' field on the sheet.
          */
         println(peek.types)
 
