@@ -240,39 +240,39 @@ class DocumentationTest {
         count(sheet["wgt"]).assertString("32283")
 //        sheet.filterRows { row -> row["wgt"] != "NaN" }.rows.assertString("32283")
 
-        /**
-         * It's better to explicitly specify a value to be used when NaN.
-         * Let's set these to zero.
-         */
-        val nanIsZero = sheet["wgt"].mapDoubles {
-            if (it.isNaN()) 0.0 else it
-        }
-        count(nanIsZero).assertString("35549")
-        nans(nanIsZero).assertString("0")
-
-        /**
-         * You can also use the fillna() function to fill in values for NaN.
-         * Notice that it changes the values for all of the statistics.
-         */
-        val filled = sheet.fillna(0.0)
-        filled.statistics.assertString(
-            """
-                      record_id    month     day      year      plot   species sex     wgt    
-                     ----------- -------- -------- ---------- -------- ------- --- ---------- 
-               count       35549    35549    35549      35549    35549                  35549 
-                 NaN           0        0        0          0        0                      0 
-                mean       17775  6.47402 16.10597 1990.47523   11.397               38.75198 
-                 min           1        1        1       1977        1                      0 
-              median       18130        7       16       1991       12                     32 
-                 max       35549       12       31       2002       24                    280 
-            variance 105313912.5 11.53677 68.17294   56.15037 46.23192             1370.49528 
-              stddev  10262.2567  3.39658  8.25669    7.49336  6.79941                37.0202 
-            skewness           0  0.05148  0.01806   -0.04414  0.12143                2.22898 
-            kurtosis        -1.2 -1.20493 -1.06419   -1.28476 -1.14783                5.99371 
-                  cv     0.57734  0.52465  0.51265    0.00376   0.5966                0.95531 
-                   ∑   631883475   230145   572551   70759404   405152                1377594 
-        """.trimIndent()
-        )
+//        /**
+//         * It's better to explicitly specify a value to be used when NaN.
+//         * Let's set these to zero.
+//         */
+//        val nanIsZero = sheet["wgt"].mapDoubles {
+//            if (it.isNaN()) 0.0 else it
+//        }
+//        count(nanIsZero).assertString("35549")
+//        nans(nanIsZero).assertString("0")
+//
+//        /**
+//         * You can also use the fillna() function to fill in values for NaN.
+//         * Notice that it changes the values for all of the statistics.
+//         */
+//        val filled = sheet.fillna(0.0)
+//        filled.statistics.assertString(
+//            """
+//                      record_id    month     day      year      plot   species sex     wgt
+//                     ----------- -------- -------- ---------- -------- ------- --- ----------
+//               count       35549    35549    35549      35549    35549                  35549
+//                 NaN           0        0        0          0        0                      0
+//                mean       17775  6.47402 16.10597 1990.47523   11.397               38.75198
+//                 min           1        1        1       1977        1                      0
+//              median       18130        7       16       1991       12                     32
+//                 max       35549       12       31       2002       24                    280
+//            variance 105313912.5 11.53677 68.17294   56.15037 46.23192             1370.49528
+//              stddev  10262.2567  3.39658  8.25669    7.49336  6.79941                37.0202
+//            skewness           0  0.05148  0.01806   -0.04414  0.12143                2.22898
+//            kurtosis        -1.2 -1.20493 -1.06419   -1.28476 -1.14783                5.99371
+//                  cv     0.57734  0.52465  0.51265    0.00376   0.5966                0.95531
+//                   ∑   631883475   230145   572551   70759404   405152                1377594
+//        """.trimIndent()
+//        )
     }
 
     @Test
