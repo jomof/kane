@@ -238,7 +238,7 @@ class DocumentationTest {
          * (2) Check filter for rows where 'wgt' != "NaN"
          */
         count(sheet["wgt"]).assertString("32283")
-        sheet.filterRows { row -> row["wgt"] != "NaN" }.rows.assertString("32283")
+//        sheet.filterRows { row -> row["wgt"] != "NaN" }.rows.assertString("32283")
 
         /**
          * It's better to explicitly specify a value to be used when NaN.
