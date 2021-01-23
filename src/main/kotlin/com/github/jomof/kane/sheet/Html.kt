@@ -42,15 +42,11 @@ val Sheet.html: String
         sb.append("<tbody>")
         for (row in 0 until rows) {
             sb.append("<tr>")
-            for (column in 0..columns) {
-                if (column == 0) {
-                    sb.append("<td>${rowName(row)}</td>")
-                } else {
-                    val cell = coordinateToCellName(ComputableCoordinate.fixed(column, row))
-                    val value = cells[cell]?.toString() ?: ""
-                    sb.append("<td>$value</td>")
-                }
-
+            sb.append("<td>${rowName(row)}</td>")
+            for (column in 0 until columns) {
+                val cell = coordinateToCellName(ComputableCoordinate.fixed(column, row))
+                val value = cells[cell]?.toString() ?: ""
+                sb.append("<td>$value</td>")
             }
             sb.append("</tr>")
         }

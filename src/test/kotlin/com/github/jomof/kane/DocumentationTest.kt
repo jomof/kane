@@ -91,6 +91,7 @@ class DocumentationTest {
          * there.
          */
         val peek = readCsv("data/covid.csv", sample = 0.001)
+        peek.html
 
         /**
          * As you can see, we sampled around 75 rows out of 87,000+ and there are 93 columns.
