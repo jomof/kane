@@ -104,7 +104,6 @@ interface Sheet : Expr {
                 rowDescriptors.isEmpty() &&
                 sheetDescriptor == SheetDescriptor()) return emptySheet
             if (cells.isEmpty()) return SheetImpl(columnDescriptors, rowDescriptors, cells, sheetDescriptor, 0, 0)
-
             val columnsFromCells : Int = cells
                 .filter { looksLikeCellName(it.key) }
                 .map { cellNameToColumnIndex(it.key) }.maxOrNull()!! + 1

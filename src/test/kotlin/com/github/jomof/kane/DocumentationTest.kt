@@ -91,7 +91,6 @@ class DocumentationTest {
          * there.
          */
         val peek = readCsv("data/covid.csv", sample = 0.02)
-        println(peek)
 
         /**
          * As you can see, there are 1706 rows in our 2% sample so we can expect around
@@ -150,8 +149,8 @@ class DocumentationTest {
          * First, read "zoo.csv".
          */
         val zoo = readCsv("data/zoo.csv", delimiter = ',')
-        println(zoo)
-
+        println(zoo.html)
+        return
         /**
          * Read the pandas tutorial csv. Notice the change in delimiter and also the explicitly specified
          * column names.
