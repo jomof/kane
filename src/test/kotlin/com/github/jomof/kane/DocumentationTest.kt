@@ -150,7 +150,7 @@ class DocumentationTest {
          */
         val zoo = readCsv("data/zoo.csv", delimiter = ',')
         println(zoo.html)
-        return
+
         /**
          * Read the pandas tutorial csv. Notice the change in delimiter and also the explicitly specified
          * column names.

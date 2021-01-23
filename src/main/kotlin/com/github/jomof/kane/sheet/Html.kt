@@ -4,6 +4,9 @@ import com.github.jomof.kane.ComputableCoordinate
 import com.github.jomof.kane.coordinateToCellName
 import com.github.jomof.kane.indexToColumnName
 
+/**
+ * Render the sheet as HTML
+ */
 val Sheet.html: String
     get() {
         val sb = StringBuilder()
