@@ -8,7 +8,7 @@ import org.junit.Test
 class FunctionalTest {
     @Test
     fun ordinalRows() {
-        val zoo = readCsv("zoo.csv")
+        val zoo = readCsv("data/zoo.csv")
         println(zoo)
         val picked = zoo.ordinalRows(2, 3, 4)
         println(picked)
@@ -31,7 +31,7 @@ class FunctionalTest {
 
     @Test
     fun head() {
-        val zoo = readCsv("zoo.csv")
+        val zoo = readCsv("data/zoo.csv")
         println(zoo)
         val head = zoo.head()
         println(head)
@@ -48,7 +48,7 @@ class FunctionalTest {
 
     @Test
     fun tail() {
-        val zoo = readCsv("zoo.csv")
+        val zoo = readCsv("data/zoo.csv")
         println(zoo)
         val tail = zoo.tail()
         println(tail)
@@ -65,7 +65,7 @@ class FunctionalTest {
 
     @Test
     fun sample() {
-        val zoo = readCsv("zoo.csv")
+        val zoo = readCsv("data/zoo.csv")
         println(zoo)
         val sample = zoo.sample()
         println(sample)
@@ -82,7 +82,7 @@ class FunctionalTest {
 
     @Test
     fun getColumns() {
-        val zoo = readCsv("zoo.csv")
+        val zoo = readCsv("data/zoo.csv")
         println(zoo)
         val cols = zoo["animal", "water_need"]
         println(cols)
@@ -105,7 +105,7 @@ class FunctionalTest {
 
     @Test
     fun `get columns by Excel-like name`() {
-        val zoo = readCsv("zoo.csv")
+        val zoo = readCsv("data/zoo.csv")
         val cols = zoo["B", "C"]
         println(cols)
         cols.assertString("""
@@ -127,7 +127,7 @@ class FunctionalTest {
 
     @Test
     fun `filtering rows`() {
-        val zoo = readCsv("zoo.csv")
+        val zoo = readCsv("data/zoo.csv")
         val filtered = zoo.filterRows { row ->
             row["uniq_id"] == "1005"
         }
@@ -142,7 +142,7 @@ class FunctionalTest {
 
     @Test
     fun statistics() {
-        val zoo = readCsv("zoo.csv")
+        val zoo = readCsv("data/zoo.csv")
         zoo.statistics.assertString(
             """
                      animal  uniq_id  water_need 
@@ -165,7 +165,7 @@ class FunctionalTest {
 
     @Test
     fun `statistics of column`() {
-        val zoo = readCsv("zoo.csv")
+        val zoo = readCsv("data/zoo.csv")
         zoo["water_need"].statistics.assertString(
             """
                       water_need 
@@ -188,14 +188,14 @@ class FunctionalTest {
 
     @Test
     fun `individual statistics of column`() {
-        val zoo = readCsv("zoo.csv")
+        val zoo = readCsv("data/zoo.csv")
         mean(zoo["water_need"]).assertString("347.72727")
         median(zoo["water_need"]).assertString("330")
     }
 
     @Test
     fun `individual statistics of sheet`() {
-        val zoo = readCsv("zoo.csv")
+        val zoo = readCsv("data/zoo.csv")
         mean(zoo).assertString(
             """
                  animal uniq_id water_need 

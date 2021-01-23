@@ -2,53 +2,96 @@ package com.github.jomof.kane.sheet
 
 import com.github.doyaaaaaken.kotlincsv.client.CsvReader
 import com.github.doyaaaaaken.kotlincsv.dsl.context.CsvReaderContext
+import com.github.jomof.kane.ComputableCoordinate
 import com.github.jomof.kane.Coordinate
+import com.github.jomof.kane.coordinateToCellName
+import com.github.jomof.kane.indexToColumnName
 import java.io.File
+import kotlin.random.Random
 
-fun readCsv(csv : String,
-            names : List<String> = listOf(),
-            charset : String = "UTF-8",
-            quoteChar: Char = '"',
-            delimiter: Char = ',',
-            escapeChar: Char = '"',
-            skipEmptyLine: Boolean = false,
-            skipMissMatchedRow: Boolean = false) : Sheet = readCsv(File(csv), names, csvReader(
-                charset,
-                quoteChar,
-                delimiter,
-                escapeChar,
-                skipEmptyLine,
-                skipMissMatchedRow))
+fun readCsv(
+    csv: String,
+    names: List<String> = listOf(),
+    sample: Double = 1.0,
+    keep: List<String> = listOf(),
+    charset: String = "UTF-8",
+    quoteChar: Char = '"',
+    delimiter: Char = ',',
+    escapeChar: Char = '"',
+    skipEmptyLine: Boolean = false,
+    skipMissMatchedRow: Boolean = false
+): Sheet = readCsv(
+    File(csv),
+    CsvParameters(
+        names = names,
+        sample = sample,
+        keep = keep.toSet()
+    ),
+    csvReaderContext(
+        charset,
+        quoteChar,
+        delimiter,
+        escapeChar,
+        skipEmptyLine,
+        skipMissMatchedRow
+    )
+)
 
-fun readCsv(csv : File,
-            names : List<String> = listOf(),
-            charset : String = "UTF-8",
-            quoteChar: Char = '"',
-            delimiter: Char = ',',
-            escapeChar: Char = '"',
-            skipEmptyLine: Boolean = false,
-            skipMissMatchedRow: Boolean = false) = readCsv(csv, names, csvReader(
-                charset,
-                quoteChar,
-                delimiter,
-                escapeChar,
-                skipEmptyLine,
-                skipMissMatchedRow
-            ))
+fun readCsv(
+    csv: File,
+    names: List<String> = listOf(),
+    sample: Double = 1.0,
+    keep: List<String> = listOf(),
+    charset: String = "UTF-8",
+    quoteChar: Char = '"',
+    delimiter: Char = ',',
+    escapeChar: Char = '"',
+    skipEmptyLine: Boolean = false,
+    skipMissMatchedRow: Boolean = false
+) = readCsv(
+    csv,
+    CsvParameters(
+        names = names,
+        sample = sample,
+        keep = keep.toSet()
+    ),
+    csvReaderContext(
+        charset,
+        quoteChar,
+        delimiter,
+        escapeChar,
+        skipEmptyLine,
+        skipMissMatchedRow
+    )
+)
 
 private fun readCsvWithHeader(
-    csv : File,
-    csvReader: CsvReader) : Sheet {
+    csv: File,
+    params: CsvParameters,
+    context: CsvReaderContext
+): Sheet {
     val sb = SheetBuilder()
-    val rows: List<Map<String, String>> = csvReader.readAllWithHeader(csv)
+    val random = Random(7)
+    val rows: MutableList<Map<String, String>> = mutableListOf()
+    CsvReader(context).open(csv) {
+        for (row in readAllWithHeaderAsSequence()) {
+            if (params.sample >= 1.0 || random.nextDouble(0.0, 1.0) < params.sample) {
+                rows += row
+                    .filter { params.keep.isEmpty() || params.keep.contains(it.key) }
+                    .map { it.key.intern() to it.value.intern() }
+                    .toMap()
+            }
+        }
+    }
+
     val info = analyzeDataTypes(rows)
-    for(column in info.columnInfos.indices) {
+    for (column in info.columnInfos.indices) {
         val columnInfo = info.columnInfos[column]
         sb.column(column, columnInfo.name, columnInfo.typeInfo)
     }
-    for(row in 0 until info.rows) {
+    for (row in 0 until info.rows) {
         val map = rows[row]
-        for(column in info.columnInfos.indices) {
+        for (column in info.columnInfos.indices) {
             val columnInfo = info.columnInfos[column]
             val coordinate = Coordinate(column, row)
             val value = columnInfo.typeInfo.tryParse(map[columnInfo.name] ?: "")
@@ -61,19 +104,32 @@ private fun readCsvWithHeader(
 }
 
 private fun readCsvWithoutHeader(
-    csv : File,
-    names : List<String> = listOf(),
-    csvReader: CsvReader) : Sheet {
+    csv: File,
+    params: CsvParameters,
+    context: CsvReaderContext
+): Sheet {
     val sb = SheetBuilder()
-    val rows: List<List<String>> = csvReader.readAll(csv)
-    val info = analyzeDataTypes(names, rows)
-    for(column in info.columnInfos.indices) {
+    val rows: MutableList<List<String>> = mutableListOf()
+    val random = Random(7)
+    if (params.keep.isNotEmpty()) {
+        error("keep='${params.keep.joinToString(",")}' not allowed for CSV without headers")
+    }
+    CsvReader(context).open(csv) {
+        for (row in readAllAsSequence()) {
+            if (params.sample >= 1.0 || random.nextDouble(0.0, 1.0) < params.sample) {
+                rows += row.map { it.intern() }
+            }
+        }
+    }
+
+    val info = analyzeDataTypes(params.names, rows)
+    for (column in info.columnInfos.indices) {
         val columnInfo = info.columnInfos[column]
         sb.column(column, columnInfo.name, columnInfo.typeInfo)
     }
-    for(row in 0 until info.rows) {
+    for (row in 0 until info.rows) {
         val list = rows[row]
-        for(column in info.columnInfos.indices) {
+        for (column in info.columnInfos.indices) {
             val columnInfo = info.columnInfos[column]
             val coordinate = Coordinate(column, row)
             val value = columnInfo.typeInfo.tryParse(list[column])
@@ -86,23 +142,30 @@ private fun readCsvWithoutHeader(
 }
 
 private fun readCsv(
-    csv : File,
-    names : List<String> = listOf(),
-    csvReader: CsvReader) : Sheet {
+    csv: File,
+    params: CsvParameters,
+    context: CsvReaderContext
+): Sheet {
     val sheet =
-        if (names.isEmpty()) readCsvWithHeader(csv, csvReader)
-        else readCsvWithoutHeader(csv, names, csvReader)
+        if (params.names.isEmpty()) readCsvWithHeader(csv, params, context)
+        else readCsvWithoutHeader(csv, params, context)
     return sheet.limitOutputLines(10)
 }
 
-private fun csvReader(
-    charset : String,
+private data class CsvParameters(
+    val names: List<String>,
+    val keep: Set<String>,
+    val sample: Double
+)
+
+private fun csvReaderContext(
+    charset: String,
     quoteChar: Char,
     delimiter: Char,
     escapeChar: Char,
     skipEmptyLine: Boolean,
     skipMissMatchedRow: Boolean
-) : CsvReader {
+): CsvReaderContext {
     val context = CsvReaderContext()
     context.charset = charset
     context.quoteChar = quoteChar
@@ -110,5 +173,46 @@ private fun csvReader(
     context.escapeChar = escapeChar
     context.skipEmptyLine = skipEmptyLine
     context.skipMissMatchedRow = skipMissMatchedRow
-    return CsvReader(context)
+    return context
+}
+
+fun Sheet.writeCsv(csv: String) {
+    writeCsv(File(csv))
+}
+
+fun Sheet.writeCsv(csv: File) {
+    csv.writeText("")
+
+    fun colName(column: Int) = columnDescriptors[column]?.name ?: indexToColumnName(column)
+
+    // Column headers
+    (0..columns).forEach { column ->
+        val columnName = colName(column)
+        csv.appendText(columnName)
+        if (column != columns - 1) csv.appendText(",")
+
+    }
+    csv.appendText("\n")
+
+    // Data
+    val sb = StringBuilder()
+    for (row in 0 until rows) {
+        for (column in 0 until columns) {
+            val cell = coordinateToCellName(ComputableCoordinate.fixed(column, row))
+            val value = cells[cell]?.toString() ?: ""
+            if (value.contains(" ")) {
+                sb.append("\"$value\"")
+            } else {
+                sb.append(value)
+            }
+            if (column != columns - 1) sb.append(",")
+        }
+        sb.append("\n")
+        if (row % 100 == 0) {
+            // Write in batches
+            csv.appendText(sb.toString())
+            sb.clear()
+        }
+    }
+    csv.appendText(sb.toString())
 }

@@ -186,7 +186,7 @@ class SheetTest {
     @Test
     fun `shiller PE to following year return`() {
         val startYear = 1928
-        val endYear = 2019 // 2019
+        val endYear = 1938 // 2019
         // expected(#years, %stock) [then 5% and 95% confidence]
         val sheet = sheetOf {
             val a1 by constant("m")
@@ -718,7 +718,7 @@ class SheetTest {
     @Test
     fun `optimize stock-bond split based on trailing Shiller PE`() {
         val startYear = 1928
-        val endYear = 2019 // 2019
+        val endYear = 1938 // 2019
         val totalYears = endYear - startYear + 1
         val rollingWindow = 2
         // expected(#years, %stock) [then 5% and 95% confidence]

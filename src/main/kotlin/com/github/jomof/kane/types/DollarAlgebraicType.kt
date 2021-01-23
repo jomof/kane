@@ -10,7 +10,7 @@ class DollarsAndCentsAlgebraicType : AlgebraicType(Double::class.java) {
     override val simpleName = "double"
     override fun render(value: Double): String {
         if (value.isInfinite()) return "Infinite"
-        if (value.isNaN()) return "NaN"
+        if (value.isNaN()) return ""
         val result = NumberFormat.getCurrencyInstance(Locale.US).format(abs(value))
         return if (value < 0.0) "($result)" else result
     }
@@ -25,7 +25,7 @@ class DollarAlgebraicType : AlgebraicType(Double::class.java) {
     override val simpleName = "double"
     override fun render(value: Double): String {
         if (value.isInfinite()) return "Infinite"
-        if (value.isNaN()) return "NaN"
+        if (value.isNaN()) return ""
         val result = NumberFormat.getCurrencyInstance(Locale.US).format(abs(value)).substringBefore(".")
         return if (value < 0.0) "($result)" else result
     }

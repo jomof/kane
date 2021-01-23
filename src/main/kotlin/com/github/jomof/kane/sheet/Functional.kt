@@ -105,7 +105,10 @@ fun Sheet.mapDoubles(translate: (Double) -> Double): Sheet {
     val new = cells.toMutableMap()
     evaled.cells.forEach { (name, expr) ->
         when (expr) {
-            is ConstantScalar -> new[name] = expr.copy(value = translate(expr.value))
+            is ConstantScalar -> {
+                val result = translate(expr.value)
+                new[name] = expr.copy(value = result)
+            }
             is ValueExpr<*> -> {
             }
             else -> error("${expr.javaClass}")
@@ -135,6 +138,13 @@ fun Expr.fillna(value: Double): Expr {
         is Sheet -> fillna(value)
         else -> error("$javaClass")
     }
+}
+
+fun Sheet.groupBy(
+    keySelector: (RowDescriptor) -> List<String>,
+    valueSelector: (RowDescriptor) -> List<ScalarExpr>
+): Sheet {
+    return this
 }
 
 /**

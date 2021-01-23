@@ -73,12 +73,70 @@ class DocumentationTest {
               ------ 
             1  ${"$"}5.20 
             2 ${"$"}10.40 
-        """.trimIndent())
+        """.trimIndent()
+        )
 
         /**
          * You can get a list of data formats supported by using Kane.dataFormats
          */
         println(Kane.dataFormats)
+    }
+
+    @Test
+    fun `reading data section--dealing with large CSV files`() {
+        /**
+         * When a CSV file is very large it can be useful to reduce it to a useful subset.
+         * Let's look at a table of US COVID-19 hospital statistics (found at data.gov).
+         * This data is pretty large, so let's first read a 2% sample to see what's in
+         * there.
+         */
+        val peek = readCsv("data/covid.csv", sample = 0.02)
+        println(peek)
+
+        /**
+         * As you can see, there are 1706 rows in our 2% sample so we can expect around
+         * 85,000+ rows in the full data set.
+         *
+         * It also looks like there are a lot of columns. We can get a more readable list
+         * and see the types of those columns with the 'types' field on the sheet.
+         */
+        println(peek.types)
+
+        /**
+         * So there are 90+ columns as well.
+         *
+         * Let's keep all of the rows, but filter down to just a few interesting columns.
+         */
+        val filtered = readCsv(
+            "data/covid.csv",
+            keep = listOf("collection_week", "hospital_name", "all_adult_hospital_inpatient_bed_occupied_7_day_avg")
+        )
+        println(filtered)
+
+        /**
+         * That's a little bit more manageable.
+         *
+         * Let's look at some summary statistics to see what this data looks like.
+         */
+        println(filtered.statistics)
+
+        /**
+         * Hmm, that 'min' value looks a little suspicious. This data uses '-999999' to represent the case when the
+         * value isn't known for this row. That's definitely going to skew other statistics as well.
+         *
+         * When Kane sees a value of Double.NaN it ignores that value in statistics. So let's replace the special value
+         * '-999999' with Double.NaN.
+         */
+        val covid = filtered.mapDoubles { if (it.toInt() == -999999) Double.NaN else it }
+        println(covid.statistics)
+
+        /**
+         * That's better. We can see there were 12,750 missing values, leaving 74,619 rows with values.
+         * Also notices the mean, min, and other statistics have changed reflect the removed -999999 values.
+         *
+         * Finally, let's save this to a new .csv file so that we can use it for other demos.
+         */
+        covid.writeCsv("data/covid-slim.csv")
     }
 
     @Test
@@ -91,7 +149,7 @@ class DocumentationTest {
          *
          * First, read "zoo.csv".
          */
-        val zoo = readCsv("zoo.csv", delimiter = ',')
+        val zoo = readCsv("data/zoo.csv", delimiter = ',')
         println(zoo)
 
         /**
@@ -99,7 +157,7 @@ class DocumentationTest {
          * column names.
          */
         val tutorial = readCsv(
-            "pandas_tutorial_read.csv",
+            "data/pandas_tutorial_read.csv",
             delimiter = ';',
             names = listOf("my_datetime", "event", "country", "user_id", "source", "topic")
         )
@@ -150,7 +208,7 @@ class DocumentationTest {
 
     @Test
     fun `advanced reading data section--types and missing data`() {
-        val sheet = readCsv("surveys.csv")
+        val sheet = readCsv("data/surveys.csv")
         /**
          * Get the type of a single column.
          */
@@ -215,6 +273,12 @@ class DocumentationTest {
                    ∑   631883475   230145   572551   70759404   405152                1377594 
         """.trimIndent()
         )
+    }
 
+    @Test
+    fun `grouping by columns and expressions`() {
+        val zoo = readCsv("data/zoo.csv", delimiter = ',')
+        println(zoo)
+        //listOf("a").groupBy()
     }
 }
