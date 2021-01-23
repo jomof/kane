@@ -87,7 +87,7 @@ class DocumentationTest {
         /**
          * When a CSV file is very large it can be useful to reduce it to a useful subset.
          * Let's look at a table of US COVID-19 hospital statistics (found at data.gov).
-         * This data is pretty large, so let's first read a 2% sample to see what's in
+         * This data is pretty large, so let's first read a smale sample to see what's in
          * there.
          */
         val peek = readCsv("data/covid.csv", sample = 0.001)

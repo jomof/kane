@@ -12,7 +12,7 @@ val Sheet.html: String
         val sb = StringBuilder()
         sb.append(
             """
-        <link rel=\"stylesheet\" type=\"text/css\" href=\"https://cdn.datatables.net/1.10.23/css/jquery.dataTables.css\">
+        <link rel=\"stylesheet\" type=\"text/css\" class=\"display compact\" href=\"https://cdn.datatables.net/1.10.23/css/jquery.dataTables.css\">
           
         <script type=\"text/javascript\" charset=\"utf8\" src=\"https://cdn.datatables.net/1.10.23/js/jquery.dataTables.js\">
         ${'$'}(document).ready( function () {
