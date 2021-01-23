@@ -18,28 +18,25 @@ val Sheet.html: String
         ${'$'}(document).ready( function () {
             ${'$'}('#table_id').DataTable();
         } );
-        </script>
+        </script>\n
     """.trimIndent()
         )
 
         fun colName(column: Int) = columnDescriptors[column]?.name ?: indexToColumnName(column)
         fun rowName(row: Int) = rowDescriptors[row]?.name ?: "$row"
-        sb.append("<table id=\"table_id\" class=\"display\">")
+        sb.append("<table id=\"table_id\" class=\"display\">\n")
 
         // Column headers
-        sb.append("<thead><tr>")
-        (0..columns).forEach { column ->
-            if (column == 0) {
-                sb.append("<th/>")
-            } else {
-                val columnName = colName(column - 1)
-                sb.append("<th>$columnName</th>")
-            }
+        sb.append("<thead><tr>\n")
+        sb.append("<th/>")
+        (0 until columns).forEach { column ->
+            val columnName = colName(column)
+            sb.append("<th>$columnName</th>")
         }
-        sb.append("</thead></tr>")
+        sb.append("</thead></tr>\n")
 
         // Data
-        sb.append("<tbody>")
+        sb.append("<tbody>\n")
         for (row in 0 until rows) {
             sb.append("<tr>")
             sb.append("<td>${rowName(row)}</td>")
@@ -48,8 +45,9 @@ val Sheet.html: String
                 val value = cells[cell]?.toString() ?: ""
                 sb.append("<td>$value</td>")
             }
-            sb.append("</tr>")
+            sb.append("</tr>\n")
         }
-        sb.append("</table>")
+        sb.append("</tbody>\n")
+        sb.append("</table>\n")
         return sb.toString()
     }
