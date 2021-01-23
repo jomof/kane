@@ -1,35 +1,68 @@
 ```kotlin
-@file:DependsOn("com.github.jomof:kane:0.1.59")
-import com.github.jomof.kane.*
-import com.github.jomof.kane.types.*
-import com.github.jomof.kane.functions.*
-import com.github.jomof.kane.sheet.*
-import java.io.File
+val html = """
+<link rel=\"stylesheet\" type=\"text/css\" href=\"https://cdn.datatables.net/1.10.23/css/jquery.dataTables.css\">
+  
+<script type=\"text/javascript\" charset=\"utf8\" src=\"https://cdn.datatables.net/1.10.23/js/jquery.dataTables.js\">
+$(document).ready( function () {
+    $('#table_id').DataTable();
+} );
+</script>
+
+<table id="table_id" class="display">
+    <thead>
+        <tr>
+            <th>Column 1</th>
+            <th>Column 2</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Row 1 Data 1</td>
+            <td>Row 1 Data 2</td>
+        </tr>
+        <tr>
+            <td>Row 2 Data 1</td>
+            <td>Row 2 Data 2</td>
+        </tr>
+    </tbody>
+</table>
+"""
+HTML(html)
 ```
 
 
-```kotlin
-val sheet = sheetOf {
-    val a1 by 0.0
-    val b1 by a1 + a1
-    add(b1)
-}
-sheet
-```
 
 
 
+<link rel=\"stylesheet\" type=\"text/css\" href=\"https://cdn.datatables.net/1.10.23/css/jquery.dataTables.css\">
 
-      A   B   
-      - ----- 
-    1 0 A1+A1 
+<script type=\"text/javascript\" charset=\"utf8\" src=\"https://cdn.datatables.net/1.10.23/js/jquery.dataTables.js\">
+$(document).ready( function () {
+    $('#table_id').DataTable();
+} );
+</script>
+
+<table id="table_id" class="display">
+    <thead>
+        <tr>
+            <th>Column 1</th>
+            <th>Column 2</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Row 1 Data 1</td>
+            <td>Row 1 Data 2</td>
+        </tr>
+        <tr>
+            <td>Row 2 Data 1</td>
+            <td>Row 2 Data 2</td>
+        </tr>
+    </tbody>
+</table>
 
 
 
-
-```kotlin
-
-```
 
 
 ```kotlin
