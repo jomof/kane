@@ -21,7 +21,7 @@ class Kane {
         /**
          * List of statistics functions that take one parameter.
          */
-        val unaryStatisticsFunctions = listOf<AlgebraicUnaryScalarStatisticFunction>(
+        val unaryStatisticsFunctions = listOf(
             count,
             nans,
             mean,

@@ -12,7 +12,7 @@ private class DivideFunction : AlgebraicBinaryScalarFunction {
         if (p1 is NamedScalarVariable && p2 is NamedScalarVariable) return null
         val leftConst = p1.tryFindConstant()
         val rightConst = p2.tryFindConstant()
-        val result = when {
+        return when {
             leftConst == 0.0 -> p1
             rightConst == 1.0 -> p1
             leftConst != null && rightConst != null -> constant(invoke(leftConst, rightConst), p1.type)
@@ -20,7 +20,6 @@ private class DivideFunction : AlgebraicBinaryScalarFunction {
             p2 is AlgebraicBinaryScalar && p2.op == pow -> p1 * pow(p2.left, -p2.right)
             else -> null
         }
-        return result
     }
 
     override fun differentiate(

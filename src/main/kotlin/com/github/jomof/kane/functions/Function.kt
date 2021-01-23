@@ -71,14 +71,26 @@ data class AlgebraicBinaryScalar(
 ) : ScalarExpr, ParentExpr<Double> {
     private val hashCode = op.hashCode() * 3 + left.hashCode() * 7 + right.hashCode() * 9
     override fun hashCode() = hashCode
+    override fun equals(other: Any?): Boolean {
+        if (other == null) return false
+        if (other !is AlgebraicBinaryScalar) return false
+        if (op != other.op) return false
+        if (left != other.left) return false
+        if (right != other.right) return false
+        if (type != other.type) return false
+        return true
+    }
+
     init {
         track()
     }
+
     override val children get() = listOf(left, right)
     override fun toString() = render()
     fun copy(
-             left : ScalarExpr = this.left,
-             right : ScalarExpr = this.right) : AlgebraicBinaryScalar {
+        left: ScalarExpr = this.left,
+        right: ScalarExpr = this.right
+    ): AlgebraicBinaryScalar {
         if (this.left === left && this.right === right) return this
         return AlgebraicBinaryScalar(op, left, right)
     }

@@ -105,16 +105,6 @@ fun analyzeDataType(value : String) : AdmissibleDataType<*> {
     return possibleDataFormats.first { it.tryParse(value) != null }
 }
 
-fun analyzeDataType(values : List<String>) : AdmissibleDataType<*> {
-    var acceptedDataTypes = possibleDataFormats.toMutableList()
-    values.forEach { value ->
-        acceptedDataTypes = acceptedDataTypes
-            .filter { tryType -> tryType.tryParse(value) != null }
-            .toMutableList()
-    }
-    return acceptedDataTypes.first()
-}
-
 fun analyzeDataTypes(data : List<Map<String, String>>) : DataTypeAnalysis {
     val rows = data.size
     val columns = data.flatMap { it.keys }.distinct()

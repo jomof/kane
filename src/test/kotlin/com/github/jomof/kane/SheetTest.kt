@@ -187,8 +187,6 @@ class SheetTest {
     fun `shiller PE to following year return`() {
         val startYear = 1928
         val endYear = 2019 // 2019
-        val totalYears = endYear - startYear + 1
-        val rollingWindow = 2
         // expected(#years, %stock) [then 5% and 95% confidence]
         val sheet = sheetOf {
             val a1 by constant("m")
@@ -574,10 +572,7 @@ class SheetTest {
             }
 
             val sorted = population.sorted()
-            val percentile = sorted[min(sorted.size, round((sorted.size - 1.0) * percentile).toInt())]
-
-
-            return percentile
+            return sorted[min(sorted.size, round((sorted.size - 1.0) * percentile).toInt())]
         }
 
         val data = mutableMapOf<Triple<Double, Double, Double>, Double>()

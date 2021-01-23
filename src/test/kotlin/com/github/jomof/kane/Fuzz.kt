@@ -1,3 +1,5 @@
+@file:Suppress("UNCHECKED_CAST")
+
 package com.github.jomof.kane
 
 import com.github.jomof.kane.functions.*
@@ -34,7 +36,7 @@ private fun Class<*>.interfacesTransitive(set : MutableSet<Class<*>> = mutableSe
 private val interfaceSpecs = interestingTypes
     .onEach { assert(!it.isInterface) {
         "$it is interface, should be class"
-        } }
+    } }
     .flatMap { type -> type.interfacesTransitive().map { it to type } }
     .groupBy { it.first }
     .map { it.key to it.value.map { x -> x.second } }
@@ -61,7 +63,6 @@ fun <E:Any> Random.nextInstance(type : Class<*>) : E {
 
 fun Random.nextAlgebraicUnaryMatrixScalarOp() = chooseOne(listOf(summation))
 fun Random.nextAlgebraicUnaryOp() = chooseOne(listOf(negate, exp, logit, tanh, relu, step, lrelu, lstep))
-fun Random.nextBinaryOp() = chooseOne(listOf())
 fun Random.nextAlgebraicBinaryScalarOp() = chooseOne(listOf(pow, multiply, divide, add, subtract))
 
 fun Random.nextAlgebraicUnaryScalar(type : AlgebraicType) =
@@ -89,9 +90,9 @@ fun Random.nextAlgebraicBinaryMatrixScalar(
 }
 
 fun Random.nextAlgebraicBinaryScalarMatrix(
-     columns : Int = nextInt(1, 5),
-     rows : Int = nextInt(1,5),
-     type : AlgebraicType) : AlgebraicBinaryScalarMatrix {
+    columns : Int = nextInt(1, 5),
+    rows : Int = nextInt(1,5),
+    type : AlgebraicType) : AlgebraicBinaryScalarMatrix {
     return AlgebraicBinaryScalarMatrix(
         nextAlgebraicBinaryScalarOp(),
         columns,
@@ -149,7 +150,7 @@ fun Random.nextNamedMatrix(
         rows,
         type))
 
-fun Random.nextNamedScalarExpr(type : AlgebraicType) : NamedScalarExpr {
+fun Random.nextNamedScalarExpr(): NamedScalarExpr {
     val method = chooseOne(interfaceSpecs.getValue(NamedScalarExpr::class.java))
     return dispatchExpr(method, nextAlgebraicType()) as NamedScalarExpr
 }
@@ -222,9 +223,6 @@ fun Random.nextExpr() : Expr {
 
 fun Random.nextMatrixExpr(columns : Int, rows : Int) =
     nextMatrixExpr(columns, rows, DoubleAlgebraicType.kaneType)
-
-fun Random.nextNamedScalarExpr() =
-    nextNamedScalarExpr(DoubleAlgebraicType.kaneType)
 
 fun Random.nextNamedAlgebraicExpr() =
     nextNamedAlgebraicExpr(DoubleAlgebraicType.kaneType)

@@ -2,8 +2,6 @@ package com.github.jomof.kane.types
 
 import com.github.jomof.kane.ConstantScalar
 import com.github.jomof.kane.ScalarExpr
-import java.math.BigDecimal
-import java.math.RoundingMode
 import java.text.NumberFormat
 import java.util.*
 import kotlin.math.abs

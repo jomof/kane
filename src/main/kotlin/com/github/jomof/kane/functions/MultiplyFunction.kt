@@ -1,20 +1,20 @@
 package com.github.jomof.kane.functions
 
 import com.github.jomof.kane.*
-import com.github.jomof.kane.types.*
 
 val TIMES by BinaryOp(op = "*", precedence = 1, associative = true, infix = true)
 
 private class MultiplyFunction : AlgebraicBinaryScalarFunction {
     override val meta = TIMES
     override fun doubleOp(p1: Double, p2: Double) = p1 * p2
-    
+
     override fun reduceArithmetic(p1: ScalarExpr, p2: ScalarExpr): ScalarExpr? {
         if (p1 is NamedScalarVariable && p2 is NamedScalarVariable) return null
         val leftConst = p1.tryFindConstant()
         val rightConst = p2.tryFindConstant()
-        val result = when {
-            p1 == p2 && p1 is AlgebraicUnaryScalar && p1.op == negate-> pow(p1.value, 2.0)
+
+        return when {
+            p1 == p2 && p1 is AlgebraicUnaryScalar && p1.op == negate -> pow(p1.value, 2.0)
             p1 == p2 -> pow(p1, 2.0)
             rightConst == 0.0 -> p2
             rightConst == -0.0 -> p2
@@ -37,8 +37,8 @@ private class MultiplyFunction : AlgebraicBinaryScalarFunction {
                 -(p1 * p2.value)
             }
             p1 is AlgebraicBinaryScalar && p1.op == pow &&
-                p2 is AlgebraicBinaryScalar && p2.op == pow &&
-                p1.left == p2.left ->
+                    p2 is AlgebraicBinaryScalar && p2.op == pow &&
+                    p1.left == p2.left ->
                 pow(p1.left, p1.right + p2.right) // x^5 * x^4 => x^9
             p1 is AlgebraicBinaryScalar && p1.op == multiply && p1.right == p2 -> p1.left * pow(p2, 2.0)
             p1 is AlgebraicBinaryScalar && p1.op == multiply && p1.left == p2 -> p1.right * pow(p2, 2.0)
@@ -58,8 +58,6 @@ private class MultiplyFunction : AlgebraicBinaryScalarFunction {
             leftConst == null && rightConst != null -> p2 * p1
             else -> null
         }
-
-        return result
     }
     override fun differentiate(
         p1: ScalarExpr,

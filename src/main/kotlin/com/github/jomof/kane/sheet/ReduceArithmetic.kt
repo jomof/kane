@@ -15,13 +15,13 @@ private class SingleSampleReducer(
     val memo : MutableMap<TypedExpr<*>,TypedExpr<*>> = mutableMapOf()
     val selfMemo : MutableMap<TypedExpr<*>,TypedExpr<*>> = mutableMapOf()
     private fun AlgebraicExpr.reduceArithmeticImpl(
-        cells : Map<String, Expr>,
+        cells: Map<String, Expr>,
         depth: Int
     ): AlgebraicExpr? {
 
         if (depth > 1000)
             return null
-        val result = when (this) {
+        return when (this) {
             is NamedScalar -> copy(
                 scalar = scalar.reduceArithmeticImpl(
                     cells,
@@ -154,7 +154,6 @@ private class SingleSampleReducer(
             else ->
                 error("$javaClass")
         }
-        return result
     }
 
     fun reduceArithmetic(
@@ -176,7 +175,7 @@ private fun Sheet.sampleOrReduceArithmetic(
     excludeVariables : Set<String>,
     randomVariableValues : Map<RandomVariableExpr, ConstantScalar>?
 ) : Sheet {
-    var new = cells.toMutableMap()
+    val new = cells.toMutableMap()
     var done = false
 
     val reducer = SingleSampleReducer(excludeVariables, randomVariableValues)

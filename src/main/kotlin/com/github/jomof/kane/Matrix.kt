@@ -3,7 +3,8 @@ package com.github.jomof.kane
 import com.github.jomof.kane.functions.divide
 import com.github.jomof.kane.functions.multiply
 import com.github.jomof.kane.functions.subtract
-import com.github.jomof.kane.types.*
+import com.github.jomof.kane.types.AlgebraicType
+import com.github.jomof.kane.types.DoubleAlgebraicType
 
 interface Matrix {
     val columns : Int
@@ -57,7 +58,7 @@ operator fun MutableMatrix.minusAssign(value: Matrix) {
 fun Matrix.render(): String {
     if (columns == 1 && rows == 1) return type.render(this[0,0])
     if (columns == 1) {
-        return "[" + (0 until rows).map { type.render(this[0,it]) }.joinToString("|") + "]ᵀ"
+        return "[" + (0 until rows).joinToString("|") { type.render(this[0, it]) } + "]ᵀ"
     }
     val sb = StringBuilder()
     for (row in 0 until rows) {

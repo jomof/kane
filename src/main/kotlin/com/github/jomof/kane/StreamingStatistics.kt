@@ -45,7 +45,7 @@ class StreamingSamples(
         val d : Int
     ) {
         companion object {
-            private val size = 20
+            private const val size = 20
             private var next = 0
             private val recent = DoubleArray(size)
             private val lookup = Array<Sample?>(size) { null }

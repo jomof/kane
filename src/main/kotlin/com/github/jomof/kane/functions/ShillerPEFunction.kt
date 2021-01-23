@@ -7,7 +7,7 @@ import com.github.jomof.kane.tryFindConstant
 
 // Source: https://www.multpl.com/shiller-pe/table/by-year
 // Year is on January 1st of that year.
-private val shillerPEMap = mapOf<Int, Double>(
+private val shillerPEMap = mapOf(
     1928 to 18.81,
     1929 to 27.08,
     1930 to 22.31,

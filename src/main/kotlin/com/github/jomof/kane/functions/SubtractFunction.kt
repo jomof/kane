@@ -12,7 +12,7 @@ private class SubtractFunction : AlgebraicBinaryScalarFunction {
         if (p1 is NamedScalarVariable && p2 is NamedScalarVariable) return null
         val leftConst = p1.tryFindConstant()
         val rightConst = p2.tryFindConstant()
-        val result = when {
+        return when {
             leftConst == 0.0 -> -p2
             leftConst == -0.0 -> -p2
             rightConst == 0.0 -> p1
@@ -25,7 +25,6 @@ private class SubtractFunction : AlgebraicBinaryScalarFunction {
             else ->
                 null
         }
-        return result
     }
     override fun differentiate(
         p1: ScalarExpr,

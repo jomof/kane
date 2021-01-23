@@ -80,7 +80,7 @@ data class ValueExpr<E: Any>(
     }
     override fun toString() = type.render(value)
     operator fun getValue(e: E?, property: KProperty<*>) = toNamed(property.name)
-    fun toNamed(name : String) = NamedValueExpr(name, value, type)
+    private fun toNamed(name: String) = NamedValueExpr(name, value, type)
 }
 data class NamedValueExpr<E: Any>(
     override val name: String,
@@ -845,8 +845,8 @@ fun Expr.render(entryPoint : Boolean = true) : String {
             else -> "${op.meta.op}(${value.self()})"
         }
         is AlgebraicBinaryScalarStatistic -> {
-            when {
-                op == pow -> {
+            when (op) {
+                pow -> {
                     val rightSuper = tryConvertToSuperscript(right.self())
                     if (rightSuper == null) binary(POW, left, right)
                     else "${left.self()}$rightSuper"
@@ -856,8 +856,8 @@ fun Expr.render(entryPoint : Boolean = true) : String {
             }
         }
         is AlgebraicBinaryScalar -> {
-            when {
-                op == pow -> {
+            when (op) {
+                pow -> {
                     val rightSuper = tryConvertToSuperscript(right.self())
                     if (rightSuper == null) binary(POW, left, right)
                     else "${left.self()}$rightSuper"

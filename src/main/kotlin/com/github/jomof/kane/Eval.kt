@@ -12,11 +12,11 @@ import com.github.jomof.kane.sheet.*
 private fun Expr.sampleEval(
     randomVariableValues : Map<RandomVariableExpr, ConstantScalar>) : Expr {
     fun ScalarExpr.self() = sampleEval(randomVariableValues) as ScalarExpr
-    return when(this) {
+    return when (this) {
         is NamedScalar -> copy(scalar = scalar.self())
         is RandomVariableExpr -> randomVariableValues.getValue(this)
-        is AlgebraicBinaryScalar -> copyReduce(left = left.self(), right = right.self(),)
-        is AlgebraicBinaryScalarStatistic -> copy(left = left.self(), right = right.self(),)
+        is AlgebraicBinaryScalar -> copyReduce(left = left.self(), right = right.self())
+        is AlgebraicBinaryScalarStatistic -> copy(left = left.self(), right = right.self())
         is AlgebraicUnaryScalarStatistic -> copy(value = value.self())
         is ConstantScalar -> this
         else ->

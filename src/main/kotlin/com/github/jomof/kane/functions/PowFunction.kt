@@ -12,11 +12,11 @@ private class PowFunction : AlgebraicBinaryScalarFunction {
     override fun reduceArithmetic(p1: ScalarExpr, p2: ScalarExpr): ScalarExpr? {
         val leftConst = p1.tryFindConstant()
         val rightConst = p2.tryFindConstant()
-        val result = when {
+        return when {
             leftConst == 1.0 -> p1
             leftConst == 0.0 -> p1
             leftConst == -0.0 -> p1
-            rightConst == 1.0-> p1
+            rightConst == 1.0 -> p1
             rightConst == 0.0 -> ConstantScalar(1.0, p1.type)
             rightConst == -0.0 -> ConstantScalar(1.0, p1.type)
             leftConst != null && rightConst != null -> constant(invoke(leftConst, rightConst), p1.type)
@@ -24,7 +24,6 @@ private class PowFunction : AlgebraicBinaryScalarFunction {
                 pow(p1.left, p2 * p1.right)
             else -> null
         }
-        return result
     }
 
     override fun differentiate(

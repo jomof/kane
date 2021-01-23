@@ -10,7 +10,7 @@ class MaxFunction : AlgebraicUnaryMatrixScalarFunction, AlgebraicUnaryScalarStat
 
     override fun reduceArithmetic(value: MatrixExpr): ScalarExpr? {
         if (!value.elements.all { it is ConstantScalar }) return null
-        return constant(value.elements.map { (it as ConstantScalar).value }.max()!!, value.type)
+        return constant(value.elements.map { (it as ConstantScalar).value }.maxOrNull()!!, value.type)
     }
 }
 

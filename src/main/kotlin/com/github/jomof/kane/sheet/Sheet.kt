@@ -3,12 +3,12 @@ package com.github.jomof.kane.sheet
 import com.github.jomof.kane.*
 import com.github.jomof.kane.ComputableIndex.FixedIndex
 import com.github.jomof.kane.ComputableIndex.RelativeIndex
-import com.github.jomof.kane.functions.*
-import com.github.jomof.kane.track
+import com.github.jomof.kane.functions.d
+import com.github.jomof.kane.functions.div
+import com.github.jomof.kane.functions.minus
+import com.github.jomof.kane.functions.multiply
 import com.github.jomof.kane.types.AlgebraicType
 import com.github.jomof.kane.types.KaneType
-import com.github.jomof.kane.types.StringKaneType
-import com.github.jomof.kane.types.kaneType
 import java.lang.Integer.max
 import kotlin.math.abs
 import kotlin.math.min
@@ -16,8 +16,8 @@ import kotlin.reflect.KProperty
 
 data class ComputableCellReference(val coordinate : ComputableCoordinate) : UntypedScalar {
     private val name by lazy { coordinateToCellName(coordinate) }
-    fun up(move : Int) = copy(coordinate = coordinate.up(move))
-    fun down(move : Int) = copy(coordinate = coordinate.down(move))
+    private fun up(move: Int) = copy(coordinate = coordinate.up(move))
+    fun down(move: Int) = copy(coordinate = coordinate.down(move))
     fun left(move : Int) = copy(coordinate = coordinate.left(move))
     fun right(move : Int) = copy(coordinate = coordinate.right(move))
     val up get() = up(1)
@@ -37,12 +37,13 @@ data class NamedComputableCellReference(
     init {
         track()
     }
+
     override fun toString() = "$name=${coordinateToCellName(coordinate)}"
 
-    fun up(move : Int) = copy(coordinate = coordinate.up(move))
-    fun down(move : Int) = copy(coordinate = coordinate.down(move))
-    fun left(move : Int) = copy(coordinate = coordinate.left(move))
-    fun right(move : Int) = copy(coordinate = coordinate.right(move))
+    private fun up(move: Int) = copy(coordinate = coordinate.up(move))
+    private fun down(move: Int) = copy(coordinate = coordinate.down(move))
+    fun left(move: Int) = copy(coordinate = coordinate.left(move))
+    fun right(move: Int) = copy(coordinate = coordinate.right(move))
     val up get() = up(1)
     val down get() = down(1)
     val left get() = left(1)
@@ -147,9 +148,9 @@ interface Sheet : Expr {
 class SheetBuilder {
     private val columnDescriptors : MutableMap<Int, ColumnDescriptor> = mutableMapOf()
     private val added : MutableList<NamedExpr> = mutableListOf()
-    fun up(offset : Int) = ComputableCellReference(ComputableCoordinate.relative(column = 0, row = -offset))
-    fun down(offset : Int) = ComputableCellReference(ComputableCoordinate.relative(column = 0, row = offset))
-    fun left(offset : Int) = ComputableCellReference(ComputableCoordinate.relative(column = -offset, row = 0))
+    fun up(offset: Int) = ComputableCellReference(ComputableCoordinate.relative(column = 0, row = -offset))
+    private fun down(offset: Int) = ComputableCellReference(ComputableCoordinate.relative(column = 0, row = offset))
+    fun left(offset: Int) = ComputableCellReference(ComputableCoordinate.relative(column = -offset, row = 0))
     fun right(offset : Int) = ComputableCellReference(ComputableCoordinate.relative(column = offset, row = 0))
     val up get() = up(1)
     val down get() = down(1)
@@ -202,13 +203,13 @@ class SheetBuilder {
 
     private fun replaceRelativeReferences(cells : Map<String, NamedExpr>) : Map<String, NamedExpr> {
         return cells
-            .map { (name, expr) -> expr.replaceRelativeCellReferences() }
+            .map { (_, expr) -> expr.replaceRelativeCellReferences() }
             .map { it.name to it }.toMap()
     }
 
     private fun convertCellNamesToUpperCase(cells : Map<String, NamedExpr>) : Map<String, NamedExpr> {
         return cells
-            .map { (name, expr) -> expr.convertCellNamesToUpperCase() }
+            .map { (_, expr) -> expr.convertCellNamesToUpperCase() }
             .map { it.name to it }.toMap()
     }
 
@@ -220,8 +221,8 @@ class SheetBuilder {
             result.toList().forEach { (name, expr) ->
                 if (looksLikeCellName(name)) {
                     val upperLeft = cellNameToCoordinate(name)
-                    when {
-                        expr is NamedMatrix -> {
+                    when (expr) {
+                        is NamedMatrix -> {
                             var replacedOurName = false
                             expr.matrix.coordinates.map { offset ->
                                 val finalCoordinate = upperLeft + offset
@@ -237,7 +238,7 @@ class SheetBuilder {
                             }
                             done = false
                         }
-                        expr is NamedTiling<*> -> {
+                        is NamedTiling<*> -> {
                             coordinatesOf(expr.tiling.columns, expr.tiling.rows).map { offset ->
                                 val finalCoordinate = upperLeft + offset
                                 val finalCellName = coordinateToCellName(finalCoordinate)
@@ -254,7 +255,7 @@ class SheetBuilder {
 
     private fun expandUnaryOperationMatrixes(cells : Map<String, NamedExpr>) : Map<String, NamedExpr> {
         return cells
-            .map { (name, expr) ->
+            .map { (_, expr) ->
                 val result = expr.expandUnaryOperationMatrixes()
                 result
             }
@@ -371,9 +372,9 @@ fun Sheet.minimize(
 
     // Differentiate target with respect to each variable
     println("Differentiating target expression with respect to change variables")
-    val diffs = resolvedVariables.map { (name, variable) ->
+    val diffs = resolvedVariables.map { (_, variable) ->
         val name = "d$target/d${variable.name}"
-        val derivative = differentiate(d(namedTarget)/d(variable)).reduceArithmetic()
+        val derivative = differentiate(d(namedTarget) / d(variable)).reduceArithmetic()
         NamedScalar(name, derivative)
     }
 

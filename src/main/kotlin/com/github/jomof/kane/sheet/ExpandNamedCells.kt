@@ -3,13 +3,12 @@ package com.github.jomof.kane.sheet
 import com.github.jomof.kane.*
 import com.github.jomof.kane.functions.AlgebraicBinaryScalar
 import com.github.jomof.kane.functions.AlgebraicBinaryScalarStatistic
-import com.github.jomof.kane.functions.AlgebraicUnaryScalarStatistic
 import com.github.jomof.kane.functions.AlgebraicUnaryScalar
+import com.github.jomof.kane.functions.AlgebraicUnaryScalarStatistic
 
-private fun AlgebraicExpr.expandNamedCells(lookup : Map<String, Expr>): AlgebraicExpr {
+private fun AlgebraicExpr.expandNamedCells(lookup: Map<String, Expr>): AlgebraicExpr {
     fun ScalarExpr.self() = expandNamedCells(lookup) as ScalarExpr
-    fun MatrixExpr.self() = expandNamedCells(lookup) as MatrixExpr
-    val result = when(this) {
+    return when (this) {
         is NamedScalarVariable -> this
         is AlgebraicUnaryScalarStatistic -> copy(value = value.self())
         is AlgebraicBinaryScalarStatistic -> copy(left = left.self(), right = right.self())
@@ -20,12 +19,12 @@ private fun AlgebraicExpr.expandNamedCells(lookup : Map<String, Expr>): Algebrai
             else this
         }
         is CoerceScalar -> {
-            val result : ScalarExpr = when(value) {
+            val result: ScalarExpr = when (value) {
                 is ScalarVariable -> constant(value.initial)
-                is ScalarExpr -> value.self() as ScalarExpr
+                is ScalarExpr -> value.self()
                 is ComputableCellReference -> {
                     val ref = "$value"
-                    val result = (lookup[ref]?:constant(0.0)) as ScalarExpr
+                    val result = (lookup[ref] ?: constant(0.0)) as ScalarExpr
                     result.self()
                 }
                 else -> error("${value.javaClass}")
@@ -41,7 +40,6 @@ private fun AlgebraicExpr.expandNamedCells(lookup : Map<String, Expr>): Algebrai
         is DiscreteUniformRandomVariable -> this
         else -> error("$javaClass")
     }
-    return result
 }
 fun Expr.expandNamedCells(lookup : Map<String, Expr>) : Expr {
     return when(this) {

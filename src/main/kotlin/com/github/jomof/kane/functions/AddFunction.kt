@@ -1,7 +1,6 @@
 package com.github.jomof.kane.functions
 
 import com.github.jomof.kane.*
-import com.github.jomof.kane.types.*
 
 val PLUS by BinaryOp(op = "+", precedence = 3, associative = true, infix = true)
 private class AddFunction : AlgebraicBinaryScalarFunction {
@@ -11,7 +10,7 @@ private class AddFunction : AlgebraicBinaryScalarFunction {
         if (p1 is NamedScalarVariable && p2 is NamedScalarVariable) return null
         val leftConst = p1.tryFindConstant()
         val rightConst = p2.tryFindConstant()
-        val result = when {
+        return when {
             leftConst == 0.0 -> p2
             leftConst == -0.0 -> p2
             rightConst == 0.0 -> p1
@@ -27,7 +26,6 @@ private class AddFunction : AlgebraicBinaryScalarFunction {
             else ->
                 null
         }
-        return result
     }
     override fun differentiate(
         p1: ScalarExpr,

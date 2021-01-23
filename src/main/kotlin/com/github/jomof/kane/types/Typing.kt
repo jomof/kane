@@ -19,15 +19,17 @@ class StringKaneType : KaneType<String>(String::class.java) {
     }
 }
 
-class IntegerKaneType : KaneType<Integer>(Integer::class.java) {
-    override fun render(value: Integer) = "$value"
+class IntegerKaneType : KaneType<Int>(Int::class.java) {
+    override fun render(value: Int) = "$value"
+
     companion object {
         val kaneType = IntegerKaneType()
     }
 }
 
-class ObjectKaneType : KaneType<Object>(Object::class.java) {
-    override fun render(value: Object) = "$value"
+class ObjectKaneType : KaneType<Any>(Any::class.java) {
+    override fun render(value: Any) = "$value"
+
     companion object {
         val kaneType = StringKaneType()
     }
@@ -46,9 +48,9 @@ val <T:Any> Class<T>.kaneType: KaneType<T>
     }
 
 class DoubleAlgebraicType(
-    val prefix : String = "",
-    val trimLeastSignificantZeros : Boolean = true,
-    val precision : Int = 5
+    private val prefix: String = "",
+    private val trimLeastSignificantZeros: Boolean = true,
+    private val precision: Int = 5
 ) : AlgebraicType(Double::class.java) {
     override val simpleName = "double"
     override fun render(value: Double): String {

@@ -3,10 +3,10 @@ package com.github.jomof.kane.sheet
 import com.github.jomof.kane.*
 import com.github.jomof.kane.functions.*
 
-private fun AlgebraicExpr.expandUnaryOperationMatrixes() : AlgebraicExpr {
+private fun AlgebraicExpr.expandUnaryOperationMatrixes(): AlgebraicExpr {
     fun MatrixExpr.self() = expandUnaryOperationMatrixes() as MatrixExpr
     fun ScalarExpr.self() = expandUnaryOperationMatrixes() as ScalarExpr
-    val result  = when(this) {
+    return when (this) {
         is NamedMatrix -> copy(matrix = matrix.self())
         is NamedScalar -> copy(scalar = scalar.self())
         is AlgebraicUnaryMatrixScalar -> {
@@ -28,7 +28,6 @@ private fun AlgebraicExpr.expandUnaryOperationMatrixes() : AlgebraicExpr {
         is CoerceScalar -> copy(value = value.expandUnaryOperationMatrixes())
         else -> error("$javaClass")
     }
-    return result
 }
 private fun Expr.expandUnaryOperationMatrixes() : Expr {
     return when(this) {
