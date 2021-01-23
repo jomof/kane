@@ -23,25 +23,34 @@ val Sheet.html: String
         )
 
         fun colName(column: Int) = columnDescriptors[column]?.name ?: indexToColumnName(column)
+        fun rowName(row: Int) = rowDescriptors[row]?.name ?: "$row"
         sb.append("<table id=\"table_id\" class=\"display\">")
 
         // Column headers
         sb.append("<thead><tr>")
-        (0 until columns).forEach { column ->
-            val columnName = colName(column)
-            sb.append("<th>$columnName</th>")
+        (0..columns).forEach { column ->
+            if (column == 0) {
+                sb.append("<th/>")
+            } else {
+                val columnName = colName(column - 1)
+                sb.append("<th>$columnName</th>")
+            }
         }
         sb.append("</thead></tr>")
-
 
         // Data
         sb.append("<tbody>")
         for (row in 0 until rows) {
             sb.append("<tr>")
-            for (column in 0 until columns) {
-                val cell = coordinateToCellName(ComputableCoordinate.fixed(column, row))
-                val value = cells[cell]?.toString() ?: ""
-                sb.append("<td>$value</td>")
+            for (column in 0..columns) {
+                if (column == 0) {
+                    sb.append("<td>${rowName(row)}</td>")
+                } else {
+                    val cell = coordinateToCellName(ComputableCoordinate.fixed(column, row))
+                    val value = cells[cell]?.toString() ?: ""
+                    sb.append("<td>$value</td>")
+                }
+
             }
             sb.append("</tr>")
         }

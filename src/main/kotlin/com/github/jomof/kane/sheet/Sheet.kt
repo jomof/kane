@@ -90,7 +90,6 @@ interface Sheet : Expr {
             override val columns : Int,
             override val rows : Int
         ) : Sheet {
-            fun toHTML() = "<p>Some <em>HTML</em></p>"
             override fun toString() = render()
         }
         private val emptySheet = SheetImpl(mapOf(), mapOf(), mapOf(), SheetDescriptor(), 0, 0)

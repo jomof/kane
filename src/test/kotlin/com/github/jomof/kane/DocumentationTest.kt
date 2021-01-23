@@ -149,7 +149,7 @@ class DocumentationTest {
          * First, read "zoo.csv".
          */
         val zoo = readCsv("data/zoo.csv", delimiter = ',')
-        println(zoo.html)
+        println(zoo)
 
         /**
          * Read the pandas tutorial csv. Notice the change in delimiter and also the explicitly specified
