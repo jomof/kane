@@ -1,7 +1,8 @@
 package com.github.jomof.kane
 
+import com.github.jomof.kane.functions.mean
+import com.github.jomof.kane.functions.median
 import com.github.jomof.kane.sheet.*
-import com.github.jomof.kane.sheet.tail
 import org.junit.Test
 
 class FunctionalTest {
@@ -130,21 +131,90 @@ class FunctionalTest {
         val filtered = zoo.filterRows { row ->
             row["uniq_id"] == "1005"
         }
-        filtered.assertString("""
+        filtered.assertString(
+            """
               animal uniq_id water_need 
               ------ ------- ---------- 
             5  tiger    1005        320 
-        """.trimIndent())
+        """.trimIndent()
+        )
+    }
+
+    @Test
+    fun statistics() {
+        val zoo = readCsv("zoo.csv")
+        zoo.statistics.assertString(
+            """
+                     animal  uniq_id  water_need 
+                     ------ -------- ----------- 
+               count              22          22 
+                 NaN               0           0 
+                mean          1011.5   347.72727 
+                 min            1001          80 
+              median            1012         330 
+                 max            1022         600 
+            variance        42.16667 21770.77922 
+              stddev         6.49359   147.54924 
+            skewness               0     0.05906 
+            kurtosis        -1.20497    -0.76712 
+                  cv         0.00642     0.42432 
+                   ∑           22253        7650 
+        """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `statistics of column`() {
+        val zoo = readCsv("zoo.csv")
+        zoo["water_need"].statistics.assertString(
+            """
+                      water_need 
+                     ----------- 
+               count          22 
+                 NaN           0 
+                mean   347.72727 
+                 min          80 
+              median         330 
+                 max         600 
+            variance 21770.77922 
+              stddev   147.54924 
+            skewness     0.05906 
+            kurtosis    -0.76712 
+                  cv     0.42432 
+                   ∑        7650 
+        """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `individual statistics of column`() {
+        val zoo = readCsv("zoo.csv")
+        mean(zoo["water_need"]).assertString("347.72727")
+        median(zoo["water_need"]).assertString("330")
+    }
+
+    @Test
+    fun `individual statistics of sheet`() {
+        val zoo = readCsv("zoo.csv")
+        mean(zoo).assertString(
+            """
+                 animal uniq_id water_need 
+                 ------ ------- ---------- 
+            mean         1011.5  347.72727 
+        """.trimIndent()
+        )
     }
 
     @Test
     fun `column types`() {
         val sheet = readCsv("./src/test/kotlin/com/github/jomof/kane/SP500toGDP.csv")
-        sheet.types.assertString("""
+        sheet.types.assertString(
+            """
                  name    type         format       
               --------- ------ ------------------- 
             1  DateTime   date yyyy-MM-dd HH:mm:ss 
             2 SP500/GDP double              double 
-        """.trimIndent())
+        """.trimIndent()
+        )
     }
 }

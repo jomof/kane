@@ -1,7 +1,7 @@
 package com.github.jomof.kane.functions
 
 import com.github.jomof.kane.*
-import com.github.jomof.kane.sheet.CoerceScalar
+import com.github.jomof.kane.sheet.*
 import com.github.jomof.kane.types.AlgebraicType
 import com.github.jomof.kane.types.DollarAlgebraicType
 import com.github.jomof.kane.types.DollarsAndCentsAlgebraicType
@@ -164,9 +164,15 @@ data class AlgebraicUnaryMatrix(
 
 // f(scalar statistic)->scalar
 interface AlgebraicUnaryScalarStatisticFunction {
-    val meta : UnaryOp
-    operator fun  invoke(value : ScalarExpr) : ScalarExpr = AlgebraicUnaryScalarStatistic(this, value)
-    fun reduceArithmetic(value : ScalarStatistic) : ScalarExpr
+    val meta: UnaryOp
+    operator fun invoke(value: ScalarExpr): ScalarExpr = AlgebraicUnaryScalarStatistic(this, value)
+    operator fun invoke(value: Sheet): Sheet = value.statistics.filterRows { row -> row.name == meta.op }
+    operator fun invoke(expr: Expr): Expr = when (expr) {
+        is Sheet -> if (expr.columns == 1) invoke(expr)["A1"] else invoke(expr)
+        else -> error("$javaClass")
+    }
+
+    fun reduceArithmetic(value: ScalarStatistic): ScalarExpr
 }
 
 data class AlgebraicUnaryScalarStatistic(

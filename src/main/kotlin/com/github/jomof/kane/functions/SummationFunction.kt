@@ -15,4 +15,4 @@ class SummationFunction : AlgebraicUnaryMatrixScalarFunction, AlgebraicUnaryScal
     }
 }
 
-val summation : AlgebraicUnaryMatrixScalarFunction = SummationFunction()
+val summation = SummationFunction()

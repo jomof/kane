@@ -47,7 +47,9 @@ private class StringAdmissibleDataType : AdmissibleDataType<String> {
 
 private class DoubleAdmissibleDataType : AdmissibleDataType<Double> {
     override val type = DoubleAlgebraicType.kaneType
-    override fun tryParse(string: String) = string.toDoubleOrNull()
+    override fun tryParse(string: String) =
+        if (string.isBlank()) Double.NaN else string.toDoubleOrNull()
+
     override fun toString() = "double"
 }
 
@@ -56,6 +58,7 @@ private class DollarsAndCentsAdmissibleDataType : AdmissibleDataType<Double> {
     override val type = DollarsAndCentsAlgebraicType.kaneType
     override fun tryParse(string: String) : Double? {
         if (!string.contains("$")) return null
+        if (string.isBlank()) return Double.NaN
         return format.parse(string)?.toDouble()
     }
     override fun toString() = "currency (${type.render(1000.12)})"
@@ -67,6 +70,7 @@ private class DollarsAdmissibleDataType : AdmissibleDataType<Double> {
     override fun tryParse(string: String) : Double? {
         if (!string.contains("$")) return null
         if (string.contains(".")) return null
+        if (string.isBlank()) return Double.NaN
         return format.parse(string)?.toDouble()
     }
     override fun toString() = "currency (${type.render(1000.12)})"

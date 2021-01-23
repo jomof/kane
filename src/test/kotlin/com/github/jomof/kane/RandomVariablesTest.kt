@@ -25,7 +25,7 @@ class RandomVariablesTest {
         median(health).eval().assertString("20")
         stddev(health).eval().assertString("9.35414")
         count(health).eval().assertString("6") // Default loops in eval()
-        coefficientOfVariation(health).eval().assertString("0.53452")
+        cv(health).eval().assertString("0.53452")
         percentile(health, 0.05).eval().assertString("5")
         percentile(health, 0.95).eval().assertString("30")
         percentile(health, 0.80).eval().assertString("25")

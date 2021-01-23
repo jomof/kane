@@ -1,7 +1,7 @@
 package com.github.jomof.kane.sheet
 
 import com.github.jomof.kane.*
-import com.github.jomof.kane.looksLikeCellName
+import com.github.jomof.kane.types.KaneType
 import com.github.jomof.kane.types.kaneType
 import kotlin.math.min
 import kotlin.random.Random
@@ -88,8 +88,9 @@ fun Sheet.ordinalColumns(elements : List<Int>) : Sheet {
     return copy(cells = cells, columnDescriptors = columnDescriptors)
 }
 
-class RowView(private val sheet : Sheet, private val row : Int) {
-    operator fun get(column : String) : String {
+class RowView(private val sheet: Sheet, private val row: Int) {
+    val name: String get() = sheet.rowDescriptors[row + 1]?.name ?: "$row"
+    operator fun get(column: String): String {
         val columnIndex = sheet.tryConvertToColumnIndex(column) ?: error("'$column' was not a recognized column")
         val cell = coordinateToCellName(columnIndex, row)
         return sheet[cell].toString()
@@ -97,10 +98,50 @@ class RowView(private val sheet : Sheet, private val row : Int) {
 }
 
 /**
+ * Map cells of a sheet that are coercible to double.
+ */
+fun Sheet.mapDoubles(translate: (Double) -> Double): Sheet {
+    val evaled = eval()
+    val new = cells.toMutableMap()
+    evaled.cells.forEach { (name, expr) ->
+        when (expr) {
+            is ConstantScalar -> new[name] = expr.copy(value = translate(expr.value))
+            is ValueExpr<*> -> {
+            }
+            else -> error("${expr.javaClass}")
+        }
+    }
+    return copy(cells = new)
+}
+
+fun Expr.mapDoubles(translate: (Double) -> Double): Expr {
+    return when (this) {
+        is Sheet -> mapDoubles(translate)
+        else -> error("$javaClass")
+    }
+}
+
+
+/**
+ * Map cells of a sheet that are coercible to double.
+ */
+fun Sheet.fillna(value: Double) = mapDoubles {
+    if (it.isNaN()) value
+    else it
+}
+
+fun Expr.fillna(value: Double): Expr {
+    return when (this) {
+        is Sheet -> fillna(value)
+        else -> error("$javaClass")
+    }
+}
+
+/**
  * Filter rows of a Sheet with a predicate function.
  */
-fun Sheet.filterRows(predicate : (RowView) -> Boolean) : Sheet {
-    val rows = (1 .. rows).filter {
+fun Sheet.filterRows(predicate: (RowView) -> Boolean): Sheet {
+    val rows = (1..rows).filter {
         predicate(RowView(this, it - 1))
     }
     return ordinalRows(rows)
@@ -118,12 +159,15 @@ private fun Sheet.columnType(column : Int) : AdmissibleDataType<*> {
     return acceptedDataTypes.first()
 }
 
-private fun Sheet.fullColumnDescriptor(column : Int) : ColumnDescriptor {
-    val name : String = columnDescriptors[column]?.name ?: indexToColumnName(column)
-    val type : AdmissibleDataType<*> = columnDescriptors[column]?.type ?: columnType(column)
+internal fun Sheet.fullColumnDescriptor(column: Int): ColumnDescriptor {
+    val name: String = columnDescriptors[column]?.name ?: indexToColumnName(column)
+    val type: AdmissibleDataType<*> = columnDescriptors[column]?.type ?: columnType(column)
     return ColumnDescriptor(name, type)
 }
 
+/**
+ * Return the column types of this sheet.
+ */
 val Sheet.types : Sheet get() {
     return sheetOf {
         column(0, "name")
@@ -139,10 +183,20 @@ val Sheet.types : Sheet get() {
 
 
 /**
+ * Get the type of an expression.
+ */
+val Expr.type: KaneType<*>
+    get() = when (this) {
+        is Sheet -> if (columns == 1) columnType(0).type else String::class.java.kaneType
+        else -> error("$javaClass")
+    }
+
+
+/**
  * Return a subsection of a sheet
  */
-operator fun Sheet.get(vararg ranges : String) : Expr?  {
-    if (ranges.size == 1 && looksLikeCellName(ranges[0])) return cells[ranges[0]]
+operator fun Sheet.get(vararg ranges: String): Expr {
+    if (ranges.size == 1 && looksLikeCellName(ranges[0])) return cells.getValue(ranges[0])
     val asColumnIndices = tryConvertToColumnIndex(ranges.toList())
     if (asColumnIndices != null) return ordinalColumns(asColumnIndices)
     error("Couldn't get sheet subset for ${ranges.joinToString(",")}")

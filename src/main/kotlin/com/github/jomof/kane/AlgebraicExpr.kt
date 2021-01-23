@@ -4,7 +4,10 @@ package com.github.jomof.kane
 
 import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.sheet.CoerceScalar
-import com.github.jomof.kane.types.*
+import com.github.jomof.kane.types.AlgebraicType
+import com.github.jomof.kane.types.DoubleAlgebraicType
+import com.github.jomof.kane.types.KaneType
+import com.github.jomof.kane.types.StringKaneType
 import java.io.Closeable
 import kotlin.reflect.KProperty
 
@@ -306,14 +309,18 @@ fun tableauOf(type : AlgebraicType, vararg elements : NamedAlgebraicExpr) : Tabl
 // Misc
 fun repeated(columns : Int, rows : Int, type : AlgebraicType, value : Double) : MatrixExpr =
     repeated(columns, rows, ConstantScalar(value, type))
-fun repeated(columns : Int, rows : Int, value : ScalarExpr) : MatrixExpr =
+
+fun repeated(columns: Int, rows: Int, value: ScalarExpr): MatrixExpr =
     DataMatrix(columns, rows, (0 until columns * rows).map { value })
-fun ScalarExpr.tryFindConstant() : Double? = when(this) {
+
+fun Expr.tryFindConstant(): Double? = when (this) {
     is ConstantScalar -> value
     is NamedScalar -> scalar.tryFindConstant()
     is CoerceScalar ->
-        if (value is ScalarExpr && type.java == value.type.java) value.tryFindConstant() as Double?
+        if (value is ScalarExpr && type.java == value.type.java) value.tryFindConstant()
         else null
+    is ValueExpr<*> ->
+        if (value is Number) value.toDouble() else null
     else -> null
 }
 
@@ -371,7 +378,8 @@ fun differentiate(expr : AlgebraicExpr) : AlgebraicExpr {
             else -> return null
         }
     }
-    fun MatrixExpr.diffOr() : MatrixExpr? {
+
+    fun MatrixExpr.diffOr(): MatrixExpr? {
         if (this !is AlgebraicBinaryScalarMatrix) return null
         if (op != divide) return null
         val dleft = left.tryD() ?: return null
@@ -381,8 +389,9 @@ fun differentiate(expr : AlgebraicExpr) : AlgebraicExpr {
             diff(dleft, dright[column, row])
         }
     }
-    fun ScalarExpr.self() = differentiate(this) as ScalarExpr
-    fun MatrixExpr.self() = differentiate(this) as MatrixExpr
+
+    fun ScalarExpr.self() = differentiate(this)
+    fun MatrixExpr.self() = differentiate(this)
     with(expr) {
         return when (this) {
             is NamedScalarAssign -> {
@@ -611,7 +620,7 @@ fun AlgebraicExpr.memoizeAndReduceArithmetic(
                     else -> value
                 }
                 when {
-                    value is AlgebraicExpr && value.type == type -> value as AlgebraicExpr
+                    value is AlgebraicExpr && value.type == type -> value
                     value is ConstantScalar -> {
                         assert(type != value.type)
                         constant(type.coerceFrom(value.value), type)

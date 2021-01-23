@@ -13,11 +13,16 @@ class StreamingSamples(
     private var n = 0
     private var minSeen = 0.0
     private var maxSeen = 0.0
+
     // Knuth method for variance, skewness, kurtosis
     private var m1 = 0.0
     private var m2 = 0.0
     private var m3 = 0.0
     private var m4 = 0.0
+
+    // NaN
+    private var nanCount = 0
+
     // Countdown until next compress
     private var countDown = compressInterval
 
@@ -25,6 +30,7 @@ class StreamingSamples(
         private const val compressInterval = 100
         private const val epsilon = 0.01 // Scale of maximum error
     }
+
     /**
      * Sample for streaming statistics (from https://www.cs.rutgers.edu/~muthu/bquant.pdf)
      * v - is the value of this sample
@@ -71,8 +77,9 @@ class StreamingSamples(
 
     private fun maxError() = 2.0 * epsilon * n
 
-    val count : Int get() = n
-    val sum : Double get() = s
+    val count: Int get() = n
+    val nans: Int get() = nanCount
+    val sum: Double get() = s
     val min : Double get() = minSeen
     val max : Double get() = maxSeen
     val mean : Double get() = if (n == 0) Double.NaN else s / n
@@ -85,6 +92,10 @@ class StreamingSamples(
     val coefficientOfVariation : Double get() = stddev / mean
 
     fun insert(value : Double) {
+        if (value.isNaN()) {
+            nanCount++
+            return
+        }
         s += value
         ++n
 
@@ -94,8 +105,8 @@ class StreamingSamples(
         val deltaN = delta / n
         val deltaN2 = deltaN * deltaN
         val term1 = delta * deltaN * n1
-        m1 += deltaN;
-        m4 += term1 * deltaN2 * (n*n - 3*n + 3) + 6 * deltaN2 * m2 - 4 * deltaN * m3
+        m1 += deltaN
+        m4 += term1 * deltaN2 * (n * n - 3 * n + 3) + 6 * deltaN2 * m2 - 4 * deltaN * m3
         m3 += term1 * deltaN * (n - 2) - 3 * deltaN * m2
         m2 += term1
 

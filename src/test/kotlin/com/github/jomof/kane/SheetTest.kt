@@ -4,7 +4,6 @@ import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
 import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.sheet.*
 import com.github.jomof.kane.types.dollars
-import com.github.jomof.kane.types.kaneType
 import com.github.jomof.kane.types.percent
 import org.junit.Test
 import java.io.File
@@ -757,7 +756,7 @@ class SheetTest {
             }
             val i3 by constant("Mix($)")
             val i4 by columnOf((0 until totalYears - rollingWindow * 2).map { compositeCumulative })
-            val i2 by coefficientOfVariation(i4)
+            val i2 by cv(i4)
 
             val i1 by constant("error")
             val j2 by summation(i4)

@@ -5,7 +5,8 @@ import java.math.RoundingMode
 
 abstract class KaneType<E:Any>(val java : Class<E>) {
     open val simpleName : String get() = java.simpleName
-    abstract fun render(value : E) : String
+    abstract fun render(value: E): String
+    override fun toString() = simpleName
 }
 abstract class AlgebraicType(java : Class<Double>) : KaneType<Double>(java) {
     abstract fun coerceFrom(value : Number) : Double
