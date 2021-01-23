@@ -2,7 +2,7 @@ package com.github.jomof.kane.functions
 
 import com.github.jomof.kane.*
 
-private val MIN by UnaryOp(op = "∑")
+private val MIN by UnaryOp()
 
 class MinFunction : AlgebraicUnaryMatrixScalarFunction, AlgebraicUnaryScalarStatisticFunction {
     override val meta = MIN
