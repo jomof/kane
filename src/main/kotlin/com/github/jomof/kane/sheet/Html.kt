@@ -12,7 +12,7 @@ val Sheet.html: String
         val sb = StringBuilder()
         sb.append(
             """
-        <link rel=\"stylesheet\" type=\"text/css\" class=\"display compact\" href=\"https://cdn.datatables.net/1.10.23/css/jquery.dataTables.css\">
+        <link rel=\"stylesheet\" type=\"text/css\" href=\"https://cdn.datatables.net/1.10.23/css/jquery.dataTables.css\">
           
         <script type=\"text/javascript\" charset=\"utf8\" src=\"https://cdn.datatables.net/1.10.23/js/jquery.dataTables.js\">
         ${'$'}(document).ready( function () {
@@ -24,11 +24,11 @@ val Sheet.html: String
 
         fun colName(column: Int) = columnDescriptors[column]?.name ?: indexToColumnName(column)
         fun rowName(row: Int) = rowDescriptors[row]?.name ?: "$row"
-        sb.append("<table id=\"table_id\" class=\"display\">\n")
+        sb.append("<table id=\"table_id\" class=\"display compact\">\n")
 
         // Column headers
         sb.append("<thead><tr>\n")
-        sb.append("<th/>")
+        sb.append("  <th/>")
         (0 until columns).forEach { column ->
             val columnName = colName(column)
             sb.append("<th>$columnName</th>")
@@ -36,10 +36,10 @@ val Sheet.html: String
         sb.append("</thead></tr>\n")
 
         // Data
-        sb.append("<tbody>\n")
+        sb.append("  <tbody>\n")
         for (row in 0 until rows) {
-            sb.append("<tr>")
-            sb.append("<td>${rowName(row)}</td>")
+            sb.append("    <tr>")
+            sb.append("<td>${rowName(row + 1)}</td>")
             for (column in 0 until columns) {
                 val cell = coordinateToCellName(ComputableCoordinate.fixed(column, row))
                 val value = cells[cell]?.toString() ?: ""
@@ -47,7 +47,7 @@ val Sheet.html: String
             }
             sb.append("</tr>\n")
         }
-        sb.append("</tbody>\n")
+        sb.append("  </tbody>\n")
         sb.append("</table>\n")
         return sb.toString()
     }

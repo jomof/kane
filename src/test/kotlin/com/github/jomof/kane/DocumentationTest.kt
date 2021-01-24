@@ -91,14 +91,15 @@ class DocumentationTest {
          * there.
          */
         val peek = readCsv("data/covid.csv", sample = 0.001)
-        println(peek.html)
+        //println(peek.html)
 
         /**
          * As you can see, we sampled around 75 rows out of 87,000+ and there are 93 columns.
          *
          * We can get a more readable list of columns with the 'types' field on the sheet.
          */
-        println(peek.types)
+        println(peek.statistics)
+        println(peek.statistics.html)
 
         /**
          * So there are 90+ columns as well.
