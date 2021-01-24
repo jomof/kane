@@ -95,4 +95,5 @@ sheet.copy("A1" to "$5.20").eval()
 
 
 
-You can see the rest of the documentation [here](https://view.datalore.jetbrains.com/notebook/xutfv4U56anAADQYuUIGxd?force_sso=true)
+# Other topics
+- [Dealing with large .csv files](https://github.com/jomof/kane/edit/main/LargeCsvSupport.md)
