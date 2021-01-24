@@ -24,7 +24,7 @@ val Sheet.html: String
 
         fun colName(column: Int) = columnDescriptors[column]?.name ?: indexToColumnName(column)
         fun rowName(row: Int) = rowDescriptors[row]?.name ?: "$row"
-        sb.append("\n<table id=\"table_id\" class=\"display\" style=\"width:100%\">\n")
+        sb.append("\n<table id=\"table_id\" class=\"display\">\n")
 
         // Column headers
         sb.append("<thead><tr>\n")
