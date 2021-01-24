@@ -16,15 +16,20 @@ val Sheet.html: String
           
         <script type=\"text/javascript\" charset=\"utf8\" src=\"https://cdn.datatables.net/1.10.23/js/jquery.dataTables.js\">
         ${'$'}(document).ready( function () {
-            ${'$'}('#table_id').DataTable();
+            ${'$'}('#table_id').DataTable( {
+                "paging":   true,
+                "ordering": true,
+                "searching": true,
+                "info":     true
+            } );
         } );
-        </script>\n
+        </script>
     """.trimIndent()
         )
 
         fun colName(column: Int) = columnDescriptors[column]?.name ?: indexToColumnName(column)
         fun rowName(row: Int) = rowDescriptors[row]?.name ?: "$row"
-        sb.append("<table id=\"table_id\" class=\"display compact\">\n")
+        sb.append("\n<table id=\"table_id\" class=\"display compact\" style=\"width:100%\">\n")
 
         // Column headers
         sb.append("<thead><tr>\n")
