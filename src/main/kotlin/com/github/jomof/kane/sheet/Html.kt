@@ -16,12 +16,7 @@ val Sheet.html: String
           
         <script type=\"text/javascript\" charset=\"utf8\" src=\"https://cdn.datatables.net/1.10.23/js/jquery.dataTables.js\">
         ${'$'}(document).ready( function () {
-            ${'$'}('#table_id').DataTable( {
-                "paging":   true,
-                "ordering": true,
-                "searching": true,
-                "info":     true
-            } );
+            ${'$'}('#table_id').DataTable();
         } );
         </script>
     """.trimIndent()
