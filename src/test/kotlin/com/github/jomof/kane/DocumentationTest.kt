@@ -1,9 +1,6 @@
 package com.github.jomof.kane
 
-import com.github.jomof.kane.functions.count
-import com.github.jomof.kane.functions.mean
-import com.github.jomof.kane.functions.nans
-import com.github.jomof.kane.functions.plus
+import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.sheet.*
 import org.junit.Test
 
@@ -203,6 +200,52 @@ class DocumentationTest {
          * Functions can be used after each other to do multiple things at once.
          */
         println(tutorial.head()["country", "user_id"])
+    }
+
+    @Test
+    fun `minimize function-basics`() {
+        /**
+         * Because Kane sheets can contain formulas in addition to plain data, it's possible to differentiate those
+         * formulas. These differentiated formulas can then be used with gradient descent to find a minimum value
+         * when for given input values.
+         *
+         * Let's start with a quick demo. Say you have the following data.
+         */
+        val raw = sheetOf {
+            val a1 by columnOf(1.0, 2.0, 3.0, 4.0)
+            val b1 by columnOf(-0.4, -1.0, -1.6, -2.0)
+            add(a1, b1)
+        }
+        println(raw)
+
+        /**
+         * You'd like to know if the data in column A is related to column B linearly. That is, is there a y=mx+b
+         * relationship?
+         *
+         * So first, let's add 'm' and 'b' to the sheet.
+         */
+        val mb = raw.copy(
+            "a5" to rowOf("m", 0.0),
+            "a6" to rowOf("b", 0.0)
+        )
+        println(mb)
+
+        /**
+         * Now, let's add a prediction in C column that takes the value from 'A' column multiplies it by 'm' and adds 'b'.
+         * In column 'D' we'll add an error function for each row. The error function is the squared difference between
+         * column 'B' and the prediction in column 'C1'
+         * Lastly, in cell 'A7' we'll add a sum of the values in column 'D'
+         */
+        val prediction = mb.copy(
+            "c1" to columnOf(4) { cell("B5") * left(2) + cell("B6") },
+            "d1" to columnOf(4) { pow(left(2) - left, 2.0) },
+            "a7" to "error",
+            "b7" to rowOf(1) { summation(range("D")) }
+        )
+        println(prediction)
+        println(prediction.eval())
+
+
     }
 
     @Test

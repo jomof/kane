@@ -8,10 +8,8 @@ class CountFunction : AlgebraicUnaryMatrixScalarFunction, AlgebraicUnaryScalarSt
     override val meta = COUNT
 
     override fun reduceArithmetic(value: ScalarStatistic) = constant(value.statistic.count.toDouble(), value.type)
-
-    override fun reduceArithmetic(value: MatrixExpr): ScalarExpr {
-        return constant(value.rows.toDouble() * value.columns.toDouble())
-    }
+    override fun reduceArithmetic(elements: List<ScalarExpr>) = constant(elements.size.toDouble())
+    override fun reduceArithmetic(value: MatrixExpr) = constant(value.rows.toDouble() * value.columns.toDouble())
 }
 
 val count = CountFunction()

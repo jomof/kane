@@ -8,10 +8,8 @@ class MedianFunction : AlgebraicUnaryMatrixScalarFunction, AlgebraicUnaryScalarS
     override val meta = MEDIAN
 
     override fun reduceArithmetic(value: ScalarStatistic) = constant(value.statistic.median, value.type)
-
-    override fun reduceArithmetic(value: MatrixExpr): ScalarExpr {
-        error("not implemented")
-    }
+    override fun reduceArithmetic(elements: List<ScalarExpr>) = TODO()
+    override fun reduceArithmetic(value: MatrixExpr) = TODO()
 }
 
 val median = MedianFunction()

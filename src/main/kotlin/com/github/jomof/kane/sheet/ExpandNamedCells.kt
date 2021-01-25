@@ -22,7 +22,7 @@ private fun AlgebraicExpr.expandNamedCells(lookup: Map<String, Expr>): Algebraic
             val result: ScalarExpr = when (value) {
                 is ScalarVariable -> constant(value.initial)
                 is ScalarExpr -> value.self()
-                is ComputableCellReference -> {
+                is SheetRangeExpr -> {
                     val ref = "$value"
                     val result = (lookup[ref] ?: constant(0.0)) as ScalarExpr
                     result.self()

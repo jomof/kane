@@ -1,7 +1,10 @@
 package com.github.jomof.kane
 
 import com.github.jomof.kane.functions.*
-import com.github.jomof.kane.sheet.*
+import com.github.jomof.kane.sheet.CoerceScalar
+import com.github.jomof.kane.sheet.NamedSheetRangeExpr
+import com.github.jomof.kane.sheet.Sheet
+import com.github.jomof.kane.sheet.SheetRangeExpr
 
 fun Expr.count() : Int {
     var count = 0
@@ -19,10 +22,12 @@ fun Expr.visit(f: (expr : Expr) -> Unit) {
         is ConstantScalar,
         is ValueExpr<*>,
         is NamedValueExpr<*>,
-        is ComputableCellReference,
-        is NamedComputableCellReference,
+        is SheetRangeExpr,
+        is NamedSheetRangeExpr,
         is DiscreteUniformRandomVariable,
-        is NamedScalarVariable -> {}
+        is AlgebraicUnaryRangeStatistic,
+        is NamedScalarVariable -> {
+        }
         is AlgebraicBinaryScalar -> {
             left.visit(f)
             right.visit(f)
@@ -55,7 +60,10 @@ fun Expr.visit(f: (expr : Expr) -> Unit) {
         is DataMatrix -> elements.forEach { it.visit(f) }
         is AlgebraicDeferredDataMatrix -> data.visit(f)
         is Tableau -> children.forEach { it.visit(f) }
-        is NamedTiling<*> -> { }
+        is NamedTiling<*> -> {
+        }
+        is Tiling<*> -> {
+        }
         is Sheet -> cells.forEach { (_, expr) -> expr.visit(f) }
         else ->
             error("$javaClass")

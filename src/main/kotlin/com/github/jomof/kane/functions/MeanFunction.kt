@@ -8,11 +8,11 @@ class MeanFunction : AlgebraicUnaryMatrixScalarFunction, AlgebraicUnaryScalarSta
     override val meta = MEAN
 
     override fun reduceArithmetic(value: ScalarStatistic) = constant(value.statistic.mean, value.type)
-
-    override fun reduceArithmetic(value: MatrixExpr): ScalarExpr {
-        return value.elements.drop(1).fold(value.elements[0]) { prior, current ->
-            prior + current
-        } / constant(value.elements.size.toDouble())
+    override fun reduceArithmetic(value: MatrixExpr) = reduceArithmetic(value.elements)
+    override fun reduceArithmetic(elements: List<ScalarExpr>): ScalarExpr {
+        val sum = summation.reduceArithmetic(elements)
+        val count = count.reduceArithmetic(elements)
+        return sum / count
     }
 }
 

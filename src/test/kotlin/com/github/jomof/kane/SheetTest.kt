@@ -303,6 +303,23 @@ class SheetTest {
     }
 
     @Test
+    fun `copy should not change moveable references`() {
+        val sheet = sheetOf {
+            val a1 by 1.0
+            val a2 by a1 + a1
+            add(a2)
+        }.copy("a1" to 2.0)
+        sheet.assertString(
+            """
+                A   
+              ----- 
+            1     2 
+            2 A1+A1 
+        """.trimIndent()
+        )
+    }
+
+    @Test
     fun `sheet with named columns`() {
         val sheet = sheetOf {
             column(0, "Column 0")
@@ -365,6 +382,22 @@ class SheetTest {
         }
         println(sheet)
         println(sheet.eval())
+    }
+
+    @Test
+    fun `simplest tiling operations`() {
+        val sheet = sheetOf {
+            val a1 by columnOf("x", 92.2)
+            add(a1)
+        }
+        sheet.assertString(
+            """
+                A  
+              ---- 
+            1    x 
+            2 92.2 
+        """.trimIndent()
+        )
     }
 
     @Test

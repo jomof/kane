@@ -4,7 +4,6 @@ import com.github.doyaaaaaken.kotlincsv.client.CsvReader
 import com.github.doyaaaaaken.kotlincsv.dsl.context.CsvReaderContext
 import com.github.jomof.kane.ComputableCoordinate
 import com.github.jomof.kane.Coordinate
-import com.github.jomof.kane.coordinateToCellName
 import com.github.jomof.kane.indexToColumnName
 import java.io.File
 import kotlin.random.Random
@@ -215,7 +214,7 @@ fun Sheet.writeCsv(csv: File) {
     val sb = StringBuilder()
     for (row in 0 until rows) {
         for (column in 0 until columns) {
-            val cell = coordinateToCellName(ComputableCoordinate.fixed(column, row))
+            val cell = ComputableCoordinate.moveable(column, row).toString()
             val value = cells[cell]?.toString() ?: ""
             if (value.contains(" ")) {
                 sb.append("\"$value\"")

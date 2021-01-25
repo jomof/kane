@@ -1,7 +1,6 @@
 package com.github.jomof.kane.sheet
 
 import com.github.jomof.kane.ComputableCoordinate
-import com.github.jomof.kane.coordinateToCellName
 import com.github.jomof.kane.indexToColumnName
 
 /**
@@ -41,7 +40,7 @@ val Sheet.html: String
             sb.append("    <tr>")
             sb.append("<td>${rowName(row + 1)}</td>")
             for (column in 0 until columns) {
-                val cell = coordinateToCellName(ComputableCoordinate.fixed(column, row))
+                val cell = ComputableCoordinate.moveable(column, row).toString()
                 val value = cells[cell]?.toString() ?: ""
                 sb.append("<td>$value</td>")
             }

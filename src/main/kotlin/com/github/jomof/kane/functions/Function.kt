@@ -6,6 +6,7 @@ import com.github.jomof.kane.types.AlgebraicType
 import com.github.jomof.kane.types.DollarAlgebraicType
 import com.github.jomof.kane.types.DollarsAndCentsAlgebraicType
 import com.github.jomof.kane.types.DoubleAlgebraicType
+import kotlin.reflect.KProperty
 
 // f(scalar,scalar)->scalar (extended to matrix 1<->1 mapping)
 interface AlgebraicBinaryScalarFunction {
@@ -64,13 +65,15 @@ fun  binaryScalar(op : AlgebraicBinaryScalarFunction,
 }
 
 data class AlgebraicBinaryScalar(
-    val op : AlgebraicBinaryScalarFunction,
-    val left : ScalarExpr,
-    val right : ScalarExpr,
+    val op: AlgebraicBinaryScalarFunction,
+    val left: ScalarExpr,
+    val right: ScalarExpr,
     override val type: AlgebraicType = op.type(left.type, right.type),
-) : ScalarExpr, ParentExpr<Double> {
+) : UnnamedExpr, ScalarExpr, ParentExpr<Double> {
     private val hashCode = op.hashCode() * 3 + left.hashCode() * 7 + right.hashCode() * 9
     override fun hashCode() = hashCode
+    override fun toNamed(name: String) = NamedScalar(name, this)
+
     override fun equals(other: Any?): Boolean {
         if (other == null) return false
         if (other !is AlgebraicBinaryScalar) return false
@@ -103,14 +106,21 @@ data class AlgebraicBinaryScalar(
 }
 
 data class AlgebraicBinaryMatrixScalar(
-    val op : AlgebraicBinaryScalarFunction,
+    val op: AlgebraicBinaryScalarFunction,
     override val columns: Int,
     override val rows: Int,
-    val left : MatrixExpr,
-    val right : ScalarExpr) : MatrixExpr {
-    init { track() }
+    val left: MatrixExpr,
+    val right: ScalarExpr
+) : UnnamedExpr, MatrixExpr {
+    init {
+        track()
+    }
+
     override val type get() = op.type(left.type, right.type)
     override fun get(column: Int, row: Int) = AlgebraicBinaryScalar(op, left[column, row], right)
+    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    override fun toNamed(name: String) = NamedMatrix(name, this)
+
     override fun toString() = render()
 }
 
@@ -127,15 +137,21 @@ data class AlgebraicBinaryScalarMatrix(
 }
 
 data class AlgebraicBinaryMatrix(
-    val op : AlgebraicBinaryScalarFunction,
+    val op: AlgebraicBinaryScalarFunction,
     override val columns: Int,
     override val rows: Int,
-    val left : MatrixExpr,
-    val right : MatrixExpr) : MatrixExpr {
-    init { track() }
+    val left: MatrixExpr,
+    val right: MatrixExpr
+) : UnnamedExpr, MatrixExpr {
+    init {
+        track()
+    }
+
     override val type get() = op.type(left.type, right.type)
     override fun get(column: Int, row: Int) = AlgebraicBinaryScalar(op, left[column, row], right[column, row])
     override fun toString() = render()
+    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    override fun toNamed(name: String) = NamedMatrix(name, this)
 }
 
 // f(scalar)->scalar
@@ -150,27 +166,39 @@ interface AlgebraicUnaryScalarFunction {
 }
 
 data class AlgebraicUnaryScalar(
-    val op : AlgebraicUnaryScalarFunction,
-    val value : ScalarExpr,
+    val op: AlgebraicUnaryScalarFunction,
+    val value: ScalarExpr,
     override val type: AlgebraicType
-) : ScalarExpr, ParentExpr<Double> {
-    init { track() }
+) : UnnamedExpr, ScalarExpr, ParentExpr<Double> {
+    init {
+        track()
+    }
+
     override val children get() = listOf(value)
+    override fun toNamed(name: String) = NamedScalar(name, this)
+
     override fun toString() = render()
-    fun copy(value : ScalarExpr) : AlgebraicUnaryScalar {
+    fun copy(value: ScalarExpr): AlgebraicUnaryScalar {
         return if (value === this.value) return this
-            else AlgebraicUnaryScalar(op, value, type)
+        else AlgebraicUnaryScalar(op, value, type)
     }
 }
 
 data class AlgebraicUnaryMatrix(
-    val op : AlgebraicUnaryScalarFunction,
-    val value : MatrixExpr) : MatrixExpr {
-    init { track() }
+    val op: AlgebraicUnaryScalarFunction,
+    val value: MatrixExpr
+) : UnnamedExpr, MatrixExpr {
+    init {
+        track()
+    }
+
     override val columns get() = value.columns
     override val rows get() = value.rows
     override val type get() = value.type
-    override fun get(column: Int, row: Int) = AlgebraicUnaryScalar(op, value[column,row], type)
+    override fun get(column: Int, row: Int) = AlgebraicUnaryScalar(op, value[column, row], type)
+    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    override fun toNamed(name: String) = NamedMatrix(name, this)
+
     override fun toString() = render()
 }
 
@@ -178,55 +206,89 @@ data class AlgebraicUnaryMatrix(
 interface AlgebraicUnaryScalarStatisticFunction {
     val meta: UnaryOp
     operator fun invoke(value: ScalarExpr): ScalarExpr = AlgebraicUnaryScalarStatistic(this, value)
+    operator fun invoke(value: SheetRangeExpr): UntypedScalar = AlgebraicUnaryRangeStatistic(this, value.range)
     operator fun invoke(value: Sheet): Sheet = value.statistics.filterRows { row -> row.name == meta.op }
     operator fun invoke(expr: Expr): Expr = when (expr) {
         is Sheet -> if (expr.columns == 1) invoke(expr)["A1"] else invoke(expr)
-        else -> error("$javaClass")
+        is SheetBuilder.SheetBuilderRange -> invoke(SheetRangeExpr(expr.range))
+        is SheetRangeExpr -> invoke(expr)
+        else ->
+            error("${expr.javaClass}")
     }
 
     fun reduceArithmetic(value: ScalarStatistic): ScalarExpr
+    fun reduceArithmetic(elements: List<ScalarExpr>): ScalarExpr?
 }
 
 data class AlgebraicUnaryScalarStatistic(
-    val op : AlgebraicUnaryScalarStatisticFunction,
-    val value : ScalarExpr) : ScalarExpr {
-    init { track() }
+    val op: AlgebraicUnaryScalarStatisticFunction,
+    val value: ScalarExpr
+) : UnnamedExpr, ScalarExpr {
+    init {
+        track()
+    }
+
     override val type get() = value.type
+    override fun toNamed(name: String) = NamedScalar(name, this)
     override fun toString() = render()
+}
+
+data class AlgebraicUnaryRangeStatistic(
+    val op: AlgebraicUnaryScalarStatisticFunction,
+    val range: SheetRange
+) : UntypedUnnamedExpr {
+    init {
+        track()
+    }
+
+    override fun toNamed(name: String) = NamedUntypedScalar(name, this)
+    override fun toString() = "${op.meta.op}($range)"
 }
 
 // f(scalar statistic, scalar)->scalar
 interface AlgebraicBinaryScalarStatisticFunction {
-    val meta : BinaryOp
-    operator fun invoke(left : ScalarExpr, right : ScalarExpr) : ScalarExpr =
+    val meta: BinaryOp
+    operator fun invoke(left: ScalarExpr, right: ScalarExpr): ScalarExpr =
         AlgebraicBinaryScalarStatistic(this, left, right)
-    operator fun invoke(left : ScalarExpr, right : Double) : ScalarExpr =
+
+    operator fun invoke(left: ScalarExpr, right: Double): ScalarExpr =
         AlgebraicBinaryScalarStatistic(this, left, constant(right))
-    fun  reduceArithmetic(left : ScalarStatistic, right : ScalarExpr) : ScalarExpr
+
+    fun reduceArithmetic(left: ScalarStatistic, right: ScalarExpr): ScalarExpr
 }
 
 data class AlgebraicBinaryScalarStatistic(
-    val op : AlgebraicBinaryScalarStatisticFunction,
-    val left : ScalarExpr,
-    val right : ScalarExpr) : ScalarExpr {
-    init { track() }
+    val op: AlgebraicBinaryScalarStatisticFunction,
+    val left: ScalarExpr,
+    val right: ScalarExpr
+) : UnnamedExpr, ScalarExpr {
+    init {
+        track()
+    }
+
     override val type get() = left.type
+    override fun toNamed(name: String) = NamedScalar(name, this)
     override fun toString() = render()
 }
 
 // f(matrix)->scalar
 interface AlgebraicUnaryMatrixScalarFunction {
     val meta : UnaryOp
-    operator fun  invoke(value : MatrixExpr) : ScalarExpr = AlgebraicUnaryMatrixScalar(this, value)
-    fun reduceArithmetic(value : MatrixExpr) : ScalarExpr?
+    operator fun invoke(value: MatrixExpr): ScalarExpr = AlgebraicUnaryMatrixScalar(this, value)
+    fun reduceArithmetic(value: MatrixExpr): ScalarExpr?
 }
 
 data class AlgebraicUnaryMatrixScalar(
-    val op : AlgebraicUnaryMatrixScalarFunction,
-    val value : MatrixExpr) : ScalarExpr, ParentExpr<Double> {
-    init { track() }
+    val op: AlgebraicUnaryMatrixScalarFunction,
+    val value: MatrixExpr
+) : UnnamedExpr, ScalarExpr, ParentExpr<Double> {
+    init {
+        track()
+    }
+
     override val type get() = value.type
-    override val children : Iterable<ScalarExpr> get() = value.elements.asIterable()
+    override val children: Iterable<ScalarExpr> get() = value.elements.asIterable()
+    override fun toNamed(name: String) = NamedScalar(name, this)
     override fun toString() = render()
 }
 

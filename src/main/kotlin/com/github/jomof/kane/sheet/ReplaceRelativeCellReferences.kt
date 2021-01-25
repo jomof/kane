@@ -4,17 +4,16 @@ import com.github.jomof.kane.*
 import com.github.jomof.kane.functions.*
 
 
-private fun AlgebraicExpr.replaceRelativeCellReferences(
-    coordinate : Coordinate
-) : AlgebraicExpr {
-    fun MatrixExpr.self(coordinate : Coordinate) =
+fun Expr.replaceRelativeCellReferences(coordinate: Coordinate): Expr {
+    fun MatrixExpr.self(coordinate: Coordinate) =
         replaceRelativeCellReferences(coordinate) as MatrixExpr
-    fun ScalarExpr.self(coordinate : Coordinate) =
+
+    fun ScalarExpr.self(coordinate: Coordinate) =
         replaceRelativeCellReferences(coordinate) as ScalarExpr
-    return when(this) {
+    return when (this) {
         is NamedScalar -> {
             val upper = name.toUpperCase()
-            val result : AlgebraicExpr = if (looksLikeCellName(upper)) {
+            val result: AlgebraicExpr = if (looksLikeCellName(upper)) {
                 val new = cellNameToCoordinate(upper)
                 copy(scalar = scalar.self(new))
             } else copy(scalar = scalar.self(coordinate))
@@ -47,40 +46,60 @@ private fun AlgebraicExpr.replaceRelativeCellReferences(
         is DiscreteUniformRandomVariable -> this
         is CoerceScalar -> {
             val result : AlgebraicExpr = when (value) {
-                //is AbsoluteCellReferenceExpr -> this
-                is ComputableCellReference -> {
-                    val fixed = computeAbsoluteCoordinate(coordinate, value.coordinate)
-                    copy(value = value.copy(fixed))
+                is SheetRangeExpr -> {
+                    val moveable = computeMoveableCoordinate(coordinate, value.range as ComputableCoordinate)
+                    copy(value = value.copy(moveable))
                 }
-                is NamedComputableCellReference -> {
-                    val fixed = computeAbsoluteCoordinate(coordinate, value.coordinate)
-                    copy(value = ComputableCellReference(coordinate = fixed))
+                is NamedSheetRangeExpr -> {
+                    when (value.range) {
+                        is ComputableCoordinate -> {
+                            val moveable = computeMoveableCoordinate(coordinate, value.range)
+                            copy(value = SheetRangeExpr(range = moveable))
+                        }
+                        is ColumnSheetRange -> {
+                            val moveable = computeMoveableCoordinate(coordinate, value.range)
+                            copy(value = SheetRangeExpr(range = moveable))
+                        }
+                        else -> error("${value.range.javaClass}")
+                    }
+
                 }
+                is AlgebraicUnaryRangeStatistic -> this
                 else -> error("${value.javaClass}")
             }
             result
         }
-        is DataMatrix -> map { it.self(coordinate)}
+        is DataMatrix -> map { it.self(coordinate) }
+        is SheetRangeExpr ->
+            when (range) {
+                is ComputableCoordinate -> copy(range = computeMoveableCoordinate(Coordinate(0, 0), range))
+                is ColumnSheetRange -> copy(range = computeMoveableCoordinate(Coordinate(0, 0), range))
+                else -> error("${range.javaClass}")
+            }
+        is ValueExpr<*> -> this
+        is AlgebraicUnaryRangeStatistic -> this
         else -> error("$javaClass")
     }
 }
-
-private fun Expr.replaceRelativeCellReferences() : Expr {
-    return when(this) {
-        is NamedScalar -> {
-            val upper = name.toUpperCase()
-            if (looksLikeCellName(upper)) {
-                val coordinate = cellNameToCoordinate(name.toUpperCase())
-                replaceRelativeCellReferences(coordinate)
-            } else this
-        }
-        is NamedValueExpr<*> -> this
-        is NamedComputableCellReference -> copy(coordinate = computeAbsoluteCoordinate(Coordinate(0,0), coordinate))
-        is NamedTiling<*> -> this
-        is NamedMatrix -> this
-        else -> error("$javaClass")
-    }
-}
-
-fun NamedExpr.replaceRelativeCellReferences() : NamedExpr =
-    (this as Expr).replaceRelativeCellReferences() as NamedExpr
+//
+//fun Expr.replaceRelativeCellReferences() : Expr {
+//    return when(this) {
+////        is NamedScalar -> {
+////            val upper = name.toUpperCase()
+////            if (looksLikeCellName(upper)) {
+////                val coordinate = cellNameToCoordinate(name.toUpperCase())
+////                replaceRelativeCellReferences(coordinate)
+////            } else this
+////        }
+////        is NamedValueExpr<*> -> this
+////        is ComputableCellReference ->
+////            when(range) {
+////                is ComputableCoordinate -> copy(range = computeMoveableCoordinate(Coordinate(0,0), range))
+////                is ColumnSheetRange -> copy(range = computeMoveableCoordinate(Coordinate(0,0), range))
+////                else -> error("${range.javaClass}")
+////            }
+//
+//        is AlgebraicBinaryMatrixScalar -> replaceRelativeCellReferences(Coordinate(0,0))
+//        else -> error("$javaClass")
+//    }
+//}

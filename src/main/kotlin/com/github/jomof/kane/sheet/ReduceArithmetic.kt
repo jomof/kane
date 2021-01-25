@@ -14,7 +14,7 @@ private class SingleSampleReducer(
 ) {
     val memo : MutableMap<TypedExpr<*>,TypedExpr<*>> = mutableMapOf()
     val selfMemo : MutableMap<TypedExpr<*>,TypedExpr<*>> = mutableMapOf()
-    private fun AlgebraicExpr.reduceArithmeticImpl(
+    private fun Expr.reduceArithmeticImpl(
         cells: Map<String, Expr>,
         depth: Int
     ): AlgebraicExpr? {
@@ -58,6 +58,10 @@ private class SingleSampleReducer(
                     depth + 1
                 ) as MatrixExpr? ?: return null
             )
+            is AlgebraicBinaryMatrix -> copy(
+                left = left.reduceArithmeticImpl(cells, depth + 1) as MatrixExpr,
+                right = right.reduceArithmeticImpl(cells, depth + 1) as MatrixExpr
+            )
             is AlgebraicBinaryScalar -> copyReduce(
                 left = left.reduceArithmeticImpl(
                     cells,
@@ -94,7 +98,7 @@ private class SingleSampleReducer(
                         // This variable is not being optimized so treat it as constant
                         ConstantScalar(value.initial, type)
                     }
-                    is ComputableCellReference -> {
+                    is SheetRangeExpr -> {
                         val ref = "$value"
                         if (excludeVariables.contains(ref)) this
                         else {
@@ -107,7 +111,16 @@ private class SingleSampleReducer(
                             }
                         }
                     }
-                    is NamedComputableCellReference -> {
+                    is AlgebraicUnaryRangeStatistic -> {
+                        val exprs = cells
+                            .filter { value.range.contains(it.key) }
+                            .map {
+                                val reduced = it.value.reduceArithmeticImpl(cells, depth + 1) ?: return null
+                                reduced as ScalarExpr
+                            }
+                        value.op.reduceArithmetic(exprs)!!
+                    }
+                    is NamedSheetRangeExpr -> {
                         val ref = "$value"
                         if (excludeVariables.contains(ref)) this
                         else {
@@ -165,7 +178,7 @@ private class SingleSampleReducer(
                 1
             )?.memoizeAndReduceArithmetic(memo = memo, selfMemo = selfMemo) ?: expr
             is ValueExpr<*> -> expr
-            is ComputableCellReference -> expr
+            is SheetRangeExpr -> expr
             else -> error("$javaClass")
         }
     }

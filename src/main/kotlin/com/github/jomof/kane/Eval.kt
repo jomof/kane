@@ -1,9 +1,6 @@
 package com.github.jomof.kane
 
-import com.github.jomof.kane.functions.AlgebraicBinaryScalar
-import com.github.jomof.kane.functions.AlgebraicBinaryScalarStatistic
-import com.github.jomof.kane.functions.AlgebraicUnaryScalar
-import com.github.jomof.kane.functions.AlgebraicUnaryScalarStatistic
+import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.sheet.*
 
 /**
@@ -37,13 +34,15 @@ private fun Expr.convertToStatistics() : Expr {
         is NamedMatrix -> copy(matrix = matrix.self())
         is AlgebraicUnaryScalarStatistic -> copy(value = value.self())
         is AlgebraicUnaryScalar -> copy(value = value.self())
+        is AlgebraicUnaryMatrix -> copy(value = value.self())
         is AlgebraicBinaryScalar -> copyReduce(left = left.self(), right = right.self())
+        is AlgebraicBinaryMatrixScalar -> copy(left = left.self(), right = right.self())
         is AlgebraicBinaryScalarStatistic -> copy(left = left.self(), right = right.self())
         is Sheet -> {
             val cells = cells.map { (name, expr) -> name to expr.convertToStatistics() }.toMap()
             copy(cells = cells)
         }
-        is ComputableCellReference -> this
+        is SheetRangeExpr -> this
         is ValueExpr<*> -> this
         is CoerceScalar -> copy(value = value.convertToStatistics())
         is DataMatrix -> map { it.self() }
@@ -81,7 +80,8 @@ private fun Expr.accumulateStatistics(incoming : Expr) {
                 expr.accumulateStatistics(incoming.cells.getValue(name))
             }
         }
-        this is ComputableCellReference && incoming is ComputableCellReference -> { }
+        this is SheetRangeExpr && incoming is SheetRangeExpr -> {
+        }
         this is CoerceScalar && incoming is CoerceScalar -> value.accumulateStatistics(incoming.value)
         this is DataMatrix && incoming is DataMatrix -> {
             (elements zip incoming.elements).forEach { (left, incoming) -> left.accumulateStatistics(incoming) }
@@ -123,7 +123,7 @@ private fun Expr.reduceStatistics() : Expr {
         is AlgebraicBinaryScalar -> copyReduce(left = left.self(), right = right.self())
         is DataMatrix -> map { it.self() }
         is Sheet -> copy(cells = cells.map { (name, cell) -> name to cell.reduceStatistics() }.toMap())
-        is ComputableCellReference -> this
+        is SheetRangeExpr -> this
         is ValueExpr<*> -> this
         else -> error("$javaClass")
     }

@@ -33,10 +33,18 @@ interface MatrixExpr : AlgebraicExpr, ParentExpr<Double> {
 interface VariableExpr : AlgebraicExpr
 interface ScalarVariableExpr : ScalarExpr, VariableExpr
 interface MatrixVariableExpr : MatrixExpr, VariableExpr
-interface NamedExpr : Expr {
-    val name : String
+interface UnnamedExpr : Expr {
+    operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    fun toNamed(name: String): NamedExpr
 }
-interface NamedAlgebraicExpr: NamedExpr, AlgebraicExpr
+
+interface NamedExpr : Expr {
+    val name: String
+    fun toUnnamed(): UnnamedExpr
+}
+
+interface UntypedUnnamedExpr : UntypedScalar, UnnamedExpr
+interface NamedAlgebraicExpr : NamedExpr, AlgebraicExpr
 interface NamedScalarExpr: NamedAlgebraicExpr, ScalarExpr
 interface NamedMatrixExpr: NamedAlgebraicExpr, MatrixExpr
 data class UnaryOp(val op : String = "") {
@@ -46,43 +54,49 @@ data class UnaryOp(val op : String = "") {
 }
 
 data class BinaryOp(
-    val op : String = "",
-    val precedence : Int,
-    val associative : Boolean = false,
-    val infix : Boolean = false
+    val op: String = "",
+    val precedence: Int,
+    val associative: Boolean = false,
+    val infix: Boolean = false
 ) {
     operator fun getValue(nothing: Nothing?, property: KProperty<*>) =
         if (op.isBlank()) copy(op = property.name.toLowerCase())
         else this
 }
 
-operator fun ScalarExpr.getValue(thisRef: Any?, property: KProperty<*>) = NamedScalar(property.name, this)
-operator fun MatrixExpr.getValue(thisRef: Any?, property: KProperty<*>) = NamedMatrix(property.name, this)
+fun ScalarExpr.toNamed(name: String) = NamedScalar(name, this)
+operator fun ScalarExpr.getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+fun MatrixExpr.toNamed(name: String) = NamedMatrix(name, this)
+operator fun MatrixExpr.getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
 
 data class ConstantScalar(
-    val value : Double,
-    override val type : AlgebraicType
-) : ScalarExpr{
+    val value: Double,
+    override val type: AlgebraicType
+) : UnnamedExpr, ScalarExpr {
     init {
         track()
     }
+
+    override fun toNamed(name: String) = NamedScalar(name, this)
     override fun toString() = render()
 }
-data class ValueExpr<E: Any>(
-    val value : E,
-    override val type : KaneType<E>
-) : TypedExpr<E> {
+
+data class ValueExpr<E : Any>(
+    val value: E,
+    override val type: KaneType<E>
+) : UnnamedExpr, TypedExpr<E> {
     init {
         assert(value !is Expr) {
             "${value.javaClass}"
         }
         track()
     }
+
     override fun toString() = type.render(value)
-    operator fun getValue(e: E?, property: KProperty<*>) = toNamed(property.name)
-    private fun toNamed(name: String) = NamedValueExpr(name, value, type)
+    override fun toNamed(name: String) = NamedValueExpr(name, value, type)
 }
-data class NamedValueExpr<E: Any>(
+
+data class NamedValueExpr<E : Any>(
     override val name: String,
     val value : E,
     override val type : KaneType<E>
@@ -91,37 +105,52 @@ data class NamedValueExpr<E: Any>(
         assert(value !is Expr)
         track()
     }
-    fun toValueExpr() = ValueExpr(value, type)
+
+    override fun toUnnamed() = ValueExpr(value, type)
     override fun toString() = type.render(value)
 }
 
 data class ScalarVariable(
-    val initial : Double,
-    override val type: AlgebraicType) : AlgebraicExpr {
-    init { track() }
-    operator fun getValue(thisRef: Any?, property: KProperty<*>) = NamedScalarVariable(property.name, initial, type)
-    override fun toString() = render()
-}
-data class NamedScalarVariable(
-    override val name : String,
-    val initial : Double,
-    override val type : AlgebraicType
-) : ScalarVariableExpr, NamedScalarExpr {
-    init { track() }
-    override fun toString() = render()
-}
-data class MatrixVariable(
-    val columns : Int,
-    val rows : Int,
-    val type : AlgebraicType,
-    val defaults : List<Double>) {
+    val initial: Double,
+    override val type: AlgebraicType
+) : UnnamedExpr, AlgebraicExpr {
     init {
         track()
-        assert(rows * columns == defaults.size) {
-            "expected ${rows*columns} elements"
+    }
+
+    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    override fun toNamed(name: String) = NamedScalarVariable(name, initial, type)
+    override fun toString() = render()
+}
+
+data class NamedScalarVariable(
+    override val name: String,
+    val initial: Double,
+    override val type: AlgebraicType
+) : ScalarVariableExpr, NamedScalarExpr {
+    init {
+        track()
+    }
+
+    override fun toUnnamed() = ScalarVariable(initial, type)
+    override fun toString() = render()
+}
+
+data class MatrixVariable(
+    val columns: Int,
+    val rows: Int,
+    override val type: AlgebraicType,
+    val initial: List<Double>
+) : UnnamedExpr, AlgebraicExpr {
+    init {
+        track()
+        assert(rows * columns == initial.size) {
+            "expected ${rows * columns} elements"
         }
     }
-    operator fun getValue(thisRef: Any?, property: KProperty<*>) = NamedMatrixVariable(property.name, columns, type, defaults)
+
+    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    override fun toNamed(name: String) = NamedMatrixVariable(name, columns, type, initial)
     override fun toString() = "matrixVariable(${columns}x$rows)"
 }
 data class NamedMatrixVariable(
@@ -141,25 +170,44 @@ data class NamedMatrixVariable(
     }
     fun get(coordinate : Coordinate) = get(coordinate.column, coordinate.row)
     val elements get() = coordinates.map { get(it) }
+    override fun toUnnamed() = MatrixVariable(columns, rows, type, initial)
     override fun toString() = render()
 }
 data class NamedScalar(
     override val name : String,
     val scalar : ScalarExpr
 ) : NamedScalarExpr, ParentExpr<Double> {
-    init { track() }
+    init {
+        track()
+    }
+
     override val type get() = scalar.type
     override val children get() = listOf(scalar)
+    override fun toUnnamed() = when (scalar) {
+        is NamedExpr -> scalar.toUnnamed()
+        is UnnamedExpr -> scalar
+        else -> error("${scalar.javaClass}")
+    }
+
     override fun toString() = render()
 }
 data class NamedMatrix(
     override val name : String,
     val matrix : MatrixExpr) : NamedMatrixExpr {
-    init { track() }
+    init {
+        track()
+    }
+
     override val columns get() = matrix.columns
     override val rows get() = matrix.rows
     override val type get() = matrix.type
-    override fun get(column: Int, row: Int) = matrix[column,row]
+    override fun get(column: Int, row: Int) = matrix[column, row]
+    override fun toUnnamed() = when (matrix) {
+        is NamedExpr -> matrix.toUnnamed()
+        is UnnamedExpr -> matrix
+        else -> error("${matrix.javaClass}")
+    }
+
     override fun toString() = render()
 }
 data class MatrixVariableElement(
@@ -182,11 +230,12 @@ data class MatrixVariableElement(
         return true
     }
 }
+
 data class DataMatrix(
     override val columns: Int,
     override val rows: Int,
     val elements: List<ScalarExpr>
-) : MatrixExpr {
+) : UnnamedExpr, MatrixExpr {
     init {
         track()
         assert(columns * rows == elements.size) {
@@ -195,6 +244,7 @@ data class DataMatrix(
         assert(columns > 0)
         assert(rows > 0)
     }
+
     override val type: AlgebraicType get() = elements[0].type
     private fun coordinateToIndex(column: Int, row: Int) = row * columns + column
     override fun get(column: Int, row: Int) = run {
@@ -206,6 +256,9 @@ data class DataMatrix(
         assert(column < columns)
         elements[coordinateToIndex(column, row)]
     }
+
+    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    override fun toNamed(name: String) = NamedMatrix(name, this)
     override fun toString() = render()
 }
 
@@ -227,15 +280,21 @@ data class Slot(
 }
 
 data class ScalarAssign(
-    val left : NamedScalarVariable,
-    val right : ScalarExpr) {
-    init { track() }
-    operator fun getValue(thisRef: Any?, property: KProperty<*>) = NamedScalarAssign(property.name, left, right)
+    val left: NamedScalarVariable,
+    val right: ScalarExpr
+) : UnnamedExpr {
+    init {
+        track()
+    }
+
+    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    override fun toNamed(name: String) = NamedScalarAssign(name, left, right)
 }
 
 data class MatrixAssign(
-    val left : NamedMatrixVariable,
-    val right : MatrixExpr) {
+    val left: NamedMatrixVariable,
+    val right: MatrixExpr
+) : UnnamedExpr {
     init {
         track()
         fun lm() = "matrix '${left.name}'"
@@ -247,7 +306,9 @@ data class MatrixAssign(
             "${lm()} columns ${left.columns} did not equal ${rm()} columns ${right.columns}"
         }
     }
-    operator fun getValue(thisRef: Any?, property: KProperty<*>) = NamedMatrixAssign(property.name, left, right)
+
+    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    override fun toNamed(name: String) = NamedMatrixAssign(name, left, right)
 }
 
 data class NamedScalarAssign(
@@ -256,7 +317,12 @@ data class NamedScalarAssign(
     val right : ScalarExpr
 ) : NamedAlgebraicExpr, ParentExpr<Double> {
     override val type get() = left.type
-    init { track() }
+
+    init {
+        track()
+    }
+
+    override fun toUnnamed() = ScalarAssign(left, right)
     override fun toString() = render()
     override val children = listOf(right)
 }
@@ -278,19 +344,29 @@ data class NamedMatrixAssign(
             "${lm()} columns ${left.columns} did not equal ${rm()} columns ${right.columns}"
         }
     }
+
+    override fun toUnnamed() = MatrixAssign(left, right)
     override fun toString() = render()
     override val children = listOf(right)
 }
 
+data class NamedUntypedScalar(
+    override val name: String,
+    val expr: UntypedUnnamedExpr
+) : NamedExpr, UntypedScalar {
+    override fun toUnnamed() = expr
+}
+
 // Assign
-fun assign(assignment : Pair<ScalarExpr, NamedScalarVariable>) = ScalarAssign(assignment.second, assignment.first)
-fun assign(assignment : Pair<MatrixExpr, NamedMatrixVariable>) = MatrixAssign(assignment.second, assignment.first)
+fun assign(assignment: Pair<ScalarExpr, NamedScalarVariable>) = ScalarAssign(assignment.second, assignment.first)
+fun assign(assignment: Pair<MatrixExpr, NamedMatrixVariable>) = MatrixAssign(assignment.second, assignment.first)
 
 // Variables
-fun matrixVariable(columns : Int, rows : Int) = matrixVariable(DoubleAlgebraicType.kaneType, columns, rows)
-fun matrixVariable(type : AlgebraicType, columns : Int, rows : Int) =
+fun matrixVariable(columns: Int, rows: Int) = matrixVariable(DoubleAlgebraicType.kaneType, columns, rows)
+fun matrixVariable(type: AlgebraicType, columns: Int, rows: Int) =
     MatrixVariable(columns, rows, type, (0 until rows * columns).map { 0.0 })
-fun matrixVariable(columns : Int, rows : Int, vararg elements : Double) =
+
+fun matrixVariable(columns: Int, rows: Int, vararg elements: Double) =
     MatrixVariable(columns, rows, DoubleAlgebraicType.kaneType, elements.toList().map { it })
 fun matrixVariable(columns : Int, rows : Int, init : (Coordinate) -> Double) =
     MatrixVariable(columns, rows, DoubleAlgebraicType.kaneType, coordinatesOf(columns, rows).toList().map { init(it) })
@@ -942,11 +1018,28 @@ fun Expr.render(entryPoint : Boolean = true) : String {
     }
 }
 
-fun ScalarExpr.withType(target : AlgebraicType) : ScalarExpr {
+fun ScalarExpr.withType(target: AlgebraicType): ScalarExpr {
     return when {
         type == target -> this
         this is AlgebraicBinaryScalar -> copy(type = target)
+        this is ConstantScalar -> copy(type = target)
         else ->
             error("$javaClass")
+    }
+}
+
+fun Expr.toNamed(name: String): Expr {
+    return when (this) {
+        is UnnamedExpr -> toNamed(name)
+        is NamedExpr -> toUnnamed().toNamed(name)
+        else -> error("$javaClass")
+    }
+}
+
+fun Expr.toUnnamed(): Expr {
+    return when (this) {
+        is UnnamedExpr -> this
+        is NamedExpr -> toUnnamed()
+        else -> error("$javaClass")
     }
 }

@@ -2,7 +2,8 @@
 package com.github.jomof.kane
 
 import com.github.jomof.kane.functions.*
-import com.github.jomof.kane.types.*
+import com.github.jomof.kane.types.DoubleAlgebraicType
+import com.github.jomof.kane.types.dollars
 import org.junit.Test
 import java.util.*
 import kotlin.math.abs
@@ -123,8 +124,8 @@ class KaneTest {
         val y by relu(m * x + b)
         val target by variable()
         val error by pow(target - y, 2.0)
-        val ds by s - 0.1 * differentiate(d(error)/d(s))
-        val ass by assign(ds to s)
+        val ds by s - 0.1 * differentiate(d(error) / d(s))
+        val ass: NamedAlgebraicExpr by assign(ds to s)
         val tab = tableauOf(m.type, m, b, ass)
         val model = tab.linearize()
         val space = model.allocateSpace()

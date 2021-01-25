@@ -30,15 +30,17 @@ private fun AlgebraicExpr.convertCellNamesToUpperCase() : AlgebraicExpr {
 }
 
 private fun Expr.convertCellNamesToUpperCase() : Expr {
-    fun String.upper() = if (looksLikeCellName(toUpperCase())) toUpperCase() else this
-    return when(this) {
+    return when (this) {
         is AlgebraicExpr -> convertCellNamesToUpperCase()
-        is NamedValueExpr<*> -> copy(name = name.upper())
-        is NamedComputableCellReference -> copy(name = name.upper())
-        is NamedTiling<*> -> copy(name = name.upper())
+//        is NamedValueExpr<*> -> copy(name = name.upper())
+//        is NamedComputableCellReference -> copy(name = name.upper())
+//        is NamedTiling<*> -> copy(name = name.upper())
+        is Tiling<*> -> this
+        is ValueExpr<*> -> this
+        is SheetRangeExpr -> this
         else -> error("$javaClass")
     }
 }
 
-fun NamedExpr.convertCellNamesToUpperCase() : NamedExpr =
-    (this as Expr).convertCellNamesToUpperCase() as NamedExpr
+fun UnnamedExpr.convertCellNamesToUpperCase(): UnnamedExpr =
+    (this as Expr).convertCellNamesToUpperCase() as UnnamedExpr

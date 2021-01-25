@@ -102,8 +102,8 @@ class FuzzTest {
 
     @Test
     fun `linearize failure`() {
-        val a by variable(0.0)
-        val c by constant(0.0)
+        val a: NamedScalarVariable by variable(0.0)
+        val c: ScalarExpr by constant(0.0)
         val ax by assign(c to a)
         println(ax.linearize())
     }
