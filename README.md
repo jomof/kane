@@ -10,7 +10,7 @@ Once you have a notebook running a Kotlin kernal add a dependency on the Kane li
 
 
 ```kotlin
-@file:DependsOn("com.github.jomof:kane:0.1.59")
+@file:DependsOn("com.github.jomof:kane:0.1.79")
 import com.github.jomof.kane.*
 import com.github.jomof.kane.types.*
 import com.github.jomof.kane.functions.*
@@ -95,4 +95,5 @@ sheet.copy("A1" to "$5.20").eval()
 
 
 
-You can see the rest of the documentation [here](https://view.datalore.jetbrains.com/notebook/xutfv4U56anAADQYuUIGxd?force_sso=true)
+# Other topics
+- [Dealing with large .csv files](https://github.com/jomof/kane/blob/main/LargeCsvSupport.md)
