@@ -61,7 +61,7 @@ fun <E:Any> Random.nextInstance(type : Class<*>) : E {
     } as E
 }
 
-fun Random.nextAlgebraicUnaryMatrixScalarOp() = chooseOne(listOf(summation))
+fun Random.nextAlgebraicUnaryMatrixScalarOp() = chooseOne(listOf(sum))
 fun Random.nextAlgebraicUnaryOp() = chooseOne(listOf(negate, exp, logit, tanh, relu, step, lrelu, lstep))
 fun Random.nextAlgebraicBinaryScalarOp() = chooseOne(listOf(pow, multiply, divide, add, subtract))
 

@@ -60,9 +60,9 @@ class RangesTest {
 
     @Test
     fun `relative coordinate`() {
-        ComputableCoordinate.relative(-1, -1).assertString("(col-1 row-1)")
-        ComputableCoordinate.relative(0, 0).assertString("(col row)")
-        ComputableCoordinate.relative(1, 1).assertString("(col+1 row+1)")
+        CellRange.relative(-1, -1).assertString("(col-1 row-1)")
+        CellRange.relative(0, 0).assertString("(col row)")
+        CellRange.relative(1, 1).assertString("(col+1 row+1)")
 
     }
 
@@ -107,5 +107,28 @@ class RangesTest {
     fun `repro A1 B2 issue`() {
         looksLikeCellName("A1:B2").assertString("false")
         parseRange("A1:B2").assertString("A1:B2")
+    }
+
+
+    @Test
+    fun `rebase range colummn up`() {
+        val columnB = parseRange("B").up
+        val cellA2 = cellNameToCoordinate("A2")
+        columnB.rebase(cellA2).assertString("B1")
+    }
+
+    @Test
+    fun `rebase range`() {
+//        val columnB = parseRange("B") as ColumnRange
+//        val cellA2 = parseRange("A2") as CellRange
+//        CellRange(RelativeIndex(0), RelativeIndex(-1))
+//            .rebase(Coordinate(0, 1)).assertString("A1")
+//        CellRange(RelativeIndex(0), RelativeIndex(-1))
+//            .rebase(Coordinate(0, 1)).assertString("A1")
+//        parseRange("A1").rebase(base).assertString("A1")
+//        parseRange("A1").down.assertString("A2")
+//        parseRange("A1").down.rebase(base).assertString("A2")
+//        parseRange("A").rebase(base).assertString("A")
+//        parseRange("A").down.assertString("(A row+1)")
     }
 }

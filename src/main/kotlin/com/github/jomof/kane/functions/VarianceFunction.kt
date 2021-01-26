@@ -12,7 +12,7 @@ class VarianceFunction : AlgebraicUnaryMatrixScalarFunction, AlgebraicUnaryScala
     override fun reduceArithmetic(elements: List<ScalarExpr>): ScalarExpr {
         val mean = mean.reduceArithmetic(elements)
         val powers = elements.map { pow(it - mean, 2.0) }
-        return summation.reduceArithmetic(powers)
+        return sum.reduceArithmetic(powers)
     }
 }
 

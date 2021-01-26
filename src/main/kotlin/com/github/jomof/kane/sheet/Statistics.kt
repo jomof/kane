@@ -40,7 +40,7 @@ val Sheet.statistics
                     stddev -> statistic.stddev
                     skewness -> statistic.skewness
                     kurtosis -> statistic.kurtosis
-                    summation -> statistic.sum
+                    sum -> statistic.sum
                     cv -> statistic.coefficientOfVariation
                     else -> error(func.meta.op)
                 }

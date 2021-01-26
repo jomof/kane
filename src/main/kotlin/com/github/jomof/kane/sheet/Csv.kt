@@ -2,17 +2,22 @@ package com.github.jomof.kane.sheet
 
 import com.github.doyaaaaaken.kotlincsv.client.CsvReader
 import com.github.doyaaaaaken.kotlincsv.dsl.context.CsvReaderContext
-import com.github.jomof.kane.ComputableCoordinate
+import com.github.jomof.kane.CellRange
 import com.github.jomof.kane.Coordinate
 import com.github.jomof.kane.indexToColumnName
 import java.io.File
+import java.io.InputStream
+import java.nio.charset.Charset
 import kotlin.random.Random
 
+/**
+ * Read CSV from a file.
+ */
 fun readCsv(
     csv: String,
     names: List<String> = listOf(),
     sample: Double = 1.0,
-    keep: List<String> = listOf(),
+    keep: List<String> = listOf(), // List of columns to keep
     charset: String = "UTF-8",
     quoteChar: Char = '"',
     delimiter: Char = ',',
@@ -20,7 +25,7 @@ fun readCsv(
     skipEmptyLine: Boolean = false,
     skipMissMatchedRow: Boolean = false
 ): Sheet = readCsv(
-    File(csv),
+    File(csv).inputStream(),
     CsvParameters(
         names = names,
         sample = sample,
@@ -36,11 +41,14 @@ fun readCsv(
     )
 )
 
+/**
+ * Read CSV from a file.
+ */
 fun readCsv(
     csv: File,
     names: List<String> = listOf(),
     sample: Double = 1.0,
-    keep: List<String> = listOf(),
+    keep: List<String> = listOf(), // List of columns to keep
     charset: String = "UTF-8",
     quoteChar: Char = '"',
     delimiter: Char = ',',
@@ -48,7 +56,38 @@ fun readCsv(
     skipEmptyLine: Boolean = false,
     skipMissMatchedRow: Boolean = false
 ) = readCsv(
-    csv,
+    csv.inputStream(),
+    CsvParameters(
+        names = names,
+        sample = sample,
+        keep = keep.toSet()
+    ),
+    csvReaderContext(
+        charset,
+        quoteChar,
+        delimiter,
+        escapeChar,
+        skipEmptyLine,
+        skipMissMatchedRow
+    )
+)
+
+/**
+ * Parse CSV from string in [data] parameter.
+ */
+fun parseCsv(
+    data: String,
+    names: List<String> = listOf(),
+    sample: Double = 1.0,
+    keep: List<String> = listOf(), // List of columns to keep
+    charset: String = "UTF-8",
+    quoteChar: Char = '"',
+    delimiter: Char = ',',
+    escapeChar: Char = '"',
+    skipEmptyLine: Boolean = false,
+    skipMissMatchedRow: Boolean = false
+): Sheet = readCsv(
+    data.byteInputStream(Charset.forName(charset)),
     CsvParameters(
         names = names,
         sample = sample,
@@ -65,7 +104,7 @@ fun readCsv(
 )
 
 private fun readCsvWithHeader(
-    csv: File,
+    csv: InputStream,
     params: CsvParameters,
     context: CsvReaderContext
 ): Sheet {
@@ -111,7 +150,7 @@ private fun readCsvWithHeader(
 }
 
 private fun readCsvWithoutHeader(
-    csv: File,
+    csv: InputStream,
     params: CsvParameters,
     context: CsvReaderContext
 ): Sheet {
@@ -158,7 +197,7 @@ private fun readCsvWithoutHeader(
 }
 
 private fun readCsv(
-    csv: File,
+    csv: InputStream,
     params: CsvParameters,
     context: CsvReaderContext
 ): Sheet {
@@ -192,10 +231,16 @@ private fun csvReaderContext(
     return context
 }
 
+/**
+ * Write Sheet to a file named [csv]
+ */
 fun Sheet.writeCsv(csv: String) {
     writeCsv(File(csv))
 }
 
+/**
+ * Write Sheet to a file named [csv]
+ */
 fun Sheet.writeCsv(csv: File) {
     csv.writeText("")
 
@@ -214,7 +259,7 @@ fun Sheet.writeCsv(csv: File) {
     val sb = StringBuilder()
     for (row in 0 until rows) {
         for (column in 0 until columns) {
-            val cell = ComputableCoordinate.moveable(column, row).toString()
+            val cell = CellRange.moveable(column, row).toString()
             val value = cells[cell]?.toString() ?: ""
             if (value.contains(" ")) {
                 sb.append("\"$value\"")
@@ -231,4 +276,32 @@ fun Sheet.writeCsv(csv: File) {
         }
     }
     csv.appendText(sb.toString())
+}
+
+/**
+ * Construct a sheet by parsing provided text.
+ */
+fun sheetOfCsv(
+    names: List<String> = listOf(),
+    sample: Double = 1.0,
+    keep: List<String> = listOf(), // List of columns to keep
+    quoteChar: Char = '"',
+    delimiter: Char = ',',
+    escapeChar: Char = '"',
+    skipEmptyLine: Boolean = false,
+    skipMissMatchedRow: Boolean = false,
+    init: () -> String
+): Sheet {
+    val text = init()
+    return parseCsv(
+        data = text.trimIndent().trim('\r', '\n'),
+        names = names,
+        sample = sample,
+        keep = keep,
+        quoteChar = quoteChar,
+        delimiter = delimiter,
+        escapeChar = escapeChar,
+        skipEmptyLine = skipEmptyLine,
+        skipMissMatchedRow = skipMissMatchedRow
+    )
 }

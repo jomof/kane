@@ -205,47 +205,74 @@ class DocumentationTest {
     @Test
     fun `minimize function-basics`() {
         /**
-         * Because Kane sheets can contain formulas in addition to plain data, it's possible to differentiate those
-         * formulas. These differentiated formulas can then be used with gradient descent to find a minimum value
-         * when for given input values.
+         * Because Kane sheets can contain formulas in addition to plain data, it's possible to seek a goal. You can
+         * minimize a cell in the sheet by changing other cells that you choose. This is done with the minimize(...)
+         * function.
          *
-         * Let's start with a quick demo. Say you have the following data.
+         * Under the covers, Kane uses gradient descent to try to reach the goal so the formulas need to be
+         * differentiable.
+         *
+         * This walk-through will show a very simple case of using minimize(...).
+         *
+         * Topics covered:
+         * - Using minimize(...) to seek a goal
+         * - Using sheetOfCsv(...) to construct a sheet from a string in CSV format.
+         * - Adding rows, columns, and cells to an existing sheet.
          */
-        val raw = sheetOf {
-            val a1 by columnOf(1.0, 2.0, 3.0, 4.0)
-            val b1 by columnOf(-0.4, -1.0, -1.6, -2.0)
-            add(a1, b1)
+        var sheet = sheetOfCsv {
+            """
+               A,B
+               1.0,-0.4
+               2.0,-1.0
+               3.0,-1.6
+               4.0,-2.0
+        """
         }
-        println(raw)
+        println(sheet)
 
         /**
-         * You'd like to know if the data in column A is related to column B linearly. That is, is there a y=mx+b
+         * You'd like to know if the data in column A is related to column B linearly. That is, what is the best y=mx+b
          * relationship?
          *
-         * So first, let's add 'm' and 'b' to the sheet.
+         * Let's add 'm' and 'b' to the sheet. The values of these variables will be in B5 and B6 respectively.
          */
-        val mb = raw.copy(
-            "a5" to rowOf("m", 0.0),
-            "a6" to rowOf("b", 0.0)
+        sheet = sheet.copy(
+            "A5" to rowOf("m", 0.0),
+            "A6" to rowOf("b", 0.0)
         )
-        println(mb)
+        println(sheet)
 
         /**
          * Now, let's add a prediction in C column that takes the value from 'A' column multiplies it by 'm' and adds 'b'.
+         */
+        sheet = sheet.copy(
+            "C1" to columnOf(4) { cell("B5") * left(2) + cell("B6") },
+        )
+        println(sheet.eval())
+
+        /**
          * In column 'D' we'll add an error function for each row. The error function is the squared difference between
          * column 'B' and the prediction in column 'C1'
-         * Lastly, in cell 'A7' we'll add a sum of the values in column 'D'
          */
-        val prediction = mb.copy(
-            "c1" to columnOf(4) { cell("B5") * left(2) + cell("B6") },
-            "d1" to columnOf(4) { pow(left(2) - left, 2.0) },
-            "a7" to "error",
-            "b7" to rowOf(1) { summation(range("D")) }
+        sheet = sheet.copy(
+            "D1" to columnOf(4) { pow(left(2) - left, 2.0) },
         )
-        println(prediction)
-        println(prediction.eval())
+        println(sheet.eval())
 
+        /**
+         * In column 'D' we'll add an error function for each row. The error function is the squared difference between
+         * column 'B' and the prediction in column 'C1'
+         *
+         * Lastly, in cell 'B7' we'll add a sum of the values in column 'D'
+         */
+        sheet = sheet.copy(
+            "A7" to "error",
+            "B7" to cellOf { sum(range("D")) }
+        )
+        println(sheet.eval())
 
+        sheet = sheet.minimize("B7", listOf("B5", "B6"))
+        println(sheet.eval())
     }
 
     @Test

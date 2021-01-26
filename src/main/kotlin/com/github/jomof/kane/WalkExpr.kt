@@ -1,10 +1,7 @@
 package com.github.jomof.kane
 
 import com.github.jomof.kane.functions.*
-import com.github.jomof.kane.sheet.CoerceScalar
-import com.github.jomof.kane.sheet.NamedSheetRangeExpr
-import com.github.jomof.kane.sheet.Sheet
-import com.github.jomof.kane.sheet.SheetRangeExpr
+import com.github.jomof.kane.sheet.*
 
 fun Expr.count() : Int {
     var count = 0
@@ -65,6 +62,8 @@ fun Expr.visit(f: (expr : Expr) -> Unit) {
         is Tiling<*> -> {
         }
         is Sheet -> cells.forEach { (_, expr) -> expr.visit(f) }
+        is SheetBuilder.SheetBuilderRange -> {
+        }
         else ->
             error("$javaClass")
     }

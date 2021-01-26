@@ -6,6 +6,7 @@ import com.github.jomof.kane.functions.div
 import com.github.jomof.kane.functions.minus
 import com.github.jomof.kane.functions.multiply
 import com.github.jomof.kane.types.AlgebraicType
+import com.github.jomof.kane.types.DoubleAlgebraicType
 import com.github.jomof.kane.types.KaneType
 import java.lang.Integer.max
 import kotlin.math.abs
@@ -52,9 +53,9 @@ data class NamedSheetRangeExpr(
 }
 
 data class CoerceScalar(
-    val value : Expr,
-    override val type : AlgebraicType
-) : ScalarExpr {
+    val value: Expr,
+    override val type: AlgebraicType
+) : UnnamedExpr, ScalarExpr {
     init {
         assert(value !is CoerceScalar) {
             "coerce of coerce?"
@@ -64,10 +65,12 @@ data class CoerceScalar(
         }
         track()
     }
+
     override fun toString() = "$value"
-    fun copy(value : Expr) : CoerceScalar {
+    override fun toNamed(name: String) = NamedScalar(name, this)
+    fun copy(value: Expr): CoerceScalar {
         return if (value === this.value) this
-            else CoerceScalar(value, type)
+        else CoerceScalar(value, type)
     }
 }
 
@@ -167,10 +170,10 @@ class SheetBuilder(
     private val added: MutableList<NamedExpr> = added.toMutableList()
 
     fun cell(name: String) = SheetRangeExpr(cellNameToCoordinate(name).toComputableCoordinate())
-    fun up(offset: Int) = SheetRangeExpr(ComputableCoordinate.relative(column = 0, row = -offset))
-    fun down(offset: Int) = SheetRangeExpr(ComputableCoordinate.relative(column = 0, row = offset))
-    fun left(offset: Int) = SheetRangeExpr(ComputableCoordinate.relative(column = -offset, row = 0))
-    fun right(offset: Int) = SheetRangeExpr(ComputableCoordinate.relative(column = offset, row = 0))
+    fun up(offset: Int) = SheetRangeExpr(CellRange.relative(column = 0, row = -offset))
+    fun down(offset: Int) = SheetRangeExpr(CellRange.relative(column = 0, row = offset))
+    fun left(offset: Int) = SheetRangeExpr(CellRange.relative(column = -offset, row = 0))
+    fun right(offset: Int) = SheetRangeExpr(CellRange.relative(column = offset, row = 0))
     val up get() = up(1)
     val down get() = down(1)
     val left get() = left(1)
@@ -325,7 +328,7 @@ class SheetBuilder(
     }
 
     fun set(cell : Coordinate, value : Any, type : KaneType<*>) {
-        val name = ComputableCoordinate.moveable(cell).toString()
+        val name = CellRange.moveable(cell).toString()
         add(
             if (value is Double) NamedScalar(name, constant(value, type as AlgebraicType))
             else NamedValueExpr(name, value, type as KaneType<Any>)
@@ -342,7 +345,7 @@ class SheetBuilder(
     ) : UntypedUnnamedExpr {
         override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
         override fun toNamed(name: String): NamedSheetRangeExpr {
-            if (range is ColumnSheetRange && range.first == range.second) {
+            if (range is ColumnRange && range.first == range.second) {
                 builder.columnDescriptors[range.first.index] = ColumnDescriptor(name, null)
             }
             return NamedSheetRangeExpr(name, range)
@@ -384,10 +387,9 @@ fun Sheet.minimize(
 
     // Follow all expressions from 'target'
     val reducedArithmetic = reduceArithmetic(variables.toSet())
-    println("Expanding target expression")
+    println("Expanding target expression $target")
     val lookup = reducedArithmetic.cells + resolvedVariables
     val targetExpr = reducedArithmetic.cells.getValue(target).expandNamedCells(lookup)
-    println("count = ${targetExpr.count()}")
     if (targetExpr !is ScalarExpr) {
         error("'$target' was not a numeric expression")
     }
@@ -395,7 +397,7 @@ fun Sheet.minimize(
     val namedTarget : NamedScalarExpr = NamedScalar(target, reduced)
 
     // Differentiate target with respect to each variable
-    println("Differentiating target expression with respect to change variables")
+    println("Differentiating target expression $target with respect to change variables: ${variables.joinToString(" ")}")
     val diffs = resolvedVariables.map { (_, variable) ->
         val name = "d$target/d${variable.name}"
         val derivative = differentiate(d(namedTarget) / d(variable)).reduceArithmetic()
@@ -404,16 +406,22 @@ fun Sheet.minimize(
 
     // Assign back variables updated by a delta of their respective derivative
     val assignBacks = (resolvedVariables.values zip diffs).map { (variable, diff) ->
-        NamedScalarAssign("update(${variable.name})", variable, variable - multiply(learningRate, diff)).reduceArithmetic()
+        NamedScalarAssign(
+            "update(${variable.name})",
+            variable,
+            variable - multiply(learningRate, diff)
+        ).reduceArithmetic()
     }
 
     // Create the model, allocate space for it, and iterate. Break when the target didn't move much
-    println("Linearizing equations")
     val model = Tableau(resolvedVariables.values + diffs + namedTarget + assignBacks, diffs[0].type).linearize()
     val space = model.allocateSpace()
-    var priorTarget = model.shape(namedTarget).ref(space).value
+    println("Plan has ${model.slotCount()} common sub-expressions and uses ${space.size * 8} bytes")
+    model.eval(space)
+    var priorTarget: Double = Double.MAX_VALUE
+    val originalTarget: Double = model.shape(namedTarget).ref(space).value
     println("Minimizing")
-    for(i in 0 until 100000) {
+    for (i in 0 until 100000) {
 //        val sb = StringBuilder()
 //        sb.append(resolvedVariables.values.joinToString(" ") {
 //            val value = model.shape(it).ref(space)
@@ -422,10 +430,18 @@ fun Sheet.minimize(
 //        println(sb)
         model.eval(space)
         val newTarget = model.shape(namedTarget).ref(space).value
-        if (abs(newTarget-priorTarget) < 0.0000000000001)
+        if (abs(newTarget - priorTarget) < 0.0000000000001)
             break
         priorTarget = newTarget
     }
+
+    println(
+        "Target '$target' reduced from ${DoubleAlgebraicType.kaneType.render(originalTarget)} to ${
+            DoubleAlgebraicType.kaneType.render(
+                priorTarget
+            )
+        }"
+    )
 
     // Extract the computed values and plug them back into a new sheet
     val new = cells.toMutableMap()
@@ -463,7 +479,7 @@ fun Sheet.render() : String {
     // Calculate widths
     for(row in 0 until rows) {
         for(column in 0 until columns) {
-            val cell = ComputableCoordinate.moveable(column, row).toString()
+            val cell = CellRange.moveable(column, row).toString()
             val value = cells[cell]?.toString() ?: ""
             widths[column + 1] = max(widths[column + 1], value.length)
         }
@@ -492,7 +508,7 @@ fun Sheet.render() : String {
     for(row in 0 until rows) {
         sb.append(padLeft(rowName(row+1), widths[0]) + " ")
         for(column in 0 until columns) {
-            val cell = ComputableCoordinate.moveable(column, row).toString()
+            val cell = CellRange.moveable(column, row).toString()
             val value = cells[cell]?.toString() ?: ""
             sb.append(padLeft(value, widths[column + 1]) + " ")
         }

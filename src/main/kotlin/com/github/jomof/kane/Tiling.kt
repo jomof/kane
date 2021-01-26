@@ -98,9 +98,15 @@ fun rowOf(range: Pair<Double, Double>, step: Double = 1.0): MatrixExpr {
     }
     return matrixOf(elements.size, 1, elements)
 }
-inline fun <reified E:Any> rowOf(vararg elements : E) : Tiling<E> {
+
+inline fun <reified E : Any> rowOf(vararg elements: E): Tiling<E> {
     val valueType = E::class.java.kaneType
     return Tiling(elements.size, 1, elements.toList(), valueType)
+}
+
+fun cellOf(init: SheetBuilder.() -> Any): ScalarExpr {
+    val sb = SheetBuilder()
+    return convertAnyToScalarExpr(init(sb))
 }
 
 

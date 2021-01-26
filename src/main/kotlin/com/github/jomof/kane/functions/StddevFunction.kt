@@ -11,7 +11,7 @@ class StddevFunction : AlgebraicUnaryMatrixScalarFunction, AlgebraicUnaryScalarS
     override fun reduceArithmetic(elements: List<ScalarExpr>): ScalarExpr {
         val mean = mean.reduceArithmetic(elements)
         val powers = elements.map { pow(it - mean, 2.0) }
-        return pow(summation.reduceArithmetic(powers), 0.5)
+        return pow(sum.reduceArithmetic(powers), 0.5)
     }
 
     override fun reduceArithmetic(value: MatrixExpr) = reduceArithmetic(value.elements)

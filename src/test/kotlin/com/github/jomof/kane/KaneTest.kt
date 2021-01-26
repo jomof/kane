@@ -223,9 +223,9 @@ class KaneTest {
         val h by logit((w0 cross inputs) + b0)
         val output by logit((w1 cross h) + b1)
         val target by matrixVariable(1, 2, 0.01, 0.99)
-        val errors by 0.5 * pow(target-output, 2.0)
-        val error by summation(errors)
-        val db0 by b0 - r * differentiate(d(error)/d(b0))
+        val errors by 0.5 * pow(target - output, 2.0)
+        val error by sum(errors)
+        val db0 by b0 - r * differentiate(d(error) / d(b0))
         val db1 by b1 - r * differentiate(d(error)/d(b1))
         val dw0 by w0 - r * differentiate(d(error)/d(w0))
         val dw1 by w1 - r * differentiate(d(error)/d(w1))
@@ -282,7 +282,7 @@ class KaneTest {
         val w1 by matrixVariable(w0.rows, outputs) { abs(random.nextGaussian()) / 3.0 }
         val output by lrelu(w1 cross h1)
         val target by matrixVariable(output.columns, output.rows)
-        val error by summation(0.5 * pow(target - output, 2.0))
+        val error by sum(0.5 * pow(target - output, 2.0))
         val dw0 by w0 - learningRate * differentiate(d(error) / d(w0))
         val dw1 by w1 - learningRate * differentiate(d(error) / d(w1))
         val aw0 by assign(dw0 to w0)
@@ -449,8 +449,8 @@ class KaneTest {
         val output by w3 cross h3
 
         val target by matrixVariable(output.columns, output.rows, type) { 0.0 }
-        val error by summation(0.5 * pow(target - output, 2.0))
-        val sumdw0 by matrixVariable(w0.columns,w0.rows,type) { 0.0 }
+        val error by sum(0.5 * pow(target - output, 2.0))
+        val sumdw0 by matrixVariable(w0.columns, w0.rows, type) { 0.0 }
         val sumdw1 by matrixVariable(w1.columns,w1.rows,type) { 0.0 }
         val sumdw2 by matrixVariable(w2.columns,w2.rows,type) { 0.0 }
         val sumdw3 by matrixVariable(w3.columns,w3.rows,type) { 0.0 }
@@ -555,7 +555,7 @@ class KaneTest {
         val w1 by matrixVariable(w0.rows, outputs) { random.nextGaussian() / 3.0 }
         val output by logit(w1 cross h1)
         val target by matrixVariable(output.columns, output.rows) { 0.0 }
-        val error by summation(0.5 * pow(target - output, 2.0))
+        val error by sum(0.5 * pow(target - output, 2.0))
         val dw0 by w0 - learningRate * differentiate(d(error) / d(w0))
         val dw1 by w1 - learningRate * differentiate(d(error) / d(w1))
         val aw0 by assign(dw0 to w0)
@@ -614,7 +614,7 @@ class KaneTest {
         val w1 by matrixVariable(w0.rows + 1, 1)
         val output by logit(w1 cross (h1 stack 1.0))
         val target by matrixVariable(output.columns, output.rows)
-        val error by summation(0.5 * pow(target - output, 2.0))
+        val error by sum(0.5 * pow(target - output, 2.0))
         val gradientW0 by d(error) / d(w0)
         differentiate(gradientW0)
     }
@@ -622,8 +622,8 @@ class KaneTest {
     @Test
     fun `summation expands on element access`() {
         val a by matrixVariable(1,3)
-        val b by matrixVariable(3,2)
-        val s by summation(a) / b
+        val b by matrixVariable(3, 2)
+        val s by sum(a) / b
         s[0,0].reduceArithmetic().assertString("(a[0,0]+a[0,1]+a[0,2])/b[0,0]")
     }
 
@@ -854,7 +854,7 @@ class KaneTest {
         val w1 by matrixVariable(w0.rows + 1, 2)
         val output by logit(w1 cross (h1 stack 1.0))
         val target by matrixVariable(output.columns, output.rows)
-        val error by summation(learningRate * pow(target - output, 2.0))
+        val error by sum(learningRate * pow(target - output, 2.0))
         val gradientW0 by d(error) / d(w0)
         differentiate(gradientW0)
     }

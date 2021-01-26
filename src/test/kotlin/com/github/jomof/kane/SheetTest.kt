@@ -201,7 +201,7 @@ class SheetTest {
             val c4 by sp500(a4)
             val d4 by b4 * b1 + b2
             val c1 by constant("error")
-            val d1 by summation(pow(d4 - c4, 2.0))
+            val d1 by sum(pow(d4 - c4, 2.0))
 
             add(
                 a1, a2, b1, b2, a3, a4, b4, b3, c3, c4, d1, c1, d4
@@ -278,7 +278,7 @@ class SheetTest {
         val sheet = sheetOf {
             val a1 by columnOf(1.0, 1.0)
             val b1 by columnOf(left + 1.0, left + 2.0)
-            val b3 by summation(b1)
+            val b3 by sum(b1)
             add(a1, b1, b3)
         }
         println(sheet)
@@ -364,7 +364,7 @@ class SheetTest {
             val b1 by columnOf((left(1) + 0.0) * left(1), (left(1) + 0.0) * left(1))
             val d1 by softmax(b1, constant(0.1))
             val e1 by softmin(b1, constant(0.1))
-            val b3 by summation(b1)
+            val b3 by sum(b1)
             add(d1, b3, a1, e1, b1)
         }
         println(sheet)
@@ -377,7 +377,7 @@ class SheetTest {
             val a1 by columnOf(0.2, 1.3)
             val b1 by columnOf((left(1) + 0.0) * left(1), (left(1) + 0.0) * left(1))
             val d1 by softmax(10_000.00 - b1)
-            val b3 by summation(b1)
+            val b3 by sum(b1)
             add(d1, b3, b1, a1)
         }
         println(sheet)
@@ -476,8 +476,8 @@ class SheetTest {
         val output by logit(w3 cross h3) + b3
 
         val target by matrixVariable(output.columns, output.rows) { 0.0 }
-        val error by summation(0.5 * pow(target - output, 2.0))
-        val sumdw0 by matrixVariable(w0.columns,w0.rows) { 0.0 }
+        val error by sum(0.5 * pow(target - output, 2.0))
+        val sumdw0 by matrixVariable(w0.columns, w0.rows) { 0.0 }
         val sumdw1 by matrixVariable(w1.columns, w1.rows) { 0.0 }
         val sumdw2 by matrixVariable(w2.columns, w2.rows) { 0.0 }
         val sumdw3 by matrixVariable(w3.columns, w3.rows) { 0.0 }
@@ -648,7 +648,7 @@ class SheetTest {
         val output by logit(w3 cross h3) + b3
 
         val target by matrixVariable(output.columns, output.rows) { 0.0 }
-        val error by summation(0.5 * pow(target - output, 2.0))
+        val error by sum(0.5 * pow(target - output, 2.0))
         //val sumdw0 by matrixVariable(w0.columns,w0.rows) { 0.0 }
         val sumdw1 by matrixVariable(w1.columns, w1.rows) { 0.0 }
         val sumdw2 by matrixVariable(w2.columns, w2.rows) { 0.0 }
@@ -787,7 +787,7 @@ class SheetTest {
             val i2 by cv(i4)
 
             val i1 by constant("error")
-            val j2 by summation(i4)
+            val j2 by sum(i4)
 
             val j1 by pow(1.45 - i2, 2.0)
             add(

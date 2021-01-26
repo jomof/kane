@@ -18,7 +18,7 @@ interface SheetRange {
 
 data class Coordinate(val column: Int, val row: Int) {
     override fun toString() = "[$column,$row]"
-    fun toComputableCoordinate() = ComputableCoordinate(MoveableIndex(column), MoveableIndex(row))
+    fun toComputableCoordinate() = CellRange(MoveableIndex(column), MoveableIndex(row))
 }
 
 fun coordinatesOf(columns: Int, rows: Int) = sequence {
@@ -88,7 +88,7 @@ sealed class ComputableIndex {
     }
 }
 
-data class ComputableCoordinate(
+data class CellRange(
     val column: ComputableIndex,
     val row: ComputableIndex
 ) : SheetRange {
@@ -110,39 +110,84 @@ data class ComputableCoordinate(
     override fun contains(name: String) = name == toString()
 
     companion object {
-        fun relative(column: Int, row: Int) = ComputableCoordinate(RelativeIndex(column), RelativeIndex(row))
-        fun moveable(column: Int, row: Int) = ComputableCoordinate(MoveableIndex(column), MoveableIndex(row))
+        fun relative(column: Int, row: Int) = CellRange(RelativeIndex(column), RelativeIndex(row))
+        fun moveable(column: Int, row: Int) = CellRange(MoveableIndex(column), MoveableIndex(row))
         fun moveable(coordinate: Coordinate) = moveable(coordinate.column, coordinate.row)
     }
 }
+//
+//fun computeMoveableCoordinate(base: Coordinate, adjustment: CellRange): CellRange {
+//    adjustment.rebase(base)
+//    val column = when (val column = adjustment.column) {
+//        is FixedIndex -> column.index
+//        is MoveableIndex -> column.index
+//        is RelativeIndex -> column.index + base.column
+//    }
+//    val row = when (val row = adjustment.row) {
+//        is FixedIndex -> row.index
+//        is MoveableIndex -> row.index
+//        is RelativeIndex -> row.index + base.row
+//    }
+//    return CellRange(MoveableIndex(column), MoveableIndex(row))
+//}
+//
+//fun computeMoveableCoordinate(base: Coordinate, adjustment: ColumnRange): CellRange {
+//    adjustment.rebase(base)
+//    val column = when (val column = adjustment.first) {
+//        is FixedIndex -> column.index
+//        is MoveableIndex -> column.index
+//        is RelativeIndex -> column.index + base.column
+//    }
+//    return CellRange(MoveableIndex(column), MoveableIndex(base.row))
+//}
+//
+//fun computeMoveableCoordinate(base: Coordinate, adjustment: SheetRange): CellRange {
+//    adjustment.rebase(base)
+//    return when(adjustment) {
+//        is CellRange -> computeMoveableCoordinate(base, adjustment)
+//        is ColumnRange -> computeMoveableCoordinate(base, adjustment)
+//        else -> error("${adjustment.javaClass}")
+//    }
+//}
 
-fun computeMoveableCoordinate(base: Coordinate, adjustment: ComputableCoordinate): ComputableCoordinate {
-    val column = when (val column = adjustment.column) {
-        is FixedIndex -> column.index
-        is MoveableIndex -> column.index
-        is RelativeIndex -> column.index + base.column
+private fun CellRange.rebase(base: Coordinate): SheetRange {
+    return when {
+        column is MoveableIndex && row is MoveableIndex -> this
+        column is RelativeIndex && row is RelativeIndex ->
+            CellRange(
+                MoveableIndex(column.index + base.column),
+                MoveableIndex(row.index + base.row)
+            )
+        column is MoveableIndex && row is RelativeIndex ->
+            CellRange(
+                column,
+                MoveableIndex(row.index + base.row)
+            )
+        else ->
+            error("$this and $base")
     }
-    val row = when (val row = adjustment.row) {
-        is FixedIndex -> row.index
-        is MoveableIndex -> row.index
-        is RelativeIndex -> row.index + base.row
-    }
-    return ComputableCoordinate(MoveableIndex(column), MoveableIndex(row))
 }
 
-fun computeMoveableCoordinate(base: Coordinate, adjustment: ColumnSheetRange): ComputableCoordinate {
-    val column = when (val column = adjustment.first) {
-        is FixedIndex -> column.index
-        is MoveableIndex -> column.index
-        is RelativeIndex -> column.index + base.column
+private fun ColumnRange.rebase(base: Coordinate): SheetRange {
+    return when {
+        first is MoveableIndex && second is MoveableIndex -> this
+        else ->
+            error("$this and $base")
     }
-    return ComputableCoordinate(MoveableIndex(column), MoveableIndex(base.row))
 }
 
+fun SheetRange.rebase(base: Coordinate): SheetRange {
+    return when {
+        this is CellRange -> rebase(base)
+        this is ColumnRange -> rebase(base)
+        else ->
+            error("$javaClass")
+    }
+}
 
 // Cell naming
 fun coordinateToCellName(column: ComputableIndex, row: ComputableIndex) =
-    ComputableCoordinate(column, row).toString()
+    CellRange(column, row).toString()
 
 fun coordinateToCellName(column: Int, row: Int): String {
     return coordinateToCellName(MoveableIndex(column), MoveableIndex(row))
@@ -208,22 +253,22 @@ fun cellNameToCoordinate(tag: String): Coordinate {
     )
 }
 
-fun cellNameToComputableCoordinate(name: String): ComputableCoordinate {
+fun cellNameToComputableCoordinate(name: String): CellRange {
     val columnIsFixed = name[0] == '$'
     val lastIndexOfDollar = name.lastIndexOf('$')
     val rowIsFixed = lastIndexOfDollar > 0
     val coordinate = cellNameToCoordinate(name.replace("$", ""))
     val column = if (columnIsFixed) FixedIndex(coordinate.column) else MoveableIndex(coordinate.column)
     val row = if (rowIsFixed) FixedIndex(coordinate.row) else MoveableIndex(coordinate.row)
-    return ComputableCoordinate(
+    return CellRange(
         column = column,
         row = row
     )
 }
 
 data class RectangleSheetRange(
-    val first: ComputableCoordinate,
-    val second: ComputableCoordinate
+    val first: CellRange,
+    val second: CellRange
 ) : SheetRange {
     override fun up(move: Int) = copy(first = first.up(move), second = second.up(move))
     override fun down(move: Int) = copy(first = first.down(move), second = second.down(move))
@@ -239,12 +284,12 @@ data class RectangleSheetRange(
     }
 }
 
-data class ColumnSheetRange(
+data class ColumnRange(
     val first: ComputableIndex,
     val second: ComputableIndex
 ) : SheetRange {
-    override fun up(move: Int) = ComputableCoordinate(first, RelativeIndex(-1))
-    override fun down(move: Int) = ComputableCoordinate(first, RelativeIndex(1))
+    override fun up(move: Int) = CellRange(first, RelativeIndex(-1))
+    override fun down(move: Int) = CellRange(first, RelativeIndex(1))
     override fun left(move: Int) = copy(first = first - move, second = second - move)
     override fun right(move: Int) = copy(first = first + move, second = second + move)
     override fun toString(): String {
@@ -268,12 +313,12 @@ fun parseRange(range: String): SheetRange {
         val value = split[0]
         assert(looksLikeColumnName(value))
         val column = cellNameToComputableCoordinate(value + "1").column
-        return ColumnSheetRange(column, column)
+        return ColumnRange(column, column)
     }
 
     val (left, right) = range.split(':')
     if (looksLikeColumnName(left) && looksLikeColumnName(right)) {
-        return ColumnSheetRange(
+        return ColumnRange(
             cellNameToComputableCoordinate(left + "1").column,
             cellNameToComputableCoordinate(right + "1").column,
         )

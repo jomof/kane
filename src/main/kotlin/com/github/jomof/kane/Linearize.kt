@@ -146,7 +146,8 @@ class LinearModel(val type : AlgebraicType) {
     fun shape(name : String) = EmbeddedScalarShape(namedScalars.getValue(name).slot)
     fun shape(expr : NamedScalarExpr) = EmbeddedScalarShape(namedScalars.getValue(expr.name).slot)
     fun shape(expr : NamedMatrixVariable) = namedMatrixShapes.getValue(expr.name)
-    fun shape(expr : NamedMatrixExpr) = namedMatrixShapes.getValue(expr.name)
+    fun shape(expr: NamedMatrixExpr) = namedMatrixShapes.getValue(expr.name)
+    fun slotCount(): Int = slots.size
 
     fun eval(space : DoubleArray) {
         assignments.forEach { (output, expr) ->
@@ -279,13 +280,13 @@ private fun AlgebraicExpr.claimMatrixVariables(model : LinearModel = LinearModel
     val seen = mutableSetOf<String>()
     visit {
         if (it is MatrixVariableElement) {
-            model.registerMatrixVariableElement(it as MatrixVariableElement)
+            model.registerMatrixVariableElement(it)
         }
         if (it is NamedMatrixAssign) {
             if (!seen.contains(it.name)) {
                 seen += it.name
                 it.left.elements.forEach { element ->
-                    model.registerMatrixVariableElement(element as MatrixVariableElement)
+                    model.registerMatrixVariableElement(element)
                 }
             }
         }
@@ -293,7 +294,7 @@ private fun AlgebraicExpr.claimMatrixVariables(model : LinearModel = LinearModel
             if (!seen.contains(it.name)) {
                 seen += it.name
                 it.elements.forEach { element ->
-                    model.registerMatrixVariableElement(element as MatrixVariableElement)
+                    model.registerMatrixVariableElement(element)
                 }
             }
         }
@@ -315,7 +316,7 @@ private fun AlgebraicExpr.evalSpace(space : DoubleArray) : Double {
 private fun AlgebraicExpr.gatherNamedExprs() : Set<NamedAlgebraicExpr> {
     val result = mutableSetOf<NamedAlgebraicExpr>()
     visit { expr ->
-        if (expr is NamedAlgebraicExpr) result += (expr as NamedAlgebraicExpr)
+        if (expr is NamedAlgebraicExpr) result += expr
     }
     return result
 }
@@ -436,9 +437,7 @@ fun AlgebraicExpr.linearize() : LinearModel {
         val model = LinearModel(type)
         claimMatrixVariables(model)
         claimScalarVariables(model)
-        println("Stripping names")
         var stripped = stripNames()
-        println("Consolidating common sub-expressions")
         stripped = stripped.rollUpCommonSubexpressions(model)
         stripped.linearizeExpr(model)
         return model

@@ -33,7 +33,7 @@ class Kane {
             skewness,
             kurtosis,
             cv,
-            summation
+            sum
         )
     }
 }

@@ -158,7 +158,7 @@ class FunctionalTest {
             skewness               0     0.05906 
             kurtosis        -1.20497    -0.76712 
                   cv         0.00642     0.42432 
-                   ∑           22253        7650 
+                 sum           22253        7650 
         """.trimIndent()
         )
     }
@@ -181,7 +181,7 @@ class FunctionalTest {
             skewness     0.05906 
             kurtosis    -0.76712 
                   cv     0.42432 
-                   ∑        7650 
+                 sum        7650 
         """.trimIndent()
         )
     }

@@ -35,71 +35,25 @@ fun Expr.replaceRelativeCellReferences(coordinate: Coordinate): Expr {
             right = right.self(coordinate))
         is AlgebraicBinaryMatrixScalar -> copy(
             left = left.self(coordinate),
-            right = right.self(coordinate))
+            right = right.self(coordinate)
+        )
         is AlgebraicBinaryMatrix -> copy(
             left = left.self(coordinate),
-            right = right.self(coordinate))
+            right = right.self(coordinate)
+        )
         is AlgebraicBinaryScalarStatistic -> copy(
             left = left.self(coordinate),
-            right = right.self(coordinate))
+            right = right.self(coordinate)
+        )
         is ConstantScalar -> this
         is DiscreteUniformRandomVariable -> this
-        is CoerceScalar -> {
-            val result : AlgebraicExpr = when (value) {
-                is SheetRangeExpr -> {
-                    val moveable = computeMoveableCoordinate(coordinate, value.range as ComputableCoordinate)
-                    copy(value = value.copy(moveable))
-                }
-                is NamedSheetRangeExpr -> {
-                    when (value.range) {
-                        is ComputableCoordinate -> {
-                            val moveable = computeMoveableCoordinate(coordinate, value.range)
-                            copy(value = SheetRangeExpr(range = moveable))
-                        }
-                        is ColumnSheetRange -> {
-                            val moveable = computeMoveableCoordinate(coordinate, value.range)
-                            copy(value = SheetRangeExpr(range = moveable))
-                        }
-                        else -> error("${value.range.javaClass}")
-                    }
-
-                }
-                is AlgebraicUnaryRangeStatistic -> this
-                else -> error("${value.javaClass}")
-            }
-            result
-        }
+        is CoerceScalar -> copy(value = value.replaceRelativeCellReferences(coordinate))
+        is SheetRangeExpr -> copy(range = range.rebase(coordinate))
+        is SheetBuilder.SheetBuilderRange -> SheetRangeExpr(range = range.rebase(coordinate))
+        is NamedSheetRangeExpr -> copy(range = range.rebase(coordinate))
+        is AlgebraicUnaryRangeStatistic -> copy(range = range.rebase(coordinate))
         is DataMatrix -> map { it.self(coordinate) }
-        is SheetRangeExpr ->
-            when (range) {
-                is ComputableCoordinate -> copy(range = computeMoveableCoordinate(Coordinate(0, 0), range))
-                is ColumnSheetRange -> copy(range = computeMoveableCoordinate(Coordinate(0, 0), range))
-                else -> error("${range.javaClass}")
-            }
         is ValueExpr<*> -> this
-        is AlgebraicUnaryRangeStatistic -> this
         else -> error("$javaClass")
     }
 }
-//
-//fun Expr.replaceRelativeCellReferences() : Expr {
-//    return when(this) {
-////        is NamedScalar -> {
-////            val upper = name.toUpperCase()
-////            if (looksLikeCellName(upper)) {
-////                val coordinate = cellNameToCoordinate(name.toUpperCase())
-////                replaceRelativeCellReferences(coordinate)
-////            } else this
-////        }
-////        is NamedValueExpr<*> -> this
-////        is ComputableCellReference ->
-////            when(range) {
-////                is ComputableCoordinate -> copy(range = computeMoveableCoordinate(Coordinate(0,0), range))
-////                is ColumnSheetRange -> copy(range = computeMoveableCoordinate(Coordinate(0,0), range))
-////                else -> error("${range.javaClass}")
-////            }
-//
-//        is AlgebraicBinaryMatrixScalar -> replaceRelativeCellReferences(Coordinate(0,0))
-//        else -> error("$javaClass")
-//    }
-//}
