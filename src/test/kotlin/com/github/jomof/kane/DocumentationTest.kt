@@ -215,26 +215,44 @@ class DocumentationTest {
          * This walk-through will show a very simple case of using minimize(...).
          *
          * Topics covered:
-         * - Using minimize(...) to seek a goal
          * - Using sheetOfCsv(...) to construct a sheet from a string in CSV format.
          * - Adding rows, columns, and cells to an existing sheet.
+         * - Using minimize(...) to seek a goal
          */
         var sheet = sheetOfCsv {
             """
             A,B
-            1.0,-0.4
+            1.0,-0.5
             2.0,-1.0
-            3.0,-1.6
+            3.0,-1.5
             4.0,-2.0
             """
         }
-        println(sheet)
+        sheet.assertString(
+            """
+              A   B  
+              - ---- 
+            1 1 -0.5 
+            2 2   -1 
+            3 3 -1.5 
+            4 4   -2 
+        """.trimIndent()
+        )
 
         /**
          * You'd like to know if the data in column A is related to column B linearly. That is, what is the best y=mx+b
          * relationship?
          *
-         * Let's add 'm' and 'b' to the sheet. The values of these variables will be in B5 and B6 respectively.
+         * Let's define 'm' and 'b' with starting values of 0. These are the change variables that will be modified
+         * in order to minimize the error function we're about to create.
+         *
+         * Next, we'll define 'prediction' which is column A times m plus b. I've called column A 'x' to increase
+         * readability.
+         *
+         * After that, we'll define 'error' which is the per row error function. The function needs to be differentiable
+         * and it needs to be positive or zero since we're going to minimize it. I chose (prediction - actual)².
+         *
+         * Lastly, we'll define 'totalError' which is the sum of all of the 'error' rows.
          */
         sheet = sheet.copy {
             val x by range("A")
@@ -246,11 +264,60 @@ class DocumentationTest {
             val totalError by sum(error)
             add(totalError)
         }
-        println(sheet)
-        println(sheet.eval())
+        sheet.assertString(
+            """
+              x actual prediction     error    
+              - ------ ---------- ------------ 
+            1 1   -0.5     m*A1+b (m*A1+b-B1)² 
+            2 2     -1     m*A2+b (m*A2+b-B2)² 
+            3 3   -1.5     m*A3+b (m*A3+b-B3)² 
+            4 4     -2     m*A4+b (m*A4+b-B4)² 
+            b=0
+            m=0
+            totalError=sum((m*A+b-B)²)
+        """.trimIndent()
+        )
 
+        /**
+         * The formulas all look good. Let's evaluate the sheet to see the starting error.
+         */
+        sheet.eval().assertString(
+            """
+              x actual prediction error 
+              - ------ ---------- ----- 
+            1 1   -0.5          0  0.25 
+            2 2     -1          0     1 
+            3 3   -1.5          0  2.25 
+            4 4     -2          0     4 
+            b=0
+            m=0
+            totalError=7.5
+        """.trimIndent()
+        )
+
+        /**
+         * So the total error is 7.5 when m=0 and b=0.
+         *
+         * Now, let's minimize 'totalError' by changing the values of 'm' and 'b'
+         */
         sheet = sheet.minimize("totalError", listOf("m", "b"))
-        println(sheet.eval())
+
+        /**
+         * Okay, the sheet was minimized. Notice that 'm' is now set to -0.5 and 'b' was left at 0.
+         */
+        sheet.eval().assertString(
+            """
+              x actual prediction error 
+              - ------ ---------- ----- 
+            1 1   -0.5       -0.5     0 
+            2 2     -1         -1     0 
+            3 3   -1.5       -1.5     0 
+            4 4     -2         -2     0 
+            b=0
+            m=-0.5
+            totalError=0
+        """.trimIndent()
+        )
     }
 
     @Test

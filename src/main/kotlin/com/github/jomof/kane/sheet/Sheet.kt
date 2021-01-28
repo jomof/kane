@@ -444,7 +444,7 @@ fun Sheet.minimize(
 //        println(sb)
         model.eval(space)
         val newTarget = model.shape(namedTarget).ref(space).value
-        if (abs(newTarget - priorTarget) < 0.0000000000001)
+        if (abs(newTarget - priorTarget) < 0.00000000000001)
             break
         priorTarget = newTarget
     }
