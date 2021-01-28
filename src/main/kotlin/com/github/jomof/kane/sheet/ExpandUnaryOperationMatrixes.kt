@@ -26,6 +26,7 @@ private fun AlgebraicExpr.expandUnaryOperations(): AlgebraicExpr {
         is AlgebraicBinaryScalarStatistic -> copy(left = left.self(), right = right.self())
         is ConstantScalar -> this
         is DiscreteUniformRandomVariable -> this
+        is NamedScalarVariable -> this
         is CoerceScalar -> copy(value = value.expandUnaryOperations())
         else -> error("$javaClass")
     }

@@ -106,6 +106,172 @@ class SheetTest {
     }
 
     @Test
+    fun `add formula to csv`() {
+        val sheet = sheetOfCsv {
+            """
+            A,B
+            1.0,-0.4
+            2.0,-1.0
+            """
+        }.copy {
+            val c1 by range("A") + range("B")
+            add(c1)
+        }
+        println(sheet)
+    }
+
+    @Test
+    fun `reference range up past end of sheet`() {
+        val sheet = sheetOf {
+            val columnC by range("C")
+            val columnD by range("D")
+            val a1 by 0.0
+            val b2 by columnC.up * columnD
+            add(a1, b2)
+        }
+        sheet.assertString(
+            """
+              A   B   columnC 
+              - ----- ------- 
+            1 0               
+            2   C1*D2            
+        """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `range expanssion doesn't reduce arithmetic`() {
+        val sheet = sheetOfCsv {
+            """
+            A
+            1.0
+            2.0
+            """
+        }.copy {
+            val x by range("A")
+            val m by 0.0
+            val b by 0.0
+            val c1 by m * x + b
+            add(c1)
+        }
+        sheet.assertString(
+            """
+              x B    C   
+              - - ------ 
+            1 1   m*A1+b 
+            2 2   m*A2+b 
+            b=0
+            m=0
+        """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `range expanssion doesn't reduce arithmetic with anonymous range`() {
+        val sheet = sheetOfCsv {
+            """
+            A
+            1.0
+            2.0
+            """
+        }.copy {
+            val m by 0.0
+            val b by 0.0
+            val c1 by m * range("A") + b
+            add(c1)
+        }
+        sheet.assertString(
+            """
+              A B    C   
+              - - ------ 
+            1 1   m*A1+b 
+            2 2   m*A2+b 
+            b=0
+            m=0
+        """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `names of ranged expressions get expanded to columns`() {
+        val sheet = sheetOfCsv {
+            """
+            A
+            1.0
+            2.0
+            """
+        }.copy {
+            val x by range("A")
+            val m by 0.0
+            val b by 0.0
+            val prediction by m * x + b
+            add(prediction)
+        }
+        sheet.assertString(
+            """
+              x prediction 
+              - ---------- 
+            1 1     m*A1+b 
+            2 2     m*A2+b 
+            b=0
+            m=0
+        """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `names of ranged expressions get expanded to columns in order`() {
+        val sheet = sheetOfCsv {
+            """
+            A
+            1.0
+            2.0
+            """
+        }.copy {
+            val x by range("A")
+            val m by 0.0
+            val b by 0.0
+            val prediction by m * x + b
+            val error by prediction - 5.0
+            add(error)
+        }
+        sheet.assertString(
+            """
+              x prediction   error  
+              - ---------- -------- 
+            1 1     m*A1+b m*A1+b-5 
+            2 2     m*A2+b m*A2+b-5 
+            b=0
+            m=0
+        """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `statistic summary function over range`() {
+        val sheet = sheetOfCsv {
+            """
+            A
+            1.0
+            2.0
+            """
+        }.copy {
+            val x by range("A")
+            val total by sum(x)
+            add(total)
+        }
+        sheet.assertString(
+            """
+              x 
+              - 
+            1 1 
+            2 2 
+            total=sum(A)
+        """.trimIndent()
+        )
+    }
+
+    @Test
     fun `basic define column`() {
         val sheet = sheetOf {
             val increasing by range("B")

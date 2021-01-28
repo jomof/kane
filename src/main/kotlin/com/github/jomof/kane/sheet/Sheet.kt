@@ -15,7 +15,7 @@ import kotlin.reflect.KProperty
 
 data class SheetRangeExpr(val range: SheetRange) : UntypedUnnamedExpr {
     private val name by lazy { range.toString() }
-    private fun up(move: Int) = copy(range = range.up(move))
+    fun up(move: Int) = copy(range = range.up(move))
     fun down(move: Int) = copy(range = range.down(move))
     fun left(move: Int) = copy(range = range.left(move))
     fun right(move: Int) = copy(range = range.right(move))
@@ -24,13 +24,13 @@ data class SheetRangeExpr(val range: SheetRange) : UntypedUnnamedExpr {
     val left get() = left(1)
     val right get() = right(1)
     override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
-    override fun toNamed(name: String) = NamedSheetRangeExpr(name, range)
+    override fun toNamed(name: String) = NamedSheetRangeExpr(name, this)
     override fun toString() = name
 }
 
 data class NamedSheetRangeExpr(
     override val name: String,
-    val range: SheetRange
+    val range: SheetRangeExpr
 ) : UntypedScalar, NamedExpr {
     init {
         track()
@@ -39,13 +39,13 @@ data class NamedSheetRangeExpr(
         }
     }
 
-    override fun toUnnamed() = SheetRangeExpr(range)
+    override fun toUnnamed() = range
     override fun toString() = "$name=$range"
 
-    fun up(move: Int) = SheetRangeExpr(range.up(move))
-    fun down(move: Int) = SheetRangeExpr(range.down(move))
-    fun left(move: Int) = SheetRangeExpr(range.left(move))
-    fun right(move: Int) = SheetRangeExpr(range.right(move))
+    fun up(move: Int) = range.up(move)
+    fun down(move: Int) = range.down(move)
+    fun left(move: Int) = range.left(move)
+    fun right(move: Int) = range.right(move)
     val up get() = up(1)
     val down get() = down(1)
     val left get() = left(1)
@@ -142,6 +142,16 @@ interface Sheet : Expr {
         return sb.build()
     }
 
+    /**
+     * Create a new sheet with cell values changed.
+     */
+    fun copy(init: SheetBuilder.() -> Unit): Sheet {
+        val sheet = toBuilder()
+        init(sheet)
+        return sheet.build()
+    }
+
+
     fun toBuilder(): SheetBuilder {
         val named = cells.map { (name, expr) ->
             when (expr) {
@@ -165,7 +175,7 @@ class SheetBuilder(
     val sheetDescriptor: SheetDescriptor = SheetDescriptor(),
     added: List<NamedExpr> = listOf()
 ) {
-    private val columnDescriptors: MutableMap<Int, ColumnDescriptor> = columnDescriptors.toMutableMap()
+    internal val columnDescriptors: MutableMap<Int, ColumnDescriptor> = columnDescriptors.toMutableMap()
     private val rowDescriptors: Map<Int, RowDescriptor> = rowDescriptors.toMutableMap()
     private val added: MutableList<NamedExpr> = added.toMutableList()
 
@@ -314,10 +324,12 @@ class SheetBuilder(
 
     fun build() : Sheet {
         val immediate = getImmediateNamedExprs()
-        val withEmbedded = getEmbeddedNamedExprs(immediate)
+        val debuilderized = removeBuilderPrivateExpressions(immediate)
+        val withEmbedded = getEmbeddedNamedExprs(debuilderized)
         val upperCased = convertCellNamesToUpperCase(withEmbedded)
         val scalarized = scalarizeMatrixes(upperCased)
-        val relativeReferencesReplaced = replaceRelativeReferences(scalarized)
+        val scalarizeRanges = scalarizeRanges(scalarized)
+        val relativeReferencesReplaced = replaceRelativeReferences(scalarizeRanges)
         val unaryMatrixesExpanded = expandUnaryOperations(relativeReferencesReplaced)
         val namesReplaced = replaceNamesWithCellReferences(unaryMatrixesExpanded)
         return Sheet.of(columnDescriptors, rowDescriptors, sheetDescriptor, namesReplaced)
@@ -348,8 +360,10 @@ class SheetBuilder(
             if (range is ColumnRange && range.first == range.second) {
                 builder.columnDescriptors[range.first.index] = ColumnDescriptor(name, null)
             }
-            return NamedSheetRangeExpr(name, range)
+            return NamedSheetRangeExpr(name, SheetRangeExpr(range))
         }
+
+        override fun toString() = "BUILDER[$range]"
     }
 
     fun range(range: String): SheetBuilderRange {

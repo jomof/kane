@@ -221,12 +221,12 @@ class DocumentationTest {
          */
         var sheet = sheetOfCsv {
             """
-               A,B
-               1.0,-0.4
-               2.0,-1.0
-               3.0,-1.6
-               4.0,-2.0
-        """
+            A,B
+            1.0,-0.4
+            2.0,-1.0
+            3.0,-1.6
+            4.0,-2.0
+            """
         }
         println(sheet)
 
@@ -236,42 +236,20 @@ class DocumentationTest {
          *
          * Let's add 'm' and 'b' to the sheet. The values of these variables will be in B5 and B6 respectively.
          */
-        sheet = sheet.copy(
-            "A5" to rowOf("m", 0.0),
-            "A6" to rowOf("b", 0.0)
-        )
+        sheet = sheet.copy {
+            val x by range("A")
+            val actual by range("B")
+            val m by 0.0
+            val b by 0.0
+            val prediction by m * x + b
+            val error by pow(prediction - actual, 2.0)
+            val totalError by sum(error)
+            add(totalError)
+        }
         println(sheet)
-
-        /**
-         * Now, let's add a prediction in C column that takes the value from 'A' column multiplies it by 'm' and adds 'b'.
-         */
-        sheet = sheet.copy(
-            "C1" to columnOf(4) { cell("B5") * left(2) + cell("B6") },
-        )
         println(sheet.eval())
 
-        /**
-         * In column 'D' we'll add an error function for each row. The error function is the squared difference between
-         * column 'B' and the prediction in column 'C1'
-         */
-        sheet = sheet.copy(
-            "D1" to columnOf(4) { pow(left(2) - left, 2.0) },
-        )
-        println(sheet.eval())
-
-        /**
-         * In column 'D' we'll add an error function for each row. The error function is the squared difference between
-         * column 'B' and the prediction in column 'C1'
-         *
-         * Lastly, in cell 'B7' we'll add a sum of the values in column 'D'
-         */
-        sheet = sheet.copy(
-            "A7" to "error",
-            "B7" to cellOf { sum(range("D")) }
-        )
-        println(sheet.eval())
-
-        sheet = sheet.minimize("B7", listOf("B5", "B6"))
+        sheet = sheet.minimize("totalError", listOf("m", "b"))
         println(sheet.eval())
     }
 

@@ -115,40 +115,6 @@ data class CellRange(
         fun moveable(coordinate: Coordinate) = moveable(coordinate.column, coordinate.row)
     }
 }
-//
-//fun computeMoveableCoordinate(base: Coordinate, adjustment: CellRange): CellRange {
-//    adjustment.rebase(base)
-//    val column = when (val column = adjustment.column) {
-//        is FixedIndex -> column.index
-//        is MoveableIndex -> column.index
-//        is RelativeIndex -> column.index + base.column
-//    }
-//    val row = when (val row = adjustment.row) {
-//        is FixedIndex -> row.index
-//        is MoveableIndex -> row.index
-//        is RelativeIndex -> row.index + base.row
-//    }
-//    return CellRange(MoveableIndex(column), MoveableIndex(row))
-//}
-//
-//fun computeMoveableCoordinate(base: Coordinate, adjustment: ColumnRange): CellRange {
-//    adjustment.rebase(base)
-//    val column = when (val column = adjustment.first) {
-//        is FixedIndex -> column.index
-//        is MoveableIndex -> column.index
-//        is RelativeIndex -> column.index + base.column
-//    }
-//    return CellRange(MoveableIndex(column), MoveableIndex(base.row))
-//}
-//
-//fun computeMoveableCoordinate(base: Coordinate, adjustment: SheetRange): CellRange {
-//    adjustment.rebase(base)
-//    return when(adjustment) {
-//        is CellRange -> computeMoveableCoordinate(base, adjustment)
-//        is ColumnRange -> computeMoveableCoordinate(base, adjustment)
-//        else -> error("${adjustment.javaClass}")
-//    }
-//}
 
 private fun CellRange.rebase(base: Coordinate): SheetRange {
     return when {
@@ -225,8 +191,9 @@ fun indexToColumnName(column : Int) : String {
 }
 
 fun looksLikeCellName(tag : String) : Boolean {
-    if (tag.contains("$"))
+    if (tag.contains("$")) {
         return looksLikeCellName(tag.replace("$", ""))
+    }
     for (c in tag) {
         if (c !in 'A'..'Z' && c !in '0'..'9') return false
     }
@@ -298,6 +265,7 @@ data class ColumnRange(
     }
 
     override fun contains(name: String): Boolean {
+        if (!looksLikeCellName(name)) return false
         val cell = cellNameToCoordinate(name)
         return cell.column >= first.index && cell.column <= second.index
     }

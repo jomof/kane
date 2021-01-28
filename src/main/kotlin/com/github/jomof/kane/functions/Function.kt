@@ -206,11 +206,13 @@ data class AlgebraicUnaryMatrix(
 interface AlgebraicUnaryScalarStatisticFunction {
     val meta: UnaryOp
     operator fun invoke(value: ScalarExpr): ScalarExpr = AlgebraicUnaryScalarStatistic(this, value)
-    operator fun invoke(value: SheetRangeExpr): UntypedScalar = AlgebraicUnaryRangeStatistic(this, value.range)
+    operator fun invoke(value: SheetRangeExpr): UntypedUnnamedExpr = AlgebraicUnaryRangeStatistic(this, value.range)
+    operator fun invoke(value: NamedSheetRangeExpr): UntypedUnnamedExpr =
+        AlgebraicUnaryRangeStatistic(this, value.range.range)
+
     operator fun invoke(value: Sheet): Sheet = value.statistics.filterRows { row -> row.name == meta.op }
     operator fun invoke(expr: Expr): Expr = when (expr) {
         is Sheet -> if (expr.columns == 1) invoke(expr)["A1"] else invoke(expr)
-        is SheetBuilder.SheetBuilderRange -> invoke(SheetRangeExpr(expr.range))
         is SheetRangeExpr -> invoke(expr)
         else ->
             error("${expr.javaClass}")

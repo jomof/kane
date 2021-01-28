@@ -40,8 +40,20 @@ class RandomVariablesTest {
             val d1 by mean(b1)
             add(c1, d1)
         }
-        println(sheet)
-        println(sheet.eval())
+        sheet.assertString(
+            """
+                          A                B         C        D    
+              ------------------------ --------- -------- -------- 
+            1 random(1928.0 to 2019.0) sp500(A1) mean(A1) mean(B1) 
+        """.trimIndent()
+        )
+        sheet.eval().assertString(
+            """
+                A     B      C      D    
+              ---- ------ ------ ------- 
+            1 1974 0.1422 1973.5 0.11572 
+        """.trimIndent()
+        )
     }
 
     @Test

@@ -3,6 +3,7 @@ package com.github.jomof.kane.sheet
 import com.github.jomof.kane.*
 import com.github.jomof.kane.functions.*
 
+
 /**
  * Functions to reduce sheet expressions where random variable samples are fixed once chosen.
  */
@@ -40,12 +41,18 @@ private class SingleSampleReducer(
                     depth + 1
                 ) as ScalarExpr? ?: return null
             )
-            is AlgebraicUnaryScalarStatistic -> copy(
-                value = value.reduceArithmeticImpl(
-                    cells,
-                    depth + 1
-                ) as ScalarExpr? ?: return null
-            )
+            is AlgebraicUnaryScalarStatistic -> {
+                if (value is ScalarListExpr)
+                    op.reduceArithmetic(value.values)
+                else {
+                    copy(
+                        value = value.reduceArithmeticImpl(
+                            cells,
+                            depth + 1
+                        ) as ScalarExpr? ?: return null
+                    )
+                }
+            }
             is AlgebraicUnaryMatrix -> copy(
                 value = value.reduceArithmeticImpl(
                     cells,
@@ -62,16 +69,27 @@ private class SingleSampleReducer(
                 left = left.reduceArithmeticImpl(cells, depth + 1) as MatrixExpr,
                 right = right.reduceArithmeticImpl(cells, depth + 1) as MatrixExpr
             )
-            is AlgebraicBinaryScalar -> copyReduce(
-                left = left.reduceArithmeticImpl(
+            is AlgebraicBinaryScalar -> {
+                val left = left.reduceArithmeticImpl(
                     cells,
                     depth + 1
-                ) as ScalarExpr? ?: return null,
-                right = right.reduceArithmeticImpl(
+                ) ?: return null
+                val right = right.reduceArithmeticImpl(
                     cells,
                     depth + 1
-                ) as ScalarExpr? ?: return null
-            )
+                ) ?: return null
+                assert(left is ScalarExpr) {
+                    this.left.reduceArithmeticImpl(
+                        cells,
+                        depth + 1
+                    )
+                    "expected ScalarExpr but got ${left.javaClass}"
+                }
+                copyReduce(
+                    left = left as ScalarExpr,
+                    right = right as ScalarExpr
+                )
+            }
             is AlgebraicBinaryMatrixScalar -> copy(
                 left = left.reduceArithmeticImpl(
                     cells,
@@ -102,12 +120,30 @@ private class SingleSampleReducer(
                         val ref = "$value"
                         if (excludeVariables.contains(ref)) this
                         else {
-                            val result = cells[ref] ?: constant(0.0)
-                            when {
-                                result is ConstantScalar && result.type.java == type.java -> result
-                                result is ConstantScalar -> constant(type.coerceFrom(result.value), type)
-                                result is NamedScalarVariable -> result
-                                else -> this
+                            when (value.range) {
+                                is CellRange -> {
+                                    val result = cells[ref] ?: constant(0.0)
+                                    when {
+                                        result is ConstantScalar && result.type.java == type.java -> result
+                                        result is ConstantScalar -> constant(type.coerceFrom(result.value), type)
+                                        result is NamedScalarVariable -> result
+                                        else -> this
+                                    }
+                                }
+                                is ColumnRange -> {
+                                    val contained = cells
+                                        .filter { (name, _) -> value.range.contains(name) }
+                                        .map { (_, expr) ->
+                                            when (expr) {
+                                                is ScalarExpr -> expr
+                                                else -> copy(value = expr)
+                                            }
+                                        }
+                                    if (contained.size == 1) copy(value = contained.single())
+                                    else ScalarListExpr(contained, type)
+                                }
+                                else ->
+                                    error("${value.range.javaClass}")
                             }
                         }
                     }
@@ -120,19 +156,8 @@ private class SingleSampleReducer(
                             }
                         value.op.reduceArithmetic(exprs)!!
                     }
-                    is NamedSheetRangeExpr -> {
-                        val ref = "$value"
-                        if (excludeVariables.contains(ref)) this
-                        else {
-                            val result = cells[ref] ?: constant(0.0)
-                            when {
-                                result is ConstantScalar && result.type.java == type.java -> result
-                                result is ConstantScalar -> constant(type.coerceFrom(result.value), type)
-                                result is NamedScalarVariable -> result
-                                else -> this
-                            }
-                        }
-                    }
+                    is NamedSheetRangeExpr -> (copy(value = value.range).reduceArithmeticImpl(cells, depth + 1)
+                        ?: return null) as ScalarExpr
                     is AlgebraicExpr -> {
                         val result = value.reduceArithmeticImpl(
                             cells,
@@ -160,7 +185,7 @@ private class SingleSampleReducer(
             is ScalarVariable -> ConstantScalar(initial, type)
             is NamedScalarVariable -> {
                 if (excludeVariables.contains(name)) this
-                else cells[name] as AlgebraicExpr
+                else (cells[name] as AlgebraicExpr).reduceArithmeticImpl(cells, depth + 1)
             }
             is RandomVariableExpr ->
                 randomVariableValues?.getValue(this) ?: this

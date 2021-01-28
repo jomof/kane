@@ -357,6 +357,19 @@ data class NamedUntypedScalar(
     override fun toUnnamed() = expr
 }
 
+data class ScalarListExpr(
+    val values: List<ScalarExpr>,
+    override val type: AlgebraicType
+) : ScalarExpr {
+    init {
+        values.forEach {
+            assert(it !is ScalarListExpr) {
+                "list of list?"
+            }
+        }
+    }
+}
+
 // Assign
 fun assign(assignment: Pair<ScalarExpr, NamedScalarVariable>) = ScalarAssign(assignment.second, assignment.first)
 fun assign(assignment: Pair<MatrixExpr, NamedMatrixVariable>) = MatrixAssign(assignment.second, assignment.first)
@@ -713,47 +726,85 @@ fun AlgebraicExpr.memoizeAndReduceArithmetic(
                 val result = run {
                     val leftSelf = left.memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr
                     val rightSelf = right.memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr
-                    val leftAffine = left.affineName()
-                    val rightAffine = right.affineName()
-                    if (left != leftSelf || right != right.memoizeAndReduceArithmetic(
-                            false,
-                            memo,
-                            selfMemo
-                        ) as ScalarExpr
-                    ) binaryScalar(op, leftSelf, rightSelf).memoizeAndReduceArithmetic(
-                        false,
-                        memo,
-                        selfMemo
-                    ) as ScalarExpr
-                    else if (leftAffine != null && rightAffine != null && leftAffine.compareTo(rightAffine) == 1 && op.meta.associative) {
-                        val result: ScalarExpr =
-                            op(right, left).memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr
-                        result
-                    } else {
-                        val leftConst = left.tryFindConstant()
-                        val rightConst = right.tryFindConstant()
-                        when {
-                            leftConst != null && rightConst != null -> ConstantScalar(op(leftConst, rightConst), type)
-                            else -> op.reduceArithmetic(left, right)
-                                ?.let { it.memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr } ?: this
+                    when {
+                        leftSelf is ScalarListExpr && rightSelf !is ScalarListExpr -> {
+                            ScalarListExpr(leftSelf.values.map {
+                                copy(left = it).memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr
+                            }, type)
+                        }
+                        leftSelf !is ScalarListExpr && rightSelf is ScalarListExpr -> {
+                            val reduced = rightSelf.values.map {
+                                copy(right = it).memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr
+                            }
+                            ScalarListExpr(reduced, type)
+                        }
+                        leftSelf is ScalarListExpr && rightSelf is ScalarListExpr -> {
+                            val zip = (leftSelf.values zip rightSelf.values).map { (l, r) ->
+                                copy(left = l, right = r).memoizeAndReduceArithmetic(
+                                    false,
+                                    memo,
+                                    selfMemo
+                                ) as ScalarExpr
+                            }
+                            ScalarListExpr(zip, type)
+                        }
+                        else -> {
+
+                            val leftAffine = left.affineName()
+                            val rightAffine = right.affineName()
+                            if (left != leftSelf || right != right.memoizeAndReduceArithmetic(
+                                    false,
+                                    memo,
+                                    selfMemo
+                                ) as ScalarExpr
+                            ) binaryScalar(op, leftSelf, rightSelf).memoizeAndReduceArithmetic(
+                                false,
+                                memo,
+                                selfMemo
+                            ) as ScalarExpr
+                            else if (leftAffine != null && rightAffine != null && leftAffine.compareTo(rightAffine) == 1 && op.meta.associative) {
+                                val result: ScalarExpr =
+                                    op(right, left).memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr
+                                result
+                            } else {
+                                val leftConst = left.tryFindConstant()
+                                val rightConst = right.tryFindConstant()
+                                when {
+                                    leftConst != null && rightConst != null -> ConstantScalar(
+                                        op(leftConst, rightConst),
+                                        type
+                                    )
+                                    else -> op.reduceArithmetic(left, right)
+                                        ?.let { it.memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr }
+                                        ?: this
+                                }
+                            }
                         }
                     }
                 }
                 result.withType(type)
             }
             is AlgebraicUnaryScalar -> {
-                val valueSelf = value.memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr
-                if (value != valueSelf) copy(value = valueSelf).memoizeAndReduceArithmetic(
-                    false,
-                    memo,
-                    selfMemo
-                ) as ScalarExpr
-                else {
-                    val valueConst = value.tryFindConstant()
-                    when {
-                        valueConst != null -> ConstantScalar(op(valueConst), type)
-                        else -> op.reduceArithmetic(value)
-                            ?.let { it.memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr } ?: this
+                when (value) {
+                    is ScalarListExpr -> ScalarListExpr(value.values.map {
+                        it.memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr
+                    }, type)
+                    else -> {
+
+                        val valueSelf = value.memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr
+                        if (value != valueSelf) copy(value = valueSelf).memoizeAndReduceArithmetic(
+                            false,
+                            memo,
+                            selfMemo
+                        ) as ScalarExpr
+                        else {
+                            val valueConst = value.tryFindConstant()
+                            when {
+                                valueConst != null -> ConstantScalar(op(valueConst), type)
+                                else -> op.reduceArithmetic(value)
+                                    ?.let { it.memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr } ?: this
+                            }
+                        }
                     }
                 }
             }
@@ -775,6 +826,7 @@ fun AlgebraicExpr.memoizeAndReduceArithmetic(
                 ?.let { it.memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr } ?: value
             is AlgebraicDeferredDataMatrix -> data.memoizeAndReduceArithmetic(false, memo, selfMemo) as MatrixExpr
             is DiscreteUniformRandomVariable -> this
+            is ScalarListExpr -> copy(values = values.map { it })
             else ->
                 error("$javaClass")
         }
@@ -921,6 +973,17 @@ fun Expr.render(entryPoint : Boolean = true) : String {
             else -> "${op.meta.op}(${value.self()})"
         }
         is AlgebraicBinaryScalarStatistic -> {
+            when (op) {
+                pow -> {
+                    val rightSuper = tryConvertToSuperscript(right.self())
+                    if (rightSuper == null) binary(POW, left, right)
+                    else "${left.self()}$rightSuper"
+
+                }
+                else -> binary(op.meta, left, right)
+            }
+        }
+        is AlgebraicBinaryMatrix -> {
             when (op) {
                 pow -> {
                     val rightSuper = tryConvertToSuperscript(right.self())

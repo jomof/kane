@@ -18,7 +18,8 @@ fun convertAnyToScalarExpr(any: Any): ScalarExpr =
     when (val expr = convertAnyToExpr(any)) {
         is ScalarExpr -> expr
         is UntypedScalar -> CoerceScalar(expr, DoubleAlgebraicType.kaneType)
-        else -> error("${expr.javaClass}")
+        else ->
+            error("${expr.javaClass}")
     }
 
 fun convertAnyToNamedExpr(name: String, any: Any): NamedExpr {

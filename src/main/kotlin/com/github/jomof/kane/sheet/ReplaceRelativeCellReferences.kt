@@ -47,10 +47,11 @@ fun Expr.replaceRelativeCellReferences(coordinate: Coordinate): Expr {
         )
         is ConstantScalar -> this
         is DiscreteUniformRandomVariable -> this
+        is NamedScalarVariable -> this
         is CoerceScalar -> copy(value = value.replaceRelativeCellReferences(coordinate))
         is SheetRangeExpr -> copy(range = range.rebase(coordinate))
         is SheetBuilder.SheetBuilderRange -> SheetRangeExpr(range = range.rebase(coordinate))
-        is NamedSheetRangeExpr -> copy(range = range.rebase(coordinate))
+        is NamedSheetRangeExpr -> copy(range = range.replaceRelativeCellReferences(coordinate) as SheetRangeExpr)
         is AlgebraicUnaryRangeStatistic -> copy(range = range.rebase(coordinate))
         is DataMatrix -> map { it.self(coordinate) }
         is ValueExpr<*> -> this
