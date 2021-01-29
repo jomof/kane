@@ -27,12 +27,14 @@ private fun Expr.ranges(): Set<SheetRange> {
         is NamedSheetRangeExpr -> range.ranges()
         is SheetRangeExpr -> when (range) {
             is ColumnRange -> setOf(range)
+            is RectangleRange -> setOf(range)
             is CellRange -> setOf()
             else -> error("${range.javaClass}")
         }
         is AlgebraicBinaryScalarStatistic,
         is AlgebraicUnaryScalarStatistic,
         is AlgebraicUnaryRangeStatistic,
+        is AlgebraicBinaryRangeStatistic,
         is ValueExpr<*>,
         is ConstantScalar,
         is DiscreteUniformRandomVariable -> setOf()

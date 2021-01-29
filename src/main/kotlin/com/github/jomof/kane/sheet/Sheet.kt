@@ -1,10 +1,7 @@
 package com.github.jomof.kane.sheet
 
 import com.github.jomof.kane.*
-import com.github.jomof.kane.functions.d
-import com.github.jomof.kane.functions.div
-import com.github.jomof.kane.functions.minus
-import com.github.jomof.kane.functions.multiply
+import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.types.AlgebraicType
 import com.github.jomof.kane.types.DoubleAlgebraicType
 import com.github.jomof.kane.types.KaneType
@@ -270,6 +267,8 @@ class SheetBuilder(
                         is ValueExpr<*> -> {
                         }
                         is SheetRangeExpr -> {
+                        }
+                        is AlgebraicBinaryRangeStatistic -> {
                         }
                         is MatrixExpr -> {
                             var replacedOurName = false

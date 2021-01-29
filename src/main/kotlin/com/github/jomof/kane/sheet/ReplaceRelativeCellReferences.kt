@@ -52,6 +52,10 @@ fun Expr.replaceRelativeCellReferences(coordinate: Coordinate): Expr {
         is SheetRangeExpr -> copy(range = range.rebase(coordinate))
         is SheetBuilder.SheetBuilderRange -> SheetRangeExpr(range = range.rebase(coordinate))
         is NamedSheetRangeExpr -> copy(range = range.replaceRelativeCellReferences(coordinate) as SheetRangeExpr)
+        is AlgebraicBinaryRangeStatistic -> copy(
+            left = left.copy(range = left.range.rebase(coordinate)),
+            right = right.self(coordinate)
+        )
         is AlgebraicUnaryRangeStatistic -> copy(range = range.rebase(coordinate))
         is DataMatrix -> map { it.self(coordinate) }
         is ValueExpr<*> -> this

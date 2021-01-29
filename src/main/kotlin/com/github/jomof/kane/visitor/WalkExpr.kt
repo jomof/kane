@@ -47,6 +47,7 @@ fun Expr.visit(f: (expr : Expr) -> Unit) {
             right.visit(f)
         }
         is AlgebraicUnaryScalarStatistic -> value.visit(f)
+        is AlgebraicBinaryRangeStatistic -> right.visit(f)
         is AlgebraicUnaryScalar -> value.visit(f)
         is AlgebraicUnaryMatrix -> value.visit(f)
         is AlgebraicUnaryMatrixScalar -> value.visit(f)

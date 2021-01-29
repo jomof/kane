@@ -1005,6 +1005,17 @@ fun Expr.render(entryPoint : Boolean = true) : String {
                 else -> binary(op.meta, left, right)
             }
         }
+        is AlgebraicBinaryRangeStatistic -> {
+            when (op) {
+                pow -> {
+                    val rightSuper = tryConvertToSuperscript(right.self())
+                    if (rightSuper == null) binary(POW, left, right)
+                    else "${left}$rightSuper"
+
+                }
+                else -> binary(op.meta, left, right)
+            }
+        }
         is AlgebraicBinaryMatrixScalar -> binary(op.meta, left, right)
         is AlgebraicBinaryScalarMatrix -> binary(op.meta, left, right)
         is NamedScalar ->

@@ -256,7 +256,20 @@ interface AlgebraicBinaryScalarStatisticFunction {
     operator fun invoke(left: ScalarExpr, right: Double): ScalarExpr =
         AlgebraicBinaryScalarStatistic(this, left, constant(right))
 
+    operator fun invoke(value: SheetRangeExpr, right: ScalarExpr): UntypedUnnamedExpr =
+        AlgebraicBinaryRangeStatistic(this, value, right)
+
+    operator fun invoke(value: NamedSheetRangeExpr, right: ScalarExpr): UntypedUnnamedExpr =
+        AlgebraicBinaryRangeStatistic(this, value.range, right)
+
+    operator fun invoke(value: SheetRangeExpr, right: Double): UntypedUnnamedExpr =
+        AlgebraicBinaryRangeStatistic(this, value, constant(right))
+
+    operator fun invoke(value: NamedSheetRangeExpr, right: Double): UntypedUnnamedExpr =
+        AlgebraicBinaryRangeStatistic(this, value.range, constant(right))
+
     fun reduceArithmetic(left: ScalarStatistic, right: ScalarExpr): ScalarExpr
+    fun reduceArithmetic(left: List<ScalarExpr>, right: ScalarExpr): ScalarExpr?
 }
 
 data class AlgebraicBinaryScalarStatistic(
@@ -273,9 +286,22 @@ data class AlgebraicBinaryScalarStatistic(
     override fun toString() = render()
 }
 
+data class AlgebraicBinaryRangeStatistic(
+    val op: AlgebraicBinaryScalarStatisticFunction,
+    val left: SheetRangeExpr,
+    val right: ScalarExpr
+) : UntypedUnnamedExpr {
+    init {
+        track()
+    }
+
+    override fun toNamed(name: String) = NamedUntypedScalar(name, this)
+    override fun toString() = render()
+}
+
 // f(matrix)->scalar
 interface AlgebraicUnaryMatrixScalarFunction {
-    val meta : UnaryOp
+    val meta: UnaryOp
     operator fun invoke(value: MatrixExpr): ScalarExpr = AlgebraicUnaryMatrixScalar(this, value)
     fun reduceArithmetic(value: MatrixExpr): ScalarExpr?
 }

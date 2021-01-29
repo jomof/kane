@@ -116,7 +116,7 @@ data class CellRange(
     }
 }
 
-private fun CellRange.rebase(base: Coordinate): SheetRange {
+private fun CellRange.rebase(base: Coordinate): CellRange {
     return when {
         column is MoveableIndex && row is MoveableIndex -> this
         column is RelativeIndex && row is RelativeIndex ->
@@ -152,10 +152,15 @@ private fun ColumnRange.rebase(base: Coordinate): SheetRange {
     }
 }
 
+private fun RectangleRange.rebase(base: Coordinate): SheetRange {
+    return RectangleRange(first = first.rebase(base), second = second.rebase(base))
+}
+
 fun SheetRange.rebase(base: Coordinate): SheetRange {
     return when {
         this is CellRange -> rebase(base)
         this is ColumnRange -> rebase(base)
+        this is RectangleRange -> rebase(base)
         else ->
             error("$javaClass")
     }
@@ -243,7 +248,7 @@ fun cellNameToComputableCoordinate(name: String): CellRange {
     )
 }
 
-data class RectangleSheetRange(
+data class RectangleRange(
     val first: CellRange,
     val second: CellRange
 ) : SheetRange {
@@ -253,6 +258,7 @@ data class RectangleSheetRange(
     override fun right(move: Int) = copy(first = first.down(move), second = second.down(move))
     override fun toString() = "$first:$second"
     override fun contains(name: String): Boolean {
+        if (!looksLikeCellName(name)) return false
         val cell = cellNameToCoordinate(name)
         return cell.column >= first.column.index &&
                 cell.column <= second.column.index &&
@@ -301,7 +307,7 @@ fun parseRange(range: String): SheetRange {
             cellNameToComputableCoordinate(right + "1").column,
         )
     }
-    return RectangleSheetRange(
+    return RectangleRange(
         cellNameToComputableCoordinate(left),
         cellNameToComputableCoordinate(right)
     )

@@ -53,6 +53,7 @@ private class ReplaceNamesWithCellReferences(val excluding: String) {
             is NamedSheetRangeExpr -> toUnnamed()
             is CoerceScalar -> copy(value = value.replace())
             is AlgebraicUnaryRangeStatistic -> this
+            is AlgebraicBinaryRangeStatistic -> copy(right = right.replace())
             is ConstantScalar -> this
             is DiscreteUniformRandomVariable -> this
             is NamedScalarVariable -> this

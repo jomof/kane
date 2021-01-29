@@ -148,13 +148,7 @@ private class SingleSampleReducer(
                         }
                     }
                     is AlgebraicUnaryRangeStatistic -> {
-                        val exprs = cells
-                            .filter { value.range.contains(it.key) }
-                            .map {
-                                val reduced = it.value.reduceArithmeticImpl(cells, depth + 1) ?: return null
-                                reduced as ScalarExpr
-                            }
-                        value.op.reduceArithmetic(exprs)!!
+                        value.reduceArithmeticImpl(cells, depth + 1) as ScalarExpr? ?: return null
                     }
                     is NamedSheetRangeExpr -> (copy(value = value.range).reduceArithmeticImpl(cells, depth + 1)
                         ?: return null) as ScalarExpr
@@ -189,6 +183,27 @@ private class SingleSampleReducer(
             }
             is RandomVariableExpr ->
                 randomVariableValues?.getValue(this) ?: this
+            is ValueExpr<*> -> null
+            is SheetRangeExpr -> null
+            is AlgebraicBinaryRangeStatistic -> {
+                val right = right.reduceArithmeticImpl(cells, depth + 1) as ScalarExpr
+                val left = cells
+                    .filter { left.range.contains(it.key) }
+                    .map {
+                        val reduced = it.value.reduceArithmeticImpl(cells, depth + 1)
+                        reduced as ScalarExpr
+                    }
+                op.reduceArithmetic(left, right)!!
+            }
+            is AlgebraicUnaryRangeStatistic -> {
+                val exprs = cells
+                    .filter { range.contains(it.key) }
+                    .map {
+                        val reduced = it.value.reduceArithmeticImpl(cells, depth + 1) ?: return null
+                        reduced as ScalarExpr
+                    }
+                op.reduceArithmetic(exprs)!!
+            }
             else ->
                 error("$javaClass")
         }
@@ -198,13 +213,15 @@ private class SingleSampleReducer(
         expr : Expr,
         cells: Map<String, Expr>): Expr {
         return when (expr) {
-            is AlgebraicExpr -> expr.reduceArithmeticImpl(
-                cells,
-                1
-            )?.memoizeAndReduceArithmetic(memo = memo, selfMemo = selfMemo) ?: expr
-            is ValueExpr<*> -> expr
-            is SheetRangeExpr -> expr
-            else -> error("$javaClass")
+//            is AlgebraicExpr -> expr.reduceArithmeticImpl(
+//                cells,
+//                1
+//            )?.memoizeAndReduceArithmetic(memo = memo, selfMemo = selfMemo) ?: expr
+//            is ValueExpr<*> -> expr
+//            is SheetRangeExpr -> expr
+            else -> expr.reduceArithmeticImpl(cells, 1)
+                ?.memoizeAndReduceArithmetic(memo = memo, selfMemo = selfMemo)
+                ?: expr
         }
     }
 }

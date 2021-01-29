@@ -37,6 +37,7 @@ private fun Expr.convertCellNamesToUpperCase() : Expr {
         is ValueExpr<*> -> this
         is SheetRangeExpr -> this
         is AlgebraicUnaryRangeStatistic -> this
+        is AlgebraicBinaryRangeStatistic -> this
         else -> error("$javaClass")
     }
 }

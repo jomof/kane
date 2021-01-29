@@ -488,6 +488,45 @@ class SheetTest {
     }
 
     @Test
+    fun `statistic of block range`() {
+        val check = sheetOfCsv {
+            """
+                A,B
+                1,2
+                3,4
+            """.trimIndent()
+        }.copy {
+            val r by range("A1:B2")
+            val mean by mean(r)
+            val stddev by stddev(r)
+            val percentile by percentile(r, 0.25)
+            add(mean, stddev, percentile)
+        }
+        check.assertString(
+            """
+                  A B 
+                  - - 
+                1 1 2 
+                2 3 4 
+                mean=mean(A1:B2)
+                percentile=percentile(A1:B2,0.25)
+                stddev=stddev(A1:B2)
+            """.trimIndent()
+        )
+        check.eval().assertString(
+            """
+                  A B 
+                  - - 
+                1 1 2 
+                2 3 4 
+                mean=2.5
+                percentile=2
+                stddev=2.23607
+            """.trimIndent()
+        )
+    }
+
+    @Test
     fun `division table using fixed column and rows`() {
         val sheet = sheetOf {
             val b1 by rowOf(10) { it }
