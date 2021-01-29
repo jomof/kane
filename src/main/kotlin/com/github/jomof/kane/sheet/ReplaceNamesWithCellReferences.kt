@@ -59,6 +59,7 @@ private class ReplaceNamesWithCellReferences(val excluding: String) {
             is NamedScalarVariable -> this
             is SheetRangeExpr -> this
             is ValueExpr<*> -> this
+            is Tiling<*> -> this
             is DataMatrix -> map { it.replace() }
             else ->
                 error("$javaClass")

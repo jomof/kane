@@ -622,11 +622,28 @@ class SheetTest {
     @Test
     fun `sheet with named columns`() {
         val sheet = sheetOf {
-            column(0, "Column 0")
-            column(1, "Column 1")
+            nameColumn(0, "Column 0")
+            nameColumn(1, "Column 1")
             listOf()
         }
         println(sheet)
+    }
+
+    @Test
+    fun `sheet with named tiling scalarizes`() {
+        val sheet = sheetOf {
+            val tiling by columnOf("a", "b", "c")
+            listOf(tiling)
+        }
+        sheet.assertString(
+            """
+              tiling 
+              ------ 
+            1      a 
+            2      b 
+            3      c 
+        """.trimIndent()
+        )
     }
 
     @Test

@@ -171,9 +171,9 @@ internal fun Sheet.fullColumnDescriptor(column: Int): ColumnDescriptor {
  */
 val Sheet.types : Sheet get() {
     return sheetOf {
-        column(0, "name")
-        column(1, "type")
-        column(2, "format")
+        nameColumn(0, "name")
+        nameColumn(1, "type")
+        nameColumn(2, "format")
         val descriptors = (0 until columns).map { fullColumnDescriptor(it) }
         val a1 by columnOf(descriptors.map { it.name })
         val b1 by columnOf(descriptors.map { it.type!!.type.simpleName })

@@ -143,14 +143,14 @@ interface Sheet : Expr {
     /**
      * Create a new sheet with cell values changed.
      */
-    fun copy(init: SheetBuilder.() -> List<NamedExpr>): Sheet {
+    fun copy(init: SheetBuilderImpl.() -> List<NamedExpr>): Sheet {
         val sheet = toBuilder()
         init(sheet).forEach { sheet.add(it) }
         return sheet.build()
     }
 
 
-    fun toBuilder(): SheetBuilder {
+    fun toBuilder(): SheetBuilderImpl {
         val named = cells.map { (name, expr) ->
             when (expr) {
                 is UnnamedExpr -> expr.toNamed(name)
@@ -158,7 +158,7 @@ interface Sheet : Expr {
                 else -> error("${expr.javaClass}")
             }
         }
-        return SheetBuilder(
+        return SheetBuilderImpl(
             columnDescriptors = columnDescriptors,
             rowDescriptors = rowDescriptors,
             sheetDescriptor = sheetDescriptor,
@@ -167,38 +167,15 @@ interface Sheet : Expr {
     }
 }
 
-class SheetBuilder(
+class SheetBuilderImpl(
     columnDescriptors: Map<Int, ColumnDescriptor> = mapOf(),
     rowDescriptors: Map<Int, RowDescriptor> = mapOf(),
     val sheetDescriptor: SheetDescriptor = SheetDescriptor(),
     added: List<NamedExpr> = listOf()
-) {
+) : SheetBuilder {
     internal val columnDescriptors: MutableMap<Int, ColumnDescriptor> = columnDescriptors.toMutableMap()
     private val rowDescriptors: Map<Int, RowDescriptor> = rowDescriptors.toMutableMap()
     private val added: MutableList<NamedExpr> = added.toMutableList()
-
-    fun cell(name: String) = SheetRangeExpr(cellNameToComputableCoordinate(name))
-    fun up(offset: Int) = SheetRangeExpr(CellRange.relative(column = 0, row = -offset))
-    fun down(offset: Int) = SheetRangeExpr(CellRange.relative(column = 0, row = offset))
-    fun left(offset: Int) = SheetRangeExpr(CellRange.relative(column = -offset, row = 0))
-    fun right(offset: Int) = SheetRangeExpr(CellRange.relative(column = offset, row = 0))
-    val up get() = up(1)
-    val down get() = down(1)
-    val left get() = left(1)
-    val right get() = right(1)
-
-    private fun parseAndNameValue(name: String, value: String): NamedExpr {
-        val admissibleType = analyzeDataType(value)
-        return when (val parsed = analyzeDataType(value).parseToExpr(value)) {
-            is ScalarExpr -> NamedScalar(name, parsed)
-            is ValueExpr<*> -> NamedValueExpr(name, value, admissibleType.type as KaneType<Any>)
-            else -> error("${parsed.javaClass}")
-        }
-    }
-
-    operator fun String.getValue(nothing: Nothing?, property: KProperty<*>) = parseAndNameValue(property.name, this)
-    operator fun Number.getValue(nothing: Nothing?, property: KProperty<*>) =
-        NamedScalar(property.name, constant(this.toDouble()))
 
     private fun getImmediateNamedExprs(): Map<String, UnnamedExpr> {
         val cells = mutableMapOf<String, UnnamedExpr>()
@@ -259,15 +236,33 @@ class SheetBuilder(
         while (!done) {
             done = true
             result.toList().forEach { (name, expr) ->
-                if (looksLikeCellName(name)) {
+                if (!looksLikeCellName(name)) {
+                    when (expr) {
+                        is MatrixExpr,
+                        is Tiling<*> -> {
+                            done = false
+                            val cellsCoordinates =
+                                result.map { it.key }.filter { looksLikeCellName(it) }.map { cellNameToCoordinate(it) }
+                            val columns = cellsCoordinates.map { it.column }.toSet()
+                            val existingColumns = (columnDescriptors.keys + columns).sorted()
+                            done = false
+                            for (next in 0 until Int.MAX_VALUE) {
+                                if (!existingColumns.contains(next)) {
+                                    columnDescriptors[next] = ColumnDescriptor(name, null)
+                                    val allocatedColumnBase = coordinateToCellName(next, 0)
+                                    result[allocatedColumnBase] = expr
+                                    result.remove(name)
+                                    break
+                                }
+                            }
+                        }
+                    }
+                } else {
                     val upperLeft = cellNameToCoordinate(name)
                     when (expr) {
-                        is ScalarExpr -> {
-                        }
-                        is ValueExpr<*> -> {
-                        }
-                        is SheetRangeExpr -> {
-                        }
+                        is ScalarExpr,
+                        is ValueExpr<*>,
+                        is SheetRangeExpr,
                         is AlgebraicBinaryRangeStatistic -> {
                         }
                         is MatrixExpr -> {
@@ -352,24 +347,8 @@ class SheetBuilder(
         columnDescriptors[index] = ColumnDescriptor(name, type)
     }
 
-    class SheetBuilderRange(
-        private val builder: SheetBuilder,
-        val range: SheetRange
-    ) : UntypedUnnamedExpr {
-        override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
-        override fun toNamed(name: String): NamedSheetRangeExpr {
-            if (range is ColumnRange && range.first == range.second) {
-                builder.columnDescriptors[range.first.index] = ColumnDescriptor(name, null)
-            }
-            return NamedSheetRangeExpr(name, SheetRangeExpr(range))
-        }
-
-        override fun toString() = "BUILDER[$range]"
-    }
-
-    fun range(range: String): SheetBuilderRange {
-        val parsed = parseRange(range)
-        return SheetBuilderRange(this, parsed)
+    override fun nameColumn(column: Int, name: String) {
+        columnDescriptors[column] = ColumnDescriptor(name, null)
     }
 }
 
@@ -547,8 +526,8 @@ fun Sheet.render() : String {
 
 // Construction
 fun sheetOf(init: SheetBuilder.() -> List<NamedExpr>): Sheet {
-    val builder = SheetBuilder()
-    init(builder).forEach { builder.add(it) }
+    val builder = SheetBuilderImpl()
+    init(builder as SheetBuilder).forEach { builder.add(it) }
     return builder.build()
 }
 

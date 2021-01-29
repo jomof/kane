@@ -1,6 +1,7 @@
 package com.github.jomof.kane
 
 import com.github.jomof.kane.sheet.SheetBuilder
+import com.github.jomof.kane.sheet.SheetBuilderImpl
 
 
 fun matrixOf(columns: Int, rows: Int, elements: List<Double>) = DataMatrix(
@@ -22,7 +23,7 @@ fun matrixOf(columns: Int, rows: Int, vararg elements: ScalarExpr) = DataMatrix(
 )
 
 fun matrixOf(columns: Int, rows: Int, init: SheetBuilder.(Coordinate) -> Any): DataMatrix {
-    val sb = SheetBuilder()
+    val sb = SheetBuilderImpl()
     val elements = coordinatesOf(columns, rows).map {
         convertAnyToScalarExpr(init(sb, it))
     }

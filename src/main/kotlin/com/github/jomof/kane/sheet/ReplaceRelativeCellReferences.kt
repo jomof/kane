@@ -50,7 +50,7 @@ fun Expr.replaceRelativeCellReferences(coordinate: Coordinate): Expr {
         is NamedScalarVariable -> this
         is CoerceScalar -> copy(value = value.replaceRelativeCellReferences(coordinate))
         is SheetRangeExpr -> copy(range = range.rebase(coordinate))
-        is SheetBuilder.SheetBuilderRange -> SheetRangeExpr(range = range.rebase(coordinate))
+        is SheetBuilderRange -> SheetRangeExpr(range = range.rebase(coordinate))
         is NamedSheetRangeExpr -> copy(range = range.replaceRelativeCellReferences(coordinate) as SheetRangeExpr)
         is AlgebraicBinaryRangeStatistic -> copy(
             left = left.copy(range = left.range.rebase(coordinate)),
@@ -59,6 +59,7 @@ fun Expr.replaceRelativeCellReferences(coordinate: Coordinate): Expr {
         is AlgebraicUnaryRangeStatistic -> copy(range = range.rebase(coordinate))
         is DataMatrix -> map { it.self(coordinate) }
         is ValueExpr<*> -> this
+        is Tiling<*> -> this
         else -> error("$javaClass")
     }
 }

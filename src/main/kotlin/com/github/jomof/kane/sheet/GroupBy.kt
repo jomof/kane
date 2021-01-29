@@ -9,6 +9,6 @@ class GroupBy(
 
 class GroupByBuilder
 
-fun Sheet.groupOf(selector: SheetBuilder.() -> List<Expr>): GroupBy {
+fun Sheet.groupOf(selector: SheetBuilderImpl.() -> List<Expr>): GroupBy {
     return GroupBy(this, selector(toBuilder()))
 }

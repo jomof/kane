@@ -11,8 +11,8 @@ class Kane {
          * List of data formats supported by Kane.
          */
         val dataFormats: Sheet = sheetOf {
-            column(0, "Supported Data Formats")
-            column(1, "Type")
+            nameColumn(0, "format")
+            nameColumn(1, "type")
             val a1 by columnOf(possibleDataFormats.map { it.toString() })
             val b1 by columnOf(possibleDataFormats.map { it.type.simpleName })
             listOf(a1, b1)

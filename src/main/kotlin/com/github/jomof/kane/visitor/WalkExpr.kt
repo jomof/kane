@@ -64,7 +64,7 @@ fun Expr.visit(f: (expr : Expr) -> Unit) {
         is Tiling<*> -> {
         }
         is Sheet -> cells.forEach { (_, expr) -> expr.visit(f) }
-        is SheetBuilder.SheetBuilderRange -> {
+        is SheetBuilderRange -> {
         }
         else ->
             error("$javaClass")

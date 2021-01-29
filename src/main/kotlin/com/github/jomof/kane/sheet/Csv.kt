@@ -108,7 +108,7 @@ private fun readCsvWithHeader(
     params: CsvParameters,
     context: CsvReaderContext
 ): Sheet {
-    val sb = SheetBuilder()
+    val sb = SheetBuilderImpl()
     val random = Random(7)
     val rows: MutableList<Map<String, String>> = mutableListOf()
     var totalRows = 0
@@ -154,7 +154,7 @@ private fun readCsvWithoutHeader(
     params: CsvParameters,
     context: CsvReaderContext
 ): Sheet {
-    val sb = SheetBuilder()
+    val sb = SheetBuilderImpl()
     val rows: MutableList<List<String>> = mutableListOf()
     val random = Random(7)
     if (params.keep.isNotEmpty()) {

@@ -35,6 +35,7 @@ private fun Expr.ranges(): Set<SheetRange> {
         is AlgebraicUnaryScalarStatistic,
         is AlgebraicUnaryRangeStatistic,
         is AlgebraicBinaryRangeStatistic,
+        is Tiling<*>,
         is ValueExpr<*>,
         is ConstantScalar,
         is DiscreteUniformRandomVariable -> setOf()
@@ -53,18 +54,20 @@ private fun Expr.replaceColumnWithCell(row: Int): Expr {
     }.rewrite(this)
 }
 
-fun SheetBuilder.scalarizeRanges(cells: Map<String, Expr>): Map<String, Expr> {
+fun SheetBuilderImpl.scalarizeRanges(cells: Map<String, Expr>): Map<String, Expr> {
     val result = cells.toMutableMap()
     var done = false
     while (!done) {
         done = true
-        val cellRanges =
-            result.map { (name, expr) -> name to expr.ranges() }.filter { it.second.isNotEmpty() }.reversed()
-        val columnRanges = cellRanges.filter { (_, expr) -> expr.all { it is ColumnRange } }
+        val cellsWithRanges = result
+            .map { (name, expr) -> name to expr.ranges() }
+            .filter { it.second.isNotEmpty() }
+            .map { it.first }
+            .reversed()
         val cellsCoordinates = result.map { it.key }.filter { looksLikeCellName(it) }.map { cellNameToCoordinate(it) }
         val columns = cellsCoordinates.map { it.column }.toSet()
         val rows = cellsCoordinates.map { it.row }.toSet().sorted()
-        for ((name, columnRanges) in cellRanges) {
+        for (name in cellsWithRanges) {
             val expr = result.getValue(name)
             if (!looksLikeCellName(name)) {
                 if (columnDescriptors.any { it.value.name == name }) continue

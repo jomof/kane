@@ -7,7 +7,7 @@ import com.github.jomof.kane.visitor.RewritingVisitor
 private fun UnnamedExpr.removeBuilderPrivateExpressions(): UnnamedExpr {
     return object : RewritingVisitor() {
         override fun rewrite(expr: Expr): Expr {
-            if (expr is SheetBuilder.SheetBuilderRange) return SheetRangeExpr(expr.range)
+            if (expr is SheetBuilderRange) return SheetRangeExpr(expr.range)
             return super.rewrite(expr)
         }
     }.rewrite(this) as UnnamedExpr

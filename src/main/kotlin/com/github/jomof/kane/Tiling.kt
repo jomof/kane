@@ -1,6 +1,6 @@
 package com.github.jomof.kane
 
-import com.github.jomof.kane.sheet.SheetBuilder
+import com.github.jomof.kane.sheet.SheetBuilderImpl
 import com.github.jomof.kane.types.DoubleAlgebraicType
 import com.github.jomof.kane.types.KaneType
 import com.github.jomof.kane.types.kaneType
@@ -47,8 +47,8 @@ data class NamedTiling<E:Any>(
 fun columnOf(vararg elements : Double) : MatrixExpr = matrixOf(1, elements.size, *elements)
 fun columnOf(vararg elements : ScalarExpr) : MatrixExpr = matrixOf(1, elements.size, *elements)
 fun columnOf(elements: List<ScalarExpr>): MatrixExpr = matrixOf(1, elements.size, *(elements.toTypedArray()))
-fun columnOf(count: Int, init: SheetBuilder.(Int) -> Any): MatrixExpr {
-    val sb = SheetBuilder()
+fun columnOf(count: Int, init: SheetBuilderImpl.(Int) -> Any): MatrixExpr {
+    val sb = SheetBuilderImpl()
     val elements = (0 until count)
         .map {
             convertAnyToScalarExpr(init(sb, it))
@@ -79,8 +79,8 @@ fun columnOf(elements: List<String>): Tiling<String> {
 fun rowOf(vararg elements : Double) : MatrixExpr = matrixOf(elements.size, 1, *elements)
 fun rowOf(vararg elements : ScalarExpr) : MatrixExpr = matrixOf(elements.size, 1, *elements)
 fun rowOf(elements: List<ScalarExpr>): MatrixExpr = matrixOf(elements.size, 1, *(elements.toTypedArray()))
-fun rowOf(count: Int, init: SheetBuilder.(Int) -> Any): MatrixExpr {
-    val sb = SheetBuilder()
+fun rowOf(count: Int, init: SheetBuilderImpl.(Int) -> Any): MatrixExpr {
+    val sb = SheetBuilderImpl()
     val elements = (0 until count)
         .map {
             convertAnyToScalarExpr(init(sb, it))
@@ -103,11 +103,5 @@ inline fun <reified E : Any> rowOf(vararg elements: E): Tiling<E> {
     val valueType = E::class.java.kaneType
     return Tiling(elements.size, 1, elements.toList(), valueType)
 }
-
-fun cellOf(init: SheetBuilder.() -> Any): ScalarExpr {
-    val sb = SheetBuilder()
-    return convertAnyToScalarExpr(init(sb))
-}
-
 
 
