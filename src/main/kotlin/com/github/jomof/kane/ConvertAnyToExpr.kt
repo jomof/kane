@@ -8,6 +8,7 @@ import com.github.jomof.kane.types.DoubleAlgebraicType
 fun convertAnyToExpr(any: Any): Expr {
     return when (any) {
         is Double -> ConstantScalar(any, DoubleAlgebraicType.kaneType)
+        is Number -> ConstantScalar(any.toDouble(), DoubleAlgebraicType.kaneType)
         is String -> analyzeDataType(any).parseToExpr(any)
         is Expr -> any
         else -> error("Unsupported type: ${any.javaClass}")

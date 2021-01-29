@@ -1,7 +1,9 @@
 package com.github.jomof.kane.sheet
 
 import com.github.jomof.kane.*
+import com.github.jomof.kane.ComputableIndex.*
 import com.github.jomof.kane.functions.*
+import com.github.jomof.kane.visitor.RewritingVisitor
 
 
 fun extractScalarizedMatrixElement(
@@ -40,4 +42,68 @@ fun extractScalarizedMatrixElement(
         else ->
             error("${matrix.javaClass}")
     }
+}
+
+
+fun Expr.slideScalarizedCellsRewritingVisitor(upperLeft: Coordinate, offset: Coordinate): Expr {
+    val currentCell = upperLeft + offset
+    return object : RewritingVisitor() {
+        override fun SheetRangeExpr.rewrite(): Expr {
+            val result: SheetRangeExpr = when (range) {
+                is CellRange ->
+                    when {
+                        range.column is MoveableIndex && range.row is FixedIndex -> {
+                            copy(
+                                range = range.copy(
+                                    column = MoveableIndex(range.column.index + offset.column),
+                                    row = MoveableIndex(range.row.index)
+                                )
+                            )
+                        }
+                        range.column is FixedIndex && range.row is MoveableIndex -> {
+                            copy(
+                                range = range.copy(
+                                    column = MoveableIndex(range.column.index),
+                                    row = MoveableIndex(range.row.index + offset.row - upperLeft.row + 1)
+                                )
+                            )
+                        }
+                        range.column is RelativeIndex && range.row is RelativeIndex -> {
+                            copy(
+                                range = range.copy(
+                                    column = MoveableIndex(currentCell.column + range.column.index),
+                                    row = MoveableIndex(currentCell.row + range.row.index)
+                                )
+                            )
+                        }
+                        range.column is MoveableIndex && range.row is RelativeIndex -> {
+                            copy(
+                                range = range.copy(
+                                    column = MoveableIndex(range.column.index + offset.column),
+                                    row = MoveableIndex(currentCell.row + range.row.index)
+                                )
+                            )
+                        }
+                        else ->
+                            TODO("$range")
+                    }
+                is ColumnRange ->
+                    when {
+                        range.first is MoveableIndex && range.second is MoveableIndex -> {
+                            copy(
+                                range = CellRange(
+                                    column = MoveableIndex(range.first.index + offset.column),
+                                    row = MoveableIndex(currentCell.row)
+                                )
+                            )
+                        }
+                        else ->
+                            TODO("$left $right")
+                    }
+                else ->
+                    TODO(range.javaClass.toString())
+            }
+            return result
+        }
+    }.rewrite(this)
 }

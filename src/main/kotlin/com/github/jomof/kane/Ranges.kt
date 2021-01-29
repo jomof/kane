@@ -129,6 +129,16 @@ private fun CellRange.rebase(base: Coordinate): SheetRange {
                 column,
                 MoveableIndex(row.index + base.row)
             )
+        column is MoveableIndex && row is FixedIndex ->
+            CellRange(
+                MoveableIndex(base.column),
+                MoveableIndex(row.index)
+            )
+        column is FixedIndex && row is MoveableIndex ->
+            CellRange(
+                MoveableIndex(column.index),
+                MoveableIndex(base.row)
+            )
         else ->
             error("$this and $base")
     }

@@ -440,6 +440,100 @@ class SheetTest {
     }
 
     @Test
+    fun `column of two ranges added`() {
+        val retire = sheetOfCsv {
+            """
+                A,B
+                1,2
+                3,4
+            """.trimIndent()
+        }.copy {
+            val a by range("A")
+            val b by range("B")
+            val c1 by columnOf(2) { a + b }
+            add(c1)
+        }
+        retire.assertString(
+            """
+              a b   C   
+              - - ----- 
+            1 1 2 A1+B1 
+            2 3 4 A2+B2
+        """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `column of two ranges added anonymous`() {
+        val retire = sheetOfCsv {
+            """
+                A,B
+                1,2
+                3,4
+            """.trimIndent()
+        }.copy {
+            val a = range("A")
+            val b = range("B")
+            val c1 by columnOf(2) { a + b }
+            add(c1)
+        }
+        retire.assertString(
+            """
+              A B   C   
+              - - ----- 
+            1 1 2 A1+B1 
+            2 3 4 A2+B2
+        """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `division table using fixed column and rows`() {
+        val sheet = sheetOf {
+            val b1 by rowOf(10) { it }
+            val a2 by columnOf(10) { it }
+            val b2 by matrixOf(10, 10) {
+                cell("C$1") / cell("\$A3")
+            }
+            add(b1, a2, b2)
+        }
+        sheet.assertString(
+            """
+               A    B      C      D      E      F      G      H      I      J      K   
+               - ------ ------ ------ ------ ------ ------ ------ ------ ------ ------ 
+             1        0      1      2      3      4      5      6      7      8      9 
+             2 0  C1/A3  D1/A3  E1/A3  F1/A3  G1/A3  H1/A3  I1/A3  J1/A3  K1/A3  L1/A3 
+             3 1  C1/A4  D1/A4  E1/A4  F1/A4  G1/A4  H1/A4  I1/A4  J1/A4  K1/A4  L1/A4 
+             4 2  C1/A5  D1/A5  E1/A5  F1/A5  G1/A5  H1/A5  I1/A5  J1/A5  K1/A5  L1/A5 
+             5 3  C1/A6  D1/A6  E1/A6  F1/A6  G1/A6  H1/A6  I1/A6  J1/A6  K1/A6  L1/A6 
+             6 4  C1/A7  D1/A7  E1/A7  F1/A7  G1/A7  H1/A7  I1/A7  J1/A7  K1/A7  L1/A7 
+             7 5  C1/A8  D1/A8  E1/A8  F1/A8  G1/A8  H1/A8  I1/A8  J1/A8  K1/A8  L1/A8 
+             8 6  C1/A9  D1/A9  E1/A9  F1/A9  G1/A9  H1/A9  I1/A9  J1/A9  K1/A9  L1/A9 
+             9 7 C1/A10 D1/A10 E1/A10 F1/A10 G1/A10 H1/A10 I1/A10 J1/A10 K1/A10 L1/A10 
+            10 8 C1/A11 D1/A11 E1/A11 F1/A11 G1/A11 H1/A11 I1/A11 J1/A11 K1/A11 L1/A11 
+            11 9 C1/A12 D1/A12 E1/A12 F1/A12 G1/A12 H1/A12 I1/A12 J1/A12 K1/A12 L1/A12  
+        """.trimIndent()
+        )
+        sheet.eval().assertString(
+            """
+               A     B        C        D        E        F        G        H        I        J    K 
+               - -------- -------- -------- -------- -------- -------- -------- -------- -------- - 
+             1          0        1        2        3        4        5        6        7        8 9 
+             2 0        1        2        3        4        5        6        7        8        9 0 
+             3 1      0.5        1      1.5        2      2.5        3      3.5        4      4.5 0 
+             4 2  0.33333  0.66667        1  1.33333  1.66667        2  2.33333  2.66667        3 0 
+             5 3     0.25      0.5     0.75        1     1.25      1.5     1.75        2     2.25 0 
+             6 4      0.2      0.4      0.6      0.8        1      1.2      1.4      1.6      1.8 0 
+             7 5  0.16667  0.33333      0.5  0.66667  0.83333        1  1.16667  1.33333      1.5 0 
+             8 6  0.14286  0.28571  0.42857  0.57143  0.71429  0.85714        1  1.14286  1.28571 0 
+             9 7    0.125     0.25    0.375      0.5    0.625     0.75    0.875        1    1.125 0 
+            10 8  0.11111  0.22222  0.33333  0.44444  0.55556  0.66667  0.77778  0.88889        1 0 
+            11 9 Infinite Infinite Infinite Infinite Infinite Infinite Infinite Infinite Infinite 0
+        """.trimIndent()
+        )
+    }
+
+    @Test
     fun `sum of relative references`() {
         val sheet = sheetOf {
             val a1 by columnOf(1.0, 1.0)
@@ -506,7 +600,7 @@ class SheetTest {
     }
 
     @Test
-    fun `softmax`() {
+    fun softmax() {
         val sheet = sheetOf {
             val a1 by columnOf(1.0, 1.0)
             val b1 by columnOf(left + 1.0, left + 2.0)

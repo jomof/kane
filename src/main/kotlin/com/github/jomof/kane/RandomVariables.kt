@@ -2,6 +2,7 @@ package com.github.jomof.kane
 
 import com.github.jomof.kane.types.AlgebraicType
 import com.github.jomof.kane.types.DoubleAlgebraicType
+import com.github.jomof.kane.visitor.visit
 import kotlin.random.Random
 import kotlin.reflect.KProperty
 

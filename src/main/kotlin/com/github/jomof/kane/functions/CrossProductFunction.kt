@@ -11,15 +11,16 @@ infix fun MatrixExpr.cross(right : MatrixExpr) : MatrixExpr {
     assert(columns == right.rows) {
         "${lm()} columns $columns did not equal ${rm()} rows ${right.rows}"
     }
+    val outer = this
     return AlgebraicDeferredDataMatrix(
         CROSS,
         this,
         right,
         matrixOf(right.columns, rows) { (column, row) ->
-        (1 until columns)
-            .fold(this[0, row] * right[column, 0]) { prior : ScalarExpr, i ->
-                prior + this[i, row] * right[column, i]
-            }
+            (1 until columns)
+                .fold(outer[0, row] * right[column, 0]) { prior: ScalarExpr, i ->
+                    prior + outer[i, row] * right[column, i]
+                }
         }
     )
 }

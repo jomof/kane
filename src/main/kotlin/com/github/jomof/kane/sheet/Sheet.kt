@@ -8,6 +8,7 @@ import com.github.jomof.kane.functions.multiply
 import com.github.jomof.kane.types.AlgebraicType
 import com.github.jomof.kane.types.DoubleAlgebraicType
 import com.github.jomof.kane.types.KaneType
+import com.github.jomof.kane.visitor.visit
 import java.lang.Integer.max
 import kotlin.math.abs
 import kotlin.math.min
@@ -179,7 +180,7 @@ class SheetBuilder(
     private val rowDescriptors: Map<Int, RowDescriptor> = rowDescriptors.toMutableMap()
     private val added: MutableList<NamedExpr> = added.toMutableList()
 
-    fun cell(name: String) = SheetRangeExpr(cellNameToCoordinate(name).toComputableCoordinate())
+    fun cell(name: String) = SheetRangeExpr(cellNameToComputableCoordinate(name))
     fun up(offset: Int) = SheetRangeExpr(CellRange.relative(column = 0, row = -offset))
     fun down(offset: Int) = SheetRangeExpr(CellRange.relative(column = 0, row = offset))
     fun left(offset: Int) = SheetRangeExpr(CellRange.relative(column = -offset, row = 0))
@@ -276,6 +277,7 @@ class SheetBuilder(
                                 val finalCoordinate = upperLeft + offset
                                 val finalCellName = coordinateToCellName(finalCoordinate)
                                 val extracted = extractScalarizedMatrixElement(expr, offset)
+                                    .slideScalarizedCellsRewritingVisitor(upperLeft, offset)
                                 if (finalCellName == name) {
                                     replacedOurName = true
                                 }

@@ -1,5 +1,6 @@
-package com.github.jomof.kane
+package com.github.jomof.kane.visitor
 
+import com.github.jomof.kane.*
 import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.sheet.*
 
@@ -20,11 +21,11 @@ fun Expr.visit(f: (expr : Expr) -> Unit) {
         is ValueExpr<*>,
         is NamedValueExpr<*>,
         is SheetRangeExpr,
-        is NamedSheetRangeExpr,
         is DiscreteUniformRandomVariable,
         is AlgebraicUnaryRangeStatistic,
         is NamedScalarVariable -> {
         }
+        is NamedSheetRangeExpr -> range.visit(f)
         is AlgebraicBinaryScalar -> {
             left.visit(f)
             right.visit(f)

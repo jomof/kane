@@ -3,6 +3,7 @@ package com.github.jomof.kane.sheet
 import com.github.jomof.kane.*
 import com.github.jomof.kane.ComputableIndex.MoveableIndex
 import com.github.jomof.kane.functions.*
+import com.github.jomof.kane.visitor.RewritingVisitor
 
 private fun Expr.ranges(): Set<SheetRange> {
     return when (this) {
@@ -41,60 +42,16 @@ private fun Expr.ranges(): Set<SheetRange> {
 }
 
 private fun Expr.replaceColumnWithCell(row: Int): Expr {
-    fun ScalarExpr.self() = replaceColumnWithCell(row) as ScalarExpr
-    return when (this) {
-        is AlgebraicUnaryScalar -> copy(value = value.self())
-        is NamedScalar -> copy(scalar = scalar.self())
-        is AlgebraicBinaryScalar -> copy(left = left.self(), right = right.self())
-        is CoerceScalar -> copy(value = value.replaceColumnWithCell(row))
-        is NamedSheetRangeExpr -> copy(range = range.replaceColumnWithCell(row) as SheetRangeExpr)
-        is SheetRangeExpr -> when (range) {
+    return object : RewritingVisitor() {
+        override fun SheetRangeExpr.rewrite(): SheetRangeExpr = when (range) {
             is ColumnRange -> copy(range = CellRange(column = range.first, MoveableIndex(row)))
             is CellRange -> this
             else -> error("${range.javaClass}")
         }
-        is ValueExpr<*>,
-        is ConstantScalar,
-        is DiscreteUniformRandomVariable -> this
-        else ->
-            error("$javaClass")
-    }
-}
-
-private fun Expr.replaceRangesWithCells(cells: Map<String, Expr>): Expr {
-    fun ScalarExpr.self() = replaceRangesWithCells(cells) as ScalarExpr
-    fun MatrixExpr.self() = replaceRangesWithCells(cells) as MatrixExpr
-    return when (this) {
-        is AlgebraicUnaryScalar -> copy(value = value.self())
-        is NamedScalar -> copy(scalar = scalar.self())
-        is NamedMatrix -> copy(matrix = matrix.self())
-        is AlgebraicBinaryScalar -> copy(left = left.self(), right = right.self())
-        is CoerceScalar -> copy(value = value.replaceRangesWithCells(cells))
-        is NamedSheetRangeExpr -> copy(range = range.replaceRangesWithCells(cells) as SheetRangeExpr)
-        is SheetRangeExpr ->
-            if (range !is CellRange) {
-                //   error("$this:${range.javaClass}")
-                this
-            } else this
-        is ValueExpr<*>,
-        is ConstantScalar,
-        is DiscreteUniformRandomVariable -> this
-        is DataMatrix -> map { it.self() }
-        is AlgebraicUnaryMatrix -> copy(value = value.self())
-        is AlgebraicUnaryMatrixScalar -> copy(value = value.self())
-        is AlgebraicUnaryScalarStatistic -> copy(value = value.self())
-        is AlgebraicUnaryRangeStatistic -> this
-        is AlgebraicBinaryMatrix -> copy(left = left.self(), right = right.self())
-        is AlgebraicBinaryScalarStatistic -> copy(left = left.self(), right = right.self())
-        is AlgebraicBinaryScalarMatrix -> copy(left = left.self(), right = right.self())
-        is AlgebraicBinaryMatrixScalar -> copy(left = left.self(), right = right.self())
-        else ->
-            error("$javaClass")
-    }
+    }.rewrite(this)
 }
 
 fun SheetBuilder.scalarizeRanges(cells: Map<String, Expr>): Map<String, Expr> {
-
     val result = cells.toMutableMap()
     var done = false
     while (!done) {
