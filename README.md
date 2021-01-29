@@ -119,8 +119,6 @@ HTML(sheet.copy("A1" to "$5.20").eval().html)
 
 
 
-You can see the rest of the documentation [here](https://view.datalore.jetbrains.com/notebook/xutfv4U56anAADQYuUIGxd?force_sso=true)
-
 
 ```kotlin
 HTML(Kane.dataFormats.html)
@@ -150,3 +148,7 @@ HTML(Kane.dataFormats.html)
 ```kotlin
 
 ```
+
+# Other topics
+- [Dealing with large .csv files](https://github.com/jomof/kane/blob/main/LargeCsvSupport.md)
+- [Goal Seeking](https://github.com/jomof/kane/blob/main/GoalSeeking.md)
