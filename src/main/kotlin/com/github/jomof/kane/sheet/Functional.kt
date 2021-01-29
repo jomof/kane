@@ -88,15 +88,6 @@ fun Sheet.ordinalColumns(elements : List<Int>) : Sheet {
     return copy(cells = cells, columnDescriptors = columnDescriptors)
 }
 
-class RowView(private val sheet: Sheet, private val row: Int) {
-    val name: String get() = sheet.rowDescriptors[row + 1]?.name ?: "$row"
-    operator fun get(column: String): String {
-        val columnIndex = sheet.tryConvertToColumnIndex(column) ?: error("'$column' was not a recognized column")
-        val cell = coordinateToCellName(columnIndex, row)
-        return sheet[cell].toString()
-    }
-}
-
 /**
  * Map cells of a sheet that are coercible to double.
  */
@@ -187,7 +178,7 @@ val Sheet.types : Sheet get() {
         val a1 by columnOf(descriptors.map { it.name })
         val b1 by columnOf(descriptors.map { it.type!!.type.simpleName })
         val c1 by columnOf(descriptors.map { it.type.toString() })
-        add(a1, b1, c1)
+        listOf(a1, b1, c1)
     }
 }
 
@@ -212,7 +203,7 @@ operator fun Sheet.get(vararg ranges: String): Expr {
     error("Couldn't get sheet subset for ${ranges.joinToString(",")}")
 }
 
-private fun Sheet.tryConvertToColumnIndex(range : String) : Int? {
+internal fun Sheet.tryConvertToColumnIndex(range: String): Int? {
     val columnByName = columnDescriptors
         .filter { (column, descriptor) -> descriptor.name == range }
         .toList()

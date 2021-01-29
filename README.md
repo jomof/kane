@@ -25,7 +25,7 @@ Kane sheets are constructed with the **sheetOf** function:
 val sheet = sheetOf {
     val a1 by 1.0
     val a2 by a1 + a1
-    add(a2)
+    listOf(a2)
 }
 HTML(sheet.html)
 ```

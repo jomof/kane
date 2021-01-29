@@ -19,7 +19,7 @@ class DocumentationTest {
         val sheet = sheetOf {
             val a1 by 1.0
             val a2 by a1 + a1
-            add(a2)
+            listOf(a2)
         }
         println(sheet)
         sheet.assertString("""
@@ -203,7 +203,7 @@ class DocumentationTest {
     }
 
     @Test
-    fun `minimize function-basics`() {
+    fun `Kane Goal Seeking`() {
         /**
          * Because Kane sheets can contain formulas in addition to plain data, it's possible to seek a goal. You can
          * minimize a cell in the sheet by changing other cells that you choose. This is done with the minimize(...)
@@ -240,7 +240,7 @@ class DocumentationTest {
         )
 
         /**
-         * You'd like to know if the data in column A is related to column B linearly. That is, what is the best y=mx+b
+         * We'd like to know if the data in column A is related to column B linearly. That is, what is the best y=mx+b
          * relationship?
          *
          * Let's define 'm' and 'b' with starting values of 0. These are the change variables that will be modified
@@ -262,7 +262,7 @@ class DocumentationTest {
             val prediction by m * x + b
             val error by pow(prediction - actual, 2.0)
             val totalError by sum(error)
-            add(totalError)
+            listOf(totalError)
         }
         sheet.assertString(
             """

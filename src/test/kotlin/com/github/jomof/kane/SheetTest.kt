@@ -45,7 +45,7 @@ class SheetTest {
         val sheet = sheetOf {
             val a1 by constant(1)
             val a2 by a1 + 1
-            add(a1, a2)
+            listOf(a1, a2)
         }
         println(sheet)
         sheet["A1"].assertString("1")
@@ -66,7 +66,7 @@ class SheetTest {
             val a4 by down + 3.0
             val a5 by right + 5.0
             val b5 by constant(7.0)
-            add(a1, a2, a3, b1, a4, a5, b5)
+            listOf(a1, a2, a3, b1, a4, a5, b5)
         }
         println(sheet)
         sheet["A1"].assertString("1")
@@ -99,7 +99,7 @@ class SheetTest {
         val plan = sheetOf {
             val a1 by sp500(constant(1988))
             val b1 by (start * a1 * stock + start * a1 * (1.0 - stock))
-            add(b1)
+            listOf(b1)
         }.eval()
         println(plan)
         plan["B1"].assertString("$16")
@@ -115,7 +115,7 @@ class SheetTest {
             """
         }.copy {
             val c1 by range("A") + range("B")
-            add(c1)
+            listOf(c1)
         }
         println(sheet)
     }
@@ -127,7 +127,7 @@ class SheetTest {
             val columnD by range("D")
             val a1 by 0.0
             val b2 by columnC.up * columnD
-            add(a1, b2)
+            listOf(a1, b2)
         }
         sheet.assertString(
             """
@@ -152,7 +152,7 @@ class SheetTest {
             val m by 0.0
             val b by 0.0
             val c1 by m * x + b
-            add(c1)
+            listOf(c1)
         }
         sheet.assertString(
             """
@@ -178,7 +178,7 @@ class SheetTest {
             val m by 0.0
             val b by 0.0
             val c1 by m * range("A") + b
-            add(c1)
+            listOf(c1)
         }
         sheet.assertString(
             """
@@ -205,7 +205,7 @@ class SheetTest {
             val m by 0.0
             val b by 0.0
             val prediction by m * x + b
-            add(prediction)
+            listOf(prediction)
         }
         sheet.assertString(
             """
@@ -233,7 +233,7 @@ class SheetTest {
             val b by 0.0
             val prediction by m * x + b
             val error by prediction - 5.0
-            add(error)
+            listOf(error)
         }
         sheet.assertString(
             """
@@ -258,7 +258,7 @@ class SheetTest {
         }.copy {
             val x by range("A")
             val total by sum(x)
-            add(total)
+            listOf(total)
         }
         sheet.assertString(
             """
@@ -277,7 +277,7 @@ class SheetTest {
             val increasing by range("B")
             val a2 by columnOf(5) { 1.1 + increasing.up }
             val b1 by columnOf(5) { constant(1.0 + it) }
-            add(a2, b1)
+            listOf(a2, b1)
         }.eval()
         println(sheet)
         sheet.assertString("""
@@ -297,7 +297,7 @@ class SheetTest {
         val sheet = sheetOf {
             val a1 by down
             val a2 by up + 1
-            add(a1, a2)
+            listOf(a1, a2)
         }
         println(sheet)
         val evaluated = sheet.eval()
@@ -312,7 +312,7 @@ class SheetTest {
             val a1 by columnOf(2020, 2021, 2022, 2023)
             val b2 by columnOf(2020, 2021, 2022, 2023)
             val c3 by columnOf(up + 1, up + 2, up + 3, up + 4)
-            add(a1, b2, c3)
+            listOf(a1, b2, c3)
         }
         println(sheet)
     }
@@ -322,7 +322,7 @@ class SheetTest {
         val sheet = sheetOf {
             val a1 by dollars(0.15)
             val a2 by up + dollars(0.35)
-            add(a1, a2)
+            listOf(a1, a2)
         }
         val evaluated = sheet.eval()
         println(evaluated)
@@ -338,7 +338,7 @@ class SheetTest {
             val a3 by a1 * a2
             val a4 by up(3) * a2
             val a5 by a1 * up(3)
-            add(a3, a4, a5)
+            listOf(a3, a4, a5)
         }
         val evaluated = sheet.eval()
         println(evaluated)
@@ -369,7 +369,7 @@ class SheetTest {
             val c1 by constant("error")
             val d1 by sum(pow(d4 - c4, 2.0))
 
-            add(
+            listOf(
                 a1, a2, b1, b2, a3, a4, b4, b3, c3, c4, d1, c1, d4
             )
         }
@@ -383,7 +383,7 @@ class SheetTest {
         val sheet = sheetOf {
             val a1 by constant("My String")
             val a2 by dollars(1.23)
-            add(a1, a2)
+            listOf(a1, a2)
         }
         println("$sheet\n")
         sheet["A1"].assertString("My String")
@@ -398,7 +398,7 @@ class SheetTest {
             val a2 by constant(-2.0)
             val a3 by b1 - a2 - 1.0
             val a4 by pow(a1, 2.0) + pow(up, 2.0) + 1.0
-            add(a1, a2, b1, a3, a4)
+            listOf(a1, a2, b1, a3, a4)
         }
         println("$sheet\n")
         val minimized = sheet.minimize(
@@ -419,7 +419,7 @@ class SheetTest {
             val a2 by constant(-2.0)
             val a3 by b1 - a2 - 1.0
             val a4 by pow(a1, 2.0) + pow(up, 2.0) + 1.0
-            add(a1, a2, b1, a3, a4)
+            listOf(a1, a2, b1, a3, a4)
         }
         println("$sheet\n")
         val minimized = sheet.minimize(
@@ -435,6 +435,7 @@ class SheetTest {
     @Test
     fun `empty sheet can still print`() {
         val sheet = sheetOf {
+            listOf()
         }
         println(sheet)
     }
@@ -451,7 +452,7 @@ class SheetTest {
             val a by range("A")
             val b by range("B")
             val c1 by columnOf(2) { a + b }
-            add(c1)
+            listOf(c1)
         }
         retire.assertString(
             """
@@ -475,7 +476,7 @@ class SheetTest {
             val a = range("A")
             val b = range("B")
             val c1 by columnOf(2) { a + b }
-            add(c1)
+            listOf(c1)
         }
         retire.assertString(
             """
@@ -500,7 +501,7 @@ class SheetTest {
             val mean by mean(r)
             val stddev by stddev(r)
             val percentile by percentile(r, 0.25)
-            add(mean, stddev, percentile)
+            listOf(mean, stddev, percentile)
         }
         check.assertString(
             """
@@ -534,7 +535,7 @@ class SheetTest {
             val b2 by matrixOf(10, 10) {
                 cell("C$1") / cell("\$A3")
             }
-            add(b1, a2, b2)
+            listOf(b1, a2, b2)
         }
         sheet.assertString(
             """
@@ -578,7 +579,7 @@ class SheetTest {
             val a1 by columnOf(1.0, 1.0)
             val b1 by columnOf(left + 1.0, left + 2.0)
             val b3 by sum(b1)
-            add(a1, b1, b3)
+            listOf(a1, b1, b3)
         }
         println(sheet)
 
@@ -606,7 +607,7 @@ class SheetTest {
         val sheet = sheetOf {
             val a1 by 1.0
             val a2 by a1 + a1
-            add(a2)
+            listOf(a2)
         }.copy("a1" to 2.0)
         sheet.assertString(
             """
@@ -623,6 +624,7 @@ class SheetTest {
         val sheet = sheetOf {
             column(0, "Column 0")
             column(1, "Column 1")
+            listOf()
         }
         println(sheet)
     }
@@ -631,7 +633,7 @@ class SheetTest {
     fun `second element of columnOf`() {
         val sheet = sheetOf {
             val a1 by columnOf(1.0, 2.0)
-            add(a1)
+            listOf(a1)
         }
         println(sheet)
         sheet["A1"].assertString("1")
@@ -644,7 +646,7 @@ class SheetTest {
             val a1 by columnOf(1.0, 1.0)
             val b1 by columnOf(left + 1.0, left + 2.0)
             val c1 by softmax(b1)
-            add(a1, b1, c1)
+            listOf(a1, b1, c1)
         }
         println(sheet)
         sheet["A1"].assertString("1")
@@ -664,7 +666,7 @@ class SheetTest {
             val d1 by softmax(b1, constant(0.1))
             val e1 by softmin(b1, constant(0.1))
             val b3 by sum(b1)
-            add(d1, b3, a1, e1, b1)
+            listOf(d1, b3, a1, e1, b1)
         }
         println(sheet)
         println(sheet.eval())
@@ -677,7 +679,7 @@ class SheetTest {
             val b1 by columnOf((left(1) + 0.0) * left(1), (left(1) + 0.0) * left(1))
             val d1 by softmax(10_000.00 - b1)
             val b3 by sum(b1)
-            add(d1, b3, b1, a1)
+            listOf(d1, b3, b1, a1)
         }
         println(sheet)
         println(sheet.eval())
@@ -687,7 +689,7 @@ class SheetTest {
     fun `simplest tiling operations`() {
         val sheet = sheetOf {
             val a1 by columnOf("x", 92.2)
-            add(a1)
+            listOf(a1)
         }
         sheet.assertString(
             """
@@ -710,7 +712,7 @@ class SheetTest {
             val c4 by rowOf(11.0 to 13.0)
             val b7 by constant(1492.0)
             val c5 by rowOf((1..4).map { logit(b7) })
-            add(a2, b1, b2, b3, c3, c4, c5)
+            listOf(a2, b1, b2, b3, c3, c4, c5)
         }
         println(sheet)
         sheet.assertString("""
@@ -737,7 +739,7 @@ class SheetTest {
             val d3 by constant("count")
             val e3 by count(a1)
 
-            add(a1, d1, e1, d2, e2, d3, e3)
+            listOf(a1, d1, e1, d2, e2, d3, e3)
         }
         println(sheet)
         println(sheet.eval())
@@ -1089,7 +1091,7 @@ class SheetTest {
             val j2 by sum(i4)
 
             val j1 by pow(1.45 - i2, 2.0)
-            add(
+            listOf(
                 g4, a1, a2, b1, b2, a3, a4, b4, b3, c2, c3, c4, d3,
                 d4, g3, h3, h4, i3, i4, i1, j1, j2, d2, i2
             )

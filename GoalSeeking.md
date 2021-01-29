@@ -79,7 +79,7 @@ val error = raw.copy {
     val prediction by m * x + b
     val error by pow(prediction - actual, 2.0)
     val totalError by sum(error)
-    add(totalError)
+    listOf(totalError)
 }
 HTML(sheet.html)
 ```

@@ -143,9 +143,9 @@ interface Sheet : Expr {
     /**
      * Create a new sheet with cell values changed.
      */
-    fun copy(init: SheetBuilder.() -> Unit): Sheet {
+    fun copy(init: SheetBuilder.() -> List<NamedExpr>): Sheet {
         val sheet = toBuilder()
-        init(sheet)
+        init(sheet).forEach { sheet.add(it) }
         return sheet.build()
     }
 
@@ -336,7 +336,7 @@ class SheetBuilder(
         return Sheet.of(columnDescriptors, rowDescriptors, sheetDescriptor, namesReplaced)
     }
 
-    fun add(vararg add : NamedExpr) {
+    internal fun add(vararg add: NamedExpr) {
         added += add
     }
 
@@ -402,7 +402,7 @@ fun Sheet.minimize(
 
     // Follow all expressions from 'target'
     val reducedArithmetic = reduceArithmetic(variables.toSet())
-    println("Expanding target expression $target")
+    println("Expanding target expression '$target'")
     val lookup = reducedArithmetic.cells + resolvedVariables
     val targetExpr = reducedArithmetic.cells.getValue(target).expandNamedCells(lookup)
     if (targetExpr !is ScalarExpr) {
@@ -546,9 +546,9 @@ fun Sheet.render() : String {
 }
 
 // Construction
-fun sheetOf(init : SheetBuilder.() -> Unit) : Sheet {
-    val sheet = SheetBuilder()
-    init(sheet)
-    return sheet.build()
+fun sheetOf(init: SheetBuilder.() -> List<NamedExpr>): Sheet {
+    val builder = SheetBuilder()
+    init(builder).forEach { builder.add(it) }
+    return builder.build()
 }
 

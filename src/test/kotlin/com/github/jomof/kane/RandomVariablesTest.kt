@@ -38,7 +38,7 @@ class RandomVariablesTest {
             val b1 by sp500(a1)
             val c1 by mean(a1)
             val d1 by mean(b1)
-            add(c1, d1)
+            listOf(c1, d1)
         }
         sheet.assertString(
             """
@@ -70,7 +70,7 @@ class RandomVariablesTest {
             val c3 by stddev(a1 + a1 + a1)
             val d1 by mean(pow(a1, 2.0))
             val d2 by count(a1)
-            add(a1, a2, a3, b1, b2, b3, c1, c2, c3, d1, d2)
+            listOf(a1, a2, a3, b1, b2, b3, c1, c2, c3, d1, d2)
         }
         println(sheet.eval())
     }
@@ -109,8 +109,10 @@ class RandomVariablesTest {
             val a8 by constant("95th percentile")
             val b8 by percentile(b2, 0.255)
             val c8 by percentile(c2, 0.255)
-            add(a1, a2, b2, a3, b3, a4, b4, a5, b5, a6, b6, a7, b7, a8, b8,
-                c1, c2, c3, c4, c5, c6, c7, c8)
+            listOf(
+                a1, a2, b2, a3, b3, a4, b4, a5, b5, a6, b6, a7, b7, a8, b8,
+                c1, c2, c3, c4, c5, c6, c7, c8
+            )
         }
         println(sheet)
         val eval = sheet.eval()

@@ -86,6 +86,7 @@ class FunctionalTest {
         println(zoo)
         val cols = zoo["animal", "water_need"]
         println(cols)
+
         cols.assertString("""
                 animal  water_need 
                -------- ---------- 
