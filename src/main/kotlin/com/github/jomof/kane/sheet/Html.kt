@@ -2,6 +2,7 @@ package com.github.jomof.kane.sheet
 
 import com.github.jomof.kane.CellRange
 import com.github.jomof.kane.indexToColumnName
+import com.github.jomof.kane.looksLikeCellName
 
 /**
  * Render the sheet as HTML
@@ -48,5 +49,15 @@ val Sheet.html: String
         }
         sb.append("  </tbody>\n")
         sb.append("</table>\n")
+
+        // Non-cell data
+        val nonCells = cells.filter { !looksLikeCellName(it.key) }
+        if (nonCells.isNotEmpty()) {
+            nonCells.toList().sortedBy { it.first }.forEach {
+                if (it.second !is SheetRangeExpr) {
+                    sb.append("\n${it.first}=${it.second}<br/>")
+                }
+            }
+        }
         return sb.toString()
     }

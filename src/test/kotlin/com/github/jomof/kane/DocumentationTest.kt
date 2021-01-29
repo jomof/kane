@@ -318,6 +318,8 @@ class DocumentationTest {
             totalError=0
         """.trimIndent()
         )
+
+        println(sheet.html)
     }
 
     @Test
