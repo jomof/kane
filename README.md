@@ -1,4 +1,4 @@
- [![](https://jitpack.io/v/jomof/kane.svg)](https://jitpack.io/#jomof/kane)
+[![](https://jitpack.io/v/jomof/kane.svg)](https://jitpack.io/#jomof/kane)
 
 # Introduction
 Kane exists at the intersection of conventional data frame libraries like Pandas, formula sheets like Excel, and Kotlin style functional programming. Data and formulas coexist in sheet cells alongside each other. Formulas are written in Kotlin. Kane is designed to be used in a Kotlin Kernel of a Jupyter notebook.
@@ -10,7 +10,7 @@ Once you have a notebook running a Kotlin kernal add a dependency on the Kane li
 
 
 ```kotlin
-@file:DependsOn("com.github.jomof:kane:0.1.79")
+@file:DependsOn("com.github.jomof:kane:0.1.90")
 import com.github.jomof.kane.*
 import com.github.jomof.kane.types.*
 import com.github.jomof.kane.functions.*
@@ -27,16 +27,22 @@ val sheet = sheetOf {
     val a2 by a1 + a1
     add(a2)
 }
-sheet
+HTML(sheet.html)
 ```
 
 
 
 
-        A   
-      ----- 
-    1     1 
-    2 A1+A1 
+
+<table id="table_id" class="display">
+<thead><tr>
+  <th/><th>A</th></thead></tr>
+  <tbody>
+    <tr><td>1</td><td>1</td></tr>
+    <tr><td>2</td><td>A1+A1</td></tr>
+  </tbody>
+</table>
+
 
 
 
@@ -46,16 +52,22 @@ You can evaluate the sheet with the eval() function to see the result of A1+A1.
 
 
 ```kotlin
-sheet.eval()
+HTML(sheet.eval().html)
 ```
 
 
 
 
-      A 
-      - 
-    1 1 
-    2 2 
+
+<table id="table_id" class="display">
+<thead><tr>
+  <th/><th>A</th></thead></tr>
+  <tbody>
+    <tr><td>1</td><td>1</td></tr>
+    <tr><td>2</td><td>2</td></tr>
+  </tbody>
+</table>
+
 
 
 
@@ -63,16 +75,22 @@ The benefit is that you can change the value of a cell to see it's effect. For e
 
 
 ```kotlin
-sheet.copy("A1" to 2.0).eval()
+HTML(sheet.copy("A1" to 2.0).eval().html)
 ```
 
 
 
 
-      A 
-      - 
-    1 2 
-    2 4 
+
+<table id="table_id" class="display">
+<thead><tr>
+  <th/><th>A</th></thead></tr>
+  <tbody>
+    <tr><td>1</td><td>2</td></tr>
+    <tr><td>2</td><td>4</td></tr>
+  </tbody>
+</table>
+
 
 
 
@@ -82,19 +100,53 @@ Sheet cells support formatting. For example, we can set cell A1 to a value in do
 
 
 ```kotlin
-sheet.copy("A1" to "$5.20").eval()
+HTML(sheet.copy("A1" to "$5.20").eval().html)
 ```
 
 
 
 
-         A   
-      ------ 
-    1  $5.20 
-    2 $10.40 
+
+<table id="table_id" class="display">
+<thead><tr>
+  <th/><th>A</th></thead></tr>
+  <tbody>
+    <tr><td>1</td><td>$5.20</td></tr>
+    <tr><td>2</td><td>$10.40</td></tr>
+  </tbody>
+</table>
 
 
 
-# Other topics
-- [Dealing with large .csv files](https://github.com/jomof/kane/blob/main/LargeCsvSupport.md)
-- [Goal Seeking](https://github.com/jomof/kane/blob/main/GoalSeeking.md)
+
+You can see the rest of the documentation [here](https://view.datalore.jetbrains.com/notebook/xutfv4U56anAADQYuUIGxd?force_sso=true)
+
+
+```kotlin
+HTML(Kane.dataFormats.html)
+```
+
+
+
+
+
+<table id="table_id" class="display">
+<thead><tr>
+  <th/><th>Supported Data Formats</th><th>Type</th></thead></tr>
+  <tbody>
+    <tr><td>1</td><td>double</td><td>double</td></tr>
+    <tr><td>2</td><td>currency ($1,000)</td><td>double</td></tr>
+    <tr><td>3</td><td>currency ($1,000.12)</td><td>double</td></tr>
+    <tr><td>4</td><td>yyyy-MM-dd HH:mm:ss</td><td>date</td></tr>
+    <tr><td>5</td><td>yyyy-MM-dd</td><td>date</td></tr>
+    <tr><td>6</td><td>string</td><td>String</td></tr>
+  </tbody>
+</table>
+
+
+
+
+
+```kotlin
+
+```
