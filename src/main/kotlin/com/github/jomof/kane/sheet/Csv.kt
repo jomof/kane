@@ -118,7 +118,7 @@ private fun readCsvWithHeader(
             if (params.sample >= 1.0 || random.nextDouble(0.0, 1.0) < params.sample) {
                 rows += row
                     .filter { params.keep.isEmpty() || params.keep.contains(it.key) }
-                    .map { it.key.intern() to it.value.intern() }
+                    .map { it.key.trim().intern() to it.value.trim().intern() }
                     .toMap()
             }
         }
@@ -165,7 +165,7 @@ private fun readCsvWithoutHeader(
         ++totalRows
         for (row in readAllAsSequence()) {
             if (params.sample >= 1.0 || random.nextDouble(0.0, 1.0) < params.sample) {
-                rows += row.map { it.intern() }
+                rows += row.map { it.trim().intern() }
             }
         }
     }

@@ -66,8 +66,9 @@ data class CoerceScalar(
 
     override fun toString() = "$value"
     override fun toNamed(name: String) = NamedScalar(name, this)
-    fun copy(value: Expr): CoerceScalar {
+    fun copy(value: Expr): ScalarExpr {
         return if (value === this.value) this
+        else if (value is ScalarExpr && type == value.type) value
         else CoerceScalar(value, type)
     }
 }
@@ -174,10 +175,16 @@ class SheetBuilderImpl(
     added: List<NamedExpr> = listOf()
 ) : SheetBuilder {
     internal val columnDescriptors: MutableMap<Int, ColumnDescriptor> = columnDescriptors.toMutableMap()
-    private val rowDescriptors: Map<Int, RowDescriptor> = rowDescriptors.toMutableMap()
+    internal val rowDescriptors: MutableMap<Int, RowDescriptor> = rowDescriptors.toMutableMap()
     private val added: MutableList<NamedExpr> = added.toMutableList()
 
-    private fun getImmediateNamedExprs(): Map<String, UnnamedExpr> {
+    override fun column(range: String): SheetBuilderRange {
+        val parsed = parseRange(range)
+        assert(parsed is ColumnRange || parsed is NamedColumnRange)
+        return SheetBuilderRange(this, parsed)
+    }
+
+    fun getImmediateNamedExprs(): Map<String, UnnamedExpr> {
         val cells = mutableMapOf<String, UnnamedExpr>()
 
         // Add immediate named expressions
@@ -321,7 +328,8 @@ class SheetBuilderImpl(
     fun build() : Sheet {
         val immediate = getImmediateNamedExprs()
         val debuilderized = removeBuilderPrivateExpressions(immediate)
-        val withEmbedded = getEmbeddedNamedExprs(debuilderized)
+        val noNamedColumns = convertNamedColumnsToColumnRanges(debuilderized)
+        val withEmbedded = getEmbeddedNamedExprs(noNamedColumns)
         val upperCased = convertCellNamesToUpperCase(withEmbedded)
         val scalarized = scalarizeMatrixes(upperCased)
         val scalarizeRanges = scalarizeRanges(scalarized)
@@ -349,6 +357,10 @@ class SheetBuilderImpl(
 
     override fun nameColumn(column: Int, name: String) {
         columnDescriptors[column] = ColumnDescriptor(name, null)
+    }
+
+    override fun nameRow(row: Int, name: String) {
+        rowDescriptors[row] = RowDescriptor(name)
     }
 }
 

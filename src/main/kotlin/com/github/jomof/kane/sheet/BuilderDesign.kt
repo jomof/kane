@@ -4,7 +4,6 @@ import com.github.jomof.kane.*
 import com.github.jomof.kane.types.KaneType
 import kotlin.reflect.KProperty
 
-
 interface SheetBuilder {
     operator fun String.getValue(nothing: Nothing?, property: KProperty<*>) = parseAndNameValue(property.name, this)
     operator fun Number.getValue(nothing: Nothing?, property: KProperty<*>) =
@@ -17,7 +16,9 @@ interface SheetBuilder {
         return SheetBuilderRange(this, parsed)
     }
 
+    fun column(range: String): SheetBuilderRange
     fun nameColumn(column: Int, name: String)
+    fun nameRow(row: Int, name: String)
 
     fun up(offset: Int) = SheetBuilderRange(this, CellRange.relative(column = 0, row = -offset))
     fun down(offset: Int) = SheetBuilderRange(this, CellRange.relative(column = 0, row = offset))

@@ -47,8 +47,10 @@ fun Sheet.ordinalRows(elements : List<Int>) : Sheet {
             val coordinate = cellNameToCoordinate(name)
             val newRow = oldOrdinalToNewOrdinal[coordinate.row+1]
             if (newRow != null) {
-                val newCoordinate = coordinate.copy(row = newRow-1)
-                coordinateToCellName(newCoordinate) to expr
+                val newCoordinate = coordinate.copy(row = newRow - 1)
+                val unfrozen = expr.unfreeze(coordinate)
+                val refrozen = unfrozen.freeze(newCoordinate)
+                coordinateToCellName(newCoordinate) to refrozen
             } else null
         }
     }.toMap()
@@ -81,7 +83,9 @@ fun Sheet.ordinalColumns(elements : List<Int>) : Sheet {
             val newColumn = oldOrdinalToNewOrdinal[coordinate.column]
             if (newColumn != null) {
                 val newCoordinate = coordinate.copy(column = newColumn)
-                coordinateToCellName(newCoordinate) to expr
+                val unfrozen = expr.unfreeze(coordinate)
+                val refrozen = unfrozen.freeze(newCoordinate)
+                coordinateToCellName(newCoordinate) to refrozen
             } else null
         }
     }.toMap()
@@ -129,13 +133,6 @@ fun Expr.fillna(value: Double): Expr {
         is Sheet -> fillna(value)
         else -> error("$javaClass")
     }
-}
-
-fun Sheet.groupBy(
-    keySelector: (RowDescriptor) -> List<String>,
-    valueSelector: (RowDescriptor) -> List<ScalarExpr>
-): Sheet {
-    return this
 }
 
 /**
@@ -201,6 +198,11 @@ operator fun Sheet.get(vararg ranges: String): Expr {
     val asColumnIndices = tryConvertToColumnIndex(ranges.toList())
     if (asColumnIndices != null) return ordinalColumns(asColumnIndices)
     error("Couldn't get sheet subset for ${ranges.joinToString(",")}")
+}
+
+operator fun Sheet.get(column: Int, row: Int): Expr {
+    val cellName = coordinateToCellName(column, row)
+    return cells.getValue(cellName)
 }
 
 internal fun Sheet.tryConvertToColumnIndex(range: String): Int? {

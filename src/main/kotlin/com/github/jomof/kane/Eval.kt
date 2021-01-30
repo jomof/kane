@@ -2,29 +2,30 @@ package com.github.jomof.kane
 
 import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.sheet.*
+import com.github.jomof.kane.visitor.RewritingVisitor
 
 /**
  * Evaluate an expression, substitute sample value for random variables.
  */
 private fun Expr.sampleEval(
-    randomVariableValues : Map<RandomVariableExpr, ConstantScalar>) : Expr {
-    fun ScalarExpr.self() = sampleEval(randomVariableValues) as ScalarExpr
-    return when (this) {
-        is NamedScalar -> copy(scalar = scalar.self())
-        is RandomVariableExpr -> randomVariableValues.getValue(this)
-        is AlgebraicBinaryScalar -> copyReduce(left = left.self(), right = right.self())
-        is AlgebraicBinaryScalarStatistic -> copy(left = left.self(), right = right.self())
-        is AlgebraicUnaryScalarStatistic -> copy(value = value.self())
-        is ConstantScalar -> this
-        else ->
-            error("$javaClass")
-    }
+    randomVariableValues: Map<RandomVariableExpr, ConstantScalar>,
+    rangeExprProvider: RangeExprProvider
+): Expr {
+    return object : RewritingVisitor() {
+        override fun SheetRangeExpr.rewrite() = rangeExprProvider.range(range)
+        override fun AlgebraicBinaryScalar.rewrite() =
+            copyReduce(left = scalar(left), right = scalar(right))
+
+        override fun DiscreteUniformRandomVariable.rewrite() =
+            randomVariableValues.getValue(this)
+    }.rewrite(this)
 }
 
-private fun Expr.convertToStatistics() : Expr {
+
+private fun Expr.convertToStatistics(): Expr {
     fun ScalarExpr.self() = convertToStatistics() as ScalarExpr
     fun MatrixExpr.self() = convertToStatistics() as MatrixExpr
-    return when(this) {
+    return when (this) {
         is ConstantScalar -> {
             val stream = StreamingSamples()
             stream.insert(value)
@@ -129,11 +130,13 @@ private fun Expr.reduceStatistics() : Expr {
     }
 }
 
-fun Expr.eval() : Expr {
-    val randomVariables = findRandomVariables()
-    if (randomVariables.isEmpty()) return sampleEval(mutableMapOf())
+private class NotImplRangeExprProvider : RangeExprProvider
 
-    var stats : Expr? = null
+fun Expr.eval(rangeExprProvider: RangeExprProvider = NotImplRangeExprProvider()): Expr {
+    val randomVariables = findRandomVariables()
+    if (randomVariables.isEmpty()) return sampleEval(mutableMapOf(), rangeExprProvider)
+
+    var stats: Expr? = null
     val randomVariableElements = randomVariables.map { variable ->
         (variable as DiscreteUniformRandomVariable).values.map { value ->
             constant(value, variable.type)
@@ -143,7 +146,7 @@ fun Expr.eval() : Expr {
         val variableValues = (randomVariables zip randomVariableValues)
             .map { (variable, value) -> variable to (value as ConstantScalar) }
             .toMap()
-        val sample = sampleEval(variableValues)
+        val sample = sampleEval(variableValues, rangeExprProvider)
         if (stats == null) {
             stats = sample.convertToStatistics()
         } else {

@@ -441,6 +441,30 @@ class SheetTest {
     }
 
     @Test
+    fun `access column by name`() {
+        val retire = sheetOfCsv {
+            """
+                cats,dogs
+                1,2
+                3,4
+            """.trimIndent()
+        }.copy {
+            val cats by column("cats")
+            val dogs by column("dogs")
+            val sum by columnOf(2) { cats + dogs }
+            listOf(sum)
+        }
+        retire.assertString(
+            """
+              cats dogs  sum  
+              ---- ---- ----- 
+            1    1    2 A1+B1 
+            2    3    4 A2+B2
+            """.trimIndent()
+        )
+    }
+
+    @Test
     fun `column of two ranges added`() {
         val retire = sheetOfCsv {
             """

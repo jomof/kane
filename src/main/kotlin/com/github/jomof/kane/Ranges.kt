@@ -287,6 +287,23 @@ data class ColumnRange(
     }
 }
 
+data class NamedColumnRange(
+    val name: String,
+    val columnOffset: Int = 0,
+    val rowOffset: Int = 0
+) : SheetRange {
+    override fun up(move: Int) = copy(rowOffset = rowOffset - move)
+    override fun down(move: Int) = copy(rowOffset = rowOffset + move)
+    override fun left(move: Int) = copy(columnOffset = columnOffset - move)
+    override fun right(move: Int) = copy(columnOffset = columnOffset - move)
+    override fun toString(): String {
+        return if (columnOffset == 0 && rowOffset == 0) name
+        else "$name[$columnOffset, $rowOffset]"
+    }
+
+    override fun contains(name: String) = error("not supported")
+}
+
 
 fun parseRange(range: String): SheetRange {
     if (looksLikeCellName(range)) {
@@ -295,9 +312,12 @@ fun parseRange(range: String): SheetRange {
     val split = range.split(':')
     if (split.size == 1) {
         val value = split[0]
-        assert(looksLikeColumnName(value))
-        val column = cellNameToComputableCoordinate(value + "1").column
-        return ColumnRange(column, column)
+        if (looksLikeColumnName(value)) {
+            val column = cellNameToComputableCoordinate(value + "1").column
+            return ColumnRange(column, column)
+        } else {
+            return NamedColumnRange(range)
+        }
     }
 
     val (left, right) = range.split(':')

@@ -7,32 +7,32 @@ import com.github.jomof.kane.sheet.NamedSheetRangeExpr
 import com.github.jomof.kane.sheet.SheetRangeExpr
 
 open class RewritingVisitor {
+    open fun CoerceScalar.rewrite(): Expr = copy(value = rewrite(value))
     open fun ConstantScalar.rewrite(): Expr = this
     open fun DiscreteUniformRandomVariable.rewrite(): Expr = this
-    open fun CoerceScalar.rewrite(): Expr = copy(value = rewrite(value))
     open fun SheetRangeExpr.rewrite(): Expr = this
     open fun Tiling<*>.rewrite(): Expr = this
     open fun ValueExpr<*>.rewrite(): Expr = this
-    open fun NamedScalar.rewrite(): Expr = copy(scalar = scalar.scalar())
-    open fun NamedSheetRangeExpr.rewrite(): Expr = copy(range = range.range())
-    open fun NamedMatrix.rewrite(): Expr = copy(matrix = matrix.matrix())
-    open fun DataMatrix.rewrite(): Expr = map { it.scalar() }
+    open fun NamedScalar.rewrite(): Expr = copy(scalar = scalar(scalar))
+    open fun NamedSheetRangeExpr.rewrite(): Expr = copy(range = range(range))
+    open fun NamedMatrix.rewrite(): Expr = copy(matrix = matrix(matrix))
+    open fun DataMatrix.rewrite(): Expr = map { scalar(it) }
     open fun AlgebraicUnaryRangeStatistic.rewrite(): Expr = this
-    open fun AlgebraicUnaryScalar.rewrite(): Expr = copy(value = value.scalar())
-    open fun AlgebraicUnaryScalarStatistic.rewrite(): Expr = copy(value = value.scalar())
-    open fun AlgebraicUnaryMatrix.rewrite(): Expr = copy(value = value.matrix())
-    open fun AlgebraicUnaryMatrixScalar.rewrite(): Expr = copy(value = value.matrix())
-    open fun AlgebraicBinaryRangeStatistic.rewrite(): Expr = copy(right = right.scalar())
-    open fun AlgebraicBinaryMatrix.rewrite(): Expr = copy(left = left.matrix(), right = right.matrix())
-    open fun AlgebraicBinaryMatrixScalar.rewrite(): Expr = copy(left = left.matrix(), right = right.scalar())
-    open fun AlgebraicBinaryScalar.rewrite(): Expr = copy(left = left.scalar(), right = right.scalar())
-    open fun AlgebraicBinaryScalarMatrix.rewrite(): Expr = copy(left = left.scalar(), right = right.matrix())
-    open fun AlgebraicBinaryScalarStatistic.rewrite(): Expr = copy(left = left.scalar(), right = right.scalar())
+    open fun AlgebraicUnaryScalar.rewrite(): Expr = copy(value = scalar(value))
+    open fun AlgebraicUnaryScalarStatistic.rewrite(): Expr = copy(value = scalar(value))
+    open fun AlgebraicUnaryMatrix.rewrite(): Expr = copy(value = matrix(value))
+    open fun AlgebraicUnaryMatrixScalar.rewrite(): Expr = copy(value = matrix(value))
+    open fun AlgebraicBinaryRangeStatistic.rewrite(): Expr = copy(right = scalar(right))
+    open fun AlgebraicBinaryMatrix.rewrite(): Expr = copy(left = matrix(left), right = matrix(right))
+    open fun AlgebraicBinaryMatrixScalar.rewrite(): Expr = copy(left = matrix(left), right = scalar(right))
+    open fun AlgebraicBinaryScalar.rewrite(): Expr = copy(left = scalar(left), right = scalar(right))
+    open fun AlgebraicBinaryScalarMatrix.rewrite(): Expr = copy(left = scalar(left), right = matrix(right))
+    open fun AlgebraicBinaryScalarStatistic.rewrite(): Expr = copy(left = scalar(left), right = scalar(right))
 
-    open fun ScalarExpr.scalar() = rewrite(this) as ScalarExpr
-    open fun MatrixExpr.matrix() = rewrite(this) as MatrixExpr
-    open fun SheetRangeExpr.range() = rewrite(this) as SheetRangeExpr
-    open fun UnnamedExpr.unnamed() = rewrite(this) as UnnamedExpr
+    open fun scalar(expr: ScalarExpr) = rewrite(expr) as ScalarExpr
+    open fun matrix(expr: MatrixExpr) = rewrite(expr) as MatrixExpr
+    open fun range(expr: SheetRangeExpr) = rewrite(expr) as SheetRangeExpr
+    open fun unnamed(expr: UnnamedExpr) = rewrite(expr) as UnnamedExpr
 
     open fun rewrite(expr: Expr): Expr {
         return when (expr) {

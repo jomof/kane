@@ -101,3 +101,26 @@ fun SheetBuilderImpl.scalarizeRanges(cells: Map<String, Expr>): Map<String, Expr
     }
     return result
 }
+
+fun SheetBuilderImpl.convertNamedColumnsToColumnRanges(cells: Map<String, UnnamedExpr>): Map<String, UnnamedExpr> {
+    val converter = object : RewritingVisitor() {
+        override fun SheetRangeExpr.rewrite(): Expr {
+            return if (range is NamedColumnRange) {
+                val columns = columnDescriptors.filter { it.value.name == range.name }.map { it.key }
+                val columnRange = when {
+                    columns.isEmpty() ->
+                        error("No column named ${range.name}")
+                    columns.size > 1 -> error("Multiple columns named ${range.name}")
+                    else -> ColumnRange(first = MoveableIndex(columns[0]), second = MoveableIndex(columns[0]))
+                }
+                copy(range = columnRange)
+            } else this
+        }
+    }
+    val result = cells.toMutableMap()
+    cells.forEach { (name, expr) ->
+        result[name] = converter.unnamed(expr)
+    }
+    return result
+}
+
