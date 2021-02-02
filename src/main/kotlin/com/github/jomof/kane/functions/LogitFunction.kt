@@ -11,10 +11,6 @@ private class LogitFunction : AlgebraicUnaryScalarFunction {
     override val meta = LOGIT
     override fun doubleOp(value: Double) = 1.0 / (1.0 + exp(-value))
 
-    override fun reduceArithmetic(value: ScalarExpr): ScalarExpr? {
-        return null
-    }
-
     override fun differentiate(
         expr : ScalarExpr,
         exprd : ScalarExpr,

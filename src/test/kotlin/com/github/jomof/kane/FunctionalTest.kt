@@ -144,22 +144,24 @@ class FunctionalTest {
     @Test
     fun statistics() {
         val zoo = readCsv("data/zoo.csv")
-        zoo.statistics.assertString(
+        zoo.describe().assertString(
             """
-                     animal  uniq_id  water_need 
-                     ------ -------- ----------- 
-               count              22          22 
-                 NaN               0           0 
-                mean          1011.5   347.72727 
-                 min            1001          80 
-              median            1012         330 
-                 max            1022         600 
-            variance        42.16667 21770.77922 
-              stddev         6.49359   147.54924 
-            skewness               0     0.05906 
-            kurtosis        -1.20497    -0.76712 
-                  cv         0.00642     0.42432 
-                 sum           22253        7650 
+                      uniq_id  water_need 
+                     -------- ----------- 
+               count       22          22 
+                 NaN        0           0 
+                mean   1011.5   347.72727 
+                 min     1001          80 
+                 25%     1006         230 
+              median     1012         330 
+                 75%     1017         430 
+                 max     1022         600 
+            variance 42.16667 21770.77922 
+              stddev  6.49359   147.54924 
+            skewness        0     0.05906 
+            kurtosis -1.20497    -0.76712 
+                  cv  0.00642     0.42432 
+                 sum    22253        7650
         """.trimIndent()
         )
     }
@@ -167,22 +169,24 @@ class FunctionalTest {
     @Test
     fun `statistics of column`() {
         val zoo = readCsv("data/zoo.csv")
-        zoo["water_need"].statistics.assertString(
+        zoo["water_need"].describe().assertString(
             """
-                      water_need 
+                     water_need 
                      ----------- 
                count          22 
                  NaN           0 
                 mean   347.72727 
                  min          80 
+                 25%         230 
               median         330 
+                 75%         430 
                  max         600 
             variance 21770.77922 
               stddev   147.54924 
             skewness     0.05906 
             kurtosis    -0.76712 
                   cv     0.42432 
-                 sum        7650 
+                 sum        7650
         """.trimIndent()
         )
     }
@@ -199,9 +203,9 @@ class FunctionalTest {
         val zoo = readCsv("data/zoo.csv")
         mean(zoo).assertString(
             """
-                 animal uniq_id water_need 
-                 ------ ------- ---------- 
-            mean         1011.5  347.72727 
+                 uniq_id water_need 
+                 ------- ---------- 
+            mean  1011.5  347.72727
         """.trimIndent()
         )
     }

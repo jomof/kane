@@ -24,10 +24,5 @@ fun convertAnyToScalarExpr(any: Any): ScalarExpr =
     }
 
 fun convertAnyToNamedExpr(name: String, any: Any): NamedExpr {
-    return when (val expr = convertAnyToExpr(any)) {
-        is NamedExpr -> expr.toUnnamed().toNamed(name)
-        is UnnamedExpr -> expr.toNamed(name)
-        is MatrixExpr -> expr.toNamed(name)
-        else -> error("Unsupported type: ${any.javaClass}")
-    }
+    return convertAnyToExpr(any).toNamed(name)
 }

@@ -4,11 +4,11 @@ package com.github.jomof.kane
 
 import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.sheet.CoerceScalar
+import com.github.jomof.kane.sheet.NamedSheetRangeExpr
 import com.github.jomof.kane.types.AlgebraicType
 import com.github.jomof.kane.types.DoubleAlgebraicType
 import com.github.jomof.kane.types.KaneType
 import com.github.jomof.kane.types.StringKaneType
-import java.io.Closeable
 import kotlin.reflect.KProperty
 
 interface Expr
@@ -33,17 +33,11 @@ interface MatrixExpr : AlgebraicExpr, ParentExpr<Double> {
 interface VariableExpr : AlgebraicExpr
 interface ScalarVariableExpr : ScalarExpr, VariableExpr
 interface MatrixVariableExpr : MatrixExpr, VariableExpr
-interface UnnamedExpr : Expr {
-    operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
-    fun toNamed(name: String): NamedExpr
-}
 
 interface NamedExpr : Expr {
     val name: String
-    fun toUnnamed(): UnnamedExpr
 }
 
-interface UntypedUnnamedExpr : UntypedScalar, UnnamedExpr
 interface NamedAlgebraicExpr : NamedExpr, AlgebraicExpr
 interface NamedScalarExpr: NamedAlgebraicExpr, ScalarExpr
 interface NamedMatrixExpr: NamedAlgebraicExpr, MatrixExpr
@@ -64,27 +58,25 @@ data class BinaryOp(
         else this
 }
 
-fun ScalarExpr.toNamed(name: String) = NamedScalar(name, this)
+
 operator fun ScalarExpr.getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
-fun MatrixExpr.toNamed(name: String) = NamedMatrix(name, this)
 operator fun MatrixExpr.getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
 
 data class ConstantScalar(
     val value: Double,
     override val type: AlgebraicType
-) : UnnamedExpr, ScalarExpr {
+) : ScalarExpr {
     init {
         track()
     }
 
-    override fun toNamed(name: String) = NamedScalar(name, this)
     override fun toString() = render()
 }
 
 data class ValueExpr<E : Any>(
     val value: E,
     override val type: KaneType<E>
-) : UnnamedExpr, TypedExpr<E> {
+) : TypedExpr<E> {
     init {
         assert(value !is Expr) {
             "${value.javaClass}"
@@ -93,7 +85,8 @@ data class ValueExpr<E : Any>(
     }
 
     override fun toString() = type.render(value)
-    override fun toNamed(name: String) = NamedValueExpr(name, value, type)
+    operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    fun toNamedValueExpr(name: String) = NamedValueExpr(name, value, type)
 }
 
 data class NamedValueExpr<E : Any>(
@@ -106,20 +99,19 @@ data class NamedValueExpr<E : Any>(
         track()
     }
 
-    override fun toUnnamed() = ValueExpr(value, type)
+    fun toUnnamedValueExpr() = ValueExpr(value, type)
     override fun toString() = type.render(value)
 }
 
 data class ScalarVariable(
     val initial: Double,
     override val type: AlgebraicType
-) : UnnamedExpr, AlgebraicExpr {
+) : AlgebraicExpr {
     init {
         track()
     }
 
-    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
-    override fun toNamed(name: String) = NamedScalarVariable(name, initial, type)
+    operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = render()
 }
 
@@ -131,8 +123,6 @@ data class NamedScalarVariable(
     init {
         track()
     }
-
-    override fun toUnnamed() = ScalarVariable(initial, type)
     override fun toString() = render()
 }
 
@@ -141,7 +131,7 @@ data class MatrixVariable(
     val rows: Int,
     override val type: AlgebraicType,
     val initial: List<Double>
-) : UnnamedExpr, AlgebraicExpr {
+) : AlgebraicExpr {
     init {
         track()
         assert(rows * columns == initial.size) {
@@ -149,8 +139,7 @@ data class MatrixVariable(
         }
     }
 
-    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
-    override fun toNamed(name: String) = NamedMatrixVariable(name, columns, type, initial)
+    operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = "matrixVariable(${columns}x$rows)"
 }
 data class NamedMatrixVariable(
@@ -170,7 +159,6 @@ data class NamedMatrixVariable(
     }
     fun get(coordinate : Coordinate) = get(coordinate.column, coordinate.row)
     val elements get() = coordinates.map { get(it) }
-    override fun toUnnamed() = MatrixVariable(columns, rows, type, initial)
     override fun toString() = render()
 }
 data class NamedScalar(
@@ -179,15 +167,13 @@ data class NamedScalar(
 ) : NamedScalarExpr, ParentExpr<Double> {
     init {
         track()
+        if (scalar is NamedScalar && scalar.name == name) {
+            error("Nested named scalar?")
+        }
     }
 
     override val type get() = scalar.type
     override val children get() = listOf(scalar)
-    override fun toUnnamed() = when (scalar) {
-        is NamedExpr -> scalar.toUnnamed()
-        is UnnamedExpr -> scalar
-        else -> error("${scalar.javaClass}")
-    }
 
     override fun toString() = render()
 }
@@ -202,11 +188,6 @@ data class NamedMatrix(
     override val rows get() = matrix.rows
     override val type get() = matrix.type
     override fun get(column: Int, row: Int) = matrix[column, row]
-    override fun toUnnamed() = when (matrix) {
-        is NamedExpr -> matrix.toUnnamed()
-        is UnnamedExpr -> matrix
-        else -> error("${matrix.javaClass}")
-    }
 
     override fun toString() = render()
 }
@@ -235,7 +216,7 @@ data class DataMatrix(
     override val columns: Int,
     override val rows: Int,
     val elements: List<ScalarExpr>
-) : UnnamedExpr, MatrixExpr {
+) : MatrixExpr {
     init {
         track()
         assert(columns * rows == elements.size) {
@@ -257,8 +238,7 @@ data class DataMatrix(
         elements[coordinateToIndex(column, row)]
     }
 
-    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
-    override fun toNamed(name: String) = NamedMatrix(name, this)
+    operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = render()
 }
 
@@ -282,19 +262,18 @@ data class Slot(
 data class ScalarAssign(
     val left: NamedScalarVariable,
     val right: ScalarExpr
-) : UnnamedExpr {
+) : Expr {
     init {
         track()
     }
 
-    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
-    override fun toNamed(name: String) = NamedScalarAssign(name, left, right)
+    operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
 }
 
 data class MatrixAssign(
     val left: NamedMatrixVariable,
     val right: MatrixExpr
-) : UnnamedExpr {
+) : Expr {
     init {
         track()
         fun lm() = "matrix '${left.name}'"
@@ -307,8 +286,7 @@ data class MatrixAssign(
         }
     }
 
-    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
-    override fun toNamed(name: String) = NamedMatrixAssign(name, left, right)
+    operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
 }
 
 data class NamedScalarAssign(
@@ -322,7 +300,6 @@ data class NamedScalarAssign(
         track()
     }
 
-    override fun toUnnamed() = ScalarAssign(left, right)
     override fun toString() = render()
     override val children = listOf(right)
 }
@@ -345,16 +322,15 @@ data class NamedMatrixAssign(
         }
     }
 
-    override fun toUnnamed() = MatrixAssign(left, right)
     override fun toString() = render()
     override val children = listOf(right)
 }
 
 data class NamedUntypedScalar(
     override val name: String,
-    val expr: UntypedUnnamedExpr
+    val expr: UntypedScalar
 ) : NamedExpr, UntypedScalar {
-    override fun toUnnamed() = expr
+    override fun toString() = render()
 }
 
 data class ScalarListExpr(
@@ -368,6 +344,8 @@ data class ScalarListExpr(
             }
         }
     }
+
+    override fun toString() = values.toString()
 }
 
 // Assign
@@ -424,7 +402,7 @@ fun diff(expr : ScalarExpr, variable : ScalarExpr) : ScalarExpr {
     val result: ScalarExpr = when (expr) {
         variable -> ConstantScalar(1.0, expr.type)
         is NamedScalar -> diff(expr.scalar, variable)
-        is AlgebraicUnaryMatrixScalar -> diff(expr.reduceArithmetic(), variable)
+        is AlgebraicUnaryMatrixScalar -> diff(expr.evalGradual(), variable)
         is MatrixVariableElement -> ConstantScalar(0.0, expr.type)
         is ScalarVariableExpr -> ConstantScalar(0.0, expr.type)
         is ConstantScalar -> ConstantScalar(0.0, expr.type)
@@ -440,6 +418,9 @@ fun diff(expr : ScalarExpr, variable : ScalarExpr) : ScalarExpr {
             val p1d = diff(expr.left, variable)
             val p2d = diff(expr.right, variable)
             expr.op.differentiate(expr.left, p1d, expr.right, p2d, variable)
+        }
+        is AlgebraicUnaryScalarStatistic -> {
+            diff(expr.evalGradual(), variable)
         }
         else ->
             error("${expr.javaClass}")
@@ -527,22 +508,24 @@ fun differentiate(expr : AlgebraicExpr) : AlgebraicExpr {
                     else this
                 }
             }
-            else -> error("${expr.javaClass}")
+            else ->
+                error("${expr.javaClass}")
         }
     }
 }
 
-fun differentiate(expr : ScalarExpr) : ScalarExpr = (differentiate(expr as AlgebraicExpr) as ScalarExpr).reduceArithmetic()
-fun differentiate(expr : MatrixExpr) : MatrixExpr = (differentiate(expr as AlgebraicExpr) as MatrixExpr).reduceArithmetic()
+fun differentiate(expr: ScalarExpr): ScalarExpr = (differentiate(expr as AlgebraicExpr) as ScalarExpr).evalGradual()
+fun differentiate(expr: MatrixExpr): MatrixExpr = (differentiate(expr as AlgebraicExpr) as MatrixExpr).evalGradual()
 
 // Data matrix
 
-fun MatrixExpr.toDataMatrix() : MatrixExpr = when(this) {
+fun MatrixExpr.toDataMatrix(): MatrixExpr = when (this) {
     is DataMatrix -> this
     is NamedMatrix -> copy(matrix = matrix.toDataMatrix())
     else -> DataMatrix(columns, rows, elements.toList())
 }
-fun MatrixExpr.map(action:(ScalarExpr)->ScalarExpr) = DataMatrix(columns, rows, elements.map(action).toList())
+
+fun MatrixExpr.map(action: (ScalarExpr) -> ScalarExpr) = DataMatrix(columns, rows, elements.map(action).toList())
 
 // Allocation tracking
 private var trackingEnabled = false
@@ -590,270 +573,6 @@ internal fun track() {
     if (trackingEnabled)  trackImpl()
 }
 
-private val recordedExprs = mutableSetOf<Expr>()
-fun getRecordedExprs() : Set<Expr> = recordedExprs
-
-private fun recordImpl(expr : Expr) {
-    if (recordedExprs.contains(expr)) return
-    recordedExprs += expr
-    when(expr) {
-        is ParentExpr<*> -> expr.children.forEach { recordImpl(it) }
-        else -> { }
-    }
-}
-
-private fun <T:Expr> T.record() : T {
-    if (trackingEnabled)  recordImpl(this)
-    return this
-}
-
-private class TrackingScope : Closeable {
-    val prior = trackingEnabled
-    init { trackingEnabled = true }
-    override fun close() {
-        trackingEnabled = prior
-    }
-}
-
-fun trackExprs() : Closeable = TrackingScope()
-
-// Substitute variable initial values
-fun AlgebraicExpr.substituteInitial() : AlgebraicExpr {
-    val result = when (this) {
-        is ConstantScalar -> this
-        is NamedScalar -> copy(scalar = scalar.substituteInitial())
-        is NamedMatrix -> copy(matrix = matrix.substituteInitial())
-        is AlgebraicUnaryScalar -> copy(value = value.substituteInitial())
-        is AlgebraicUnaryMatrix -> copy(value = value.substituteInitial())
-        is AlgebraicUnaryMatrixScalar -> copy(value = value.substituteInitial())
-        is AlgebraicBinaryScalar -> copyReduce(left = left.substituteInitial(), right = right.substituteInitial())
-        is AlgebraicBinaryScalarMatrix -> copy(left = left.substituteInitial(), right = right.substituteInitial())
-        is AlgebraicBinaryMatrixScalar -> copy(left = left.substituteInitial(), right = right.substituteInitial())
-        is AlgebraicBinaryMatrix -> copy(left = left.substituteInitial(), right = right.substituteInitial())
-        is AlgebraicDeferredDataMatrix -> data.substituteInitial()
-        is NamedScalarVariable -> ConstantScalar(initial, type)
-        is MatrixVariableElement -> ConstantScalar(initial, type)
-        is DataMatrix -> map { it.substituteInitial() }
-        is NamedMatrixVariable -> toDataMatrix().substituteInitial()
-        else -> error("$javaClass")
-    }
-    return result
-}
-
-fun ScalarExpr.substituteInitial() = (this as AlgebraicExpr).substituteInitial() as ScalarExpr
-fun MatrixExpr.substituteInitial() = (this as AlgebraicExpr).substituteInitial() as MatrixExpr
-
-// Reduce arithmetic
-fun AlgebraicExpr.memoizeAndReduceArithmetic(
-    entryPoint : Boolean = true,
-    memo : MutableMap<TypedExpr<*>,TypedExpr<*>> = mutableMapOf(),
-    selfMemo : MutableMap<TypedExpr<*>,TypedExpr<*>> = mutableMapOf()) : AlgebraicExpr {
-    if (this is ConstantScalar) return this
-    if (memo.contains(this)) {
-        val result = memo.getValue(this)
-        return result as AlgebraicExpr
-    }
-    val result : AlgebraicExpr =
-        when (this) {
-            is NamedMatrixVariable -> this
-            is ConstantScalar -> this
-            is AlgebraicBinaryMatrix -> {
-                val dm = toDataMatrix()
-                val dmself = dm.memoizeAndReduceArithmetic(false, memo, selfMemo) as MatrixExpr
-                if (dm != dmself) dmself
-                else this
-            }
-            is DataMatrix -> map { it.memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr }
-            is MatrixVariableElement -> copy(
-                matrix = matrix.memoizeAndReduceArithmetic(
-                    false,
-                    memo,
-                    selfMemo
-                ) as NamedMatrixVariable
-            )
-            is AlgebraicUnaryMatrix -> copy(
-                value = value.memoizeAndReduceArithmetic(
-                    false,
-                    memo,
-                    selfMemo
-                ) as MatrixExpr
-            )
-            is NamedMatrix -> copy(matrix = matrix.memoizeAndReduceArithmetic(false, memo, selfMemo) as MatrixExpr)
-            is NamedScalar ->
-                if (entryPoint) copy(scalar = scalar.memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr)
-                else scalar.memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr
-            is NamedScalarVariable -> this
-            is AlgebraicBinaryScalarMatrix -> copy(
-                left = left.memoizeAndReduceArithmetic(
-                    false,
-                    memo,
-                    selfMemo
-                ) as ScalarExpr, right = right.memoizeAndReduceArithmetic(false, memo, selfMemo) as MatrixExpr
-            )
-            is AlgebraicBinaryMatrixScalar -> copy(
-                left = left.memoizeAndReduceArithmetic(false, memo, selfMemo) as MatrixExpr,
-                right = right.memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr
-            )
-            is NamedScalarAssign -> copy(right = right.memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr)
-            is NamedMatrixAssign -> copy(right = right.memoizeAndReduceArithmetic(false, memo, selfMemo) as MatrixExpr)
-            is Tableau -> copy(children = children.map {
-                it.memoizeAndReduceArithmetic(
-                    true,
-                    memo,
-                    selfMemo
-                ) as NamedAlgebraicExpr
-            })
-            is CoerceScalar -> {
-                val value = when (value) {
-                    is AlgebraicExpr -> value.memoizeAndReduceArithmetic(false, memo, selfMemo)
-                    else -> value
-                }
-                when {
-                    value is AlgebraicExpr && value.type == type -> value
-                    value is ConstantScalar -> {
-                        assert(type != value.type)
-                        constant(type.coerceFrom(value.value), type)
-                    }
-                    else ->
-                        if (this.value !== value)
-                            copy(value = value)
-                        else
-                            this
-                }
-            }
-            is ScalarVariable -> this
-            is AlgebraicBinaryScalar -> {
-                val result = run {
-                    val leftSelf = left.memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr
-                    val rightSelf = right.memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr
-                    when {
-                        leftSelf is ScalarListExpr && rightSelf !is ScalarListExpr -> {
-                            ScalarListExpr(leftSelf.values.map {
-                                copy(left = it).memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr
-                            }, type)
-                        }
-                        leftSelf !is ScalarListExpr && rightSelf is ScalarListExpr -> {
-                            val reduced = rightSelf.values.map {
-                                copy(right = it).memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr
-                            }
-                            ScalarListExpr(reduced, type)
-                        }
-                        leftSelf is ScalarListExpr && rightSelf is ScalarListExpr -> {
-                            val zip = (leftSelf.values zip rightSelf.values).map { (l, r) ->
-                                copy(left = l, right = r).memoizeAndReduceArithmetic(
-                                    false,
-                                    memo,
-                                    selfMemo
-                                ) as ScalarExpr
-                            }
-                            ScalarListExpr(zip, type)
-                        }
-                        else -> {
-
-                            val leftAffine = left.affineName()
-                            val rightAffine = right.affineName()
-                            if (left != leftSelf || right != right.memoizeAndReduceArithmetic(
-                                    false,
-                                    memo,
-                                    selfMemo
-                                ) as ScalarExpr
-                            ) binaryScalar(op, leftSelf, rightSelf).memoizeAndReduceArithmetic(
-                                false,
-                                memo,
-                                selfMemo
-                            ) as ScalarExpr
-                            else if (leftAffine != null && rightAffine != null && leftAffine.compareTo(rightAffine) == 1 && op.meta.associative) {
-                                val result: ScalarExpr =
-                                    op(right, left).memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr
-                                result
-                            } else {
-                                val leftConst = left.tryFindConstant()
-                                val rightConst = right.tryFindConstant()
-                                when {
-                                    leftConst != null && rightConst != null -> ConstantScalar(
-                                        op(leftConst, rightConst),
-                                        type
-                                    )
-                                    else -> op.reduceArithmetic(left, right)
-                                        ?.let { it.memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr }
-                                        ?: this
-                                }
-                            }
-                        }
-                    }
-                }
-                result.withType(type)
-            }
-            is AlgebraicUnaryScalar -> {
-                when (value) {
-                    is ScalarListExpr -> ScalarListExpr(value.values.map {
-                        it.memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr
-                    }, type)
-                    else -> {
-
-                        val valueSelf = value.memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr
-                        if (value != valueSelf) copy(value = valueSelf).memoizeAndReduceArithmetic(
-                            false,
-                            memo,
-                            selfMemo
-                        ) as ScalarExpr
-                        else {
-                            val valueConst = value.tryFindConstant()
-                            when {
-                                valueConst != null -> ConstantScalar(op(valueConst), type)
-                                else -> op.reduceArithmetic(value)
-                                    ?.let { it.memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr } ?: this
-                            }
-                        }
-                    }
-                }
-            }
-            is AlgebraicBinaryScalarStatistic -> copy(
-                left = left.memoizeAndReduceArithmetic(
-                    false,
-                    memo,
-                    selfMemo
-                ) as ScalarExpr, right = right.memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr
-            )
-            is AlgebraicUnaryScalarStatistic -> copy(
-                value = value.memoizeAndReduceArithmetic(
-                    false,
-                    memo,
-                    selfMemo
-                ) as ScalarExpr
-            )
-            is AlgebraicUnaryMatrixScalar -> op.reduceArithmetic(value)
-                ?.let { it.memoizeAndReduceArithmetic(false, memo, selfMemo) as ScalarExpr } ?: value
-            is AlgebraicDeferredDataMatrix -> data.memoizeAndReduceArithmetic(false, memo, selfMemo) as MatrixExpr
-            is DiscreteUniformRandomVariable -> this
-            is ScalarListExpr -> copy(values = values.map { it })
-            else ->
-                error("$javaClass")
-        }
-
-    memo[this] = result
-    return result
-}
-
-fun NamedScalar.reduceArithmetic() = (this as AlgebraicExpr).memoizeAndReduceArithmetic() as NamedScalar
-fun NamedAlgebraicExpr.reduceArithmetic() = (this as AlgebraicExpr).memoizeAndReduceArithmetic() as NamedAlgebraicExpr
-fun NamedScalarExpr.reduceArithmetic() = (this as AlgebraicExpr).memoizeAndReduceArithmetic() as NamedScalarExpr
-fun ScalarExpr.reduceArithmetic() = (this as AlgebraicExpr).memoizeAndReduceArithmetic() as ScalarExpr
-fun MatrixExpr.reduceArithmetic() = (this as AlgebraicExpr).memoizeAndReduceArithmetic() as MatrixExpr
-fun Tableau.reduceArithmetic() = (this as AlgebraicExpr).memoizeAndReduceArithmetic() as Tableau
-
-private fun AlgebraicExpr.affineName(depth : Int = 2) : String? {
-    if (depth == 0) return null
-    return when(this) {
-        is AlgebraicBinaryScalar -> left.affineName(depth - 1) ?: right.affineName(depth - 1) ?: op.meta.op
-        is NamedScalar -> name
-        is MatrixVariableElement -> matrix.name
-        is AlgebraicUnaryScalar -> value.affineName(depth - 1) ?: op.meta.op
-        is NamedScalarVariable -> name
-        is NamedScalarExpr -> name
-        else -> null
-    }
-}
 
 // Render
 fun binaryRequiresParents(parent : BinaryOp, child : BinaryOp, childIsRight: Boolean) : Boolean {
@@ -953,9 +672,13 @@ fun Expr.render(entryPoint : Boolean = true) : String {
             op.infix -> "${left.self()}${op.op}${right.self(true)}"
             else -> "${op.op}(${left.self()},${right.self()})"
         }
-    return when(this) {
+    return when (this) {
+        is CoerceScalar -> value.self()
         is Slot -> "\$$slot"
-        is NamedScalarVariable-> name
+        is NamedScalarVariable -> name
+        is NamedSheetRangeExpr ->
+            if (entryPoint) "$name=${range.self()}"
+            else name
         is ScalarVariable ->
             type.render(initial)
         is NamedScalarAssign -> "${left.self()} <- ${right.self()}"
@@ -1020,6 +743,9 @@ fun Expr.render(entryPoint : Boolean = true) : String {
         is AlgebraicBinaryScalarMatrix -> binary(op.meta, left, right)
         is NamedScalar ->
             if (entryPoint) "$name=${scalar.self()}"
+            else name
+        is NamedUntypedScalar ->
+            if (entryPoint) "$name=${expr.self()}"
             else name
         is NamedMatrix -> {
             when {
@@ -1089,31 +815,5 @@ fun Expr.render(entryPoint : Boolean = true) : String {
             }
         }
         else -> "$this"
-    }
-}
-
-fun ScalarExpr.withType(target: AlgebraicType): ScalarExpr {
-    return when {
-        type == target -> this
-        this is AlgebraicBinaryScalar -> copy(type = target)
-        this is ConstantScalar -> copy(type = target)
-        else ->
-            error("$javaClass")
-    }
-}
-
-fun Expr.toNamed(name: String): Expr {
-    return when (this) {
-        is UnnamedExpr -> toNamed(name)
-        is NamedExpr -> toUnnamed().toNamed(name)
-        else -> error("$javaClass")
-    }
-}
-
-fun Expr.toUnnamed(): Expr {
-    return when (this) {
-        is UnnamedExpr -> this
-        is NamedExpr -> toUnnamed()
-        else -> error("$javaClass")
     }
 }

@@ -157,12 +157,11 @@ private fun RectangleRange.rebase(base: Coordinate): SheetRange {
 }
 
 fun SheetRange.rebase(base: Coordinate): SheetRange {
-    return when {
-        this is CellRange -> rebase(base)
-        this is ColumnRange -> rebase(base)
-        this is RectangleRange -> rebase(base)
-        else ->
-            error("$javaClass")
+    return when (this) {
+        is CellRange -> rebase(base)
+        is ColumnRange -> rebase(base)
+        is RectangleRange -> rebase(base)
+        else -> error("$javaClass")
     }
 }
 

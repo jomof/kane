@@ -18,11 +18,16 @@ private fun AlgebraicExpr.expandUnaryOperations(): AlgebraicExpr {
         }
         is DataMatrix -> map { it.self() }
         is AlgebraicUnaryScalar -> copy(value = value.self())
-        is AlgebraicUnaryScalarStatistic -> copy(value = value.self())
+        is AlgebraicUnaryScalarStatistic ->
+            when (value) {
+                is AlgebraicExpr -> copy(value = value.expandUnaryOperations())
+                else -> error("${value.javaClass}")
+            }
         is AlgebraicUnaryMatrix -> copy(value = value.self())
         is AlgebraicBinaryScalar -> copy(left = left.self(), right = right.self())
         is AlgebraicBinaryMatrix -> copy(left = left.self(), right = right.self())
         is AlgebraicBinaryMatrixScalar -> copy(left = left.self(), right = right.self())
+        is AlgebraicBinaryScalarMatrix -> copy(left = left.self(), right = right.self())
         is AlgebraicBinaryScalarStatistic -> copy(left = left.self(), right = right.self())
         is ConstantScalar -> this
         is DiscreteUniformRandomVariable -> this

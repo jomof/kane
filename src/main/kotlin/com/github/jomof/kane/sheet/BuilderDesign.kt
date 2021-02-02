@@ -42,9 +42,9 @@ private fun parseAndNameValue(name: String, value: String): NamedExpr {
 data class SheetBuilderRange(
     private val builder: SheetBuilder,
     val range: SheetRange
-) : UntypedUnnamedExpr {
-    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
-    override fun toNamed(name: String): NamedSheetRangeExpr {
+) : UntypedScalar {
+    operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    fun toNamed(name: String): NamedSheetRangeExpr {
         if (range is ColumnRange && range.first == range.second) {
             builder.nameColumn(range.first.index, name)
         }

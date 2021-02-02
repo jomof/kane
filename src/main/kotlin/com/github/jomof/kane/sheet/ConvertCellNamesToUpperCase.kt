@@ -13,7 +13,7 @@ private fun AlgebraicExpr.convertCellNamesToUpperCase() : AlgebraicExpr {
         is NamedMatrix -> copy(name = name.upper(), matrix = matrix.self())
         is NamedScalar -> copy(name = name.upper(), scalar = scalar.self())
         is AlgebraicUnaryScalar -> copy(value = value.self())
-        is AlgebraicUnaryScalarStatistic -> copy(value = value.self())
+        is AlgebraicUnaryScalarStatistic -> copy(value = value.convertCellNamesToUpperCase())
         is AlgebraicUnaryMatrix -> copy(value = value.self())
         is AlgebraicUnaryMatrixScalar -> copy(value = value.self())
         is AlgebraicBinaryScalar -> copy(left = left.self(), right = right.self())
@@ -30,17 +30,14 @@ private fun AlgebraicExpr.convertCellNamesToUpperCase() : AlgebraicExpr {
     }
 }
 
-private fun Expr.convertCellNamesToUpperCase() : Expr {
+fun Expr.convertCellNamesToUpperCase(): Expr {
     return when (this) {
         is AlgebraicExpr -> convertCellNamesToUpperCase()
         is Tiling<*> -> this
         is ValueExpr<*> -> this
         is SheetRangeExpr -> this
-        is AlgebraicUnaryRangeStatistic -> this
         is AlgebraicBinaryRangeStatistic -> this
+        is NamedSheetRangeExpr -> this
         else -> error("$javaClass")
     }
 }
-
-fun UnnamedExpr.convertCellNamesToUpperCase(): UnnamedExpr =
-    (this as Expr).convertCellNamesToUpperCase() as UnnamedExpr

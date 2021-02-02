@@ -69,10 +69,9 @@ data class AlgebraicBinaryScalar(
     val left: ScalarExpr,
     val right: ScalarExpr,
     override val type: AlgebraicType = op.type(left.type, right.type),
-) : UnnamedExpr, ScalarExpr, ParentExpr<Double> {
+) : ScalarExpr, ParentExpr<Double> {
     private val hashCode = op.hashCode() * 3 + left.hashCode() * 7 + right.hashCode() * 9
     override fun hashCode() = hashCode
-    override fun toNamed(name: String) = NamedScalar(name, this)
 
     override fun equals(other: Any?): Boolean {
         if (other == null) return false
@@ -111,16 +110,14 @@ data class AlgebraicBinaryMatrixScalar(
     override val rows: Int,
     val left: MatrixExpr,
     val right: ScalarExpr
-) : UnnamedExpr, MatrixExpr {
+) : MatrixExpr {
     init {
         track()
     }
 
     override val type get() = op.type(left.type, right.type)
     override fun get(column: Int, row: Int) = AlgebraicBinaryScalar(op, left[column, row], right)
-    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
-    override fun toNamed(name: String) = NamedMatrix(name, this)
-
+    operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = render()
 }
 
@@ -142,7 +139,7 @@ data class AlgebraicBinaryMatrix(
     override val rows: Int,
     val left: MatrixExpr,
     val right: MatrixExpr
-) : UnnamedExpr, MatrixExpr {
+) : MatrixExpr {
     init {
         track()
     }
@@ -150,32 +147,37 @@ data class AlgebraicBinaryMatrix(
     override val type get() = op.type(left.type, right.type)
     override fun get(column: Int, row: Int) = AlgebraicBinaryScalar(op, left[column, row], right[column, row])
     override fun toString() = render()
-    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
-    override fun toNamed(name: String) = NamedMatrix(name, this)
+    operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
 }
 
 // f(scalar)->scalar
 interface AlgebraicUnaryScalarFunction {
-    val meta : UnaryOp
-    operator fun invoke(value : Double) = doubleOp(value)
-    fun doubleOp(value : Double) : Double
-    operator fun invoke(value : ScalarExpr) : ScalarExpr = AlgebraicUnaryScalar(this, value, value.type)
-    operator fun invoke(value : MatrixExpr) : MatrixExpr = AlgebraicUnaryMatrix(this, value)
-    fun  reduceArithmetic(value : ScalarExpr) : ScalarExpr?
-    fun  differentiate(expr : ScalarExpr, exprd : ScalarExpr, variable : ScalarExpr) : ScalarExpr
+    val meta: UnaryOp
+    operator fun invoke(value: Double) = doubleOp(value)
+    fun doubleOp(value: Double): Double
+    operator fun invoke(value: ScalarExpr): ScalarExpr = AlgebraicUnaryScalar(this, value, value.type)
+    operator fun invoke(value: MatrixExpr): MatrixExpr = AlgebraicUnaryMatrix(this, value)
+    fun reduceArithmetic(value: ScalarExpr): ScalarExpr? {
+        val constValue = value.tryFindConstant()
+        return when {
+            constValue != null -> constant(doubleOp(constValue), value.type)
+            else -> null
+        }
+    }
+
+    fun differentiate(expr: ScalarExpr, exprd: ScalarExpr, variable: ScalarExpr): ScalarExpr
 }
 
 data class AlgebraicUnaryScalar(
     val op: AlgebraicUnaryScalarFunction,
     val value: ScalarExpr,
     override val type: AlgebraicType
-) : UnnamedExpr, ScalarExpr, ParentExpr<Double> {
+) : ScalarExpr, ParentExpr<Double> {
     init {
         track()
     }
 
     override val children get() = listOf(value)
-    override fun toNamed(name: String) = NamedScalar(name, this)
 
     override fun toString() = render()
     fun copy(value: ScalarExpr): AlgebraicUnaryScalar {
@@ -187,7 +189,7 @@ data class AlgebraicUnaryScalar(
 data class AlgebraicUnaryMatrix(
     val op: AlgebraicUnaryScalarFunction,
     val value: MatrixExpr
-) : UnnamedExpr, MatrixExpr {
+) : MatrixExpr {
     init {
         track()
     }
@@ -196,76 +198,107 @@ data class AlgebraicUnaryMatrix(
     override val rows get() = value.rows
     override val type get() = value.type
     override fun get(column: Int, row: Int) = AlgebraicUnaryScalar(op, value[column, row], type)
-    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
-    override fun toNamed(name: String) = NamedMatrix(name, this)
-
+    operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = render()
 }
 
 // f(scalar statistic)->scalar
 interface AlgebraicUnaryScalarStatisticFunction {
     val meta: UnaryOp
-    operator fun invoke(value: ScalarExpr): ScalarExpr = AlgebraicUnaryScalarStatistic(this, value)
-    operator fun invoke(value: SheetRangeExpr): UntypedUnnamedExpr = AlgebraicUnaryRangeStatistic(this, value.range)
-    operator fun invoke(value: NamedSheetRangeExpr): UntypedUnnamedExpr =
-        AlgebraicUnaryRangeStatistic(this, value.range.range)
 
-    operator fun invoke(value: Sheet): Sheet = value.statistics.filterRows { row -> row.name == meta.op }
-    operator fun invoke(expr: Expr): Expr = when (expr) {
-        is Sheet -> if (expr.columns == 1) invoke(expr)["A1"] else invoke(expr)
-        is SheetRangeExpr -> invoke(expr)
-        else ->
-            error("${expr.javaClass}")
+    //    operator fun invoke(value: ScalarExpr) = AlgebraicUnaryScalarStatistic(this, value, value.type)
+//    operator fun invoke(value: MatrixExpr) = AlgebraicUnaryScalarStatistic(this, value, value.type)
+//    operator fun invoke(value: SheetRangeExpr) = AlgebraicUnaryScalarStatistic(this, value, DoubleAlgebraicType.kaneType)
+//    operator fun invoke(value: NamedSheetRangeExpr) = AlgebraicUnaryScalarStatistic(this, value.range, DoubleAlgebraicType.kaneType)
+    operator fun invoke(value: Sheet): Expr {
+        val filtered = value.describe().filterRows { row -> row.name == meta.op }
+        if (filtered.columns == 1) return filtered[0, 0] as ScalarExpr
+        return filtered
     }
 
-    fun reduceArithmetic(value: ScalarStatistic): ScalarExpr
-    fun reduceArithmetic(elements: List<ScalarExpr>): ScalarExpr?
+    operator fun invoke(expr: UntypedScalar): ScalarExpr =
+        AlgebraicUnaryScalarStatistic(
+            this,
+            CoerceScalar(expr, DoubleAlgebraicType.kaneType),
+            DoubleAlgebraicType.kaneType
+        )
+
+    operator fun invoke(expr: AlgebraicExpr): ScalarExpr =
+        AlgebraicUnaryScalarStatistic(this, expr, DoubleAlgebraicType.kaneType)
+
+    operator fun invoke(expr: Expr): Expr = when (expr) {
+        is AlgebraicExpr -> invoke(expr)
+        is UntypedScalar -> invoke(expr)
+        is Sheet -> invoke(expr)
+        else -> error("${expr.javaClass}")
+    }
+
+    fun lookupStatistic(statistic: StreamingSamples): Double
+    fun reduceArithmetic(value: ScalarStatistic) = constant(lookupStatistic(value.statistic), value.type)
+    fun reduceArithmetic(elements: List<ScalarExpr>): ScalarExpr? {
+        if (elements.isEmpty()) return null
+        if (!elements.all { it.tryFindConstant() != null }) return null
+        val statistic = StreamingSamples()
+        elements.forEach {
+            statistic.insert(it.tryFindConstant()!!)
+        }
+        return reduceArithmetic(ScalarStatistic(statistic, elements[0].type))
+    }
+
+    fun reduceArithmetic(value: MatrixExpr) = reduceArithmetic(value.elements)
+    fun reduceArithmetic(value: Expr) = when (value) {
+        is ScalarStatistic -> reduceArithmetic(value)
+        is MatrixExpr -> reduceArithmetic(value)
+        is ScalarListExpr -> reduceArithmetic(value.values)
+        is ScalarExpr -> reduceArithmetic(listOf(value))
+        else ->
+            error("${value.javaClass}")
+    }
 }
 
 data class AlgebraicUnaryScalarStatistic(
     val op: AlgebraicUnaryScalarStatisticFunction,
-    val value: ScalarExpr
-) : UnnamedExpr, ScalarExpr {
+    val value: AlgebraicExpr,
+    override val type: AlgebraicType
+) : ScalarExpr {
     init {
         track()
     }
 
-    override val type get() = value.type
-    override fun toNamed(name: String) = NamedScalar(name, this)
     override fun toString() = render()
 }
 
-data class AlgebraicUnaryRangeStatistic(
-    val op: AlgebraicUnaryScalarStatisticFunction,
-    val range: SheetRange
-) : UntypedUnnamedExpr {
-    init {
-        track()
-    }
-
-    override fun toNamed(name: String) = NamedUntypedScalar(name, this)
-    override fun toString() = "${op.meta.op}($range)"
-}
+//data class AlgebraicUnaryRangeStatistic(
+//    val op: AlgebraicUnaryScalarStatisticFunction,
+//    val range: SheetRangeExpr
+//) : UntypedScalar {
+//    init {
+//        track()
+//    }
+//
+//    operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+//    override fun toString() = "${op.meta.op}($range)"
+//}
 
 // f(scalar statistic, scalar)->scalar
 interface AlgebraicBinaryScalarStatisticFunction {
     val meta: BinaryOp
-    operator fun invoke(left: ScalarExpr, right: ScalarExpr): ScalarExpr =
+    operator fun invoke(left: ScalarExpr, right: ScalarExpr) =
         AlgebraicBinaryScalarStatistic(this, left, right)
 
-    operator fun invoke(left: ScalarExpr, right: Double): ScalarExpr =
+    operator fun invoke(left: ScalarExpr, right: Double) =
         AlgebraicBinaryScalarStatistic(this, left, constant(right))
 
-    operator fun invoke(value: SheetRangeExpr, right: ScalarExpr): UntypedUnnamedExpr =
+    operator fun invoke(value: SheetRangeExpr, right: ScalarExpr) =
         AlgebraicBinaryRangeStatistic(this, value, right)
 
-    operator fun invoke(value: NamedSheetRangeExpr, right: ScalarExpr): UntypedUnnamedExpr =
+    operator fun invoke(value: NamedSheetRangeExpr, right: ScalarExpr) =
         AlgebraicBinaryRangeStatistic(this, value.range, right)
 
-    operator fun invoke(value: SheetRangeExpr, right: Double): UntypedUnnamedExpr =
+    operator fun invoke(value: SheetRangeExpr, right: Double) =
         AlgebraicBinaryRangeStatistic(this, value, constant(right))
 
-    operator fun invoke(value: NamedSheetRangeExpr, right: Double): UntypedUnnamedExpr =
+    operator fun invoke(value: NamedSheetRangeExpr, right: Double) =
         AlgebraicBinaryRangeStatistic(this, value.range, constant(right))
 
     fun reduceArithmetic(left: ScalarStatistic, right: ScalarExpr): ScalarExpr
@@ -276,13 +309,12 @@ data class AlgebraicBinaryScalarStatistic(
     val op: AlgebraicBinaryScalarStatisticFunction,
     val left: ScalarExpr,
     val right: ScalarExpr
-) : UnnamedExpr, ScalarExpr {
+) : ScalarExpr {
     init {
         track()
     }
 
     override val type get() = left.type
-    override fun toNamed(name: String) = NamedScalar(name, this)
     override fun toString() = render()
 }
 
@@ -290,12 +322,12 @@ data class AlgebraicBinaryRangeStatistic(
     val op: AlgebraicBinaryScalarStatisticFunction,
     val left: SheetRangeExpr,
     val right: ScalarExpr
-) : UntypedUnnamedExpr {
+) : UntypedScalar {
     init {
         track()
     }
 
-    override fun toNamed(name: String) = NamedUntypedScalar(name, this)
+    operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = render()
 }
 
@@ -309,14 +341,13 @@ interface AlgebraicUnaryMatrixScalarFunction {
 data class AlgebraicUnaryMatrixScalar(
     val op: AlgebraicUnaryMatrixScalarFunction,
     val value: MatrixExpr
-) : UnnamedExpr, ScalarExpr, ParentExpr<Double> {
+) : ScalarExpr, ParentExpr<Double> {
     init {
         track()
     }
 
     override val type get() = value.type
     override val children: Iterable<ScalarExpr> get() = value.elements.asIterable()
-    override fun toNamed(name: String) = NamedScalar(name, this)
     override fun toString() = render()
 }
 

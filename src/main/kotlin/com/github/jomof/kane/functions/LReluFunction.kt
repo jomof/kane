@@ -9,10 +9,6 @@ private class LReluFunction : AlgebraicUnaryScalarFunction {
     override val meta = LRELU
     override fun doubleOp(value: Double) = max(0.1 * value, value)
 
-    override fun reduceArithmetic(value: ScalarExpr): ScalarExpr? {
-        return null
-    }
-
     override fun differentiate(
         expr : ScalarExpr,
         exprd : ScalarExpr,

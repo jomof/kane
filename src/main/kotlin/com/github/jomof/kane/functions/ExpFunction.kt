@@ -10,10 +10,6 @@ private class ExpFunction : AlgebraicUnaryScalarFunction {
     override val meta = EXP
     override fun doubleOp(value: Double) = exp(value)
 
-    override fun reduceArithmetic(value: ScalarExpr): ScalarExpr? {
-        return null
-    }
-
     override fun differentiate(
         expr : ScalarExpr,
         exprd : ScalarExpr,

@@ -8,14 +8,21 @@ import com.github.jomof.kane.functions.AlgebraicUnaryScalarStatistic
 
 private fun AlgebraicExpr.expandNamedCells(lookup: Map<String, Expr>): AlgebraicExpr {
     fun ScalarExpr.self() = expandNamedCells(lookup) as ScalarExpr
+    fun MatrixExpr.self() = expandNamedCells(lookup) as MatrixExpr
     return when (this) {
         is NamedScalarVariable -> this
-        is AlgebraicUnaryScalarStatistic -> copy(value = value.self())
+        is DataMatrix -> map { it.self() }
+        is NamedMatrix -> copy(matrix = matrix.self())
+        is AlgebraicUnaryScalarStatistic ->
+            when (value) {
+                is AlgebraicExpr -> copy(value = value.expandNamedCells(lookup))
+                else -> error("${value.javaClass}")
+            }
         is AlgebraicBinaryScalarStatistic -> copy(left = left.self(), right = right.self())
         is AlgebraicUnaryScalar -> copy(value = value.self())
         is AlgebraicBinaryScalar -> {
             val changed = copy(left = left.self(), right = right.self())
-            if (changed !== this) changed.memoizeAndReduceArithmetic()
+            if (changed !== this) changed.evalGradual()
             else this
         }
         is CoerceScalar -> {

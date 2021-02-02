@@ -5,13 +5,14 @@ import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.types.AlgebraicType
 import com.github.jomof.kane.types.DoubleAlgebraicType
 import com.github.jomof.kane.types.KaneType
+import com.github.jomof.kane.visitor.CopyEliminatedRewritingVisitor
 import com.github.jomof.kane.visitor.visit
 import java.lang.Integer.max
 import kotlin.math.abs
 import kotlin.math.min
 import kotlin.reflect.KProperty
 
-data class SheetRangeExpr(val range: SheetRange) : UntypedUnnamedExpr {
+data class SheetRangeExpr(val range: SheetRange) : UntypedScalar {
     private val name by lazy { range.toString() }
     fun up(move: Int) = copy(range = range.up(move))
     fun down(move: Int) = copy(range = range.down(move))
@@ -21,8 +22,7 @@ data class SheetRangeExpr(val range: SheetRange) : UntypedUnnamedExpr {
     val down get() = down(1)
     val left get() = left(1)
     val right get() = right(1)
-    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
-    override fun toNamed(name: String) = NamedSheetRangeExpr(name, this)
+    operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = name
 }
 
@@ -37,8 +37,7 @@ data class NamedSheetRangeExpr(
         }
     }
 
-    override fun toUnnamed() = range
-    override fun toString() = "$name=$range"
+    override fun toString() = render()
 
     fun up(move: Int) = range.up(move)
     fun down(move: Int) = range.down(move)
@@ -53,8 +52,11 @@ data class NamedSheetRangeExpr(
 data class CoerceScalar(
     val value: Expr,
     override val type: AlgebraicType
-) : UnnamedExpr, ScalarExpr {
+) : ScalarExpr {
     init {
+        assert(value !is ScalarExpr) {
+            "coerce of scalar?"
+        }
         assert(value !is CoerceScalar) {
             "coerce of coerce?"
         }
@@ -64,12 +66,13 @@ data class CoerceScalar(
         track()
     }
 
-    override fun toString() = "$value"
-    override fun toNamed(name: String) = NamedScalar(name, this)
+    override fun toString() = render()
     fun copy(value: Expr): ScalarExpr {
-        return if (value === this.value) this
-        else if (value is ScalarExpr && type == value.type) value
-        else CoerceScalar(value, type)
+        return when {
+            value === this.value -> this
+            value is ScalarExpr -> value
+            else -> CoerceScalar(value, type)
+        }
     }
 }
 
@@ -152,13 +155,7 @@ interface Sheet : Expr {
 
 
     fun toBuilder(): SheetBuilderImpl {
-        val named = cells.map { (name, expr) ->
-            when (expr) {
-                is UnnamedExpr -> expr.toNamed(name)
-                is ScalarExpr -> expr.toNamed(name)
-                else -> error("${expr.javaClass}")
-            }
-        }
+        val named = cells.map { (name, expr) -> expr.toNamed(name) }
         return SheetBuilderImpl(
             columnDescriptors = columnDescriptors,
             rowDescriptors = rowDescriptors,
@@ -184,8 +181,8 @@ class SheetBuilderImpl(
         return SheetBuilderRange(this, parsed)
     }
 
-    fun getImmediateNamedExprs(): Map<String, UnnamedExpr> {
-        val cells = mutableMapOf<String, UnnamedExpr>()
+    fun getImmediateNamedExprs(): Map<String, Expr> {
+        val cells = mutableMapOf<String, Expr>()
 
         // Add immediate named expressions
         added.forEach { namedExpr ->
@@ -195,7 +192,7 @@ class SheetBuilderImpl(
         return cells
     }
 
-    private fun getEmbeddedNamedExprs(cells: Map<String, UnnamedExpr>): Map<String, UnnamedExpr> {
+    private fun getEmbeddedNamedExprs(cells: Map<String, Expr>): Map<String, Expr> {
         val result = cells.toMutableMap()
         var done = false
         while (!done) {
@@ -227,7 +224,7 @@ class SheetBuilderImpl(
             .toMap()
     }
 
-    private fun convertCellNamesToUpperCase(cells: Map<String, UnnamedExpr>): Map<String, UnnamedExpr> {
+    private fun convertCellNamesToUpperCase(cells: Map<String, Expr>): Map<String, Expr> {
         return cells
             .map { (name, expr) ->
                 val upper = name.toUpperCase()
@@ -237,8 +234,8 @@ class SheetBuilderImpl(
             .map { it.first to it.second }.toMap()
     }
 
-    private fun scalarizeMatrixes(cells: Map<String, UnnamedExpr>): Map<String, Expr> {
-        val result = cells.map { it.key to it.value as Expr }.toMap().toMutableMap()
+    private fun scalarizeMatrixes(cells: Map<String, Expr>): Map<String, Expr> {
+        val result = cells.map { it.key to it.value }.toMap().toMutableMap()
         var done = false
         while (!done) {
             done = true
@@ -336,6 +333,11 @@ class SheetBuilderImpl(
         val relativeReferencesReplaced = replaceRelativeReferences(scalarizeRanges)
         val unaryMatrixesExpanded = expandUnaryOperations(relativeReferencesReplaced)
         val namesReplaced = replaceNamesWithCellReferences(unaryMatrixesExpanded)
+        namesReplaced.forEach { (name, expr) ->
+            assert(looksLikeCellName(name) || expr !is SheetRangeExpr) {
+                "Should have eliminated $name"
+            }
+        }
         return Sheet.of(columnDescriptors, rowDescriptors, sheetDescriptor, namesReplaced)
     }
 
@@ -368,22 +370,30 @@ class SheetBuilderImpl(
 
 private fun Sheet.variable(cell : String) : NamedScalarVariable {
     val reduced = when(val value = cells.getValue(cell)) {
-        is AlgebraicExpr ->
-            value.memoizeAndReduceArithmetic()
+        is AlgebraicExpr -> value.evalGradual()
         else ->
             error("${value.javaClass}")
     }
-    return when(reduced) {
+    return when (reduced) {
         is ConstantScalar -> NamedScalarVariable(cell, reduced.value, reduced.type)
         is ScalarVariable -> NamedScalarVariable(cell, reduced.initial, reduced.type)
         else -> error("$cell (${cells.getValue(cell)}) is not a constant")
     }
 }
 
+private fun Sheet.replaceNamesWithVariables(variables: Map<String, NamedScalarVariable>): Sheet {
+    return object : CopyEliminatedRewritingVisitor() {
+        override fun rewrite(expr: NamedScalar): Expr {
+            return variables[expr.name] ?: super.rewrite(expr)
+        }
+    }.rewrite(this) as Sheet
+}
+
 fun Sheet.minimize(
-    target : String,
-    variables : List<String>,
-    learningRate : Double = 0.001) : Sheet {
+    target: String,
+    variables: List<String>,
+    learningRate: Double = 0.001
+): Sheet {
     val resolvedVariables = mutableMapOf<String, NamedScalarVariable>()
 
     // Turn each 'variable' into a NamedScalarVariable
@@ -391,22 +401,29 @@ fun Sheet.minimize(
         resolvedVariables[cell] = variable(cell)
     }
 
+    // Replace names with variables
+    val namesReplaced = replaceNamesWithVariables(resolvedVariables)
+
     // Follow all expressions from 'target'
-    val reducedArithmetic = reduceArithmetic(variables.toSet())
+    val reducedArithmetic = namesReplaced.evalGradual(
+        reduceVariables = true,
+        excludeVariables = variables.toSet()
+    )
+    //val reducedArithmetic = reduceArithmetic(variables.toSet())
     println("Expanding target expression '$target'")
     val lookup = reducedArithmetic.cells + resolvedVariables
     val targetExpr = reducedArithmetic.cells.getValue(target).expandNamedCells(lookup)
     if (targetExpr !is ScalarExpr) {
         error("'$target' was not a numeric expression")
     }
-    val reduced = targetExpr.reduceArithmetic()
-    val namedTarget : NamedScalarExpr = NamedScalar(target, reduced)
+    val reduced = targetExpr.evalGradual()
+    val namedTarget: NamedScalarExpr = NamedScalar(target, reduced)
 
     // Differentiate target with respect to each variable
     println("Differentiating target expression $target with respect to change variables: ${variables.joinToString(" ")}")
     val diffs = resolvedVariables.map { (_, variable) ->
         val name = "d$target/d${variable.name}"
-        val derivative = differentiate(d(namedTarget) / d(variable)).reduceArithmetic()
+        val derivative = differentiate(d(namedTarget) / d(variable)).evalGradual()
         NamedScalar(name, derivative)
     }
 
@@ -416,7 +433,7 @@ fun Sheet.minimize(
             "update(${variable.name})",
             variable,
             variable - multiply(learningRate, diff)
-        ).reduceArithmetic()
+        ).evalGradual()
     }
 
     // Create the model, allocate space for it, and iterate. Break when the target didn't move much

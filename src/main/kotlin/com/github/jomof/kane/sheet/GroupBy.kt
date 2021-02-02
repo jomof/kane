@@ -9,7 +9,7 @@ import com.github.jomof.kane.*
  */
 class GroupBy(
     val sheet: Sheet,
-    val keySelector: List<NamedExpr>
+    private val keySelector: List<NamedExpr>
 ) : Expr {
     val groups by lazy { createGroups() }
 
@@ -17,7 +17,7 @@ class GroupBy(
         val map = mutableMapOf<List<Expr>, MutableList<Int>>()
         (1..sheet.rows).map { row ->
             val view = RowView(sheet, row - 1)
-            val key = keySelector.map { it.toUnnamed().eval(view) }
+            val key = keySelector.map { it.toUnnamed().evalGradual(rangeExprProvider = view) }
             val ordinals = map.computeIfAbsent(key) { mutableListOf() }
             ordinals.add(row)
         }

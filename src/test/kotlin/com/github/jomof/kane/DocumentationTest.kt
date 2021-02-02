@@ -27,33 +27,38 @@ class DocumentationTest {
               ----- 
             1     1 
             2 A1+A1 
-        """.trimIndent())
+        """.trimIndent()
+        )
 
         /**
          * As you can see, the formula A1+A1 is preserved in the sheet cell A2.
          *
          * You can evaluate the sheet with the eval() function to see the result of A1+A1.
          */
-        println(sheet.eval())
-        sheet.eval().assertString("""
+        println(sheet.evalGradual())
+        sheet.evalGradual().assertString(
+            """
               A 
               - 
             1 1 
             2 2 
-        """.trimIndent())
+        """.trimIndent()
+        )
 
         /**
          * The benefit is that you can change the value of a cell to see it"s effect.
          * For example, we can change cell A1 to 2.
          */
         val sheet2 = sheet.copy("A1" to 2.0)
-        println(sheet2.eval())
-        sheet2.eval().assertString("""
+        println(sheet2.evalGradual())
+        sheet2.evalGradual().assertString(
+            """
               A 
               - 
             1 2 
             2 4 
-        """.trimIndent())
+        """.trimIndent()
+        )
 
         /**
          * Sheet instances are immutable, so a new sheet was created with the copy(...) function.
@@ -63,7 +68,7 @@ class DocumentationTest {
          * Sheet cells support formatting. For example, we can set cell "A1" to a value in
          * dollars.
          */
-        val dollarSheet = sheet.copy("A1" to "$5.20").eval()
+        val dollarSheet = sheet.copy("A1" to "$5.20").evalGradual()
         println(dollarSheet)
         dollarSheet.assertString("""
                  A   
@@ -95,8 +100,8 @@ class DocumentationTest {
          *
          * We can get a more readable list of columns with the 'types' field on the sheet.
          */
-        println(peek.statistics)
-        println(peek.statistics.html)
+        println(peek.describe())
+        println(peek.describe().html)
 
         /**
          * So there are 90+ columns as well.
@@ -114,7 +119,7 @@ class DocumentationTest {
          *
          * Let's look at some summary statistics to see what this data looks like.
          */
-        println(filtered.statistics)
+        println(filtered.describe())
 
         /**
          * Hmm, that 'min' value looks a little suspicious. This data uses '-999999' to represent the case when the
@@ -124,7 +129,7 @@ class DocumentationTest {
          * '-999999' with Double.NaN.
          */
         val covid = filtered.mapDoubles { if (it.toInt() == -999999) Double.NaN else it }
-        println(covid.statistics)
+        println(covid.describe())
 
         /**
          * That's better. We can see there were 12,750 missing values, leaving 74,619 rows with values.
@@ -281,7 +286,7 @@ class DocumentationTest {
         /**
          * The formulas all look good. Let's evaluate the sheet to see the starting error.
          */
-        sheet.eval().assertString(
+        sheet.evalGradual().assertString(
             """
               x actual prediction error 
               - ------ ---------- ----- 
@@ -305,7 +310,7 @@ class DocumentationTest {
         /**
          * Okay, the sheet was minimized. Notice that 'm' is now set to -0.5 and 'b' was left at 0.
          */
-        sheet.eval().assertString(
+        sheet.evalGradual().assertString(
             """
               x actual prediction error 
               - ------ ---------- ----- 

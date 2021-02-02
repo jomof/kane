@@ -1,19 +1,13 @@
 package com.github.jomof.kane.functions
 
-import com.github.jomof.kane.*
+import com.github.jomof.kane.StreamingSamples
+import com.github.jomof.kane.UnaryOp
 
 private val MAX by UnaryOp()
 
-class MaxFunction : AlgebraicUnaryMatrixScalarFunction, AlgebraicUnaryScalarStatisticFunction {
+class MaxFunction : AlgebraicUnaryScalarStatisticFunction {
     override val meta = MAX
-    override fun reduceArithmetic(value: ScalarStatistic) = constant(value.statistic.max, value.type)
-    override fun reduceArithmetic(elements: List<ScalarExpr>): ScalarExpr? {
-        if (elements.isEmpty()) return null
-        if (!elements.all { it is ConstantScalar }) return null
-        return constant(elements.map { (it as ConstantScalar).value }.maxOrNull()!!, elements.first().type)
-    }
-
-    override fun reduceArithmetic(value: MatrixExpr) = reduceArithmetic(value.elements)
+    override fun lookupStatistic(statistic: StreamingSamples) = statistic.max
 }
 
 val max = MaxFunction()

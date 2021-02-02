@@ -13,7 +13,7 @@ interface RandomVariableExpr : ScalarExpr {
 class DiscreteUniformRandomVariable(
     val values: List<Double>,
     override val type: AlgebraicType
-) : UnnamedExpr, RandomVariableExpr, ScalarExpr {
+) : RandomVariableExpr, ScalarExpr {
     init {
         track()
     }
@@ -24,8 +24,7 @@ class DiscreteUniformRandomVariable(
         return ConstantScalar(sample, type)
     }
 
-    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
-    override fun toNamed(name: String) = NamedScalar(name, this)
+    operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
 
     override fun toString(): String {
         val min = values.minByOrNull { it } ?: 0.0

@@ -4,20 +4,22 @@ import com.github.jomof.kane.sheet.SheetBuilderImpl
 import com.github.jomof.kane.types.DoubleAlgebraicType
 import com.github.jomof.kane.types.KaneType
 import com.github.jomof.kane.types.kaneType
+import kotlin.reflect.KProperty
 
 data class Tiling<E : Any>(
     val columns: Int,
     val rows: Int,
     val data: List<E>,
     override val type: KaneType<E>,
-) : UnnamedExpr, TypedExpr<E> {
+) : TypedExpr<E> {
     init {
         assert(rows * columns == data.size)
         assert(rows > 0)
         assert(columns > 0)
     }
 
-    override fun toNamed(name: String) = NamedTiling(name, this)
+    fun toNamedTilingExpr(name: String) = NamedTiling(name, this)
+    operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
 
     fun getNamedElement(name: String, coordinate: Coordinate): NamedExpr {
         return when (val element = data[coordinate.row * columns + coordinate.column]) {
@@ -27,9 +29,8 @@ data class Tiling<E : Any>(
         }
     }
 
-    fun getUnnamedElement(coordinate: Coordinate): UnnamedExpr {
+    fun getUnnamedElement(coordinate: Coordinate): Expr {
         return when (val element = data[coordinate.row * columns + coordinate.column]) {
-            is UnnamedExpr -> element
             is Double -> ConstantScalar(element, DoubleAlgebraicType.kaneType)
             else -> ValueExpr(element, element.javaClass.kaneType)
         }
@@ -41,7 +42,6 @@ data class NamedTiling<E:Any>(
     val tiling : Tiling<E>
 ) : NamedExpr, TypedExpr<E> {
     override val type get() = tiling.type
-    override fun toUnnamed() = tiling
 }
 
 fun columnOf(vararg elements : Double) : MatrixExpr = matrixOf(1, elements.size, *elements)

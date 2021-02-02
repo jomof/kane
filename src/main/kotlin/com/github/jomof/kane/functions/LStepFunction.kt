@@ -10,10 +10,6 @@ private class LStepFunction : AlgebraicUnaryScalarFunction {
     override val meta = LSTEP
     override fun doubleOp(value: Double) = if (value < 0.0) 0.1 else 1.0
 
-    override fun reduceArithmetic(value: ScalarExpr): ScalarExpr? {
-        return null
-    }
-
     override fun differentiate(
         expr : ScalarExpr,
         exprd : ScalarExpr,

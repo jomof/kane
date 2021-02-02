@@ -1,15 +1,13 @@
 package com.github.jomof.kane.functions
 
-import com.github.jomof.kane.*
+import com.github.jomof.kane.StreamingSamples
+import com.github.jomof.kane.UnaryOp
 
 private val MEDIAN by UnaryOp()
 
-class MedianFunction : AlgebraicUnaryMatrixScalarFunction, AlgebraicUnaryScalarStatisticFunction {
+class MedianFunction : AlgebraicUnaryScalarStatisticFunction {
     override val meta = MEDIAN
-
-    override fun reduceArithmetic(value: ScalarStatistic) = constant(value.statistic.median, value.type)
-    override fun reduceArithmetic(elements: List<ScalarExpr>) = TODO()
-    override fun reduceArithmetic(value: MatrixExpr) = TODO()
+    override fun lookupStatistic(statistic: StreamingSamples) = statistic.median
 }
 
 val median = MedianFunction()

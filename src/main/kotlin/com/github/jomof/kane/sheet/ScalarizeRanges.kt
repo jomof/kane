@@ -3,6 +3,7 @@ package com.github.jomof.kane.sheet
 import com.github.jomof.kane.*
 import com.github.jomof.kane.ComputableIndex.MoveableIndex
 import com.github.jomof.kane.functions.*
+import com.github.jomof.kane.visitor.CopyEliminatedRewritingVisitor
 import com.github.jomof.kane.visitor.RewritingVisitor
 
 private fun Expr.ranges(): Set<SheetRange> {
@@ -15,6 +16,7 @@ private fun Expr.ranges(): Set<SheetRange> {
             set
         }
         is NamedMatrix -> matrix.ranges()
+        is NamedUntypedScalar -> expr.ranges()
         is AlgebraicUnaryMatrix -> value.ranges()
         is AlgebraicUnaryMatrixScalar -> value.ranges()
         is AlgebraicUnaryScalar -> value.ranges()
@@ -33,7 +35,7 @@ private fun Expr.ranges(): Set<SheetRange> {
         }
         is AlgebraicBinaryScalarStatistic,
         is AlgebraicUnaryScalarStatistic,
-        is AlgebraicUnaryRangeStatistic,
+            //is AlgebraicUnaryRangeStatistic,
         is AlgebraicBinaryRangeStatistic,
         is Tiling<*>,
         is ValueExpr<*>,
@@ -45,11 +47,16 @@ private fun Expr.ranges(): Set<SheetRange> {
 }
 
 private fun Expr.replaceColumnWithCell(row: Int): Expr {
-    return object : RewritingVisitor() {
-        override fun SheetRangeExpr.rewrite(): SheetRangeExpr = when (range) {
-            is ColumnRange -> copy(range = CellRange(column = range.first, MoveableIndex(row)))
-            is CellRange -> this
-            else -> error("${range.javaClass}")
+    return object : CopyEliminatedRewritingVisitor() {
+        override fun rewrite(expr: AlgebraicUnaryScalarStatistic) = expr
+        override fun rewrite(expr: AlgebraicBinaryRangeStatistic) = expr.copy(right = scalar(expr.right))
+        override fun rewrite(expr: SheetRangeExpr) = with(expr) {
+            when (range) {
+                is ColumnRange -> copy(range = CellRange(column = range.first, MoveableIndex(row)))
+                is CellRange -> this
+                is RectangleRange -> this
+                else -> error("${range.javaClass}")
+            }
         }
     }.rewrite(this)
 }
@@ -92,34 +99,50 @@ fun SheetBuilderImpl.scalarizeRanges(cells: Map<String, Expr>): Map<String, Expr
                 val columnReplaced = expr.replaceColumnWithCell(row)
                 val newCell = CellRange.moveable(base.column, row)
                 val cellName = "$newCell"
-                if (cellName == name || !result.containsKey(cellName)) {
+                if (result[cellName] != columnReplaced) {
                     result[cellName] = columnReplaced
                     done = false
                 }
             }
         }
     }
+
+    // Remove any cells that have ranges
+    val cellsWithRanges = result
+        .map { (name, expr) -> name to expr.ranges() }
+        .filter { it.second.isNotEmpty() }
+
+
+    cellsWithRanges.forEach { (name, expr) ->
+        result.remove(name)
+    }
+
+
+
     return result
 }
 
-fun SheetBuilderImpl.convertNamedColumnsToColumnRanges(cells: Map<String, UnnamedExpr>): Map<String, UnnamedExpr> {
+fun SheetBuilderImpl.convertNamedColumnsToColumnRanges(cells: Map<String, Expr>): Map<String, Expr> {
     val converter = object : RewritingVisitor() {
         override fun SheetRangeExpr.rewrite(): Expr {
-            return if (range is NamedColumnRange) {
-                val columns = columnDescriptors.filter { it.value.name == range.name }.map { it.key }
-                val columnRange = when {
-                    columns.isEmpty() ->
-                        error("No column named ${range.name}")
-                    columns.size > 1 -> error("Multiple columns named ${range.name}")
-                    else -> ColumnRange(first = MoveableIndex(columns[0]), second = MoveableIndex(columns[0]))
+            return when (range) {
+                is NamedColumnRange -> {
+                    val columns = columnDescriptors.filter { it.value.name == range.name }.map { it.key }
+                    val columnRange = when {
+                        columns.isEmpty() ->
+                            error("No column named ${range.name}")
+                        columns.size > 1 -> error("Multiple columns named ${range.name}")
+                        else -> ColumnRange(first = MoveableIndex(columns[0]), second = MoveableIndex(columns[0]))
+                    }
+                    copy(range = columnRange)
                 }
-                copy(range = columnRange)
-            } else this
+                else -> this
+            }
         }
     }
     val result = cells.toMutableMap()
     cells.forEach { (name, expr) ->
-        result[name] = converter.unnamed(expr)
+        result[name] = converter(expr)
     }
     return result
 }

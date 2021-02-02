@@ -2,13 +2,29 @@ package com.github.jomof.kane.sheet
 
 import com.github.jomof.kane.*
 import com.github.jomof.kane.functions.*
+import com.github.jomof.kane.types.DoubleAlgebraicType
 
 
 private class ReplaceNamesWithCellReferences(val excluding: String) {
     private fun MatrixExpr.replace() = (this as Expr).replace() as MatrixExpr
     private fun ScalarExpr.replace() = (this as Expr).replace() as ScalarExpr
+    private fun UntypedScalar.replace() = (this as Expr).replace() as UntypedScalar
     private fun Expr.replace(): Expr {
         return when (this) {
+            is NamedUntypedScalar ->
+                when {
+                    name == excluding -> copy(expr = expr.replace())
+                    looksLikeCellName(name) -> {
+                        CoerceScalar(
+                            SheetRangeExpr(
+                                cellNameToCoordinate(name).toComputableCoordinate()
+                            ), DoubleAlgebraicType.kaneType
+                        )
+                    }
+
+                    else ->
+                        expr.replace()
+                }
             is NamedScalar ->
                 when {
                     name == excluding -> copy(scalar = scalar.replace())
@@ -19,15 +35,15 @@ private class ReplaceNamesWithCellReferences(val excluding: String) {
                             ), type
                         )
                     }
-                    scalar is ConstantScalar -> {
-                        NamedScalarVariable(name, scalar.value, scalar.type)
-                    }
-                    else ->
-                        scalar.replace()
+//                    scalar is ConstantScalar -> {
+//                        NamedScalarVariable(name, scalar.value, scalar.type)
+//                    }
+                    scalar is ConstantScalar -> this
+                    else -> scalar.replace()
                 }
             is NamedMatrix -> copy(matrix = matrix.replace())
             is AlgebraicUnaryScalar -> copy(value = value.replace())
-            is AlgebraicUnaryScalarStatistic -> copy(value = value.replace())
+            is AlgebraicUnaryScalarStatistic -> copy(value = value.replace() as AlgebraicExpr)
             is AlgebraicUnaryMatrix -> copy(value = value.replace())
             is AlgebraicUnaryMatrixScalar -> copy(value = value.replace())
             is AlgebraicBinaryMatrix -> copy(
@@ -52,7 +68,7 @@ private class ReplaceNamesWithCellReferences(val excluding: String) {
             )
             is NamedSheetRangeExpr -> toUnnamed()
             is CoerceScalar -> copy(value = value.replace())
-            is AlgebraicUnaryRangeStatistic -> this
+            //is AlgebraicUnaryRangeStatistic -> this
             is AlgebraicBinaryRangeStatistic -> copy(right = right.replace())
             is ConstantScalar -> this
             is DiscreteUniformRandomVariable -> this

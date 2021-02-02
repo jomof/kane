@@ -1,20 +1,22 @@
 package com.github.jomof.kane.functions
 
-import com.github.jomof.kane.*
+import com.github.jomof.kane.ScalarExpr
+import com.github.jomof.kane.StreamingSamples
+import com.github.jomof.kane.UnaryOp
 
 private val STDDEV by UnaryOp()
 
-class StddevFunction : AlgebraicUnaryMatrixScalarFunction, AlgebraicUnaryScalarStatisticFunction {
+class StddevFunction : AlgebraicUnaryScalarStatisticFunction {
     override val meta = STDDEV
+    override fun lookupStatistic(statistic: StreamingSamples) =
+        statistic.stddev
 
-    override fun reduceArithmetic(value: ScalarStatistic) = constant(value.statistic.stddev, value.type)
-    override fun reduceArithmetic(elements: List<ScalarExpr>): ScalarExpr {
-        val mean = mean.reduceArithmetic(elements)
-        val powers = elements.map { pow(it - mean, 2.0) }
-        return pow(sum.reduceArithmetic(powers), 0.5)
+    override fun reduceArithmetic(elements: List<ScalarExpr>): ScalarExpr? {
+        val statistic = super.reduceArithmetic(elements)
+        if (statistic != null) return statistic
+        val variance = variance.reduceArithmetic(elements)
+        return pow(variance, 0.5)
     }
-
-    override fun reduceArithmetic(value: MatrixExpr) = reduceArithmetic(value.elements)
 }
 
 val stddev = StddevFunction()

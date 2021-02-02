@@ -2,14 +2,11 @@ package com.github.jomof.kane.sheet
 
 import com.github.jomof.kane.Expr
 import com.github.jomof.kane.NamedColumnRange
-import com.github.jomof.kane.SheetRange
 import com.github.jomof.kane.coordinateToCellName
 
 
 interface RangeExprProvider {
-    fun range(range: SheetRange): Expr {
-        TODO()
-    }
+    fun range(range: SheetRangeExpr): Expr = range
 }
 
 class RowView(private val sheet: Sheet, private val row: Int) : RangeExprProvider {
@@ -20,15 +17,15 @@ class RowView(private val sheet: Sheet, private val row: Int) : RangeExprProvide
         return sheet[cell].toString()
     }
 
-    override fun range(range: SheetRange): Expr {
-        return when (range) {
+    override fun range(range: SheetRangeExpr): Expr {
+        return when (range.range) {
             is NamedColumnRange -> {
                 val column = sheet.columnDescriptors
-                    .filter { it.value.name == range.name }
+                    .filter { it.value.name == range.range.name }
                     .map { it.key }.single()
                 sheet[column, row]
             }
-            else -> error("${range.javaClass}")
+            else -> error("${range.range.javaClass}")
         }
     }
 }

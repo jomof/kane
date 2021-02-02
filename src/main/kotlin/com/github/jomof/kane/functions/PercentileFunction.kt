@@ -3,6 +3,8 @@ package com.github.jomof.kane.functions
 import com.github.jomof.kane.*
 
 private val PERCENTILE by BinaryOp(precedence = 7)
+private val PERCENTILE25 by UnaryOp("25%")
+private val PERCENTILE75 by UnaryOp("75%")
 
 class PercentileFunction : AlgebraicBinaryScalarStatisticFunction {
     override val meta = PERCENTILE
@@ -19,12 +21,18 @@ class PercentileFunction : AlgebraicBinaryScalarStatisticFunction {
     override fun reduceArithmetic(left: ScalarStatistic, right: ScalarExpr): ScalarExpr {
         return when (right) {
             is ConstantScalar -> constant(left.statistic.percentile(right.value), left.type)
-            is ScalarStatistic -> {
-                error("${left.javaClass} ${right.javaClass}")
-            }
+            is ScalarStatistic -> constant(left.statistic.percentile(right.statistic.mean), left.type)
             else -> error("${left.javaClass} ${right.javaClass}")
         }
     }
 }
 
 val percentile = PercentileFunction()
+val percentile25 = object : AlgebraicUnaryScalarStatisticFunction {
+    override val meta = PERCENTILE25
+    override fun lookupStatistic(statistic: StreamingSamples) = statistic.percentile(0.25)
+}
+val percentile75 = object : AlgebraicUnaryScalarStatisticFunction {
+    override val meta = PERCENTILE75
+    override fun lookupStatistic(statistic: StreamingSamples) = statistic.percentile(0.75)
+}

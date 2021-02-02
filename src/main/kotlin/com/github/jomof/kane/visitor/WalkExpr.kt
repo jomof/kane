@@ -22,7 +22,7 @@ fun Expr.visit(f: (expr : Expr) -> Unit) {
         is NamedValueExpr<*>,
         is SheetRangeExpr,
         is DiscreteUniformRandomVariable,
-        is AlgebraicUnaryRangeStatistic,
+        //is AlgebraicUnaryRangeStatistic,
         is NamedScalarVariable -> {
         }
         is NamedSheetRangeExpr -> range.visit(f)
@@ -56,6 +56,7 @@ fun Expr.visit(f: (expr : Expr) -> Unit) {
         is NamedScalarAssign -> right.visit(f)
         is NamedMatrixAssign -> right.visit(f)
         is NamedMatrix -> matrix.visit(f)
+        is NamedUntypedScalar -> expr.visit(f)
         is DataMatrix -> elements.forEach { it.visit(f) }
         is AlgebraicDeferredDataMatrix -> data.visit(f)
         is Tableau -> children.forEach { it.visit(f) }

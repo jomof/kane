@@ -84,7 +84,7 @@ class KaneTest {
         val input by matrixVariable(1, 1)
         val w0 by matrixVariable(input.rows + 1, 1)
         val h1 by logit(w0 cross (input stack 1.0))
-        h1.toDataMatrix().reduceArithmetic().assertString("h1=[logit(w0[0,0]*input[0,0]+w0[1,0])]")
+        h1.toDataMatrix().evalGradual().assertString("h1=[logit(w0[0,0]*input[0,0]+w0[1,0])]")
     }
 
     @Test
@@ -107,12 +107,12 @@ class KaneTest {
         val y by m * x + b
         val target by variable()
         val error by pow(target - y, 2.0)
-        val dm by -1.0 * r * differentiate(d(error)/d(m))
-        val db by -1.0 * r * differentiate(d(error)/d(b))
+        val dm by -1.0 * r * differentiate(d(error) / d(m))
+        val db by -1.0 * r * differentiate(d(error) / d(b))
         (1.0 - pow(r, 2.0)).assertString("1-r²")
-        error.reduceArithmetic().assertString("error=(target-(m*x+b))²")
-        dm.reduceArithmetic().assertString("dm=2*r*(target-(m*x+b))*x")
-        db.reduceArithmetic().assertString("db=2*r*(target-(m*x+b))")
+        error.evalGradual().assertString("error=(target-(m*x+b))²")
+        dm.evalGradual().assertString("dm=2*r*(target-(m*x+b))*x")
+        db.evalGradual().assertString("db=2*r*(target-(m*x+b))")
     }
 
     @Test
@@ -153,7 +153,7 @@ class KaneTest {
         val r by variable()
         val a1 by assign(r + 1.0 - 1.0 to r)
         a1.assertString("r <- r+1-1")
-        a1.memoizeAndReduceArithmetic().assertString("r <- r")
+        a1.evalGradual().assertString("r <- r")
     }
 
     @Test
@@ -226,42 +226,43 @@ class KaneTest {
         val errors by 0.5 * pow(target - output, 2.0)
         val error by sum(errors)
         val db0 by b0 - r * differentiate(d(error) / d(b0))
-        val db1 by b1 - r * differentiate(d(error)/d(b1))
-        val dw0 by w0 - r * differentiate(d(error)/d(w0))
-        val dw1 by w1 - r * differentiate(d(error)/d(w1))
-        val h0 by h[0,0]
-        val h1 by h[0,1]
-        val o0 by output[0,0]
-        val o1 by output[0,1]
-        val e0 by errors[0,0]
-        val e1 by errors[0,1]
+        val db1 by b1 - r * differentiate(d(error) / d(b1))
+        val dw0 by w0 - r * differentiate(d(error) / d(w0))
+        val dw1 by w1 - r * differentiate(d(error) / d(w1))
+        val h0 by h[0, 0]
+        val h1 by h[0, 1]
+        val o0 by output[0, 0]
+        val o1 by output[0, 1]
+        val e0 by errors[0, 0]
+        val e1 by errors[0, 1]
 
-        val substituted = h0.substituteInitial()
-        substituted.assertString("h0=logit(0.3775)")
-        substituted.reduceArithmetic().assertString("h0=0.59327")
-//        h1.substituteInitial().assertString("h1=logit(0.25*0.05+0.3*0.1+0.35)")
-        h1.substituteInitial().reduceArithmetic().assertString("h1=0.59688")
+        h0.evalGradual(reduceVariables = true).assertString("h0=0.59327")
+        h1.evalGradual(reduceVariables = true).assertString("h1=0.59688")
 
-        o0.substituteInitial().reduceArithmetic().assertString("o0=0.75137")
-        o1.substituteInitial().reduceArithmetic().assertString("o1=0.77293")
+        o0.evalGradual(reduceVariables = true).assertString("o0=0.75137")
+        o1.evalGradual(reduceVariables = true).assertString("o1=0.77293")
 
-        e0.substituteInitial().reduceArithmetic().assertString("e0=0.27481")
-        e1.substituteInitial().reduceArithmetic().assertString("e1=0.02356")
+        e0.evalGradual(reduceVariables = true).assertString("e0=0.27481")
+        e1.evalGradual(reduceVariables = true).assertString("e1=0.02356")
 
-        error.substituteInitial().reduceArithmetic().assertString("error=0.29837")
-        val x = dw1.substituteInitial()
-        x.reduceArithmetic().assertString("""
+        error.evalGradual(reduceVariables = true).assertString("error=0.29837")
+        val x = dw1.evalGradual(reduceVariables = true)
+        x.assertString(
+            """
             dw1
             ------
             0.35892|0.40867
             0.5113|0.56137
-        """.trimIndent())
-        dw0.substituteInitial().reduceArithmetic().assertString("""
+        """.trimIndent()
+        )
+        dw0.evalGradual(reduceVariables = true).assertString(
+            """
             dw0
             ------
             0.14978|0.19956
             0.24975|0.2995
-        """.trimIndent())
+        """.trimIndent()
+        )
 
         val layout = tableauOf(output.type,output, db0, db1, dw0, dw1).linearize()
         println(layout)
@@ -376,12 +377,12 @@ class KaneTest {
     }
 
     @Test
-    fun `divide`() {
+    fun divide() {
         val x by variable()
         val fx by 4.0 / pow(x, 6.0)
-        val dfx by differentiate(d(fx)/d(x))
-        fx.reduceArithmetic().assertString("fx=4*x⁻⁶")
-        dfx.reduceArithmetic().assertString("dfx=-24*x⁻⁷")
+        val dfx by differentiate(d(fx) / d(x))
+        fx.evalGradual().assertString("fx=4*x⁻⁶")
+        dfx.evalGradual().assertString("dfx=-24*x⁻⁷")
     }
 
     @Test
@@ -409,7 +410,7 @@ class KaneTest {
         val x by variable(100.0)
         val y by squarsh(x)
         val dy by (differentiate(d(y)/d(x)))
-        y.reduceArithmetic().assertString("y=(2/(e⁻ˣ+1)-1)+0.01*x")
+        y.evalGradual().assertString("y=(2/(e⁻ˣ+1)-1)+0.01*x")
         dy.assertString("dy=2*e⁻ˣ*(e⁻ˣ+1)⁻²+0.01")
         val fx = y.toFunc(x)
         val fxp = dy.toFunc(x)
@@ -624,7 +625,7 @@ class KaneTest {
         val a by matrixVariable(1,3)
         val b by matrixVariable(3, 2)
         val s by sum(a) / b
-        s[0,0].reduceArithmetic().assertString("(a[0,0]+a[0,1]+a[0,2])/b[0,0]")
+        s[0, 0].evalGradual().assertString("(a[0,0]+a[0,1]+a[0,2])/b[0,0]")
     }
 
     @Test
@@ -703,11 +704,11 @@ class KaneTest {
         (a * -1.0).assertString("a*-1")
         (a * b).assertString("a*b")
         (a - b).assertString("a-b")
-        (b + a).reduceArithmetic().assertString("a+b")
-        (b - a).reduceArithmetic().assertString("b-a")
+//        (b + a).evalGradual().assertString("a+b")
+//        (b - a).evalGradual().assertString("b-a")
         (a / b).assertString("a/b")
-        (b * a).reduceArithmetic().assertString("a*b")
-        (b / a).reduceArithmetic().assertString("b/a")
+//        (b * a).evalGradual().assertString("a*b")
+//        (b / a).evalGradual().assertString("b/a")
         (a + a * b).assertString("a+a*b")
         ((a + a) * b).assertString("(a+a)*b")
         ((a - a) * b).assertString("(a-a)*b")
@@ -722,7 +723,7 @@ class KaneTest {
         ((a + a) - b).assertString("a+a-b")
         ((a - a) - b).assertString("a-a-b")
         (a - (a - b)).assertString("a-(a-b)")
-        (a - -b).reduceArithmetic().assertString("a+b")
+//        (a - -b).evalGradual().assertString("a+b")
         val m : MatrixExpr by matrixVariable(5, 2)
         val n : MatrixExpr by matrixVariable(3, 5)
         m.assertString("m")
@@ -745,14 +746,14 @@ class KaneTest {
     fun `variable negation rendering`() {
         val a by variable()
         val b by variable()
-        (-b * -b * -a).reduceArithmetic().assertString("-a*b²")
-        (-b * -b).reduceArithmetic().assertString("b²")
-        (-b * -a * -b).reduceArithmetic().assertString("-a*b²")
+        //(-b * -b * -a).evalGradual().assertString("-a*b²")
+        (-b * -b).evalGradual().assertString("b²")
+        (-b * -a * -b).evalGradual().assertString("-a*b²")
         (-a).assertString("-a")
         (-(a + b)).assertString("-(a+b)")
         (-(a * b)).assertString("-a*b")
-        (-1.0 * b).reduceArithmetic().assertString("-b")
-        (b * -1.0).reduceArithmetic().assertString("-b")
+        (-1.0 * b).evalGradual().assertString("-b")
+        (b * -1.0).evalGradual().assertString("-b")
     }
 
     @Test
@@ -761,12 +762,12 @@ class KaneTest {
         val b by variable()
         val x by variable()
 
-        (pow(a, -1.0)).reduceArithmetic().assertString("a⁻¹")
-        (pow(a, b)).reduceArithmetic().assertString("aᵇ")
-        (pow(a, -b)).reduceArithmetic().assertString("a⁻ᵇ")
-        (pow(a, b-b)).reduceArithmetic().assertString("a⁽ᵇ⁻ᵇ⁾")
-        (exp(x)).reduceArithmetic().assertString("eˣ")
-        (exp(-x)).reduceArithmetic().assertString("e⁻ˣ")
+        (pow(a, -1.0)).evalGradual().assertString("a⁻¹")
+        (pow(a, b)).evalGradual().assertString("aᵇ")
+        (pow(a, -b)).evalGradual().assertString("a⁻ᵇ")
+        (pow(a, b - b)).evalGradual().assertString("a⁽ᵇ⁻ᵇ⁾")
+        (exp(x)).evalGradual().assertString("eˣ")
+        (exp(-x)).evalGradual().assertString("e⁻ˣ")
     }
 
     @Test
@@ -785,30 +786,30 @@ class KaneTest {
         val x by m[0,0]
         val y by m[0,1]
         val f1 by pow(x, 2.0) + pow(y, 3.0)
-        f1.reduceArithmetic().assertString("f1=m[0,0]²+m[0,1]³")
+        f1.evalGradual().assertString("f1=m[0,0]²+m[0,1]³")
         val d1 by d(f1) / d(x)
-        d1.reduceArithmetic().assertString("d1=d(m[0,0]²+m[0,1]³)/d(m[0,0])")
+        d1.evalGradual().assertString("d1=d(m[0,0]²+m[0,1]³)/d(m[0,0])")
         differentiate(d1).assertString("d1'=2*m[0,0]")
         val d2 by d(f1) / d(y)
-        d2.reduceArithmetic().assertString("d2=d(m[0,0]²+m[0,1]³)/d(m[0,1])")
+        d2.evalGradual().assertString("d2=d(m[0,0]²+m[0,1]³)/d(m[0,1])")
         differentiate(d2).assertString("d2'=3*m[0,1]²")
         val f2 by pow(x, 2.0) * pow(y, 3.0)
-        f2.reduceArithmetic().assertString("f2=m[0,0]²*m[0,1]³")
+        f2.evalGradual().assertString("f2=m[0,0]²*m[0,1]³")
         val df2dx by d(f2) / d(x)
-        df2dx.reduceArithmetic().assertString("df2dx=d(m[0,0]²*m[0,1]³)/d(m[0,0])")
+        df2dx.evalGradual().assertString("df2dx=d(m[0,0]²*m[0,1]³)/d(m[0,0])")
         differentiate(df2dx).assertString("df2dx'=2*m[0,0]*m[0,1]³")
         val df2dy by d(f2) / d(y)
-        df2dy.reduceArithmetic().assertString("df2dy=d(m[0,0]²*m[0,1]³)/d(m[0,1])")
+        df2dy.evalGradual().assertString("df2dy=d(m[0,0]²*m[0,1]³)/d(m[0,1])")
         differentiate(df2dy).assertString("df2dy'=3*m[0,0]²*m[0,1]²")
         val assigned by differentiate(df2dy)
-        assigned.reduceArithmetic().assertString("assigned=3*m[0,0]²*m[0,1]²")
+        assigned.evalGradual().assertString("assigned=3*m[0,0]²*m[0,1]²")
         val f3 by logit(x * y)
-        f3.reduceArithmetic().assertString("f3=logit(m[0,0]*m[0,1])")
+        f3.evalGradual().assertString("f3=logit(m[0,0]*m[0,1])")
         val df3dx by d(f3) / d(x)
-        df3dx.reduceArithmetic().assertString("df3dx=d(logit(m[0,0]*m[0,1]))/d(m[0,0])")
+        df3dx.evalGradual().assertString("df3dx=d(logit(m[0,0]*m[0,1]))/d(m[0,0])")
         differentiate(df3dx).assertString("df3dx'=logit(m[0,0]*m[0,1])*(1-logit(m[0,0]*m[0,1]))*m[0,1]")
         val df3dy by d(f3) / d(y)
-        df3dy.reduceArithmetic().assertString("df3dy=d(logit(m[0,0]*m[0,1]))/d(m[0,1])")
+        df3dy.evalGradual().assertString("df3dy=d(logit(m[0,0]*m[0,1]))/d(m[0,1])")
         differentiate(df3dy).assertString("df3dy'=logit(m[0,0]*m[0,1])*(1-logit(m[0,0]*m[0,1]))*m[0,0]")
     }
 
@@ -819,29 +820,29 @@ class KaneTest {
         val f1 by pow(x, 2.0) + pow(y, 3.0)
         f1.assertString("f1=x²+y³")
         val d1 by d(f1) / d(x)
-        d1.reduceArithmetic().assertString("d1=d(x²+y³)/dx")
+        d1.evalGradual().assertString("d1=d(x²+y³)/dx")
         differentiate(d1).assertString("d1'=2*x")
         val d2 by d(f1) / d(y)
-        d2.reduceArithmetic().assertString("d2=d(x²+y³)/dy")
+        d2.evalGradual().assertString("d2=d(x²+y³)/dy")
         differentiate(d2).assertString("d2'=3*y²")
         val f2 by pow(x, 2.0) * pow(y, 3.0)
         f2.assertString("f2=x²*y³")
         val df2dx by d(f2) / d(x)
-        df2dx.reduceArithmetic().assertString("df2dx=d(x²*y³)/dx")
+        df2dx.evalGradual().assertString("df2dx=d(x²*y³)/dx")
         differentiate(df2dx).assertString("df2dx'=2*x*y³")
         val df2dy by d(f2) / d(y)
-        df2dy.reduceArithmetic().assertString("df2dy=d(x²*y³)/dy")
+        df2dy.evalGradual().assertString("df2dy=d(x²*y³)/dy")
         val diff = differentiate(df2dy)
-        diff.reduceArithmetic().assertString("df2dy'=3*x²*y²")
+        diff.evalGradual().assertString("df2dy'=3*x²*y²")
         val assigned by differentiate(df2dy)
-        assigned.reduceArithmetic().assertString("assigned=3*x²*y²")
+        assigned.evalGradual().assertString("assigned=3*x²*y²")
         val f3 by logit(x * y)
         f3.assertString("f3=logit(x*y)")
         val df3dx by d(f3) / d(x)
-        df3dx.reduceArithmetic().assertString("df3dx=d(logit(x*y))/dx")
+        df3dx.evalGradual().assertString("df3dx=d(logit(x*y))/dx")
         differentiate(df3dx).assertString("df3dx'=logit(x*y)*(1-logit(x*y))*y")
         val df3dy by d(f3) / d(y)
-        df3dy.reduceArithmetic().assertString("df3dy=d(logit(x*y))/dy")
+        df3dy.evalGradual().assertString("df3dy=d(logit(x*y))/dy")
         differentiate(df3dy).assertString("df3dy'=logit(x*y)*(1-logit(x*y))*x")
     }
 

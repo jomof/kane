@@ -10,6 +10,8 @@ private class NegateFunction : AlgebraicUnaryScalarFunction {
 
     override fun reduceArithmetic(value: ScalarExpr): ScalarExpr? {
         if (value is AlgebraicUnaryScalar && value.op == negate) return value.value
+        if (value is ConstantScalar) return value.copy(value = -value.value)
+        if (value is ScalarListExpr) return ScalarListExpr(value.values.map { negate(it) }, value.type)
         return null
     }
 

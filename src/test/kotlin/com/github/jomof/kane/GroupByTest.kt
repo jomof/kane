@@ -22,6 +22,16 @@ class GroupByTest {
                 2000-01-10,45.306120,177.540920,male
             """
     }
+    private val animals = sheetOfCsv {
+        """
+        type,class,order,max_speed
+        falcon,bird,Falconiformes,389.0
+        parrot,bird,Psittaciformes,24.0
+        lion,mammal,Carnivora,80.2
+        monkey,mammal,Primates,NaN
+        leopard,mammal,Carnivora,58.0
+        """
+    }
 
     @Test
     fun basic() {
@@ -120,7 +130,7 @@ class GroupByTest {
             val bmi by range("weight") / pow(range("height"), 2.0)
             listOf(bmi)
         }
-        val expected = bmi.eval().filterRows { row -> row["gender"] == "male" }
+        val expected = bmi.evalGradual().filterRows { row -> row["gender"] == "male" }
         expected.assertString(
             """
                   date     height    weight  gender   bmi   
@@ -146,7 +156,7 @@ class GroupByTest {
             10 2000-01-10 45.30612 177.54092   male C6/B6²
             """.trimIndent()
         )
-        filtered.eval().assertString(
+        filtered.evalGradual().assertString(
             """
                   date     height    weight  gender   bmi   
                ---------- -------- --------- ------ ------- 
@@ -159,7 +169,7 @@ class GroupByTest {
             """.trimIndent()
         )
         // This is the real test. Filter then eval should be the same as eval then filter.
-        filtered.eval().assertString(expected.toString())
+        filtered.evalGradual().assertString(expected.toString())
     }
 
     @Test
@@ -168,9 +178,33 @@ class GroupByTest {
             val bmi by range("weight") / pow(range("height"), 2.0)
             listOf(bmi)
         }
-        val evalThenGroup = bmi.eval().groupBy("gender")["female"]
-        val groupThenEval = bmi.groupBy("gender")["female"].eval()
+        val evalThenGroup = bmi.evalGradual().groupBy("gender")["female"]
+        val groupThenEval = bmi.groupBy("gender")["female"].evalGradual()
 
         evalThenGroup.assertString(groupThenEval.toString())
+    }
+
+    @Test
+    fun `animal statistics`() {
+        animals.describe().assertString(
+            """
+                  max_speed  
+                 ----------- 
+           count           4 
+             NaN           1 
+            mean       137.8 
+             min          24 
+             25%          58 
+          median        80.2 
+             75%         389 
+             max         389 
+        variance 28579.22667 
+          stddev   169.05392 
+        skewness     1.08967 
+        kurtosis      -0.714 
+              cv     1.22681 
+             sum       551.2
+        """.trimIndent()
+        )
     }
 }

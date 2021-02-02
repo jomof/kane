@@ -167,10 +167,14 @@ class LinearModel(val type : AlgebraicType) {
 
 private fun AlgebraicExpr.linearizeExpr(model : LinearModel = LinearModel(type)) : AlgebraicExpr {
     if(this is ScalarExpr && model.contains(this)) return model.getValue(this)
-    val result = when(this) {
+    val result = when (this) {
         is Slot -> this
         is ConstantScalar -> this
-        is AlgebraicUnaryScalarStatistic -> copy(value = value.linearizeExpr(model) as ScalarExpr)
+        is AlgebraicUnaryScalarStatistic ->
+            when (value) {
+                is AlgebraicExpr -> copy(value = value.linearizeExpr(model) as ScalarExpr)
+                else -> error("${value.javaClass}")
+            }
         is AlgebraicBinaryScalarStatistic -> copy(
             left = left.linearizeExpr(model) as ScalarExpr,
             right = right.linearizeExpr(model) as ScalarExpr,
@@ -359,15 +363,17 @@ private fun AlgebraicExpr.stripNames() : AlgebraicExpr {
     }
 }
 
-private fun Expr.terminal() : Boolean = when(this) {
+private fun Expr.terminal() : Boolean = when (this) {
     is ConstantScalar -> true
     is Slot -> true
     is NamedScalarVariable -> true
     is MatrixVariableElement -> true
     is AlgebraicBinaryScalar -> false
     is AlgebraicUnaryScalar -> false
+    is AlgebraicUnaryScalarStatistic -> false
     is DiscreteUniformRandomVariable -> true
-    else -> error("$javaClass")
+    else ->
+        error("$javaClass")
 }
 
 fun AlgebraicExpr.rollUpCommonSubexpressions(model : LinearModel) : AlgebraicExpr {
@@ -393,7 +399,10 @@ fun AlgebraicExpr.rollUpCommonSubexpressions(model : LinearModel) : AlgebraicExp
             else this
         }
         this is AlgebraicUnaryScalarStatistic -> {
-            val value = value.rollUpCommonSubexpressions(model) as ScalarExpr
+            val value = value.rollUpCommonSubexpressions(model)
+            assert(value is ScalarExpr) {
+                "Expected ScalarExpr but was '${value.javaClass.simpleName}'}"
+            }
             if (this.value !== value) copy(value = value).rollUpCommonSubexpressions(model)
             else this
         }
@@ -433,7 +442,7 @@ fun AlgebraicExpr.rollUpCommonSubexpressions(model : LinearModel) : AlgebraicExp
 }
 
 fun AlgebraicExpr.linearize() : LinearModel {
-    val names = gatherNamedExprs().toList().map { it.reduceArithmetic() }
+    val names = gatherNamedExprs().toList().map { it.evalGradual() }
     with(Tableau(names, type)) {
         val model = LinearModel(type)
         claimMatrixVariables(model)
