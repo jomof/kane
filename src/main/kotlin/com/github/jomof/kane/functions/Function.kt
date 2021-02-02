@@ -206,12 +206,8 @@ data class AlgebraicUnaryMatrix(
 interface AlgebraicUnaryScalarStatisticFunction {
     val meta: UnaryOp
 
-    //    operator fun invoke(value: ScalarExpr) = AlgebraicUnaryScalarStatistic(this, value, value.type)
-//    operator fun invoke(value: MatrixExpr) = AlgebraicUnaryScalarStatistic(this, value, value.type)
-//    operator fun invoke(value: SheetRangeExpr) = AlgebraicUnaryScalarStatistic(this, value, DoubleAlgebraicType.kaneType)
-//    operator fun invoke(value: NamedSheetRangeExpr) = AlgebraicUnaryScalarStatistic(this, value.range, DoubleAlgebraicType.kaneType)
     operator fun invoke(value: Sheet): Expr {
-        val filtered = value.describe().filterRows { row -> row.name == meta.op }
+        val filtered = value.describe().filterRows { row -> "$row" == meta.op }
         if (filtered.columns == 1) return filtered[0, 0] as ScalarExpr
         return filtered
     }

@@ -17,3 +17,6 @@ fun removeBuilderPrivateExpressions(cells: Map<String, Expr>): Map<String, Expr>
         .map { (name, expr) -> name to expr.removeBuilderPrivateExpressions() }
         .toMap()
 }
+
+fun Sheet.removeBuilderPrivateExpressions() = copy(cells = removeBuilderPrivateExpressions(cells))
+

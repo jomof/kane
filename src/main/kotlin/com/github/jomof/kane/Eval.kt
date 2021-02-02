@@ -136,7 +136,17 @@ private val convertVariablesToStatistics = object : RewritingVisitor() {
     }
 }
 
-fun Expr.expandSheetCells(sheet: Sheet, excludeVariables: Set<String>): Expr {
+private val reduceCoerceScalar = object : RewritingVisitor() {
+    override fun rewrite(expr: CoerceScalar): Expr {
+        return when (expr.value) {
+            is Sheet -> ScalarListExpr(expr.value.cells.map { expr.copy(value = it.value) }, expr.type)
+            is SheetRangeExpr -> expr
+            else -> error("${expr.value.javaClass}")
+        }
+    }
+}
+
+private fun Expr.expandSheetCells(sheet: Sheet, excludeVariables: Set<String>): Expr {
     return object : RewritingVisitor() {
         override fun rewrite(expr: AlgebraicBinaryRangeStatistic): Expr = with(expr) {
             val leftRewritten = rewrite(left)
@@ -262,14 +272,15 @@ private fun Expr.evalGradualSingleSample(
         val reducedAlgebraicBinaryScalar = reduceAlgebraicBinaryScalar(reducedAlgebraicUnaryScalar)
         val reducedProvidedSheetRangeExprs = reduceProvidedSheetRangeExprs(reducedAlgebraicBinaryScalar)
         val expandedSheetCells = expandSheetCells(reducedProvidedSheetRangeExprs)
+        val reducedCoerceScalar = reduceCoerceScalar(expandedSheetCells)
 
-        if (expandedSheetCells === last) {
-            if (this is NamedExpr && expandedSheetCells !is NamedExpr) {
-                return expandedSheetCells.toNamed(name)
+        if (reducedCoerceScalar === last) {
+            if (this is NamedExpr && reducedCoerceScalar !is NamedExpr) {
+                return reducedCoerceScalar.toNamed(name)
             }
-            return expandedSheetCells
+            return reducedCoerceScalar
         }
-        last = expandedSheetCells
+        last = reducedCoerceScalar
     }
 }
 

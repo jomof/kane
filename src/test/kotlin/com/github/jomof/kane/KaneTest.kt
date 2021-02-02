@@ -2,6 +2,7 @@
 package com.github.jomof.kane
 
 import com.github.jomof.kane.functions.*
+import com.github.jomof.kane.sheet.describe
 import com.github.jomof.kane.types.DoubleAlgebraicType
 import com.github.jomof.kane.types.dollars
 import org.junit.Test
@@ -35,11 +36,43 @@ class KaneTest {
     }
 
     @Test
-    fun `data matrix basics`() {
-        val m1 by matrixOf(3,2,
+    fun `describe matrix basics`() {
+        val m1 by matrixOf(
+            3, 2,
             1.0, 2.0, 3.0,
-            4.0, 5.0, 6.0)
-        m1.assertString("""
+            4.0, 5.0, 6.0
+        )
+        m1.describe().assertString(
+            """
+                        m1    
+                     -------- 
+               count        6 
+                 NaN        0 
+                mean      3.5 
+                 min        1 
+                 25%        2 
+              median        4 
+                 75%        5 
+                 max        6 
+            variance      3.5 
+              stddev  1.87083 
+            skewness        0 
+            kurtosis -1.26857 
+                  cv  0.53452 
+                 sum       21 
+        """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `data matrix basics`() {
+        val m1 by matrixOf(
+            3, 2,
+            1.0, 2.0, 3.0,
+            4.0, 5.0, 6.0
+        )
+        m1.assertString(
+            """
             m1
             ------
             1|2|3

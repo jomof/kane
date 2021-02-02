@@ -38,7 +38,7 @@ fun Sheet.sample(count : Int = 5, random : Random = Random(7)) : Sheet {
 fun Sheet.ordinalRows(elements : List<Int>) : Sheet {
     val oldOrdinalToNewOrdinal = elements.indices.map { elements[it] to it+1 }.toMap()
     val rowDescriptors : Map<Int, RowDescriptor> = oldOrdinalToNewOrdinal.map { (old, new) ->
-        val descriptor : RowDescriptor = rowDescriptors[old] ?: RowDescriptor(name = old.toString())
+        val descriptor: RowDescriptor = rowDescriptors[old] ?: RowDescriptor(name = listOf(constant(old)))
         new to descriptor
     }.toMap()
     val cells = cells.mapNotNull { (name,expr) ->

@@ -76,9 +76,9 @@ data class CoerceScalar(
     }
 }
 
-data class ColumnDescriptor(val name : String, val type: AdmissibleDataType<*>?)
-data class RowDescriptor(val name : String)
-data class SheetDescriptor(val limitOutputLines : Int = Int.MAX_VALUE)
+data class ColumnDescriptor(val name: String, val type: AdmissibleDataType<*>?)
+data class RowDescriptor(val name: List<Expr>)
+data class SheetDescriptor(val limitOutputLines: Int = Int.MAX_VALUE)
 interface Sheet : Expr {
     val columnDescriptors : Map<Int, ColumnDescriptor>
     val rowDescriptors : Map<Int, RowDescriptor>
@@ -172,7 +172,7 @@ class SheetBuilderImpl(
     added: List<NamedExpr> = listOf()
 ) : SheetBuilder {
     internal val columnDescriptors: MutableMap<Int, ColumnDescriptor> = columnDescriptors.toMutableMap()
-    internal val rowDescriptors: MutableMap<Int, RowDescriptor> = rowDescriptors.toMutableMap()
+    private val rowDescriptors: MutableMap<Int, RowDescriptor> = rowDescriptors.toMutableMap()
     private val added: MutableList<NamedExpr> = added.toMutableList()
 
     override fun column(range: String): SheetBuilderRange {
@@ -362,6 +362,10 @@ class SheetBuilderImpl(
     }
 
     override fun nameRow(row: Int, name: String) {
+        rowDescriptors[row] = RowDescriptor(listOf(constant(name)))
+    }
+
+    override fun nameRow(row: Int, name: List<Expr>) {
         rowDescriptors[row] = RowDescriptor(name)
     }
 }
@@ -483,8 +487,8 @@ fun Sheet.render() : String {
         if (it > 0) columnDescriptors[it-1]?.name?.length?:0 else 0
     }
 
-    fun colName(column : Int) = columnDescriptors[column]?.name ?: indexToColumnName(column)
-    fun rowName(row : Int) = rowDescriptors[row]?.name ?: "$row"
+    fun colName(column: Int) = columnDescriptors[column]?.name ?: indexToColumnName(column)
+    fun rowName(row: Int) = rowDescriptors[row]?.name?.joinToString(" ") ?: "$row"
 
     // Effective row count for formatting
     val rows = min(rows, sheetDescriptor.limitOutputLines)

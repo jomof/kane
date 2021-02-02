@@ -11,7 +11,7 @@ class GroupBy(
     val sheet: Sheet,
     private val keySelector: List<NamedExpr>
 ) : Expr {
-    val groups by lazy { createGroups() }
+    private val groups by lazy { createGroups() }
 
     private fun createGroups(): Map<List<Expr>, Sheet> {
         val map = mutableMapOf<List<Expr>, MutableList<Int>>()
@@ -26,7 +26,7 @@ class GroupBy(
 
     operator fun iterator() = groups.iterator()
 
-    private fun toKeySelectorSheet(): Sheet {
+    private fun descriptiveSheet(): Sheet {
         return sheetOf {
             nameColumn(0, "key selector")
             keySelector.forEachIndexed { index, expr ->
@@ -37,15 +37,14 @@ class GroupBy(
         }
     }
 
-    val html: String get() = toKeySelectorSheet().html
-    override fun toString() = toKeySelectorSheet().toString()
+    val html: String get() = descriptiveSheet().html
+    override fun toString() = descriptiveSheet().toString()
 
     operator fun get(vararg keys: Any): Sheet {
         val keyExprs = keys.toList().map { convertAnyToExpr(it) }
         return groups.getValue(keyExprs)
     }
 }
-
 
 private fun Sheet.buildGrouping(builder: SheetBuilderImpl): GroupBy {
     val immediate = builder.getImmediateNamedExprs()
@@ -61,3 +60,4 @@ fun Sheet.groupOf(selector: SheetBuilder.() -> List<NamedExpr>): GroupBy {
 }
 
 fun Sheet.groupBy(vararg columns: String) = groupOf { columns.map { column(it).toNamed(it) } }
+

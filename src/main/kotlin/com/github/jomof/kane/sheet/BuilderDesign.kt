@@ -19,6 +19,7 @@ interface SheetBuilder {
     fun column(range: String): SheetBuilderRange
     fun nameColumn(column: Int, name: String)
     fun nameRow(row: Int, name: String)
+    fun nameRow(row: Int, name: List<Expr>)
 
     fun up(offset: Int) = SheetBuilderRange(this, CellRange.relative(column = 0, row = -offset))
     fun down(offset: Int) = SheetBuilderRange(this, CellRange.relative(column = 0, row = offset))

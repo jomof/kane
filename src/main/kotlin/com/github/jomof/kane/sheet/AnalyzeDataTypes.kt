@@ -45,7 +45,7 @@ private class StringAdmissibleDataType : AdmissibleDataType<String> {
     override fun toString() = "string"
 }
 
-private class DoubleAdmissibleDataType : AdmissibleDataType<Double> {
+internal class DoubleAdmissibleDataType : AdmissibleDataType<Double> {
     override val type = DoubleAlgebraicType.kaneType
     override fun tryParse(string: String) =
         if (string.isBlank()) Double.NaN else string.toDoubleOrNull()
