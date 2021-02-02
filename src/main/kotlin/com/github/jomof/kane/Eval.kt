@@ -294,7 +294,7 @@ private fun Expr.evalGradualReduceStatistics(
     }
 }
 
-fun Expr.evalGradual(
+fun Expr.eval(
     rangeExprProvider: RangeExprProvider = NopRangeExprProvider(),
     reduceVariables: Boolean = false,
     excludeVariables: Set<String> = setOf()
@@ -330,44 +330,44 @@ fun Expr.evalGradual(
     return stats!!.evalGradualReduceStatistics(rangeExprProvider, reduceVariables, excludeVariables)
 }
 
-fun NamedMatrix.evalGradual(
+fun NamedMatrix.eval(
     rangeExprProvider: RangeExprProvider = NopRangeExprProvider(),
     reduceVariables: Boolean = false,
     excludeVariables: Set<String> = setOf()
 ) =
-    (this as Expr).evalGradual(rangeExprProvider, reduceVariables, excludeVariables) as NamedMatrix
+    (this as Expr).eval(rangeExprProvider, reduceVariables, excludeVariables) as NamedMatrix
 
-fun NamedScalar.evalGradual(
+fun NamedScalar.eval(
     rangeExprProvider: RangeExprProvider = NopRangeExprProvider(),
     reduceVariables: Boolean = false,
     excludeVariables: Set<String> = setOf()
 ) =
-    (this as Expr).evalGradual(rangeExprProvider, reduceVariables, excludeVariables) as NamedScalar
+    (this as Expr).eval(rangeExprProvider, reduceVariables, excludeVariables) as NamedScalar
 
-fun NamedAlgebraicExpr.evalGradual(
+fun NamedAlgebraicExpr.eval(
     rangeExprProvider: RangeExprProvider = NopRangeExprProvider(),
     reduceVariables: Boolean = false,
     excludeVariables: Set<String> = setOf()
 ) =
-    (this as Expr).evalGradual(rangeExprProvider, reduceVariables, excludeVariables) as NamedAlgebraicExpr
+    (this as Expr).eval(rangeExprProvider, reduceVariables, excludeVariables) as NamedAlgebraicExpr
 
-fun Sheet.evalGradual(
+fun Sheet.eval(
     rangeExprProvider: RangeExprProvider = NopRangeExprProvider(),
     reduceVariables: Boolean = false,
     excludeVariables: Set<String> = setOf()
 ) =
-    (this as Expr).evalGradual(rangeExprProvider, reduceVariables, excludeVariables) as Sheet
+    (this as Expr).eval(rangeExprProvider, reduceVariables, excludeVariables) as Sheet
 
-fun ScalarExpr.evalGradual(
+fun ScalarExpr.eval(
     rangeExprProvider: RangeExprProvider = NopRangeExprProvider(),
     reduceVariables: Boolean = false,
     excludeVariables: Set<String> = setOf()
 ) =
-    (this as Expr).evalGradual(rangeExprProvider, reduceVariables, excludeVariables) as ScalarExpr
+    (this as Expr).eval(rangeExprProvider, reduceVariables, excludeVariables) as ScalarExpr
 
-fun MatrixExpr.evalGradual(
+fun MatrixExpr.eval(
     rangeExprProvider: RangeExprProvider = NopRangeExprProvider(),
     reduceVariables: Boolean = false,
     excludeVariables: Set<String> = setOf()
 ) =
-    (this as Expr).evalGradual(rangeExprProvider, reduceVariables, excludeVariables) as MatrixExpr
+    (this as Expr).eval(rangeExprProvider, reduceVariables, excludeVariables) as MatrixExpr

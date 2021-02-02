@@ -35,8 +35,8 @@ class DocumentationTest {
          *
          * You can evaluate the sheet with the eval() function to see the result of A1+A1.
          */
-        println(sheet.evalGradual())
-        sheet.evalGradual().assertString(
+        println(sheet.eval())
+        sheet.eval().assertString(
             """
               A 
               - 
@@ -50,8 +50,8 @@ class DocumentationTest {
          * For example, we can change cell A1 to 2.
          */
         val sheet2 = sheet.copy("A1" to 2.0)
-        println(sheet2.evalGradual())
-        sheet2.evalGradual().assertString(
+        println(sheet2.eval())
+        sheet2.eval().assertString(
             """
               A 
               - 
@@ -68,7 +68,7 @@ class DocumentationTest {
          * Sheet cells support formatting. For example, we can set cell "A1" to a value in
          * dollars.
          */
-        val dollarSheet = sheet.copy("A1" to "$5.20").evalGradual()
+        val dollarSheet = sheet.copy("A1" to "$5.20").eval()
         println(dollarSheet)
         dollarSheet.assertString("""
                  A   
@@ -286,7 +286,7 @@ class DocumentationTest {
         /**
          * The formulas all look good. Let's evaluate the sheet to see the starting error.
          */
-        sheet.evalGradual().assertString(
+        sheet.eval().assertString(
             """
               x actual prediction error 
               - ------ ---------- ----- 
@@ -310,7 +310,7 @@ class DocumentationTest {
         /**
          * Okay, the sheet was minimized. Notice that 'm' is now set to -0.5 and 'b' was left at 0.
          */
-        sheet.evalGradual().assertString(
+        sheet.eval().assertString(
             """
               x actual prediction error 
               - ------ ---------- ----- 

@@ -38,7 +38,7 @@ fun Sheet.describe(): Sheet {
 }
 
 private fun Sheet.columnStatistics(): List<StreamingSamples> {
-    val evaled = evalGradual()
+    val evaled = eval()
     val samples = (0 until evaled.columns).map { StreamingSamples() }
     cells.forEach { (name, expr) ->
         val constant = expr.tryFindConstant()

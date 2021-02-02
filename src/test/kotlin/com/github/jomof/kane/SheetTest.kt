@@ -50,7 +50,7 @@ class SheetTest {
         println(sheet)
         sheet["A1"].assertString("1")
         sheet["A2"].assertString("A1+1")
-        val evaluated = sheet.evalGradual()
+        val evaluated = sheet.eval()
         println(evaluated)
         evaluated["A1"].assertString("1")
         evaluated["A2"].assertString("2")
@@ -76,7 +76,7 @@ class SheetTest {
         sheet["A5"].assertString("B5+5")
         sheet["B1"].assertString("A1+8")
         sheet["B5"].assertString("7")
-        val evaluated = sheet.evalGradual()
+        val evaluated = sheet.eval()
         println(evaluated)
         evaluated["A1"].assertString("1")
         evaluated["A2"].assertString("2")
@@ -100,7 +100,7 @@ class SheetTest {
             val a1 by sp500(constant(1988))
             val b1 by (start * a1 * stock + start * a1 * (1.0 - stock))
             listOf(b1)
-        }.evalGradual()
+        }.eval()
         println(plan)
         plan["B1"].assertString("$16")
     }
@@ -278,7 +278,7 @@ class SheetTest {
             val a2 by columnOf(5) { 1.1 + increasing.up }
             val b1 by columnOf(5) { constant(1.0 + it) }
             listOf(a2, b1)
-        }.evalGradual()
+        }.eval()
         println(sheet)
         sheet.assertString("""
                A  increasing 
@@ -300,7 +300,7 @@ class SheetTest {
             listOf(a1, a2)
         }
         println(sheet)
-        val evaluated = sheet.evalGradual()
+        val evaluated = sheet.eval()
         println(evaluated)
         evaluated["A1"].assertString("A2")
         evaluated["A2"].assertString("A1+1")
@@ -324,7 +324,7 @@ class SheetTest {
             val a2 by up + dollars(0.35)
             listOf(a1, a2)
         }
-        val evaluated = sheet.evalGradual()
+        val evaluated = sheet.eval()
         println(evaluated)
         evaluated["A1"].assertString("$0.15")
         evaluated["A2"].assertString("$0.50")
@@ -340,7 +340,7 @@ class SheetTest {
             val a5 by a1 * up(3)
             listOf(a3, a4, a5)
         }
-        val evaluated = sheet.evalGradual()
+        val evaluated = sheet.eval()
         println(evaluated)
         evaluated["A1"].assertString("15%")
         evaluated["A2"].assertString("\$1,234.00")
@@ -373,9 +373,9 @@ class SheetTest {
                 a1, a2, b1, b2, a3, a4, b4, b3, c3, c4, d1, c1, d4
             )
         }
-        println(sheet.evalGradual())
+        println(sheet.eval())
         val min = sheet.minimize("D1", listOf("B1", "B2"), learningRate = 0.00001)
-        println(min.evalGradual())
+        println(min.eval())
     }
 
     @Test
@@ -409,8 +409,8 @@ class SheetTest {
         minimized["A1"].assertString("0")
         minimized["A2"].assertString("4")
         minimized["B1"].assertString("5")
-        println(minimized.evalGradual())
-        minimized.evalGradual()["A4"].assertString("1") // The minimized target
+        println(minimized.eval())
+        minimized.eval()["A4"].assertString("1") // The minimized target
     }
 
     @Test
@@ -432,7 +432,7 @@ class SheetTest {
         minimized["A1"].assertString("0")
         minimized["A2"].assertString("10")
         minimized["B1"].assertString("11") // Should be held constant
-        minimized.evalGradual()["A4"].assertString("1") // The minimized target
+        minimized.eval()["A4"].assertString("1") // The minimized target
     }
 
     @Test
@@ -541,7 +541,7 @@ class SheetTest {
                 stddev=stddev(A1:B2)
             """.trimIndent()
         )
-        check.evalGradual().assertString(
+        check.eval().assertString(
             """
                   A B 
                   - - 
@@ -581,7 +581,7 @@ class SheetTest {
             11 9 C1/A12 D1/A12 E1/A12 F1/A12 G1/A12 H1/A12 I1/A12 J1/A12 K1/A12 L1/A12  
         """.trimIndent()
         )
-        sheet.evalGradual().assertString(
+        sheet.eval().assertString(
             """
                A    B       C       D       E       F       G       H       I       J       K   
                - ------- ------- ------- ------- ------- ------- ------- ------- ------- ------ 
@@ -615,8 +615,8 @@ class SheetTest {
         sheet["B1"].assertString("A1+1")
         sheet["B2"].assertString("A2+2")
         sheet["B3"].assertString("sum(B1)")
-        println(sheet.evalGradual())
-        sheet.evalGradual()["B3"].assertString("5")
+        println(sheet.eval())
+        sheet.eval()["B3"].assertString("5")
     }
 
     @Test
@@ -693,7 +693,7 @@ class SheetTest {
             listOf(a1, b1, c1)
         }
         println(sheet)
-        println(sheet.evalGradual())
+        println(sheet.eval())
         sheet["A1"].assertString("1")
         sheet["A2"].assertString("1")
         sheet["B1"].assertString("A1+1")
@@ -714,7 +714,7 @@ class SheetTest {
             listOf(d1, b3, a1, e1, b1)
         }
         println(sheet)
-        println(sheet.evalGradual())
+        println(sheet.eval())
     }
 
     @Test
@@ -727,7 +727,7 @@ class SheetTest {
             listOf(d1, b3, b1, a1)
         }
         println(sheet)
-        println(sheet.evalGradual())
+        println(sheet.eval())
     }
 
     @Test
@@ -787,10 +787,10 @@ class SheetTest {
             listOf(a1, d1, e1, d2, e2, d3, e3)
         }
         println(sheet)
-        println(sheet.evalGradual())
-        sheet.evalGradual()["E1"].assertString("9.5")
-        sheet.evalGradual()["E2"].assertString("1.87083")
-        sheet.evalGradual()["E3"].assertString("6")
+        println(sheet.eval())
+        sheet.eval()["E1"].assertString("9.5")
+        sheet.eval()["E2"].assertString("1.87083")
+        sheet.eval()["E3"].assertString("6")
     }
 
     @Test
@@ -818,7 +818,7 @@ class SheetTest {
             listOf(mean, difference, squared, sumSquared, variance, varianceExpr, stddev, stddevExpr)
         }
         println(sheet)
-        sheet.evalGradual().assertString(
+        sheet.eval().assertString(
             """
               weight squared difference 
               ------ ------- ---------- 
@@ -1146,12 +1146,12 @@ class SheetTest {
             val a2 by cv(b1)
             listOf(a1, b1, a2)
         }
-        println(sheet.evalGradual())
+        println(sheet.eval())
 
         sheet.minimize(
             target = "A2",
             variables = listOf("A1")
-        ).evalGradual()
+        ).eval()
     }
 
     @Test
@@ -1201,14 +1201,14 @@ class SheetTest {
                 d4, g3, h3, h4, i3, i4, i1, j1, j2, d2, i2
             )
         }
-        println(sheet.evalGradual())
+        println(sheet.eval())
         repeat(1) {
             val min = sheet.minimize(
                 target = "J1",
                 variables = listOf("B1", "B2"),
                 learningRate = 0.01
-            ).evalGradual()
-            println(min.evalGradual())
+            ).eval()
+            println(min.eval())
         }
 
 //        min["G4"].assertString("0")

@@ -14,21 +14,21 @@ class RandomVariablesTest {
         roll1.assertString("roll1=random(1.0 to 6.0)")
         val health by roll1 + roll2 + roll3
         health.assertString("health=roll1+roll2+roll3")
-        health.evalGradual().assertString("health=11")
+        health.eval().assertString("health=11")
     }
 
     @Test
     fun `same variable multiple times`() {
         val roll by randomOf(1.0 to 6.0)
         val health by roll + roll + roll + roll + roll
-        health.evalGradual().assertString("health=20")
-        median(health).evalGradual().assertString("20")
-        stddev(health).evalGradual().assertString("9.35414")
-        count(health).evalGradual().assertString("6") // Default loops in evalGradual()
-        cv(health).evalGradual().assertString("0.53452")
-        percentile(health, 0.05).evalGradual().assertString("5")
-        percentile(health, 0.95).evalGradual().assertString("30")
-        percentile(health, 0.80).evalGradual().assertString("25")
+        health.eval().assertString("health=20")
+        median(health).eval().assertString("20")
+        stddev(health).eval().assertString("9.35414")
+        count(health).eval().assertString("6") // Default loops in evalGradual()
+        cv(health).eval().assertString("0.53452")
+        percentile(health, 0.05).eval().assertString("5")
+        percentile(health, 0.95).eval().assertString("30")
+        percentile(health, 0.80).eval().assertString("25")
     }
 
     @Test
@@ -47,7 +47,7 @@ class RandomVariablesTest {
             1 random(1928.0 to 2019.0) sp500(A1) mean(A1) mean(B1) 
         """.trimIndent()
         )
-        sheet.evalGradual().assertString(
+        sheet.eval().assertString(
             """
                 A   B     C    D  
               ---- --- ------ --- 
@@ -72,7 +72,7 @@ class RandomVariablesTest {
             val d2 by count(a1)
             listOf(a1, a2, a3, b1, b2, b3, c1, c2, c3, d1, d2)
         }
-        sheet.evalGradual().assertString(
+        sheet.eval().assertString(
             """
               A    B       C        D    
               - ------- ------- -------- 
@@ -123,7 +123,7 @@ class RandomVariablesTest {
             )
         }
         println(sheet)
-        val eval = sheet.evalGradual()
+        val eval = sheet.eval()
         println(eval)
         eval["B3"].assertString("12%")
         eval["B4"].assertString("14%")
@@ -137,20 +137,20 @@ class RandomVariablesTest {
     fun `mean of random`() {
         val roll by randomOf(1.0 to 6.0)
         val health by mean(roll + roll + roll + roll + roll)
-        health.evalGradual().assertString("health=17.5")
+        health.eval().assertString("health=17.5")
     }
 
     @Test
     fun `sum of mean of random`() {
         val roll by randomOf(1.0 to 6.0)
         val health by mean(roll) + mean(roll)
-        health.evalGradual().assertString("health=7")
+        health.eval().assertString("health=7")
     }
 
     @Test
     fun `anonymous random`() {
         val health by randomOf(1.0 to 6.0) + randomOf(1.0 to 6.0) + randomOf(1.0 to 6.0)
-        health.evalGradual().assertString("health=11")
+        health.eval().assertString("health=11")
     }
 
     @Test

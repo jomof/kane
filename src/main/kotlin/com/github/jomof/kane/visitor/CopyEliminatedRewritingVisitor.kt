@@ -8,7 +8,7 @@ import com.github.jomof.kane.sheet.Sheet
 import com.github.jomof.kane.sheet.SheetRangeExpr
 
 open class CopyEliminatedRewritingVisitor {
-    protected var depth = 0
+    private var depth = 0
     open fun rewrite(expr: CoerceScalar): Expr = with(expr) {
         val rewritten = rewrite(value)
         return if (rewritten === value) this

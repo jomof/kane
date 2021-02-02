@@ -402,7 +402,7 @@ fun diff(expr : ScalarExpr, variable : ScalarExpr) : ScalarExpr {
     val result: ScalarExpr = when (expr) {
         variable -> ConstantScalar(1.0, expr.type)
         is NamedScalar -> diff(expr.scalar, variable)
-        is AlgebraicUnaryMatrixScalar -> diff(expr.evalGradual(), variable)
+        is AlgebraicUnaryMatrixScalar -> diff(expr.eval(), variable)
         is MatrixVariableElement -> ConstantScalar(0.0, expr.type)
         is ScalarVariableExpr -> ConstantScalar(0.0, expr.type)
         is ConstantScalar -> ConstantScalar(0.0, expr.type)
@@ -420,7 +420,7 @@ fun diff(expr : ScalarExpr, variable : ScalarExpr) : ScalarExpr {
             expr.op.differentiate(expr.left, p1d, expr.right, p2d, variable)
         }
         is AlgebraicUnaryScalarStatistic -> {
-            diff(expr.evalGradual(), variable)
+            diff(expr.eval(), variable)
         }
         else ->
             error("${expr.javaClass}")
@@ -514,8 +514,8 @@ fun differentiate(expr : AlgebraicExpr) : AlgebraicExpr {
     }
 }
 
-fun differentiate(expr: ScalarExpr): ScalarExpr = (differentiate(expr as AlgebraicExpr) as ScalarExpr).evalGradual()
-fun differentiate(expr: MatrixExpr): MatrixExpr = (differentiate(expr as AlgebraicExpr) as MatrixExpr).evalGradual()
+fun differentiate(expr: ScalarExpr): ScalarExpr = (differentiate(expr as AlgebraicExpr) as ScalarExpr).eval()
+fun differentiate(expr: MatrixExpr): MatrixExpr = (differentiate(expr as AlgebraicExpr) as MatrixExpr).eval()
 
 // Data matrix
 

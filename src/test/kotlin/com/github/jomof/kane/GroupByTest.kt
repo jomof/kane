@@ -130,7 +130,7 @@ class GroupByTest {
             val bmi by range("weight") / pow(range("height"), 2.0)
             listOf(bmi)
         }
-        val expected = bmi.evalGradual().filterRows { row -> row["gender"] == "male" }
+        val expected = bmi.eval().filterRows { row -> row["gender"] == "male" }
         expected.assertString(
             """
                   date     height    weight  gender   bmi   
@@ -156,7 +156,7 @@ class GroupByTest {
             10 2000-01-10 45.30612 177.54092   male C6/B6²
             """.trimIndent()
         )
-        filtered.evalGradual().assertString(
+        filtered.eval().assertString(
             """
                   date     height    weight  gender   bmi   
                ---------- -------- --------- ------ ------- 
@@ -169,7 +169,7 @@ class GroupByTest {
             """.trimIndent()
         )
         // This is the real test. Filter then eval should be the same as eval then filter.
-        filtered.evalGradual().assertString(expected.toString())
+        filtered.eval().assertString(expected.toString())
     }
 
     @Test
@@ -178,8 +178,8 @@ class GroupByTest {
             val bmi by range("weight") / pow(range("height"), 2.0)
             listOf(bmi)
         }
-        val evalThenGroup = bmi.evalGradual().groupBy("gender")["female"]
-        val groupThenEval = bmi.groupBy("gender")["female"].evalGradual()
+        val evalThenGroup = bmi.eval().groupBy("gender")["female"]
+        val groupThenEval = bmi.groupBy("gender")["female"].eval()
 
         evalThenGroup.assertString(groupThenEval.toString())
     }

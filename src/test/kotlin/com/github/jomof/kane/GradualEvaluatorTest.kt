@@ -26,15 +26,15 @@ class GradualEvaluatorTest {
     @Test
     fun `basic scalar`() {
         val x by constant(1.0)
-        (x + x).evalGradual().assertString("2")
-        (-x).evalGradual().assertString("-1")
+        (x + x).eval().assertString("2")
+        (-x).eval().assertString("-1")
     }
 
     @Test
     fun `basic matrix`() {
         val m by rowOf(1.0, 2.0)
-        (m * m).evalGradual().assertString("1|4")
-        (-m).evalGradual().assertString("-1|-2")
+        (m * m).eval().assertString("1|4")
+        (-m).eval().assertString("-1|-2")
     }
 
     @Test
@@ -45,21 +45,21 @@ class GradualEvaluatorTest {
         roll1.assertString("roll1=random(1.0 to 6.0)")
         val health by roll1 + roll2 + roll3
         health.assertString("health=roll1+roll2+roll3")
-        health.evalGradual().assertString("health=11")
+        health.eval().assertString("health=11")
     }
 
     @Test
     fun `same variable multiple times`() {
         val roll by randomOf(1.0 to 6.0)
         val health by roll + roll + roll + roll + roll
-        health.evalGradual().assertString("health=20")
-        median(health).evalGradual().assertString("20")
-        stddev(health).evalGradual().assertString("9.35414")
-        count(health).evalGradual().assertString("6") // Default loops in evalGradual()
-        cv(health).evalGradual().assertString("0.53452")
-        percentile(health, 0.05).evalGradual().assertString("5")
-        percentile(health, 0.95).evalGradual().assertString("30")
-        percentile(health, 0.80).evalGradual().assertString("25")
+        health.eval().assertString("health=20")
+        median(health).eval().assertString("20")
+        stddev(health).eval().assertString("9.35414")
+        count(health).eval().assertString("6") // Default loops in evalGradual()
+        cv(health).eval().assertString("0.53452")
+        percentile(health, 0.05).eval().assertString("5")
+        percentile(health, 0.95).eval().assertString("30")
+        percentile(health, 0.80).eval().assertString("25")
     }
 
     @Test
@@ -78,8 +78,8 @@ class GradualEvaluatorTest {
             val d2 by count(a1)
             listOf(a1, a2, a3, b1, b2, b3, c1, c2, c3, d1, d2)
         }
-        println(sheet.evalGradual())
-        sheet.evalGradual().assertString(
+        println(sheet.eval())
+        sheet.eval().assertString(
             """
               A    B       C        D    
               - ------- ------- -------- 
@@ -94,20 +94,20 @@ class GradualEvaluatorTest {
     fun `mean of random`() {
         val roll by randomOf(1.0 to 6.0)
         val health by mean(roll + roll + roll + roll + roll)
-        health.evalGradual().assertString("health=17.5")
+        health.eval().assertString("health=17.5")
     }
 
     @Test
     fun `sum of mean of random`() {
         val roll by randomOf(1.0 to 6.0)
         val health by mean(roll) + mean(roll)
-        health.evalGradual().assertString("health=7")
+        health.eval().assertString("health=7")
     }
 
     @Test
     fun `anonymous random`() {
         val health by randomOf(1.0 to 6.0) + randomOf(1.0 to 6.0) + randomOf(1.0 to 6.0)
-        health.evalGradual().assertString("health=11")
+        health.eval().assertString("health=11")
     }
 
     @Test
@@ -115,7 +115,7 @@ class GradualEvaluatorTest {
         val health by randomOf(-1.0 to 3.0)
         val step by step(health)
         val mean by mean(step)
-        mean.evalGradual().assertString("mean=0.8")
+        mean.eval().assertString("mean=0.8")
     }
 
 //    @Test
@@ -144,7 +144,7 @@ class GradualEvaluatorTest {
             1 random(1928.0 to 2019.0) sp500(A1) mean(A1) mean(B1) 
         """.trimIndent()
         )
-        sheet.evalGradual().assertString(
+        sheet.eval().assertString(
             """
             A   B     C    D  
           ---- --- ------ --- 
@@ -173,7 +173,7 @@ class GradualEvaluatorTest {
             val totalError by sum(error)
             listOf(totalError)
         }
-        val evaled = sheet.evalGradual()
+        val evaled = sheet.eval()
         evaled.assertString(
             """
               x actual prediction error 
@@ -195,7 +195,7 @@ class GradualEvaluatorTest {
             val bmi by range("weight") / pow(range("height"), 2.0)
             listOf(bmi)
         }
-        val expected = bmi.evalGradual().filterRows { row -> row["gender"] == "male" }
+        val expected = bmi.eval().filterRows { row -> row["gender"] == "male" }
         expected.assertString(
             """
                   date     height    weight  gender   bmi   
@@ -221,7 +221,7 @@ class GradualEvaluatorTest {
             10 2000-01-10 45.30612 177.54092   male C6/B6²
             """.trimIndent()
         )
-        filtered.evalGradual().assertString(
+        filtered.eval().assertString(
             """
                   date     height    weight  gender   bmi   
                ---------- -------- --------- ------ ------- 
@@ -234,6 +234,6 @@ class GradualEvaluatorTest {
             """.trimIndent()
         )
         // This is the real test. Filter then eval should be the same as eval then filter.
-        filtered.evalGradual().assertString(expected.toString())
+        filtered.eval().assertString(expected.toString())
     }
 }

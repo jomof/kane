@@ -96,7 +96,7 @@ fun Sheet.ordinalColumns(elements : List<Int>) : Sheet {
  * Map cells of a sheet that are coercible to double.
  */
 fun Sheet.mapDoubles(translate: (Double) -> Double): Sheet {
-    val evaled = evalGradual()
+    val evaled = eval()
     val new = cells.toMutableMap()
     evaled.cells.forEach { (name, expr) ->
         when (expr) {

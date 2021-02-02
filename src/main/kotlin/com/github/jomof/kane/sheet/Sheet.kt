@@ -370,7 +370,7 @@ class SheetBuilderImpl(
 
 private fun Sheet.variable(cell : String) : NamedScalarVariable {
     val reduced = when(val value = cells.getValue(cell)) {
-        is AlgebraicExpr -> value.evalGradual()
+        is AlgebraicExpr -> value.eval()
         else ->
             error("${value.javaClass}")
     }
@@ -405,7 +405,7 @@ fun Sheet.minimize(
     val namesReplaced = replaceNamesWithVariables(resolvedVariables)
 
     // Follow all expressions from 'target'
-    val reducedArithmetic = namesReplaced.evalGradual(
+    val reducedArithmetic = namesReplaced.eval(
         reduceVariables = true,
         excludeVariables = variables.toSet()
     )
@@ -416,14 +416,14 @@ fun Sheet.minimize(
     if (targetExpr !is ScalarExpr) {
         error("'$target' was not a numeric expression")
     }
-    val reduced = targetExpr.evalGradual()
+    val reduced = targetExpr.eval()
     val namedTarget: NamedScalarExpr = NamedScalar(target, reduced)
 
     // Differentiate target with respect to each variable
     println("Differentiating target expression $target with respect to change variables: ${variables.joinToString(" ")}")
     val diffs = resolvedVariables.map { (_, variable) ->
         val name = "d$target/d${variable.name}"
-        val derivative = differentiate(d(namedTarget) / d(variable)).evalGradual()
+        val derivative = differentiate(d(namedTarget) / d(variable)).eval()
         NamedScalar(name, derivative)
     }
 
@@ -433,7 +433,7 @@ fun Sheet.minimize(
             "update(${variable.name})",
             variable,
             variable - multiply(learningRate, diff)
-        ).evalGradual()
+        ).eval()
     }
 
     // Create the model, allocate space for it, and iterate. Break when the target didn't move much

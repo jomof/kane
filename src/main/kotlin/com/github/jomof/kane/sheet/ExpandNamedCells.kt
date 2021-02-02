@@ -22,7 +22,7 @@ private fun AlgebraicExpr.expandNamedCells(lookup: Map<String, Expr>): Algebraic
         is AlgebraicUnaryScalar -> copy(value = value.self())
         is AlgebraicBinaryScalar -> {
             val changed = copy(left = left.self(), right = right.self())
-            if (changed !== this) changed.evalGradual()
+            if (changed !== this) changed.eval()
             else this
         }
         is CoerceScalar -> {

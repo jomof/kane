@@ -17,7 +17,7 @@ class GroupBy(
         val map = mutableMapOf<List<Expr>, MutableList<Int>>()
         (1..sheet.rows).map { row ->
             val view = RowView(sheet, row - 1)
-            val key = keySelector.map { it.toUnnamed().evalGradual(rangeExprProvider = view) }
+            val key = keySelector.map { it.toUnnamed().eval(rangeExprProvider = view) }
             val ordinals = map.computeIfAbsent(key) { mutableListOf() }
             ordinals.add(row)
         }
