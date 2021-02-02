@@ -5,12 +5,12 @@ import com.github.jomof.kane.sheet.CoerceScalar
 import com.github.jomof.kane.sheet.RangeExprProvider
 import com.github.jomof.kane.sheet.Sheet
 import com.github.jomof.kane.sheet.SheetRangeExpr
-import com.github.jomof.kane.visitor.CopyEliminatedRewritingVisitor
+import com.github.jomof.kane.visitor.RewritingVisitor
 
-private val reduceNamedMatrix = object : CopyEliminatedRewritingVisitor() {
+private val reduceNamedMatrix = object : RewritingVisitor() {
     override fun rewrite(expr: NamedMatrix) = expr.matrix
 }
-private val reduceAlgebraicBinaryScalar = object : CopyEliminatedRewritingVisitor() {
+private val reduceAlgebraicBinaryScalar = object : RewritingVisitor() {
     override fun rewrite(expr: AlgebraicBinaryScalar): Expr {
         return when (val sub = super.rewrite(expr)) {
             is AlgebraicBinaryScalar -> when {
@@ -29,7 +29,7 @@ private val reduceAlgebraicBinaryScalar = object : CopyEliminatedRewritingVisito
         }
     }
 }
-private val reduceAlgebraicUnaryScalar = object : CopyEliminatedRewritingVisitor() {
+private val reduceAlgebraicUnaryScalar = object : RewritingVisitor() {
     override fun rewrite(expr: AlgebraicUnaryScalar): Expr {
         return when (val sub = super.rewrite(expr)) {
             is AlgebraicUnaryScalar -> when (sub.value) {
@@ -40,7 +40,7 @@ private val reduceAlgebraicUnaryScalar = object : CopyEliminatedRewritingVisitor
         }
     }
 }
-private val reduceAlgebraicBinaryMatrix = object : CopyEliminatedRewritingVisitor() {
+private val reduceAlgebraicBinaryMatrix = object : RewritingVisitor() {
     override fun rewrite(expr: AlgebraicBinaryMatrix): Expr = with(expr) {
         val left = left.toDataMatrix()
         val right = right.toDataMatrix()
@@ -51,18 +51,18 @@ private val reduceAlgebraicBinaryMatrix = object : CopyEliminatedRewritingVisito
         })
     }
 }
-private val reduceAlgebraicUnaryMatrix = object : CopyEliminatedRewritingVisitor() {
+private val reduceAlgebraicUnaryMatrix = object : RewritingVisitor() {
     override fun rewrite(expr: AlgebraicUnaryMatrix) = expr.value.map {
         AlgebraicUnaryScalar(expr.op, it, expr.value.type)
     }
 }
-private val reduceAlgebraicUnaryScalarStatistic = object : CopyEliminatedRewritingVisitor() {
+private val reduceAlgebraicUnaryScalarStatistic = object : RewritingVisitor() {
     override fun rewrite(expr: AlgebraicUnaryScalarStatistic): Expr = with(expr) {
         return op.reduceArithmetic(value) ?: super.rewrite(expr)
     }
 }
 
-private val reduceAlgebraicBinaryScalarStatistic = object : CopyEliminatedRewritingVisitor() {
+private val reduceAlgebraicBinaryScalarStatistic = object : RewritingVisitor() {
     override fun rewrite(expr: AlgebraicBinaryScalarStatistic): Expr = with(expr) {
 
         return when {
@@ -75,13 +75,13 @@ private val reduceAlgebraicBinaryScalarStatistic = object : CopyEliminatedRewrit
     }
 }
 
-private val reduceNakedScalarStatistic = object : CopyEliminatedRewritingVisitor() {
+private val reduceNakedScalarStatistic = object : RewritingVisitor() {
     override fun rewrite(expr: ScalarStatistic) =
         constant(expr.statistic.median, expr.type)
 }
 
 private class ReduceRandomVariables(val variables: Map<RandomVariableExpr, ConstantScalar>) :
-    CopyEliminatedRewritingVisitor() {
+    RewritingVisitor() {
     override fun rewrite(expr: DiscreteUniformRandomVariable) = variables[expr] ?: expr
 }
 
@@ -89,7 +89,7 @@ private class ReduceNamedVariables(
     val reduceVariables: Boolean,
     val excludeVariables: Set<String>,
     val namedVariableLookup: Map<String, Expr>
-) : CopyEliminatedRewritingVisitor() {
+) : RewritingVisitor() {
     private var recursionDetected = false
     override fun rewrite(expr: NamedScalar): Expr {
         if (excludeVariables.contains(expr.name)) return expr
@@ -128,7 +128,7 @@ private class ReduceNamedVariables(
     }
 }
 
-private val convertVariablesToStatistics = object : CopyEliminatedRewritingVisitor() {
+private val convertVariablesToStatistics = object : RewritingVisitor() {
     override fun rewrite(expr: ConstantScalar): Expr {
         val stream = StreamingSamples()
         stream.insert(expr.value)
@@ -137,7 +137,7 @@ private val convertVariablesToStatistics = object : CopyEliminatedRewritingVisit
 }
 
 fun Expr.expandSheetCells(sheet: Sheet, excludeVariables: Set<String>): Expr {
-    return object : CopyEliminatedRewritingVisitor() {
+    return object : RewritingVisitor() {
         override fun rewrite(expr: AlgebraicBinaryRangeStatistic): Expr = with(expr) {
             val leftRewritten = rewrite(left)
             val rightRewritten = scalar(right)
@@ -168,12 +168,12 @@ fun Expr.expandSheetCells(sheet: Sheet, excludeVariables: Set<String>): Expr {
 }
 
 private class ReduceProvidedSheetRangeExprs(val rangeExprProvider: RangeExprProvider) :
-    CopyEliminatedRewritingVisitor() {
+    RewritingVisitor() {
     override fun rewrite(expr: SheetRangeExpr) =
         rangeExprProvider.range(expr)
 }
 
-private class ExpandSheetCells(val excludeVariables: Set<String>) : CopyEliminatedRewritingVisitor() {
+private class ExpandSheetCells(val excludeVariables: Set<String>) : RewritingVisitor() {
     override fun rewrite(expr: Sheet): Expr = with(expr) {
         var changed = false
         val rewrittenElements = mutableMapOf<String, Expr>()

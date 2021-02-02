@@ -5,7 +5,7 @@ import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.types.AlgebraicType
 import com.github.jomof.kane.types.DoubleAlgebraicType
 import com.github.jomof.kane.types.KaneType
-import com.github.jomof.kane.visitor.CopyEliminatedRewritingVisitor
+import com.github.jomof.kane.visitor.RewritingVisitor
 import com.github.jomof.kane.visitor.visit
 import java.lang.Integer.max
 import kotlin.math.abs
@@ -382,7 +382,7 @@ private fun Sheet.variable(cell : String) : NamedScalarVariable {
 }
 
 private fun Sheet.replaceNamesWithVariables(variables: Map<String, NamedScalarVariable>): Sheet {
-    return object : CopyEliminatedRewritingVisitor() {
+    return object : RewritingVisitor() {
         override fun rewrite(expr: NamedScalar): Expr {
             return variables[expr.name] ?: super.rewrite(expr)
         }

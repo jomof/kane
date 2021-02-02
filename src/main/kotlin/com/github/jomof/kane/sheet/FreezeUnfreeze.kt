@@ -7,7 +7,6 @@ import com.github.jomof.kane.Coordinate
 import com.github.jomof.kane.Expr
 import com.github.jomof.kane.visitor.RewritingVisitor
 
-
 /**
  * Convert moveable cell references to relative. This is so that rows and columns can be moved, added, and deleted
  * before refreezing.
@@ -15,7 +14,7 @@ import com.github.jomof.kane.visitor.RewritingVisitor
  */
 fun Expr.unfreeze(current: Coordinate): Expr {
     return object : RewritingVisitor() {
-        override fun SheetRangeExpr.rewrite(): Expr {
+        override fun rewrite(expr: SheetRangeExpr): Expr = with(expr) {
             return when (range) {
                 is CellRange -> when {
                     range.column is MoveableIndex && range.row is MoveableIndex -> {
@@ -41,7 +40,7 @@ fun Expr.unfreeze(current: Coordinate): Expr {
  */
 fun Expr.freeze(current: Coordinate): Expr {
     return object : RewritingVisitor() {
-        override fun SheetRangeExpr.rewrite(): Expr {
+        override fun rewrite(expr: SheetRangeExpr): Expr = with(expr) {
             return when (range) {
                 is CellRange -> when {
                     range.column is RelativeIndex && range.row is RelativeIndex -> {

@@ -3,7 +3,6 @@ package com.github.jomof.kane.sheet
 import com.github.jomof.kane.*
 import com.github.jomof.kane.ComputableIndex.MoveableIndex
 import com.github.jomof.kane.functions.*
-import com.github.jomof.kane.visitor.CopyEliminatedRewritingVisitor
 import com.github.jomof.kane.visitor.RewritingVisitor
 
 private fun Expr.ranges(): Set<SheetRange> {
@@ -47,7 +46,7 @@ private fun Expr.ranges(): Set<SheetRange> {
 }
 
 private fun Expr.replaceColumnWithCell(row: Int): Expr {
-    return object : CopyEliminatedRewritingVisitor() {
+    return object : RewritingVisitor() {
         override fun rewrite(expr: AlgebraicUnaryScalarStatistic) = expr
         override fun rewrite(expr: AlgebraicBinaryRangeStatistic) = expr.copy(right = scalar(expr.right))
         override fun rewrite(expr: SheetRangeExpr) = with(expr) {
@@ -124,7 +123,7 @@ fun SheetBuilderImpl.scalarizeRanges(cells: Map<String, Expr>): Map<String, Expr
 
 fun SheetBuilderImpl.convertNamedColumnsToColumnRanges(cells: Map<String, Expr>): Map<String, Expr> {
     val converter = object : RewritingVisitor() {
-        override fun SheetRangeExpr.rewrite(): Expr {
+        override fun rewrite(expr: SheetRangeExpr): Expr = with(expr) {
             return when (range) {
                 is NamedColumnRange -> {
                     val columns = columnDescriptors.filter { it.value.name == range.name }.map { it.key }
