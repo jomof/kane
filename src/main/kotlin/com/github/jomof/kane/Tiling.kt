@@ -18,16 +18,8 @@ data class Tiling<E : Any>(
         assert(columns > 0)
     }
 
-    fun toNamedTilingExpr(name: String) = NamedTiling(name, this)
+    fun toNamedTilingExpr(name: Id) = NamedTiling(name, this)
     operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
-
-    fun getNamedElement(name: String, coordinate: Coordinate): NamedExpr {
-        return when (val element = data[coordinate.row * columns + coordinate.column]) {
-            is ScalarExpr -> NamedScalar(name, element)
-            is Double -> NamedScalar(name, constant(element))
-            else -> NamedValueExpr(name, element, element.javaClass.kaneType)
-        }
-    }
 
     fun getUnnamedElement(coordinate: Coordinate): Expr {
         return when (val element = data[coordinate.row * columns + coordinate.column]) {
@@ -38,8 +30,8 @@ data class Tiling<E : Any>(
 }
 
 data class NamedTiling<E:Any>(
-    override val name : String,
-    val tiling : Tiling<E>
+    override val name: Id,
+    val tiling: Tiling<E>
 ) : NamedExpr, TypedExpr<E> {
     override val type get() = tiling.type
 }

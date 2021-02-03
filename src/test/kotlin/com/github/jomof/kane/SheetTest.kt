@@ -1215,4 +1215,60 @@ class SheetTest {
 //        min["H4"].assertString("1")
 
     }
+
+    @Test
+    fun `copy analysis ages`() {
+        val start = 2021
+        val end = start + 30
+        val allYears = end - start + 1
+        val startAllocs = AlgebraicBinaryScalar.allocs
+        val modelStartYear by randomOf(1928.0 to 2019.0)
+        val retire = sheetOf {
+            val years by columnOf(allYears) { constant(start + it) }
+            val j by years - 1969
+            val k by years - 1972
+            listOf(years, j, k)
+        }
+        println(retire.eval())
+        (AlgebraicBinaryScalar.allocs - startAllocs).assertString("62")
+    }
+
+    @Test
+    fun `copy analysis with modelStartYear`() {
+        val start = 2021
+        val end = start + 30
+        val allYears = end - start + 1
+        val startAllocs = AlgebraicBinaryScalar.allocs
+        val modelStartYear by randomOf(1928.0 to 2019.0)
+        val retire = sheetOf {
+            val years by columnOf(allYears) { constant(start + it) }
+            val j by years - 1969
+            val k by years - 1972
+            val modelYear by years - start + modelStartYear
+            listOf(years, j, k, modelYear)
+        }
+        println(retire.eval())
+        (AlgebraicBinaryScalar.allocs - startAllocs).assertString("247")
+    }
+
+    @Test
+    fun `copy analysis with with stock, bond, and inflation`() {
+        val start = 2021
+        val end = start + 30
+        val allYears = end - start + 1
+        val startAllocs = AlgebraicBinaryScalar.allocs
+        val modelStartYear by randomOf(1928.0 to 2019.0)
+        val retire = sheetOf {
+            val years by columnOf(allYears) { constant(start + it) }
+            val j by years - 1969
+            val k by years - 1972
+            val modelYear by years - start + modelStartYear
+            val stock by sp500(modelYear)
+            val bond by baaCorporateBond(modelYear)
+            val inflation by usInflation(modelYear)
+            listOf(years, j, k, modelYear, stock, bond, inflation)
+        }
+        println(retire.eval())
+        (AlgebraicBinaryScalar.allocs - startAllocs).assertString("802")
+    }
 }

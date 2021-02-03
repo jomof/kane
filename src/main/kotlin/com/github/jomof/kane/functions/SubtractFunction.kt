@@ -10,16 +10,16 @@ private class SubtractFunction : AlgebraicBinaryScalarFunction {
 
     override fun reduceArithmetic(p1: ScalarExpr, p2: ScalarExpr): ScalarExpr? {
         if (p1 is NamedScalarVariable && p2 is NamedScalarVariable) return null
-        val leftConst = p1.tryFindConstant()
-        val rightConst = p2.tryFindConstant()
+        val leftIsConst = p1.canGetConstant()
+        val rightIsConst = p2.canGetConstant()
         return when {
-            leftConst == 0.0 -> -p2
-            leftConst == -0.0 -> -p2
-            rightConst == 0.0 -> p1
-            rightConst == -0.0 -> p1
-            leftConst != null && rightConst != null -> constant(invoke(leftConst, rightConst), p1.type)
-            rightConst != null && p1 is AlgebraicBinaryScalar && p1.op == add && p1.right is ConstantScalar -> {
-                p1.left + (p1.right - rightConst)
+            leftIsConst && p1.getConstant() == 0.0 -> -p2
+            leftIsConst && p1.getConstant() == -0.0 -> -p2
+            rightIsConst && p2.getConstant() == 0.0 -> p1
+            rightIsConst && p2.getConstant() == -0.0 -> p1
+            leftIsConst && rightIsConst -> constant(invoke(p1.getConstant(), p2.getConstant()), p1.type)
+            rightIsConst && p1 is AlgebraicBinaryScalar && p1.op == add && p1.right is ConstantScalar -> {
+                p1.left + (p1.right - p2.getConstant())
             }
             p2 is AlgebraicUnaryScalar && p2.op == negate -> p1 + p2.value
             else ->

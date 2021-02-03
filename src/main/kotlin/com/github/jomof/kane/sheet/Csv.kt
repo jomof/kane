@@ -2,8 +2,8 @@ package com.github.jomof.kane.sheet
 
 import com.github.doyaaaaaken.kotlincsv.client.CsvReader
 import com.github.doyaaaaaken.kotlincsv.dsl.context.CsvReaderContext
-import com.github.jomof.kane.CellRange
-import com.github.jomof.kane.Coordinate
+import com.github.jomof.kane.Identifier
+import com.github.jomof.kane.coordinate
 import com.github.jomof.kane.indexToColumnName
 import java.io.File
 import java.io.InputStream
@@ -133,7 +133,7 @@ private fun readCsvWithHeader(
         val map = rows[row]
         for (column in info.columnInfos.indices) {
             val columnInfo = info.columnInfos[column]
-            val coordinate = Coordinate(column, row)
+            val coordinate = coordinate(column, row)
             val value = columnInfo.typeInfo.tryParse(map[columnInfo.name] ?: "")
             if (value != null) {
                 sb.set(coordinate, value, columnInfo.typeInfo.type)
@@ -179,7 +179,7 @@ private fun readCsvWithoutHeader(
         val list = rows[row]
         for (column in info.columnInfos.indices) {
             val columnInfo = info.columnInfos[column]
-            val coordinate = Coordinate(column, row)
+            val coordinate = coordinate(column, row)
             val value = columnInfo.typeInfo.tryParse(list[column])
             if (value != null) {
                 sb.set(coordinate, value, columnInfo.typeInfo.type)
@@ -249,7 +249,7 @@ fun Sheet.writeCsv(csv: File) {
     // Column headers
     (0..columns).forEach { column ->
         val columnName = colName(column)
-        csv.appendText(columnName)
+        csv.appendText(Identifier.string(columnName))
         if (column != columns - 1) csv.appendText(",")
 
     }
@@ -259,7 +259,7 @@ fun Sheet.writeCsv(csv: File) {
     val sb = StringBuilder()
     for (row in 0 until rows) {
         for (column in 0 until columns) {
-            val cell = CellRange.moveable(column, row).toString()
+            val cell = coordinate(column, row)
             val value = cells[cell]?.toString() ?: ""
             if (value.contains(" ")) {
                 sb.append("\"$value\"")

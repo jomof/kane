@@ -1,9 +1,7 @@
 package com.github.jomof.kane.functions
 
-import com.github.jomof.kane.ScalarExpr
-import com.github.jomof.kane.UnaryOp
-import com.github.jomof.kane.constant
-import com.github.jomof.kane.tryFindConstant
+import com.github.jomof.kane.*
+
 private val usInflationMap = mapOf(
     1916 to 0.079,
     1917 to 0.174,
@@ -123,11 +121,8 @@ private class USInflationFunction : AlgebraicUnaryScalarFunction {
     override fun doubleOp(value: Double) = usInflation(value.toInt())
 
     override fun reduceArithmetic(value: ScalarExpr): ScalarExpr? {
-        val constValue = value.tryFindConstant()
-        return when {
-            constValue != null -> constant(usInflation(constValue.toInt()))
-            else -> null
-        }
+        if (!value.canGetConstant()) return null
+        return constant(usInflation(value.getConstant().toInt()))
     }
     override fun differentiate(
         expr : ScalarExpr,

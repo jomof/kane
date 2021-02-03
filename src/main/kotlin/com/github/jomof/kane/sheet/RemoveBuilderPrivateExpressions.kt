@@ -12,10 +12,10 @@ private fun Expr.removeBuilderPrivateExpressions(): Expr {
     }.rewrite(this)
 }
 
-fun removeBuilderPrivateExpressions(cells: Map<String, Expr>): Map<String, Expr> {
+fun removeBuilderPrivateExpressions(cells: Cells): Cells {
     return cells
         .map { (name, expr) -> name to expr.removeBuilderPrivateExpressions() }
-        .toMap()
+        .toCells()
 }
 
 fun Sheet.removeBuilderPrivateExpressions() = copy(cells = removeBuilderPrivateExpressions(cells))

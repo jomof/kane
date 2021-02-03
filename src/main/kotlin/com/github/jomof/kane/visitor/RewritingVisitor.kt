@@ -2,13 +2,13 @@ package com.github.jomof.kane.visitor
 
 import com.github.jomof.kane.*
 import com.github.jomof.kane.functions.*
-import com.github.jomof.kane.sheet.CoerceScalar
-import com.github.jomof.kane.sheet.NamedSheetRangeExpr
-import com.github.jomof.kane.sheet.Sheet
-import com.github.jomof.kane.sheet.SheetRangeExpr
+import com.github.jomof.kane.sheet.*
 
-open class RewritingVisitor {
+open class RewritingVisitor(
+    val memo: MutableMap<Expr, Expr>? = null
+) {
     private var depth = 0
+    protected val checkIdentity = false
     open fun rewrite(expr: CoerceScalar): Expr = with(expr) {
         val rewritten = rewrite(value)
         return if (rewritten === value) this
@@ -27,22 +27,18 @@ open class RewritingVisitor {
     open fun rewrite(expr: MatrixVariableElement): Expr = expr
     open fun rewrite(expr: NamedScalarAssign): Expr {
         val scalar = scalar(expr.right)
-        if (scalar == expr.right) return expr
+        if (scalar === expr.right) return expr
         return expr.copy(right = scalar)
     }
 
     open fun rewrite(expr: NamedMatrixAssign): Expr {
         val matrix = matrix(expr.right)
-        if (matrix == expr.right) return expr
+        if (matrix === expr.right) return expr
         return expr.copy(right = matrix)
     }
 
     open fun rewrite(expr: NamedScalar): Expr = with(expr) {
         val rewritten = scalar(scalar)
-        if (rewritten is NamedScalar && rewritten.name == name) {
-            scalar(scalar)
-            error("what")
-        }
         return if (rewritten === scalar) this
         else copy(scalar = rewritten)
     }
@@ -69,7 +65,7 @@ open class RewritingVisitor {
         val leftRewritten = rewrite(expr.left) as TypedExpr<Double>
         val rightRewritten = rewrite(expr.right) as TypedExpr<Double>
         val dataRewritten = rewrite(expr.data) as DataMatrix
-        if (leftRewritten === left && rightRewritten == right && dataRewritten === data) return this
+        if (leftRewritten === left && rightRewritten === right && dataRewritten === data) return this
         else copy(left = leftRewritten, right = rightRewritten, data = dataRewritten)
     }
 
@@ -124,55 +120,55 @@ open class RewritingVisitor {
     open fun rewrite(expr: AlgebraicBinaryRangeStatistic): Expr = with(expr) {
         val leftRewritten = range(left)
         val rightRewritten = scalar(right)
-        if (leftRewritten === left && rightRewritten == right) return this
+        if (leftRewritten === left && rightRewritten === right) return this
         return copy(left = leftRewritten, right = rightRewritten)
     }
 
     open fun rewrite(expr: AlgebraicBinaryMatrix): Expr = with(expr) {
         val leftRewritten = matrix(left)
         val rightRewritten = matrix(right)
-        if (leftRewritten === left && rightRewritten == right) return this
+        if (leftRewritten === left && rightRewritten === right) return this
         return copy(left = leftRewritten, right = rightRewritten)
     }
 
     open fun rewrite(expr: AlgebraicBinaryMatrixScalar): Expr = with(expr) {
         val leftRewritten = matrix(left)
         val rightRewritten = scalar(right)
-        if (leftRewritten === left && rightRewritten == right) return this
+        if (leftRewritten === left && rightRewritten === right) return this
         return copy(left = leftRewritten, right = rightRewritten)
     }
 
     open fun rewrite(expr: AlgebraicBinaryScalar): Expr = with(expr) {
         val leftRewritten = scalar(left)
         val rightRewritten = scalar(right)
-        if (leftRewritten === left && rightRewritten == right) return this
+        if (leftRewritten === left && rightRewritten === right) return this
         return copy(left = leftRewritten, right = rightRewritten)
     }
 
     open fun rewrite(expr: AlgebraicBinaryScalarMatrix): Expr = with(expr) {
         val leftRewritten = scalar(left)
         val rightRewritten = matrix(right)
-        if (leftRewritten === left && rightRewritten == right) return this
+        if (leftRewritten === left && rightRewritten === right) return this
         return copy(left = leftRewritten, right = rightRewritten)
     }
 
     open fun rewrite(expr: AlgebraicBinaryScalarStatistic): Expr = with(expr) {
         val leftRewritten = scalar(left)
         val rightRewritten = scalar(right)
-        if (leftRewritten === left && rightRewritten == right) return this
+        if (leftRewritten === left && rightRewritten === right) return this
         return copy(left = leftRewritten, right = rightRewritten)
     }
 
     open fun rewrite(expr: Sheet): Expr = with(expr) {
         var changed = false
-        val rewrittenElements = mutableMapOf<String, Expr>()
+        val rewrittenElements = mutableMapOf<Id, Expr>()
         for (cell in cells) {
             val (name, expr) = cell
             val rewritten = rewrite(expr)
             changed = changed || (rewritten !== expr)
             rewrittenElements[name] = rewritten
         }
-        return if (changed) copy(cells = rewrittenElements)
+        return if (changed) copy(cells = rewrittenElements.toCells())
         else this
     }
 
@@ -205,10 +201,18 @@ open class RewritingVisitor {
         try {
             ++depth
             beginRewrite(expr, depth)
-            if (depth > 1000) {
-                "recursion"
+            when (expr) {
+                is ConstantScalar -> return rewrite(expr)
+                is DiscreteUniformRandomVariable -> return rewrite(expr)
+                is ScalarStatistic -> return rewrite(expr)
             }
-            return when (expr) {
+//            if (memo != null) {
+//                val lookup = memo[expr]
+//                if(lookup != null) {
+//                    return lookup
+//                }
+//            }
+            val result = when (expr) {
                 is AlgebraicBinaryMatrix -> rewrite(expr)
                 is AlgebraicBinaryMatrixScalar -> rewrite(expr)
                 is AlgebraicBinaryRangeStatistic -> rewrite(expr)
@@ -220,11 +224,8 @@ open class RewritingVisitor {
                 is AlgebraicUnaryScalar -> rewrite(expr)
                 is AlgebraicUnaryScalarStatistic -> rewrite(expr)
                 is CoerceScalar -> rewrite(expr)
-                is ConstantScalar -> rewrite(expr)
-                is DiscreteUniformRandomVariable -> rewrite(expr)
                 is DataMatrix -> rewrite(expr)
                 is AlgebraicDeferredDataMatrix -> rewrite(expr)
-                is ScalarStatistic -> rewrite(expr)
                 is NamedScalar -> rewrite(expr)
                 is NamedScalarVariable -> rewrite(expr)
                 is NamedMatrixVariable -> rewrite(expr)
@@ -242,6 +243,16 @@ open class RewritingVisitor {
                 is NamedMatrixAssign -> rewrite(expr)
                 else -> error("${expr.javaClass}")
             }
+            if (checkIdentity && result !== expr) {
+                assert(result != expr) {
+                    rewrite(expr)
+                    "Change for no reason"
+                }
+            }
+//            if (memo!=null && result !== expr) {
+//                memo[expr] = result
+//            }
+            return result
         } finally {
             endRewrite(expr, depth)
             --depth

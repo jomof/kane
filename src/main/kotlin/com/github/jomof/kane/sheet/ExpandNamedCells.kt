@@ -6,18 +6,14 @@ import com.github.jomof.kane.functions.AlgebraicBinaryScalarStatistic
 import com.github.jomof.kane.functions.AlgebraicUnaryScalar
 import com.github.jomof.kane.functions.AlgebraicUnaryScalarStatistic
 
-private fun AlgebraicExpr.expandNamedCells(lookup: Map<String, Expr>): AlgebraicExpr {
+private fun AlgebraicExpr.expandNamedCells(lookup: Cells): AlgebraicExpr {
     fun ScalarExpr.self() = expandNamedCells(lookup) as ScalarExpr
     fun MatrixExpr.self() = expandNamedCells(lookup) as MatrixExpr
     return when (this) {
         is NamedScalarVariable -> this
         is DataMatrix -> map { it.self() }
         is NamedMatrix -> copy(matrix = matrix.self())
-        is AlgebraicUnaryScalarStatistic ->
-            when (value) {
-                is AlgebraicExpr -> copy(value = value.expandNamedCells(lookup))
-                else -> error("${value.javaClass}")
-            }
+        is AlgebraicUnaryScalarStatistic -> copy(value = value.expandNamedCells(lookup))
         is AlgebraicBinaryScalarStatistic -> copy(left = left.self(), right = right.self())
         is AlgebraicUnaryScalar -> copy(value = value.self())
         is AlgebraicBinaryScalar -> {
@@ -30,7 +26,8 @@ private fun AlgebraicExpr.expandNamedCells(lookup: Map<String, Expr>): Algebraic
                 is ScalarVariable -> constant(value.initial)
                 is ScalarExpr -> value.self()
                 is SheetRangeExpr -> {
-                    val ref = "$value"
+                    if (value.range !is CellRange) error("")
+                    val ref = value.range.toCoordinate()
                     val result = (lookup[ref] ?: constant(0.0)) as ScalarExpr
                     result.self()
                 }
@@ -48,8 +45,9 @@ private fun AlgebraicExpr.expandNamedCells(lookup: Map<String, Expr>): Algebraic
         else -> error("$javaClass")
     }
 }
-fun Expr.expandNamedCells(lookup : Map<String, Expr>) : Expr {
-    return when(this) {
+
+fun Expr.expandNamedCells(lookup: Cells): Expr {
+    return when (this) {
         is AlgebraicExpr -> expandNamedCells(lookup)
         else -> error("$javaClass")
     }

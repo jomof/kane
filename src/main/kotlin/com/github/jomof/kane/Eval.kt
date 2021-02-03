@@ -1,16 +1,15 @@
 package com.github.jomof.kane
 
+import com.github.jomof.kane.ComputableIndex.MoveableIndex
 import com.github.jomof.kane.functions.*
-import com.github.jomof.kane.sheet.CoerceScalar
-import com.github.jomof.kane.sheet.RangeExprProvider
-import com.github.jomof.kane.sheet.Sheet
-import com.github.jomof.kane.sheet.SheetRangeExpr
+import com.github.jomof.kane.sheet.*
 import com.github.jomof.kane.visitor.RewritingVisitor
 
 private val reduceNamedMatrix = object : RewritingVisitor() {
     override fun rewrite(expr: NamedMatrix) = expr.matrix
 }
-private val reduceAlgebraicBinaryScalar = object : RewritingVisitor() {
+
+private class ReduceAlgebraicBinaryScalar(memo: MutableMap<Expr, Expr>) : RewritingVisitor(memo) {
     override fun rewrite(expr: AlgebraicBinaryScalar): Expr {
         return when (val sub = super.rewrite(expr)) {
             is AlgebraicBinaryScalar -> when {
@@ -23,13 +22,17 @@ private val reduceAlgebraicBinaryScalar = object : RewritingVisitor() {
                     }, sub.type)
                 sub.left is ScalarListExpr -> sub.left.copy(sub.left.values.map { sub.copy(left = it) })
                 sub.right is ScalarListExpr -> sub.right.copy(sub.right.values.map { sub.copy(right = it) })
-                else -> sub.op.reduceArithmetic(sub.left, sub.right) ?: sub
+                else -> {
+                    val reduced = sub.op.reduceArithmetic(sub.left, sub.right)
+                    reduced ?: sub
+                }
             }
             else -> sub
         }
     }
 }
-private val reduceAlgebraicUnaryScalar = object : RewritingVisitor() {
+
+private class ReduceAlgebraicUnaryScalar(memo: MutableMap<Expr, Expr>) : RewritingVisitor(memo) {
     override fun rewrite(expr: AlgebraicUnaryScalar): Expr {
         return when (val sub = super.rewrite(expr)) {
             is AlgebraicUnaryScalar -> when (sub.value) {
@@ -82,13 +85,21 @@ private val reduceNakedScalarStatistic = object : RewritingVisitor() {
 
 private class ReduceRandomVariables(val variables: Map<RandomVariableExpr, ConstantScalar>) :
     RewritingVisitor() {
-    override fun rewrite(expr: DiscreteUniformRandomVariable) = variables[expr] ?: expr
+    override fun rewrite(expr: DiscreteUniformRandomVariable) =
+        variables[expr] ?: expr
+
+    override fun rewrite(expr: AlgebraicBinaryScalar): Expr = with(expr) {
+        val leftRewritten = scalar(left)
+        val rightRewritten = scalar(right)
+        if (leftRewritten === left && rightRewritten === right) return this
+        return op.reduceArithmetic(leftRewritten, rightRewritten) ?: copy(leftRewritten, rightRewritten)
+    }
 }
 
 private class ReduceNamedVariables(
     val reduceVariables: Boolean,
-    val excludeVariables: Set<String>,
-    val namedVariableLookup: Map<String, Expr>
+    val excludeVariables: Set<Id>,
+    val namedVariableLookup: Cells
 ) : RewritingVisitor() {
     private var recursionDetected = false
     override fun rewrite(expr: NamedScalar): Expr {
@@ -146,7 +157,7 @@ private val reduceCoerceScalar = object : RewritingVisitor() {
     }
 }
 
-private fun Expr.expandSheetCells(sheet: Sheet, excludeVariables: Set<String>): Expr {
+private fun Expr.expandSheetCells(sheet: Sheet, excludeVariables: Set<Id>): Expr {
     return object : RewritingVisitor() {
         override fun rewrite(expr: AlgebraicBinaryRangeStatistic): Expr = with(expr) {
             val leftRewritten = rewrite(left)
@@ -159,15 +170,37 @@ private fun Expr.expandSheetCells(sheet: Sheet, excludeVariables: Set<String>): 
             }
         }
 
+        override fun rewrite(expr: CoerceScalar): Expr = with(expr) {
+            val rewritten = rewrite(value)
+            if (rewritten === value) return this
+            if (rewritten is ScalarExpr && type == rewritten.type) return rewritten
+            return copy(value = rewritten)
+        }
+
         override fun rewrite(expr: SheetRangeExpr): Expr = with(expr) {
-            if (excludeVariables.contains(expr.range.toString()))
+            if (expr.range is CellRange && excludeVariables.contains(expr.range.toCoordinate()))
                 return this
-            val list = sheet.cells.filter { range.contains(it.key) }.map {
-                when (val value = it.value) {
-                    is ScalarExpr -> value
-                    is ScalarVariable -> constant(value.initial, value.type)
+            if (checkIdentity && excludeVariables.contains(expr.range.toString())) {
+                excludeVariables.contains(expr.range.toString())
+                error("Invalid range lookup")
+            }
+            if (expr.range is CellRange && expr.range.column is MoveableIndex && expr.range.row is MoveableIndex) {
+                val coordinate = expr.range.toCoordinate()
+                when (val result = sheet.cells[coordinate]) {
+                    null -> return expr
+                    is ScalarExpr -> return result
+                    is ScalarVariable -> constant(result.initial, result.type)
                     else -> return this
                 }
+            }
+            val list = sheet.cells.toMap().filter { range.contains(it.key) }.map {
+                val result = when (val value = it.value) {
+                    is ScalarExpr -> value
+                    is ScalarVariable -> constant(value.initial, value.type)
+                    else ->
+                        return this
+                }
+                result
             }
             if (list.isEmpty()) return this
             if (list.size == 1) return list.first()
@@ -183,17 +216,17 @@ private class ReduceProvidedSheetRangeExprs(val rangeExprProvider: RangeExprProv
         rangeExprProvider.range(expr)
 }
 
-private class ExpandSheetCells(val excludeVariables: Set<String>) : RewritingVisitor() {
+private class ExpandSheetCells(val excludeVariables: Set<Id>) : RewritingVisitor() {
     override fun rewrite(expr: Sheet): Expr = with(expr) {
         var changed = false
-        val rewrittenElements = mutableMapOf<String, Expr>()
+        val rewrittenElements = mutableMapOf<Id, Expr>()
         for (cell in cells) {
             val (name, expr) = cell
             val rewritten = expr.expandSheetCells(this, excludeVariables)
             changed = changed || (rewritten !== expr)
             rewrittenElements[name] = rewritten
         }
-        return if (changed) copy(cells = rewrittenElements)
+        return if (changed) copy(cells = rewrittenElements.toCells())
         else this
     }
 }
@@ -251,17 +284,21 @@ private class NopRangeExprProvider : RangeExprProvider
 private fun Expr.evalGradualSingleSample(
     rangeExprProvider: RangeExprProvider,
     reduceVariables: Boolean,
-    excludeVariables: Set<String>,
-    randomVariableValues: Map<RandomVariableExpr, ConstantScalar>
+    excludeVariables: Set<Id>,
+    randomVariableValues: Map<RandomVariableExpr, ConstantScalar>,
+    memo: MutableMap<Expr, Expr>
 ): Expr {
+    excludeVariables.forEach { Identifier.validate(it) }
     var last = this
     var allowedReductions = 10000
     val reduceRandomVariables = ReduceRandomVariables(randomVariableValues)
     val expandSheetCells = ExpandSheetCells(excludeVariables)
     val reduceProvidedSheetRangeExprs = ReduceProvidedSheetRangeExprs(rangeExprProvider)
+    val reduceAlgebraicBinaryScalar = ReduceAlgebraicBinaryScalar(memo)
+    val reduceAlgebraicUnaryScalar = ReduceAlgebraicUnaryScalar(memo)
     while (true) {
         if (--allowedReductions == 0) error("Reduction took too long")
-        val namedVariableLookup = if (last is Sheet) last.cells else mapOf()
+        val namedVariableLookup = if (last is Sheet) last.cells else Cells(mapOf())
         val reduceNamedVariables = ReduceNamedVariables(reduceVariables, excludeVariables, namedVariableLookup)
         val reducedNamedVariables = reduceNamedVariables.rewriteOrNull(last) ?: return this
         val reducedNamedMatrix = reduceNamedMatrix(reducedNamedVariables)
@@ -287,13 +324,14 @@ private fun Expr.evalGradualSingleSample(
 private fun Expr.evalGradualReduceStatistics(
     rangeExprProvider: RangeExprProvider,
     reduceVariables: Boolean,
-    excludeVariables: Set<String>
+    excludeVariables: Set<Id>,
+    memo: MutableMap<Expr, Expr>
 ): Expr {
     var last = this
     var allowedReductions = 10000
     while (true) {
         if (--allowedReductions == 0) error("Reduction took too long")
-        val reduced = last.evalGradualSingleSample(rangeExprProvider, reduceVariables, excludeVariables, mapOf())
+        val reduced = last.evalGradualSingleSample(rangeExprProvider, reduceVariables, excludeVariables, mapOf(), memo)
         val reducedAlgebraicBinaryScalarStatistic = reduceAlgebraicBinaryScalarStatistic(reduced)
         val reducedAlgebraicUnaryScalarStatistic =
             reduceAlgebraicUnaryScalarStatistic(reducedAlgebraicBinaryScalarStatistic)
@@ -308,7 +346,7 @@ private fun Expr.evalGradualReduceStatistics(
 fun Expr.eval(
     rangeExprProvider: RangeExprProvider = NopRangeExprProvider(),
     reduceVariables: Boolean = false,
-    excludeVariables: Set<String> = setOf()
+    excludeVariables: Set<Id> = setOf()
 ): Expr {
     if (excludeVariables.isNotEmpty()) {
         assert(reduceVariables) {
@@ -319,7 +357,8 @@ fun Expr.eval(
     if (randomVariables.isEmpty()) return evalGradualReduceStatistics(
         rangeExprProvider,
         reduceVariables,
-        excludeVariables
+        excludeVariables,
+        mutableMapOf()
     )
     var stats: Expr? = null
     val randomVariableElements = randomVariables.map { variable ->
@@ -327,58 +366,64 @@ fun Expr.eval(
             constant(value, variable.type)
         }
     }
+
+    val reduced = evalGradualSingleSample(
+        rangeExprProvider,
+        reduceVariables,
+        excludeVariables,
+        mapOf(),
+        mutableMapOf()
+    )
     cartesianOf(randomVariableElements) { randomVariableValues ->
         val variableValues: Map<RandomVariableExpr, ConstantScalar> = (randomVariables zip randomVariableValues)
             .map { (variable, value) -> variable to (value as ConstantScalar) }
             .toMap()
-        val sample = evalGradualSingleSample(rangeExprProvider, reduceVariables, excludeVariables, variableValues)
+        val memo: MutableMap<Expr, Expr> = mutableMapOf()
+
+        println("loop $variableValues")
+        val sample =
+            reduced.evalGradualSingleSample(rangeExprProvider, reduceVariables, excludeVariables, variableValues, memo)
         if (stats == null) {
             stats = convertVariablesToStatistics(sample)
         } else {
             stats!!.accumulateStatistics(sample)
         }
     }
-    return stats!!.evalGradualReduceStatistics(rangeExprProvider, reduceVariables, excludeVariables)
+    return stats!!.evalGradualReduceStatistics(rangeExprProvider, reduceVariables, excludeVariables, mutableMapOf())
 }
 
 fun NamedMatrix.eval(
     rangeExprProvider: RangeExprProvider = NopRangeExprProvider(),
     reduceVariables: Boolean = false,
-    excludeVariables: Set<String> = setOf()
-) =
-    (this as Expr).eval(rangeExprProvider, reduceVariables, excludeVariables) as NamedMatrix
+    excludeVariables: Set<Id> = setOf(),
+) = (this as Expr).eval(rangeExprProvider, reduceVariables, excludeVariables) as NamedMatrix
 
 fun NamedScalar.eval(
     rangeExprProvider: RangeExprProvider = NopRangeExprProvider(),
     reduceVariables: Boolean = false,
-    excludeVariables: Set<String> = setOf()
-) =
-    (this as Expr).eval(rangeExprProvider, reduceVariables, excludeVariables) as NamedScalar
+    excludeVariables: Set<Id> = setOf(),
+) = (this as Expr).eval(rangeExprProvider, reduceVariables, excludeVariables) as NamedScalar
 
 fun NamedAlgebraicExpr.eval(
     rangeExprProvider: RangeExprProvider = NopRangeExprProvider(),
     reduceVariables: Boolean = false,
-    excludeVariables: Set<String> = setOf()
-) =
-    (this as Expr).eval(rangeExprProvider, reduceVariables, excludeVariables) as NamedAlgebraicExpr
+    excludeVariables: Set<Id> = setOf(),
+) = (this as Expr).eval(rangeExprProvider, reduceVariables, excludeVariables) as NamedAlgebraicExpr
 
 fun Sheet.eval(
     rangeExprProvider: RangeExprProvider = NopRangeExprProvider(),
     reduceVariables: Boolean = false,
-    excludeVariables: Set<String> = setOf()
-) =
-    (this as Expr).eval(rangeExprProvider, reduceVariables, excludeVariables) as Sheet
+    excludeVariables: Set<Id> = setOf(),
+) = (this as Expr).eval(rangeExprProvider, reduceVariables, excludeVariables) as Sheet
 
 fun ScalarExpr.eval(
     rangeExprProvider: RangeExprProvider = NopRangeExprProvider(),
     reduceVariables: Boolean = false,
-    excludeVariables: Set<String> = setOf()
-) =
-    (this as Expr).eval(rangeExprProvider, reduceVariables, excludeVariables) as ScalarExpr
+    excludeVariables: Set<Id> = setOf(),
+) = (this as Expr).eval(rangeExprProvider, reduceVariables, excludeVariables) as ScalarExpr
 
 fun MatrixExpr.eval(
     rangeExprProvider: RangeExprProvider = NopRangeExprProvider(),
     reduceVariables: Boolean = false,
-    excludeVariables: Set<String> = setOf()
-) =
-    (this as Expr).eval(rangeExprProvider, reduceVariables, excludeVariables) as MatrixExpr
+    excludeVariables: Set<Id> = setOf(),
+) = (this as Expr).eval(rangeExprProvider, reduceVariables, excludeVariables) as MatrixExpr

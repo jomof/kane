@@ -85,6 +85,11 @@ data class AlgebraicBinaryScalar(
 
     init {
         track()
+        ++allocs
+    }
+
+    companion object {
+        var allocs = 0
     }
 
     override val children get() = listOf(left, right)
@@ -95,12 +100,6 @@ data class AlgebraicBinaryScalar(
     ): AlgebraicBinaryScalar {
         if (this.left === left && this.right === right) return this
         return AlgebraicBinaryScalar(op, left, right)
-    }
-    fun copyReduce(
-        left : ScalarExpr = this.left,
-        right : ScalarExpr = this.right) : ScalarExpr {
-        if (this.left === left && this.right === right) return this
-        return binaryScalar(op, left, right)
     }
 }
 
@@ -158,9 +157,9 @@ interface AlgebraicUnaryScalarFunction {
     operator fun invoke(value: ScalarExpr): ScalarExpr = AlgebraicUnaryScalar(this, value, value.type)
     operator fun invoke(value: MatrixExpr): MatrixExpr = AlgebraicUnaryMatrix(this, value)
     fun reduceArithmetic(value: ScalarExpr): ScalarExpr? {
-        val constValue = value.tryFindConstant()
+        val isConstValue = value.canGetConstant()
         return when {
-            constValue != null -> constant(doubleOp(constValue), value.type)
+            isConstValue -> constant(doubleOp(value.getConstant()), value.type)
             else -> null
         }
     }
@@ -233,10 +232,10 @@ interface AlgebraicUnaryScalarStatisticFunction {
     fun reduceArithmetic(value: ScalarStatistic) = constant(lookupStatistic(value.statistic), value.type)
     fun reduceArithmetic(elements: List<ScalarExpr>): ScalarExpr? {
         if (elements.isEmpty()) return null
-        if (!elements.all { it.tryFindConstant() != null }) return null
+        if (!elements.all { it.canGetConstant() }) return null
         val statistic = StreamingSamples()
         elements.forEach {
-            statistic.insert(it.tryFindConstant()!!)
+            statistic.insert(it.getConstant())
         }
         return reduceArithmetic(ScalarStatistic(statistic, elements[0].type))
     }

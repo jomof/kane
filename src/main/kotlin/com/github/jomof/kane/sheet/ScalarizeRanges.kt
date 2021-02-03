@@ -60,7 +60,7 @@ private fun Expr.replaceColumnWithCell(row: Int): Expr {
     }.rewrite(this)
 }
 
-fun SheetBuilderImpl.scalarizeRanges(cells: Map<String, Expr>): Map<String, Expr> {
+fun SheetBuilderImpl.scalarizeRanges(cells: Cells): Cells {
     val result = cells.toMutableMap()
     var done = false
     while (!done) {
@@ -70,12 +70,12 @@ fun SheetBuilderImpl.scalarizeRanges(cells: Map<String, Expr>): Map<String, Expr
             .filter { it.second.isNotEmpty() }
             .map { it.first }
             .reversed()
-        val cellsCoordinates = result.map { it.key }.filter { looksLikeCellName(it) }.map { cellNameToCoordinate(it) }
+        val cellsCoordinates = result.map { it.key }.filter { it is Coordinate }.map { Identifier.coordinate(it) }
         val columns = cellsCoordinates.map { it.column }.toSet()
         val rows = cellsCoordinates.map { it.row }.toSet().sorted()
         for (name in cellsWithRanges) {
             val expr = result.getValue(name)
-            if (!looksLikeCellName(name)) {
+            if (name !is Coordinate) {
                 if (columnDescriptors.any { it.value.name == name }) continue
                 // It has column ranges but doesn't have a cell-like name, let's allocate a column for it.
                 val existingColumns = (columnDescriptors.keys + columns).sorted()
@@ -83,7 +83,7 @@ fun SheetBuilderImpl.scalarizeRanges(cells: Map<String, Expr>): Map<String, Expr
                 for (next in 0 until Int.MAX_VALUE) {
                     if (!existingColumns.contains(next)) {
                         columnDescriptors[next] = ColumnDescriptor(name, null)
-                        val allocatedColumnBase = coordinateToCellName(next, 0)
+                        val allocatedColumnBase = coordinate(next, 0)
                         result[allocatedColumnBase] = expr
                         result.remove(name)
                         break
@@ -91,15 +91,13 @@ fun SheetBuilderImpl.scalarizeRanges(cells: Map<String, Expr>): Map<String, Expr
                 }
                 continue
             }
-            val base = cellNameToCoordinate(name)
 
             for (row in rows) {
-                if (row < base.row) continue
+                if (row < name.row) continue
                 val columnReplaced = expr.replaceColumnWithCell(row)
-                val newCell = CellRange.moveable(base.column, row)
-                val cellName = "$newCell"
-                if (result[cellName] != columnReplaced) {
-                    result[cellName] = columnReplaced
+                val newCell = coordinate(name.column, row)
+                if (result[newCell] != columnReplaced) {
+                    result[newCell] = columnReplaced
                     done = false
                 }
             }
@@ -116,12 +114,10 @@ fun SheetBuilderImpl.scalarizeRanges(cells: Map<String, Expr>): Map<String, Expr
         result.remove(name)
     }
 
-
-
-    return result
+    return result.toCells()
 }
 
-fun SheetBuilderImpl.convertNamedColumnsToColumnRanges(cells: Map<String, Expr>): Map<String, Expr> {
+fun SheetBuilderImpl.convertNamedColumnsToColumnRanges(cells: Cells): Cells {
     val converter = object : RewritingVisitor() {
         override fun rewrite(expr: SheetRangeExpr): Expr = with(expr) {
             return when (range) {
@@ -143,6 +139,6 @@ fun SheetBuilderImpl.convertNamedColumnsToColumnRanges(cells: Map<String, Expr>)
     cells.forEach { (name, expr) ->
         result[name] = converter(expr)
     }
-    return result
+    return result.toCells()
 }
 

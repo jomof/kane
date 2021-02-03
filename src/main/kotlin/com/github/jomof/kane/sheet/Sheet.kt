@@ -27,7 +27,7 @@ data class SheetRangeExpr(val range: SheetRange) : UntypedScalar {
 }
 
 data class NamedSheetRangeExpr(
-    override val name: String,
+    override val name: Id,
     val range: SheetRangeExpr
 ) : UntypedScalar, NamedExpr {
     init {
@@ -76,56 +76,114 @@ data class CoerceScalar(
     }
 }
 
-data class ColumnDescriptor(val name: String, val type: AdmissibleDataType<*>?)
+data class ColumnDescriptor(val name: Id, val type: AdmissibleDataType<*>?)
 data class RowDescriptor(val name: List<Expr>)
 data class SheetDescriptor(val limitOutputLines: Int = Int.MAX_VALUE)
+
+data class Cells(private val map: Map<Id, Expr>) {
+    init {
+        map.forEach { (id, expr) -> Identifier.validate(id) }
+    }
+
+    fun <R : Any> mapNotNull(transform: (Map.Entry<Id, Expr>) -> R?): List<R> {
+        return map.mapNotNullTo(ArrayList<R>(), transform)
+    }
+
+    fun <R : Any> map(transform: (Map.Entry<Id, Expr>) -> R): List<R> {
+        return map.map(transform)
+    }
+
+    fun filter(predicate: (Map.Entry<Id, Expr>) -> Boolean) = map.filter(predicate).toCells()
+    fun mapExprs(transform: (Id, Expr) -> Expr): Cells {
+        val mutable = toMutableMap()
+        map.forEach { (id, expr) ->
+            mutable[id] = transform(id, expr)
+        }
+        return mutable.toCells()
+    }
+
+    fun mapExprsNotNull(transform: (Id, Expr) -> Expr?): Cells {
+        val mutable = toMutableMap()
+        map.forEach { (id, expr) ->
+            val result = transform(id, expr)
+            if (result != null) mutable[id] = result
+        }
+        return mutable.toCells()
+    }
+
+    fun forEach(action: (Map.Entry<Id, Expr>) -> Unit) {
+        return map.forEach(action)
+    }
+
+    fun toMutableMap() = map.toMutableMap()
+    fun toMap() = map
+    operator fun iterator() = map.iterator()
+    fun isEmpty() = map.isEmpty()
+    fun isNotEmpty() = map.isNotEmpty()
+    fun getValue(key: Id) = get(key) ?: error("No cell named '$key' in cell map")
+    operator fun get(key: Id): Expr? {
+        Identifier.validate(key)
+        return map[key]
+    }
+
+    infix operator fun <E : Expr> plus(right: Map<Id, E>): Cells = (toMap() + right).toCells()
+}
+
+fun List<Pair<Id, Expr>>.toCells() = Cells(toMap())
+fun Map<Id, Expr>.toCells() = Cells(this)
+
 interface Sheet : Expr {
-    val columnDescriptors : Map<Int, ColumnDescriptor>
-    val rowDescriptors : Map<Int, RowDescriptor>
-    val cells : Map<String, Expr>
-    val sheetDescriptor : SheetDescriptor
-    val columns : Int
-    val rows : Int
+    val columnDescriptors: Map<Int, ColumnDescriptor>
+    val rowDescriptors: Map<Int, RowDescriptor>
+    val cells: Cells
+    val sheetDescriptor: SheetDescriptor
+    val columns: Int
+    val rows: Int
 
     companion object {
         private data class SheetImpl(
-            override val columnDescriptors : Map<Int, ColumnDescriptor>,
-            override val rowDescriptors : Map<Int, RowDescriptor>,
-            override val cells: Map<String, Expr>,
-            override val sheetDescriptor : SheetDescriptor,
-            override val columns : Int,
-            override val rows : Int
+            override val columnDescriptors: Map<Int, ColumnDescriptor>,
+            override val rowDescriptors: Map<Int, RowDescriptor>,
+            override val cells: Cells,
+            override val sheetDescriptor: SheetDescriptor,
+            override val columns: Int,
+            override val rows: Int
         ) : Sheet {
             override fun toString() = render()
         }
-        private val emptySheet = SheetImpl(mapOf(), mapOf(), mapOf(), SheetDescriptor(), 0, 0)
+
+        private val emptySheet = SheetImpl(mapOf(), mapOf(), Cells(mapOf()), SheetDescriptor(), 0, 0)
         fun of(
-            columnDescriptors : Map<Int, ColumnDescriptor>,
-            rowDescriptors : Map<Int, RowDescriptor>,
+            columnDescriptors: Map<Int, ColumnDescriptor>,
+            rowDescriptors: Map<Int, RowDescriptor>,
             sheetDescriptor: SheetDescriptor,
-            cells : Map<String, Expr>) : Sheet {
+            cells: Cells
+        ): Sheet {
             if (cells.isEmpty() &&
                 columnDescriptors.isEmpty() &&
                 rowDescriptors.isEmpty() &&
-                sheetDescriptor == SheetDescriptor()) return emptySheet
+                sheetDescriptor == SheetDescriptor()
+            ) return emptySheet
             if (cells.isEmpty()) return SheetImpl(columnDescriptors, rowDescriptors, cells, sheetDescriptor, 0, 0)
-            val columnsFromCells : Int = cells
-                .filter { looksLikeCellName(it.key) }
-                .map { cellNameToColumnIndex(it.key) }.maxOrNull()!! + 1
-            val columnsColumnDescriptors : Int = columnDescriptors
+            val columnsFromCells: Int = cells
+                .toMap()
+                .filter { it.key is Coordinate }
+                .map { Identifier.column(it.key) }.maxOrNull()!! + 1
+            val columnsColumnDescriptors: Int = columnDescriptors
                 .map { it.key }.maxOrNull()?:0 + 1
             val rows : Int = cells
-                .filter { looksLikeCellName(it.key) }
-                .map { cellNameToRowIndex(it.key) }.maxOrNull()!! + 1
+                .toMap()
+                .filter { it.key is Coordinate }
+                .map { Identifier.row(it.key) }.maxOrNull()!! + 1
             return SheetImpl(columnDescriptors, rowDescriptors, cells, sheetDescriptor, max(columnsFromCells, columnsColumnDescriptors), rows)
         }
     }
 
     fun copy(
-        columnDescriptors : Map<Int, ColumnDescriptor> = this.columnDescriptors,
-        rowDescriptors : Map<Int, RowDescriptor> = this.rowDescriptors,
-        cells : Map<String, Expr> = this.cells,
-        sheetDescriptor : SheetDescriptor = this.sheetDescriptor
+        columnDescriptors: Map<Int, ColumnDescriptor> = this.columnDescriptors,
+        rowDescriptors: Map<Int, RowDescriptor> = this.rowDescriptors,
+        cells: Cells = this.cells,
+        sheetDescriptor: SheetDescriptor = this.sheetDescriptor
     ) = of(columnDescriptors, rowDescriptors, sheetDescriptor, cells)
 
     /**
@@ -139,7 +197,7 @@ interface Sheet : Expr {
     fun copy(vararg assignments: Pair<String, Any>): Sheet {
         val sb = toBuilder()
         assignments.forEach { (name, any) ->
-            sb.add(convertAnyToNamedExpr(name, any))
+            sb.add(convertAnyToNamedExpr(Identifier.normalizeUserInput(name), any))
         }
         return sb.build()
     }
@@ -181,18 +239,18 @@ class SheetBuilderImpl(
         return SheetBuilderRange(this, parsed)
     }
 
-    fun getImmediateNamedExprs(): Map<String, Expr> {
-        val cells = mutableMapOf<String, Expr>()
+    fun getImmediateNamedExprs(): Cells {
+        val cells = mutableMapOf<Id, Expr>()
 
         // Add immediate named expressions
         added.forEach { namedExpr ->
-            cells[namedExpr.name] = namedExpr.toUnnamed()
+            cells[Identifier.normalizeUserInput(namedExpr.name)] = namedExpr.toUnnamed()
         }
 
-        return cells
+        return cells.toCells()
     }
 
-    private fun getEmbeddedNamedExprs(cells: Map<String, Expr>): Map<String, Expr> {
+    private fun getEmbeddedNamedExprs(cells: Cells): Cells {
         val result = cells.toMutableMap()
         var done = false
         while (!done) {
@@ -210,50 +268,49 @@ class SheetBuilderImpl(
                 }
             }
         }
-        return result
+        return result.toCells()
     }
 
-    private fun replaceRelativeReferences(cells: Map<String, Expr>): Map<String, Expr> {
+    private fun replaceRelativeReferences(cells: Cells): Cells {
         return cells
             .map { (name, expr) ->
-                val base =
-                    if (looksLikeCellName(name)) cellNameToCoordinate(name) else Coordinate(0, 0)
-
+                val base = if (name is Coordinate) name else coordinate(0, 0)
                 name to expr.replaceRelativeCellReferences(base)
             }
-            .toMap()
+            .toCells()
     }
 
-    private fun convertCellNamesToUpperCase(cells: Map<String, Expr>): Map<String, Expr> {
+    private fun convertCellNamesToUpperCase(cells: Cells): Cells {
         return cells
             .map { (name, expr) ->
-                val upper = name.toUpperCase()
-                val new = if (looksLikeCellName(upper)) upper else name
+                val upper = Identifier.string(name).toUpperCase()
+                val new = if (looksLikeCellName(upper)) cellNameToCoordinate(upper) else name
                 new to expr.convertCellNamesToUpperCase()
             }
-            .map { it.first to it.second }.toMap()
+            .map { it.first to it.second }
+            .toCells()
     }
 
-    private fun scalarizeMatrixes(cells: Map<String, Expr>): Map<String, Expr> {
-        val result = cells.map { it.key to it.value }.toMap().toMutableMap()
+    private fun scalarizeMatrixes(cells: Cells): Cells {
+        val result = cells.toMutableMap()
         var done = false
         while (!done) {
             done = true
             result.toList().forEach { (name, expr) ->
-                if (!looksLikeCellName(name)) {
+                if (!(name is Coordinate)) {
                     when (expr) {
                         is MatrixExpr,
                         is Tiling<*> -> {
                             done = false
                             val cellsCoordinates =
-                                result.map { it.key }.filter { looksLikeCellName(it) }.map { cellNameToCoordinate(it) }
+                                result.map { it.key }.filter { it is Coordinate }.map { Identifier.coordinate(it) }
                             val columns = cellsCoordinates.map { it.column }.toSet()
                             val existingColumns = (columnDescriptors.keys + columns).sorted()
                             done = false
                             for (next in 0 until Int.MAX_VALUE) {
                                 if (!existingColumns.contains(next)) {
                                     columnDescriptors[next] = ColumnDescriptor(name, null)
-                                    val allocatedColumnBase = coordinateToCellName(next, 0)
+                                    val allocatedColumnBase = coordinate(next, 0)
                                     result[allocatedColumnBase] = expr
                                     result.remove(name)
                                     break
@@ -262,7 +319,6 @@ class SheetBuilderImpl(
                         }
                     }
                 } else {
-                    val upperLeft = cellNameToCoordinate(name)
                     when (expr) {
                         is ScalarExpr,
                         is ValueExpr<*>,
@@ -272,14 +328,13 @@ class SheetBuilderImpl(
                         is MatrixExpr -> {
                             var replacedOurName = false
                             expr.coordinates.map { offset ->
-                                val finalCoordinate = upperLeft + offset
-                                val finalCellName = coordinateToCellName(finalCoordinate)
+                                val finalCoordinate = name + offset
                                 val extracted = extractScalarizedMatrixElement(expr, offset)
-                                    .slideScalarizedCellsRewritingVisitor(upperLeft, offset)
-                                if (finalCellName == name) {
+                                    .slideScalarizedCellsRewritingVisitor(name, offset)
+                                if (finalCoordinate == name) {
                                     replacedOurName = true
                                 }
-                                result[finalCellName] = extracted
+                                result[finalCoordinate] = extracted
                             }
                             assert(replacedOurName) {
                                 "Should have replaced our own name in $name"
@@ -288,9 +343,8 @@ class SheetBuilderImpl(
                         }
                         is Tiling<*> -> {
                             coordinatesOf(expr.columns, expr.rows).map { offset ->
-                                val finalCoordinate = upperLeft + offset
-                                val finalCellName = coordinateToCellName(finalCoordinate)
-                                result[finalCellName] = expr.getUnnamedElement(offset)
+                                val finalCoordinate = name + offset
+                                result[finalCoordinate] = expr.getUnnamedElement(offset)
                             }
                         }
                         else -> error("${expr.javaClass}")
@@ -299,30 +353,20 @@ class SheetBuilderImpl(
             }
         }
 
-        return result.map { it.key to it.value }.toMap()
+        return result.toCells()
     }
 
-    private fun expandUnaryOperations(cells: Map<String, Expr>): Map<String, Expr> {
-        return cells
-            .map { (name, expr) ->
-                val result = expr.expandUnaryOperations()
-                name to result
-            }.toMap()
-    }
+    private fun expandUnaryOperations(cells: Cells) = cells
+        .mapExprs { _, expr ->
+            expr.expandUnaryOperations()
+        }
 
-    private fun replaceNamesWithCellReferences(cells: Map<String, Expr>): Map<String, Expr> {
-        return cells
-            .map { (name, expr) ->
-//                if (expr is ComputableCellReference
-//                    && (expr.range as ComputableCoordinate).column is MoveableIndex) {
-//                    columnDescriptors[expr.range.column.index] = ColumnDescriptor(name, null)
-//                }
-                name to expr.replaceNamesWithCellReferences(name)
-            }
-            .toMap()
-    }
+    private fun replaceNamesWithCellReferences(cells: Cells) = cells
+        .mapExprs { name, expr ->
+            expr.replaceNamesWithCellReferences(name)
+        }
 
-    fun build() : Sheet {
+    fun build(): Sheet {
         val immediate = getImmediateNamedExprs()
         val debuilderized = removeBuilderPrivateExpressions(immediate)
         val noNamedColumns = convertNamedColumnsToColumnRanges(debuilderized)
@@ -334,7 +378,7 @@ class SheetBuilderImpl(
         val unaryMatrixesExpanded = expandUnaryOperations(relativeReferencesReplaced)
         val namesReplaced = replaceNamesWithCellReferences(unaryMatrixesExpanded)
         namesReplaced.forEach { (name, expr) ->
-            assert(looksLikeCellName(name) || expr !is SheetRangeExpr) {
+            assert(name is Coordinate || expr !is SheetRangeExpr) {
                 "Should have eliminated $name"
             }
         }
@@ -348,8 +392,8 @@ class SheetBuilderImpl(
     fun set(cell : Coordinate, value : Any, type : KaneType<*>) {
         val name = CellRange.moveable(cell).toString()
         add(
-            if (value is Double) NamedScalar(name, constant(value, type as AlgebraicType))
-            else NamedValueExpr(name, value, type as KaneType<Any>)
+            if (value is Double) NamedScalar(cell, constant(value, type as AlgebraicType))
+            else NamedValueExpr(cell, value, type as KaneType<Any>)
         )
     }
 
@@ -357,12 +401,12 @@ class SheetBuilderImpl(
         columnDescriptors[index] = ColumnDescriptor(name, type)
     }
 
-    override fun nameColumn(column: Int, name: String) {
+    override fun nameColumn(column: Int, name: Id) {
         columnDescriptors[column] = ColumnDescriptor(name, null)
     }
 
-    override fun nameRow(row: Int, name: String) {
-        rowDescriptors[row] = RowDescriptor(listOf(constant(name)))
+    override fun nameRow(row: Int, name: Id) {
+        rowDescriptors[row] = RowDescriptor(listOf(constant(Identifier.string(name))))
     }
 
     override fun nameRow(row: Int, name: List<Expr>) {
@@ -371,9 +415,8 @@ class SheetBuilderImpl(
 }
 
 
-
-private fun Sheet.variable(cell : String) : NamedScalarVariable {
-    val reduced = when(val value = cells.getValue(cell)) {
+private fun Sheet.variable(cell: Id): NamedScalarVariable {
+    val reduced = when (val value = cells.getValue(cell)) {
         is AlgebraicExpr -> value.eval()
         else ->
             error("${value.javaClass}")
@@ -385,7 +428,7 @@ private fun Sheet.variable(cell : String) : NamedScalarVariable {
     }
 }
 
-private fun Sheet.replaceNamesWithVariables(variables: Map<String, NamedScalarVariable>): Sheet {
+private fun Sheet.replaceNamesWithVariables(variables: Map<Id, NamedScalarVariable>): Sheet {
     return object : RewritingVisitor() {
         override fun rewrite(expr: NamedScalar): Expr {
             return variables[expr.name] ?: super.rewrite(expr)
@@ -398,10 +441,11 @@ fun Sheet.minimize(
     variables: List<String>,
     learningRate: Double = 0.001
 ): Sheet {
-    val resolvedVariables = mutableMapOf<String, NamedScalarVariable>()
+    val resolvedVariables = mutableMapOf<Id, NamedScalarVariable>()
+    val variableIds = variables.map { Identifier.normalizeUserInput(it) }
 
     // Turn each 'variable' into a NamedScalarVariable
-    variables.forEach { cell ->
+    variableIds.forEach { cell ->
         resolvedVariables[cell] = variable(cell)
     }
 
@@ -411,20 +455,21 @@ fun Sheet.minimize(
     // Follow all expressions from 'target'
     val reducedArithmetic = namesReplaced.eval(
         reduceVariables = true,
-        excludeVariables = variables.toSet()
+        excludeVariables = variableIds.toSet()
     )
     //val reducedArithmetic = reduceArithmetic(variables.toSet())
     println("Expanding target expression '$target'")
     val lookup = reducedArithmetic.cells + resolvedVariables
-    val targetExpr = reducedArithmetic.cells.getValue(target).expandNamedCells(lookup)
+    val targetId = Identifier.normalizeUserInput(target)
+    val targetExpr = reducedArithmetic.cells.getValue(targetId).expandNamedCells(lookup)
     if (targetExpr !is ScalarExpr) {
         error("'$target' was not a numeric expression")
     }
     val reduced = targetExpr.eval()
-    val namedTarget: NamedScalarExpr = NamedScalar(target, reduced)
+    val namedTarget: NamedScalarExpr = NamedScalar(targetId, reduced)
 
     // Differentiate target with respect to each variable
-    println("Differentiating target expression $target with respect to change variables: ${variables.joinToString(" ")}")
+    println("Differentiating target expression $target with respect to change variables: ${variableIds.joinToString(" ")}")
     val diffs = resolvedVariables.map { (_, variable) ->
         val name = "d$target/d${variable.name}"
         val derivative = differentiate(d(namedTarget) / d(variable)).eval()
@@ -477,14 +522,18 @@ fun Sheet.minimize(
         assert(new.containsKey(it.name))
         new[it.name] = variable(value.value, (cells[it.name] as AlgebraicExpr).type)
     }
-    return copy(cells = new)
+    return copy(cells = new.toCells())
 }
 
 fun Sheet.render() : String {
     if (cells.isEmpty()) return ""
     val sb = StringBuilder()
     val widths = Array(columns + 1) {
-        if (it > 0) columnDescriptors[it-1]?.name?.length?:0 else 0
+        if (it > 0) {
+            val name = columnDescriptors[it - 1]?.name
+            if (name == null) 0
+            else Identifier.width(name)
+        } else 0
     }
 
     fun colName(column: Int) = columnDescriptors[column]?.name ?: indexToColumnName(column)
@@ -500,13 +549,13 @@ fun Sheet.render() : String {
 
     // Calculate widths of column headers
     for(column in 0 until columns) {
-        widths[column + 1] = max(widths[column + 1], colName(column).length)
+        widths[column + 1] = max(widths[column + 1], Identifier.width(colName(column)))
     }
 
     // Calculate widths
     for(row in 0 until rows) {
         for(column in 0 until columns) {
-            val cell = CellRange.moveable(column, row).toString()
+            val cell = coordinate(column, row)
             val value = cells[cell]?.toString() ?: ""
             widths[column + 1] = max(widths[column + 1], value.length)
         }
@@ -518,7 +567,7 @@ fun Sheet.render() : String {
         if (index == 0) sb.append(" ".repeat(width) + " ")
         else {
             val columnName = colName(index - 1)
-            sb.append(padCenter(columnName, width) + " ")
+            sb.append(padCenter(Identifier.string(columnName), width) + " ")
         }
     }
     sb.append("\n")
@@ -535,7 +584,7 @@ fun Sheet.render() : String {
     for(row in 0 until rows) {
         sb.append(padLeft(rowName(row+1), widths[0]) + " ")
         for(column in 0 until columns) {
-            val cell = CellRange.moveable(column, row).toString()
+            val cell = coordinate(column, row)
             val value = cells[cell]?.toString() ?: ""
             sb.append(padLeft(value, widths[column + 1]) + " ")
         }
@@ -546,9 +595,9 @@ fun Sheet.render() : String {
     }
 
     // Non-cell data
-    val nonCells = cells.filter { !looksLikeCellName(it.key) }
+    val nonCells = cells.toMap().filter { !(it.key is Coordinate) }
     if (nonCells.isNotEmpty()) {
-        nonCells.toList().sortedBy { it.first }.forEach {
+        nonCells.toList().sortedBy { Identifier.string(it.first) }.forEach {
             if (it.second !is SheetRangeExpr) {
                 sb.append("\n${it.first}=${it.second}")
             }

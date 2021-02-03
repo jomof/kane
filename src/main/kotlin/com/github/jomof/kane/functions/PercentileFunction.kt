@@ -9,11 +9,12 @@ private val PERCENTILE75 by UnaryOp("75%")
 class PercentileFunction : AlgebraicBinaryScalarStatisticFunction {
     override val meta = PERCENTILE
     override fun reduceArithmetic(left: List<ScalarExpr>, right: ScalarExpr): ScalarExpr? {
-        val right = right.tryFindConstant() ?: return null
+        if (!right.canGetConstant()) return null
+        val right = right.getConstant()
         val statistic = StreamingSamples()
         left.forEach {
-            val value = it.tryFindConstant() ?: return null
-            statistic.insert(value)
+            if (!it.canGetConstant()) return null
+            statistic.insert(it.getConstant())
         }
         return ConstantScalar(statistic.percentile(right), left.first().type)
     }

@@ -2,8 +2,8 @@ package com.github.jomof.kane.functions
 
 import com.github.jomof.kane.ScalarExpr
 import com.github.jomof.kane.UnaryOp
-import com.github.jomof.kane.constant
-import com.github.jomof.kane.tryFindConstant
+import com.github.jomof.kane.canGetConstant
+import com.github.jomof.kane.getConstant
 import com.github.jomof.kane.types.percent
 
 // %gain at end of year
@@ -113,11 +113,8 @@ private class BAACorporateBondFunctionFunction : AlgebraicUnaryScalarFunction {
     override fun doubleOp(value: Double) = baaCorporateBond(value.toInt())
 
     override fun reduceArithmetic(value: ScalarExpr): ScalarExpr? {
-        val constValue = value.tryFindConstant()
-        return when {
-            constValue != null -> percent(baaCorporateBond(constValue.toInt()))
-            else -> null
-        }
+        if (!value.canGetConstant()) return null
+        return percent(baaCorporateBond(value.getConstant().toInt()))
     }
     override fun differentiate(
         expr : ScalarExpr,

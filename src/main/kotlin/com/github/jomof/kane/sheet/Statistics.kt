@@ -22,11 +22,11 @@ fun NamedMatrix.describe() = matrix.describe(name)
 /**
  * Return a new sheet with data summarized into statistics
  */
-fun MatrixExpr.describe(name: String = "matrix"): Sheet {
+fun MatrixExpr.describe(name: Id = "matrix"): Sheet {
     val statistic = StreamingSamples()
     elements.forEach {
-        val constant = it.eval().tryFindConstant() ?: error("Could not evaluate constant for all elements")
-        statistic.insert(constant)
+        if (!it.eval().canGetConstant()) error("Could not evaluate constant for all elements")
+        statistic.insert(it.eval().getConstant())
     }
 
     val columnDescriptors = mapOf(
@@ -34,18 +34,17 @@ fun MatrixExpr.describe(name: String = "matrix"): Sheet {
     )
     val rowDescriptors = Kane.unaryStatisticsFunctions
         .mapIndexed { index, func -> index + 1 to RowDescriptor(listOf(constant(func.meta.op))) }.toMap()
-    val cells = mutableMapOf<String, Expr>()
+    val cells = mutableMapOf<Id, Expr>()
     for (row in Kane.unaryStatisticsFunctions.indices) {
         val result = Kane.unaryStatisticsFunctions[row].lookupStatistic(statistic)
-        cells[coordinateToCellName(0, row)] = constant(result, type)
+        cells[coordinate(0, row)] = constant(result, type)
     }
     return Sheet.of(
-        cells = cells,
+        cells = cells.toCells(),
         rowDescriptors = rowDescriptors,
         columnDescriptors = columnDescriptors,
         sheetDescriptor = SheetDescriptor()
-    )
-        .limitOutputLines(Kane.unaryStatisticsFunctions.size)
+    ).limitOutputLines(Kane.unaryStatisticsFunctions.size)
 }
 
 /**
@@ -53,7 +52,7 @@ fun MatrixExpr.describe(name: String = "matrix"): Sheet {
  */
 fun Sheet.describe(): Sheet {
     val statistics = columnStatistics()
-    val cells = mutableMapOf<String, Expr>()
+    val cells = mutableMapOf<Id, Expr>()
     val rowDescriptors = Kane.unaryStatisticsFunctions
         .mapIndexed { index, func -> index + 1 to RowDescriptor(listOf(constant(func.meta.op))) }.toMap()
     val relevantColumns = mutableListOf<Int>()
@@ -65,10 +64,10 @@ fun Sheet.describe(): Sheet {
         val type = columnInfo.type.type as AlgebraicType
         for (row in Kane.unaryStatisticsFunctions.indices) {
             val result = Kane.unaryStatisticsFunctions[row].lookupStatistic(statistic)
-            cells[coordinateToCellName(column, row)] = constant(result, type)
+            cells[coordinate(column, row)] = constant(result, type)
         }
     }
-    return copy(cells = cells, rowDescriptors = rowDescriptors)
+    return copy(cells = cells.toCells(), rowDescriptors = rowDescriptors)
         .ordinalColumns(relevantColumns)
         .limitOutputLines(Kane.unaryStatisticsFunctions.size)
 }
@@ -77,10 +76,10 @@ private fun Sheet.columnStatistics(): List<StreamingSamples> {
     val evaled = eval()
     val samples = (0 until evaled.columns).map { StreamingSamples() }
     cells.forEach { (name, expr) ->
-        val constant = expr.tryFindConstant()
-        if (constant != null && looksLikeCellName(name)) {
-            val coordinate = cellNameToCoordinate(name)
-            samples[coordinate.column].insert(constant)
+        if (name is Coordinate) {
+            if (expr.canGetConstant()) {
+                samples[name.column].insert(expr.getConstant())
+            }
         }
     }
     return samples

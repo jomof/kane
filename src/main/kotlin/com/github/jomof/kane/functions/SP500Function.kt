@@ -1,6 +1,9 @@
 package com.github.jomof.kane.functions
 
-import com.github.jomof.kane.*
+import com.github.jomof.kane.ScalarExpr
+import com.github.jomof.kane.UnaryOp
+import com.github.jomof.kane.canGetConstant
+import com.github.jomof.kane.getConstant
 import com.github.jomof.kane.types.percent
 
 // %gain, including dividends at end of year
@@ -110,12 +113,8 @@ private class SP500Function : AlgebraicUnaryScalarFunction {
     override fun doubleOp(value: Double) = sp500(value.toInt())
 
     override fun reduceArithmetic(value: ScalarExpr) : ScalarExpr? {
-        val constValue = value.tryFindConstant()
-        return when {
-            constValue != null ->
-                percent(sp500(constValue.toInt()))
-            else -> null
-        }
+        if (!value.canGetConstant()) return null
+        return percent(sp500(value.getConstant().toInt()))
     }
 
     override fun differentiate(

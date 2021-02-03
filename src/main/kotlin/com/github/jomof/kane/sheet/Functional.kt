@@ -42,18 +42,17 @@ fun Sheet.ordinalRows(elements : List<Int>) : Sheet {
         new to descriptor
     }.toMap()
     val cells = cells.mapNotNull { (name,expr) ->
-        if (!looksLikeCellName(name)) name to expr
+        if (name !is Coordinate) name to expr
         else {
-            val coordinate = cellNameToCoordinate(name)
-            val newRow = oldOrdinalToNewOrdinal[coordinate.row+1]
+            val newRow = oldOrdinalToNewOrdinal[name.row + 1]
             if (newRow != null) {
-                val newCoordinate = coordinate.copy(row = newRow - 1)
-                val unfrozen = expr.unfreeze(coordinate)
+                val newCoordinate = name.copy(row = newRow - 1)
+                val unfrozen = expr.unfreeze(name)
                 val refrozen = unfrozen.freeze(newCoordinate)
-                coordinateToCellName(newCoordinate) to refrozen
+                newCoordinate to refrozen
             } else null
         }
-    }.toMap()
+    }.toCells()
     return copy(cells = cells, rowDescriptors = rowDescriptors)
 }
 
@@ -77,18 +76,17 @@ fun Sheet.ordinalColumns(elements : List<Int>) : Sheet {
         new to descriptor
     }.toMap()
     val cells = cells.mapNotNull { (name,expr) ->
-        if (!looksLikeCellName(name)) name to expr
+        if (name !is Coordinate) name to expr
         else {
-            val coordinate = cellNameToCoordinate(name)
-            val newColumn = oldOrdinalToNewOrdinal[coordinate.column]
+            val newColumn = oldOrdinalToNewOrdinal[name.column]
             if (newColumn != null) {
-                val newCoordinate = coordinate.copy(column = newColumn)
-                val unfrozen = expr.unfreeze(coordinate)
+                val newCoordinate = name.copy(column = newColumn)
+                val unfrozen = expr.unfreeze(name)
                 val refrozen = unfrozen.freeze(newCoordinate)
-                coordinateToCellName(newCoordinate) to refrozen
+                newCoordinate to refrozen
             } else null
         }
-    }.toMap()
+    }.toCells()
     return copy(cells = cells, columnDescriptors = columnDescriptors)
 }
 
@@ -109,7 +107,7 @@ fun Sheet.mapDoubles(translate: (Double) -> Double): Sheet {
             else -> error("${expr.javaClass}")
         }
     }
-    return copy(cells = new)
+    return copy(cells = new.toCells())
 }
 
 fun Expr.mapDoubles(translate: (Double) -> Double): Expr {
@@ -148,7 +146,7 @@ fun Sheet.filterRows(predicate: (RowView) -> Boolean): Sheet {
 private fun Sheet.columnType(column : Int) : AdmissibleDataType<*> {
     var acceptedDataTypes = possibleDataFormats
     for((name, expr) in cells) {
-        if (looksLikeCellName(name) && column == cellNameToColumnIndex(name))  {
+        if (name is Coordinate && column == name.column) {
             acceptedDataTypes = acceptedDataTypes
                 .filter { tryType -> tryType.tryParse(expr.toString()) != null }
             if (acceptedDataTypes.size == 1) return acceptedDataTypes.first()
@@ -158,7 +156,7 @@ private fun Sheet.columnType(column : Int) : AdmissibleDataType<*> {
 }
 
 internal fun Sheet.fullColumnDescriptor(column: Int): ColumnDescriptor {
-    val name: String = columnDescriptors[column]?.name ?: indexToColumnName(column)
+    val name: String = columnDescriptors[column]?.name?.identifierString() ?: indexToColumnName(column)
     val type: AdmissibleDataType<*> = columnDescriptors[column]?.type ?: columnType(column)
     return ColumnDescriptor(name, type)
 }
@@ -172,7 +170,7 @@ val Sheet.types : Sheet get() {
         nameColumn(1, "type")
         nameColumn(2, "format")
         val descriptors = (0 until columns).map { fullColumnDescriptor(it) }
-        val a1 by columnOf(descriptors.map { it.name })
+        val a1 by columnOf(descriptors.map { Identifier.string(it.name) })
         val b1 by columnOf(descriptors.map { it.type!!.type.simpleName })
         val c1 by columnOf(descriptors.map { it.type.toString() })
         listOf(a1, b1, c1)
@@ -194,15 +192,15 @@ val Expr.type: KaneType<*>
  * Return a subsection of a sheet
  */
 operator fun Sheet.get(vararg ranges: String): Expr {
-    if (ranges.size == 1 && looksLikeCellName(ranges[0])) return cells.getValue(ranges[0])
+    if (ranges.size == 1 && looksLikeCellName(ranges[0]))
+        return cells.getValue(cellNameToCoordinate(ranges[0]))
     val asColumnIndices = tryConvertToColumnIndex(ranges.toList())
     if (asColumnIndices != null) return ordinalColumns(asColumnIndices)
     error("Couldn't get sheet subset for ${ranges.joinToString(",")}")
 }
 
 operator fun Sheet.get(column: Int, row: Int): Expr {
-    val cellName = coordinateToCellName(column, row)
-    return cells.getValue(cellName)
+    return cells.getValue(coordinate(column, row))
 }
 
 internal fun Sheet.tryConvertToColumnIndex(range: String): Int? {

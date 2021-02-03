@@ -49,7 +49,7 @@ class GroupBy(
 private fun Sheet.buildGrouping(builder: SheetBuilderImpl): GroupBy {
     val immediate = builder.getImmediateNamedExprs()
     val debuilderized = removeBuilderPrivateExpressions(immediate)
-    val names = debuilderized.map { (name, expr) -> expr.toNamed(name) }
+    val names = debuilderized.map { (name, expr) -> expr.toNamed(Identifier.string(name)) }
     return GroupBy(this, names)
 }
 

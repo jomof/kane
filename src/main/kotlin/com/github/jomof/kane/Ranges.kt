@@ -2,7 +2,6 @@ package com.github.jomof.kane
 
 import com.github.jomof.kane.ComputableIndex.*
 
-
 interface SheetRange {
     fun up(move: Int): SheetRange
     fun down(move: Int): SheetRange
@@ -12,24 +11,70 @@ interface SheetRange {
     val down get() = down(1)
     val left get() = left(1)
     val right get() = right(1)
-    fun contains(name: String): Boolean
+    fun contains(name: Id): Boolean
 }
 
 
-data class Coordinate(val column: Int, val row: Int) {
+class Coordinate private constructor(val column: Int, val row: Int) {
+    init {
+        if (locked) {
+            assert(column >= coordinateLookupSide || row >= coordinateLookupSide) {
+                "Unexpected"
+            }
+        }
+    }
+
+    operator fun component1(): Int = column
+    operator fun component2(): Int = row
     override fun toString() = "[$column,$row]"
     fun toComputableCoordinate() = CellRange(MoveableIndex(column), MoveableIndex(row))
+    fun copy(column: Int = this.column, row: Int = this.row): Coordinate = coordinate(column, row)
+    override fun hashCode() = row * 7 + column * 119
+    override fun equals(other: Any?): Boolean {
+        if (other == null) return false
+        if (other !is Coordinate) return false
+        if (column != other.column) return false
+        if (row != other.row) return false
+        return true
+    }
+
+    companion object {
+        /**
+         * Cache/intern some lower-range coordinates
+         */
+        private var locked = false
+        private const val coordinateLookupSide = 50
+        private val coordinateLookup = Array(coordinateLookupSide * coordinateLookupSide) { index ->
+            val column = index % coordinateLookupSide
+            val row = index / coordinateLookupSide
+            Coordinate(column, row)
+        }
+
+        fun coordinate(column: Int, row: Int): Coordinate {
+            if (column < coordinateLookupSide && row < coordinateLookupSide) {
+                val result = coordinateLookup[row * coordinateLookupSide + column]
+                assert(result.row == row && result.column == column) {
+                    "invalid coordinate lookup"
+                }
+                return result
+            }
+            locked = true
+            return Coordinate(column, row)
+        }
+    }
 }
+
+fun coordinate(column: Int, row: Int) = Coordinate.coordinate(column, row)
 
 fun coordinatesOf(columns: Int, rows: Int) = sequence {
     for (row in 0 until rows) {
         for (column in 0 until columns) {
-            yield(Coordinate(column,row))
+            yield(coordinate(column, row))
         }
     }
 }.toList()
 
-operator fun Coordinate.plus(right : Coordinate) = copy(column = column + right.column, row = row + right.row)
+operator fun Coordinate.plus(right: Coordinate) = copy(column = column + right.column, row = row + right.row)
 
 sealed class ComputableIndex {
     abstract val index: Int
@@ -107,7 +152,18 @@ data class CellRange(
         return sb.toString()
     }
 
-    override fun contains(name: String) = name == toString()
+    override fun contains(name: Id) = when (name) {
+        is String -> name == toString()
+        is Coordinate -> column is MoveableIndex && row is MoveableIndex &&
+                column.index == name.column && row.index == name.row
+        else -> error("")
+    }
+
+    fun toCoordinate(): Coordinate {
+        if (column !is MoveableIndex) error("")
+        if (row !is MoveableIndex) error("")
+        return coordinate(column.index, row.index)
+    }
 
     companion object {
         fun relative(column: Int, row: Int) = CellRange(RelativeIndex(column), RelativeIndex(row))
@@ -228,7 +284,7 @@ fun cellNameToCoordinate(tag: String): Coordinate {
     assert(looksLikeCellName(tag))
     val column = cellNameToColumnIndex(tag)
     val row = cellNameToRowIndex(tag)
-    return Coordinate(
+    return coordinate(
         column = column,
         row = row
     )
@@ -256,13 +312,12 @@ data class RectangleRange(
     override fun left(move: Int) = copy(first = first.down(move), second = second.down(move))
     override fun right(move: Int) = copy(first = first.down(move), second = second.down(move))
     override fun toString() = "$first:$second"
-    override fun contains(name: String): Boolean {
-        if (!looksLikeCellName(name)) return false
-        val cell = cellNameToCoordinate(name)
-        return cell.column >= first.column.index &&
-                cell.column <= second.column.index &&
-                cell.row >= first.row.index &&
-                cell.row <= second.row.index
+    override fun contains(name: Id): Boolean {
+        if (name !is Coordinate) return false
+        return name.column >= first.column.index &&
+                name.column <= second.column.index &&
+                name.row >= first.row.index &&
+                name.row <= second.row.index
     }
 }
 
@@ -279,10 +334,9 @@ data class ColumnRange(
         return "${first.toColumnName()}:${second.toColumnName()}"
     }
 
-    override fun contains(name: String): Boolean {
-        if (!looksLikeCellName(name)) return false
-        val cell = cellNameToCoordinate(name)
-        return cell.column >= first.index && cell.column <= second.index
+    override fun contains(name: Id): Boolean {
+        if (name !is Coordinate) return false
+        return name.column >= first.index && name.column <= second.index
     }
 }
 
@@ -300,7 +354,7 @@ data class NamedColumnRange(
         else "$name[$columnOffset, $rowOffset]"
     }
 
-    override fun contains(name: String) = error("not supported")
+    override fun contains(name: Id) = error("not supported")
 }
 
 

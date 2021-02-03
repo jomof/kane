@@ -5,7 +5,7 @@ import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.types.DoubleAlgebraicType
 
 
-private class ReplaceNamesWithCellReferences(val excluding: String) {
+private class ReplaceNamesWithCellReferences(val excluding: Id) {
     private fun MatrixExpr.replace() = (this as Expr).replace() as MatrixExpr
     private fun ScalarExpr.replace() = (this as Expr).replace() as ScalarExpr
     private fun UntypedScalar.replace() = (this as Expr).replace() as UntypedScalar
@@ -14,10 +14,10 @@ private class ReplaceNamesWithCellReferences(val excluding: String) {
             is NamedUntypedScalar ->
                 when {
                     name == excluding -> copy(expr = expr.replace())
-                    looksLikeCellName(name) -> {
+                    name is Coordinate -> {
                         CoerceScalar(
                             SheetRangeExpr(
-                                cellNameToCoordinate(name).toComputableCoordinate()
+                                name.toComputableCoordinate()
                             ), DoubleAlgebraicType.kaneType
                         )
                     }
@@ -28,10 +28,10 @@ private class ReplaceNamesWithCellReferences(val excluding: String) {
             is NamedScalar ->
                 when {
                     name == excluding -> copy(scalar = scalar.replace())
-                    looksLikeCellName(name) -> {
+                    name is Coordinate -> {
                         CoerceScalar(
                             SheetRangeExpr(
-                                cellNameToCoordinate(name).toComputableCoordinate()
+                                name.toComputableCoordinate()
                             ), type
                         )
                     }
@@ -85,6 +85,6 @@ private class ReplaceNamesWithCellReferences(val excluding: String) {
     fun run(expr: Expr) = expr.replace()
 }
 
-fun Expr.replaceNamesWithCellReferences(excluding: String): Expr {
+fun Expr.replaceNamesWithCellReferences(excluding: Id): Expr {
     return ReplaceNamesWithCellReferences(excluding).run(this)
 }

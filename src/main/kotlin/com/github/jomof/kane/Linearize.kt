@@ -6,16 +6,16 @@ import com.github.jomof.kane.visitor.visit
 
 class LinearModel(val type : AlgebraicType) {
     private val map = mutableMapOf<ScalarExpr, Slot>()
-    private val namedScalarVariables = mutableMapOf<String, NamedScalarVariable>()
-    private val namedMatrixVariableElements = mutableMapOf<String, MatrixVariableElement>()
-    private val namedMatrixShapes = mutableMapOf<String, MatrixShape>()
-    private val namedScalars = mutableMapOf<String, Slot>()
+    private val namedScalarVariables = mutableMapOf<Id, NamedScalarVariable>()
+    private val namedMatrixVariableElements = mutableMapOf<Id, MatrixVariableElement>()
+    private val namedMatrixShapes = mutableMapOf<Id, MatrixShape>()
+    private val namedScalars = mutableMapOf<Id, Slot>()
     private val randomVariables = mutableMapOf<RandomVariableExpr, Slot>()
     private val assignments = mutableListOf<Pair<Int, ScalarExpr>>()
     private val slots = mutableListOf<Pair<Slot, String>>()
     private val assignBacks = mutableSetOf<Pair<Int, ScalarExpr>>()
 
-    private fun allocateSlot(expr : ScalarExpr, comment : String) : Slot {
+    private fun allocateSlot(expr: ScalarExpr, comment: String): Slot {
         val slot = Slot(slots.size, expr)
         slots += slot to comment
         return slot
@@ -50,7 +50,7 @@ class LinearModel(val type : AlgebraicType) {
         return randomVariables.getValue(expr)
     }
 
-    fun registerNamedMatrixShape(name : String, init : () -> MatrixShape) {
+    fun registerNamedMatrixShape(name: Id, init: () -> MatrixShape) {
         namedMatrixShapes.computeIfAbsent(name) { init() }
     }
 
@@ -70,7 +70,7 @@ class LinearModel(val type : AlgebraicType) {
         return namedScalars.getValue(name)
     }
 
-    fun registerNamedScalar(name : String, scalar : ScalarExpr) {
+    fun registerNamedScalar(name: Id, scalar: ScalarExpr) {
         if (namedScalars.containsKey(name))
             return
         if (map.containsKey(scalar)) {
@@ -105,13 +105,13 @@ class LinearModel(val type : AlgebraicType) {
         return slot
     }
 
-    fun assignBack(name : String, slot : Slot) {
+    fun assignBack(name: Id, slot: Slot) {
         val target = namedScalars.getValue(name)
         assignments += target.slot to slot
         assignBacks += target.slot to slot
     }
 
-    fun assignBack(name : String, constant : ConstantScalar) {
+    fun assignBack(name: Id, constant: ConstantScalar) {
         val target = namedScalars.getValue(name)
         assignments += target.slot to constant
         assignBacks += target.slot to constant
@@ -282,7 +282,7 @@ private fun AlgebraicExpr.claimScalarVariables(model : LinearModel = LinearModel
 
 
 private fun AlgebraicExpr.claimMatrixVariables(model : LinearModel = LinearModel(type)) {
-    val seen = mutableSetOf<String>()
+    val seen = mutableSetOf<Id>()
     visit {
         if (it is MatrixVariableElement) {
             model.registerMatrixVariableElement(it)

@@ -278,7 +278,7 @@ class GroupByTest {
             )
     }
 
-    @Test
+//    @Test
     fun `covid-slim`() {
         val gp = readCsv("data/covid-slim.csv")
             .groupBy("hospital_name")

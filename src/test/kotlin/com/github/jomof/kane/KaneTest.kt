@@ -429,7 +429,7 @@ class KaneTest {
     @Test
     fun `dollars is constant`() {
        val dollars by dollars(1.00)
-       dollars.tryFindConstant().assertString("1.0")
+       dollars.getConstant().assertString("1.0")
     }
 
     @Test

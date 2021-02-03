@@ -1,8 +1,9 @@
 package com.github.jomof.kane.sheet
 
-import com.github.jomof.kane.CellRange
+import com.github.jomof.kane.Coordinate
+import com.github.jomof.kane.Identifier
+import com.github.jomof.kane.coordinate
 import com.github.jomof.kane.indexToColumnName
-import com.github.jomof.kane.looksLikeCellName
 
 /**
  * Render the sheet as HTML
@@ -41,7 +42,7 @@ val Sheet.html: String
             sb.append("    <tr>")
             sb.append("<td>${rowName(row + 1)}</td>")
             for (column in 0 until columns) {
-                val cell = CellRange.moveable(column, row).toString()
+                val cell = coordinate(column, row)
                 val value = cells[cell]?.toString() ?: ""
                 sb.append("<td>$value</td>")
             }
@@ -51,9 +52,9 @@ val Sheet.html: String
         sb.append("</table>\n")
 
         // Non-cell data
-        val nonCells = cells.filter { !looksLikeCellName(it.key) }
+        val nonCells = cells.filter { !(it.key is Coordinate) }
         if (nonCells.isNotEmpty()) {
-            nonCells.toList().sortedBy { it.first }.forEach {
+            nonCells.toMap().toList().sortedBy { Identifier.string(it.first) }.forEach {
                 if (it.second !is SheetRangeExpr) {
                     sb.append("\n${it.first}=${it.second}<br/>")
                 }

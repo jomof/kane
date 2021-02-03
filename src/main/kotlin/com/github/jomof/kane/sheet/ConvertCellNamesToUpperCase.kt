@@ -7,8 +7,13 @@ import com.github.jomof.kane.functions.*
 private fun AlgebraicExpr.convertCellNamesToUpperCase() : AlgebraicExpr {
     fun MatrixExpr.self() = convertCellNamesToUpperCase() as MatrixExpr
     fun ScalarExpr.self() = convertCellNamesToUpperCase() as ScalarExpr
-    fun String.upper() = if (looksLikeCellName(toUpperCase())) toUpperCase() else this
-    return when(this) {
+    fun Id.upper(): Id {
+        if (this is Coordinate) return this
+        if (this !is String) error("not a string")
+        val upper = toUpperCase()
+        return if (looksLikeCellName(upper)) cellNameToCoordinate(upper) else this
+    }
+    return when (this) {
         is NamedScalarVariable -> copy(name = name.upper())
         is NamedMatrix -> copy(name = name.upper(), matrix = matrix.self())
         is NamedScalar -> copy(name = name.upper(), scalar = scalar.self())

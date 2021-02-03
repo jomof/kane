@@ -22,8 +22,7 @@ private fun GroupBy.buildAggregation(builder: SheetBuilderImpl): Sheet {
             nameColumn(column, name)
             row = 0
             for ((_, sheet) in groupBy) {
-                val cell = coordinateToCellName(Coordinate(column, row))
-                result += expr.eval(rangeExprProvider = SheetRangeExprProvider(sheet)).toNamed(cell)
+                result += expr.eval(rangeExprProvider = SheetRangeExprProvider(sheet)).toNamed(coordinate(column, row))
                 row++
             }
             column++
@@ -45,7 +44,7 @@ fun GroupBy.aggregate(vararg functions: AlgebraicUnaryScalarStatisticFunction): 
             val columnInfo = sheet.fullColumnDescriptor(column)
             if (columnInfo.type!!.type.java != Double::class.java) continue
             for (function in functions) {
-                result += function(range(columnInfo.name)).toNamed(function.meta.op + " " + columnInfo.name)
+                result += function(range(Identifier.string(columnInfo.name))).toNamed(function.meta.op + " " + columnInfo.name)
             }
         }
         result

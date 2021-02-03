@@ -1,9 +1,6 @@
 package com.github.jomof.kane.functions
 
-import com.github.jomof.kane.ScalarExpr
-import com.github.jomof.kane.UnaryOp
-import com.github.jomof.kane.constant
-import com.github.jomof.kane.tryFindConstant
+import com.github.jomof.kane.*
 
 // Source: https://www.multpl.com/shiller-pe/table/by-year
 // Year is on January 1st of that year.
@@ -112,11 +109,8 @@ private class ShillerPEFunction : AlgebraicUnaryScalarFunction {
     override fun doubleOp(value: Double) = shillerPEImpl(value.toInt())
 
     override fun reduceArithmetic(value: ScalarExpr) : ScalarExpr? {
-        val constValue = value.tryFindConstant()
-        return when {
-            constValue != null -> constant(shillerPEImpl(constValue.toInt()))
-            else -> null
-        }
+        if (!value.canGetConstant()) return null
+        return constant(shillerPEImpl(value.getConstant().toInt()))
     }
 
     override fun differentiate(

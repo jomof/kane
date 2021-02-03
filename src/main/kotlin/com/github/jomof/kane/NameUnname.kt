@@ -4,18 +4,18 @@ import com.github.jomof.kane.sheet.NamedSheetRangeExpr
 import com.github.jomof.kane.sheet.SheetRangeExpr
 
 
-fun ScalarVariable.toNamed(name: String) = NamedScalarVariable(name, initial, type)
-fun MatrixVariable.toNamed(name: String) = NamedMatrixVariable(name, columns, type, initial)
-fun ScalarAssign.toNamed(name: String) = NamedScalarAssign(name, left, right)
-fun MatrixAssign.toNamed(name: String) = NamedMatrixAssign(name, left, right)
-fun ScalarExpr.toNamed(name: String) = NamedScalar(name, this)
-fun MatrixExpr.toNamed(name: String) = NamedMatrix(name, this)
-fun UntypedScalar.toNamed(name: String) = NamedUntypedScalar(name, this)
-fun SheetRangeExpr.toNamed(name: String) = NamedSheetRangeExpr(name, this)
-fun <E : Any> ValueExpr<E>.toNamed(name: String) = toNamedValueExpr(name)
-fun <E : Any> Tiling<E>.toNamed(name: String) = toNamedTilingExpr(name)
+fun ScalarVariable.toNamed(name: Id) = NamedScalarVariable(name, initial, type)
+fun MatrixVariable.toNamed(name: Id) = NamedMatrixVariable(name, columns, type, initial)
+fun ScalarAssign.toNamed(name: Id) = NamedScalarAssign(name, left, right)
+fun MatrixAssign.toNamed(name: Id) = NamedMatrixAssign(name, left, right)
+fun ScalarExpr.toNamed(name: Id) = NamedScalar(name, this)
+fun MatrixExpr.toNamed(name: Id) = NamedMatrix(name, this)
+fun UntypedScalar.toNamed(name: Id) = NamedUntypedScalar(name, this)
+fun SheetRangeExpr.toNamed(name: Id) = NamedSheetRangeExpr(name, this)
+fun <E : Any> ValueExpr<E>.toNamed(name: Id) = toNamedValueExpr(name)
+fun <E : Any> Tiling<E>.toNamed(name: Id) = toNamedTilingExpr(name)
 
-fun Expr.toNamed(name: String): NamedExpr {
+fun Expr.toNamed(name: Id): NamedExpr {
     return when (this) {
         is ScalarExpr -> toNamed(name)
         is MatrixExpr -> toNamed(name)

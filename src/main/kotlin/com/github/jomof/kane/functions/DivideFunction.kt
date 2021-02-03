@@ -10,12 +10,12 @@ private class DivideFunction : AlgebraicBinaryScalarFunction {
 
     override fun reduceArithmetic(p1: ScalarExpr, p2: ScalarExpr): ScalarExpr? {
         if (p1 is NamedScalarVariable && p2 is NamedScalarVariable) return null
-        val leftConst = p1.tryFindConstant()
-        val rightConst = p2.tryFindConstant()
+        val leftIsConst = p1.canGetConstant()
+        val rightIsConst = p2.canGetConstant()
         return when {
-            leftConst == 0.0 -> p1
-            rightConst == 1.0 -> p1
-            leftConst != null && rightConst != null -> constant(invoke(leftConst, rightConst), p1.type)
+            leftIsConst && p1.getConstant() == 0.0 -> p1
+            rightIsConst && p2.getConstant() == 1.0 -> p1
+            leftIsConst && rightIsConst -> constant(invoke(p1.getConstant(), p2.getConstant()), p1.type)
             p1 is AlgebraicUnaryScalar && p1.op == negate && p2 is AlgebraicUnaryScalar && p2.op == negate -> p1.value / p2.value
             p2 is AlgebraicBinaryScalar && p2.op == pow -> p1 * pow(p2.left, -p2.right)
             else -> null

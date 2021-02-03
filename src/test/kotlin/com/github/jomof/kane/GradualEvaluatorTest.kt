@@ -78,7 +78,6 @@ class GradualEvaluatorTest {
             val d2 by count(a1)
             listOf(a1, a2, a3, b1, b2, b3, c1, c2, c3, d1, d2)
         }
-        println(sheet.eval())
         sheet.eval().assertString(
             """
               A    B       C        D    
@@ -102,6 +101,13 @@ class GradualEvaluatorTest {
         val roll by randomOf(1.0 to 6.0)
         val health by mean(roll) + mean(roll)
         health.eval().assertString("health=7")
+    }
+
+    @Test
+    fun `sum of mean of single random`() {
+        val roll by randomOf(1.0 to 10.0)
+        val health by sum(roll) + sum(roll)
+        health.eval().assertString("health=110")
     }
 
     @Test
