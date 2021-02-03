@@ -267,6 +267,7 @@ fun looksLikeCellName(tag : String) : Boolean {
     for (c in tag) {
         if (c !in 'A'..'Z' && c !in '0'..'9') return false
     }
+    if (cellNameToColumnIndex(tag) > 50) return false
     if (tag.length < 2) return false
     if (tag[0] !in 'A'..'Z') return false
     if (tag.last() !in '0'..'9') return false

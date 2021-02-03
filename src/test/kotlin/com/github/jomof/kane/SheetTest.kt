@@ -1270,5 +1270,43 @@ class SheetTest {
         }
         println(retire.eval())
         (AlgebraicBinaryScalar.allocs - startAllocs).assertString("619")
+
+    }
+
+    @Test
+    fun `copy analysis with with pre and post tax`() {
+        val start = 2021
+        val end = start + 30
+        val allYears = end - start + 1
+        val startAllocs = AlgebraicBinaryScalar.allocs
+        val modelStartYear by randomOf(1928.0 to 2019.0)
+        val pre1 by dollars(25)
+        val pre2 by dollars(25)
+        val pre3 by dollars(25)
+        val pre4 by dollars(25)
+        val initialPreTax by pre1 + pre2 + pre3 + pre4
+        val post1 by dollars(250)
+        val post2 by dollars(25)
+        val post3 by dollars(25)
+        val post4 by dollars(25)
+        val initialPostTax by post1 + post2 + post3 + post4
+
+        val retire = sheetOf {
+            val stockRatio by percent(0.7)
+            val years by columnOf(allYears) { constant(start + it) }
+            val j by years - 1969
+            val k by years - 1972
+            val modelYear by years - start + modelStartYear
+            val stock by sp500(modelYear)
+            val bond by baaCorporateBond(modelYear)
+            val inflation by usInflation(modelYear)
+            val multiplier by 1.0 + stock * stockRatio + bond * (1.0 - stockRatio)
+            val preTax by initialPreTax stack (multiplier * up)
+            val postTax by initialPostTax stack (multiplier * up)
+            val total by preTax + postTax
+            listOf(years, j, k, modelYear, stock, bond, inflation, multiplier, preTax, postTax)
+        }
+        println(retire.eval())
+        // (AlgebraicBinaryScalar.allocs - startAllocs).assertString("619")
     }
 }

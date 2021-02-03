@@ -156,7 +156,8 @@ private val convertVariablesToStatistics = object : RewritingVisitor() {
 private val reduceCoerceScalar = object : RewritingVisitor() {
     override fun rewrite(expr: CoerceScalar): Expr {
         return when (expr.value) {
-            is Sheet -> ScalarListExpr(expr.value.cells.map { expr.copy(value = it.value) }, expr.type)
+            is Sheet ->
+                ScalarListExpr(expr.value.cells.map { expr.copy(value = it.value) }, expr.type)
             is SheetRangeExpr -> expr
             else -> error("${expr.value.javaClass}")
         }
