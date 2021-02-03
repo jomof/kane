@@ -1269,6 +1269,6 @@ class SheetTest {
             listOf(years, j, k, modelYear, stock, bond, inflation)
         }
         println(retire.eval())
-        (AlgebraicBinaryScalar.allocs - startAllocs).assertString("802")
+        (AlgebraicBinaryScalar.allocs - startAllocs).assertString("619")
     }
 }

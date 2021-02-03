@@ -94,6 +94,12 @@ private class ReduceRandomVariables(val variables: Map<RandomVariableExpr, Const
         if (leftRewritten === left && rightRewritten === right) return this
         return op.reduceArithmetic(leftRewritten, rightRewritten) ?: copy(leftRewritten, rightRewritten)
     }
+
+    override fun rewrite(expr: AlgebraicUnaryScalar): Expr = with(expr) {
+        val rewritten = scalar(value)
+        return if (rewritten === value) this
+        else op.reduceArithmetic(rewritten) ?: copy(rewritten)
+    }
 }
 
 private class ReduceNamedVariables(
@@ -379,8 +385,6 @@ fun Expr.eval(
             .map { (variable, value) -> variable to (value as ConstantScalar) }
             .toMap()
         val memo: MutableMap<Expr, Expr> = mutableMapOf()
-
-        println("loop $variableValues")
         val sample =
             reduced.evalGradualSingleSample(rangeExprProvider, reduceVariables, excludeVariables, variableValues, memo)
         if (stats == null) {

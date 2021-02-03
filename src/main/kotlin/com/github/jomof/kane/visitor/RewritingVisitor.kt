@@ -206,12 +206,12 @@ open class RewritingVisitor(
                 is DiscreteUniformRandomVariable -> return rewrite(expr)
                 is ScalarStatistic -> return rewrite(expr)
             }
-//            if (memo != null) {
-//                val lookup = memo[expr]
-//                if(lookup != null) {
-//                    return lookup
-//                }
-//            }
+            if (memo != null) {
+                val lookup = memo[expr]
+                if (lookup != null) {
+                    return lookup
+                }
+            }
             val result = when (expr) {
                 is AlgebraicBinaryMatrix -> rewrite(expr)
                 is AlgebraicBinaryMatrixScalar -> rewrite(expr)
@@ -249,9 +249,9 @@ open class RewritingVisitor(
                     "Change for no reason"
                 }
             }
-//            if (memo!=null && result !== expr) {
-//                memo[expr] = result
-//            }
+            if (memo != null && result !== expr) {
+                memo[expr] = result
+            }
             return result
         } finally {
             endRewrite(expr, depth)
