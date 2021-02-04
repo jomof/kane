@@ -172,6 +172,18 @@ open class RewritingVisitor(
         else this
     }
 
+    open fun rewrite(expr: Tableau): Expr = with(expr) {
+        var changed = false
+        val rewrittenElements = mutableListOf<NamedAlgebraicExpr>()
+        for (child in children) {
+            val rewritten = named(child)
+            changed = changed || (rewritten !== child)
+            rewrittenElements.add(rewritten)
+        }
+        return if (changed) expr.copy(children = rewrittenElements)
+        else this
+    }
+
     open fun scalar(expr: ScalarExpr): ScalarExpr {
         val result = rewrite(expr)
         assert(result is ScalarExpr) {
@@ -193,6 +205,7 @@ open class RewritingVisitor(
     }
 
     open fun algebraic(expr: AlgebraicExpr) = rewrite(expr) as AlgebraicExpr
+    open fun named(expr: NamedAlgebraicExpr) = rewrite(expr) as NamedAlgebraicExpr
 
     open fun beginRewrite(expr: Expr, depth: Int) {}
     open fun endRewrite(expr: Expr, depth: Int) {}
@@ -241,6 +254,7 @@ open class RewritingVisitor(
                 is MatrixVariableElement -> rewrite(expr)
                 is NamedScalarAssign -> rewrite(expr)
                 is NamedMatrixAssign -> rewrite(expr)
+                is Tableau -> rewrite(expr)
                 else -> error("${expr.javaClass}")
             }
             if (checkIdentity && result !== expr) {

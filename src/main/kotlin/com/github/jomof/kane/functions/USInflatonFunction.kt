@@ -1,6 +1,10 @@
 package com.github.jomof.kane.functions
 
-import com.github.jomof.kane.*
+import com.github.jomof.kane.ScalarExpr
+import com.github.jomof.kane.UnaryOp
+import com.github.jomof.kane.canGetConstant
+import com.github.jomof.kane.getConstant
+import com.github.jomof.kane.types.percent
 
 private val usInflationMap = mapOf(
     1916 to 0.079,
@@ -122,7 +126,7 @@ private class USInflationFunction : AlgebraicUnaryScalarFunction {
 
     override fun reduceArithmetic(value: ScalarExpr): ScalarExpr? {
         if (!value.canGetConstant()) return null
-        return constant(usInflation(value.getConstant().toInt()))
+        return percent(usInflation(value.getConstant().toInt()))
     }
     override fun differentiate(
         expr : ScalarExpr,

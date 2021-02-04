@@ -102,15 +102,6 @@ data class Cells(private val map: Map<Id, Expr>) {
         return mutable.toCells()
     }
 
-    fun mapExprsNotNull(transform: (Id, Expr) -> Expr?): Cells {
-        val mutable = toMutableMap()
-        map.forEach { (id, expr) ->
-            val result = transform(id, expr)
-            if (result != null) mutable[id] = result
-        }
-        return mutable.toCells()
-    }
-
     fun forEach(action: (Map.Entry<Id, Expr>) -> Unit) {
         return map.forEach(action)
     }
@@ -293,62 +284,63 @@ class SheetBuilderImpl(
 
     private fun scalarizeMatrixes(cells: Cells): Cells {
         val result = cells.toMutableMap()
-        var done = false
-        while (!done) {
-            done = true
-            result.toList().forEach { (name, expr) ->
-                if (!(name is Coordinate)) {
-                    when (expr) {
-                        is MatrixExpr,
-                        is Tiling<*> -> {
-                            done = false
-                            val cellsCoordinates =
-                                result.map { it.key }.filter { it is Coordinate }.map { Identifier.coordinate(it) }
-                            val columns = cellsCoordinates.map { it.column }.toSet()
-                            val existingColumns = (columnDescriptors.keys + columns).sorted()
-                            done = false
-                            for (next in 0 until Int.MAX_VALUE) {
-                                if (!existingColumns.contains(next)) {
-                                    columnDescriptors[next] = ColumnDescriptor(name, null)
-                                    val allocatedColumnBase = coordinate(next, 0)
-                                    result[allocatedColumnBase] = expr
-                                    result.remove(name)
-                                    break
-                                }
+        val namedColumns = mutableMapOf<String, Int>()
+
+        // First, assign all named matrixes to a column or set of columns
+        result.toList().forEach { (name, expr) ->
+            if (name !is Coordinate) {
+                when (expr) {
+                    is MatrixExpr,
+                    is Tiling<*> -> {
+                        val cellsCoordinates = result.map { it.key }.filterIsInstance<Coordinate>()
+                        val columns = cellsCoordinates.map { it.column }.toSet()
+                        val existingColumns = (columnDescriptors.keys + columns).sorted()
+                        for (next in 0 until Int.MAX_VALUE) {
+                            if (!existingColumns.contains(next)) {
+                                columnDescriptors[next] = ColumnDescriptor(name, null)
+                                namedColumns[Identifier.string(name)] = next
+                                val allocatedColumnBase = coordinate(next, 0)
+                                result[allocatedColumnBase] = expr
+                                result.remove(name)
+                                break
                             }
                         }
                     }
-                } else {
-                    when (expr) {
-                        is ScalarExpr,
-                        is ValueExpr<*>,
-                        is SheetRangeExpr,
-                        is AlgebraicBinaryRangeStatistic -> {
-                        }
-                        is MatrixExpr -> {
-                            var replacedOurName = false
-                            expr.coordinates.map { offset ->
-                                val finalCoordinate = name + offset
-                                val extracted = extractScalarizedMatrixElement(expr, offset)
-                                    .slideScalarizedCellsRewritingVisitor(name, offset)
-                                if (finalCoordinate == name) {
-                                    replacedOurName = true
-                                }
-                                result[finalCoordinate] = extracted
-                            }
-                            assert(replacedOurName) {
-                                "Should have replaced our own name in $name"
-                            }
-                            done = false
-                        }
-                        is Tiling<*> -> {
-                            coordinatesOf(expr.columns, expr.rows).map { offset ->
-                                val finalCoordinate = name + offset
-                                result[finalCoordinate] = expr.getUnnamedElement(offset)
-                            }
-                        }
-                        else -> error("${expr.javaClass}")
+                }
+            }
+        }
+
+        // Then, expand matrix elements
+        result.toList().forEach { (name, expr) ->
+            if (name is Coordinate) {
+                when (expr) {
+                    is ScalarExpr,
+                    is ValueExpr<*>,
+                    is SheetRangeExpr,
+                    is AlgebraicBinaryRangeStatistic -> {
                     }
+                    is MatrixExpr -> {
+                        var replacedOurName = false
+                        expr.coordinates.map { offset ->
+                            val finalCoordinate = name + offset
+                            val extracted = extractScalarizedMatrixElement(expr, offset, namedColumns)
+                            val slided = extracted.slideScalarizedCellsRewritingVisitor(name, offset)
+                            if (finalCoordinate == name) {
+                                replacedOurName = true
+                            }
+                            result[finalCoordinate] = slided
+                        }
+                        assert(replacedOurName) {
+                            "Should have replaced our own name in $name"
+                        }
+                    }
+                    is Tiling<*> -> {
+                        coordinatesOf(expr.columns, expr.rows).map { offset ->
+                            val finalCoordinate = name + offset
+                            result[finalCoordinate] = expr.getUnnamedElement(offset)
+                        }
+                    }
+                    else -> error("${expr.javaClass}")
                 }
             }
         }

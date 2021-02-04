@@ -137,6 +137,12 @@ data class CellRange(
     val column: ComputableIndex,
     val row: ComputableIndex
 ) : SheetRange {
+    init {
+//        assert(column !is MoveableIndex || row !is MoveableIndex) {
+//            "Should be NamedScalarVariable"
+//        }
+    }
+
     override fun up(move: Int) = copy(row = row - move)
     override fun down(move: Int) = copy(row = row + move)
     override fun left(move: Int) = copy(column = column - move)

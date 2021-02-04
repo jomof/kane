@@ -1216,97 +1216,74 @@ class SheetTest {
 
     }
 
-    @Test
-    fun `copy analysis ages`() {
-        val start = 2021
-        val end = start + 30
-        val allYears = end - start + 1
-        val startAllocs = AlgebraicBinaryScalar.allocs
-        val modelStartYear by randomOf(1928.0 to 2019.0)
-        val retire = sheetOf {
-            val years by columnOf(allYears) { constant(start + it) }
-            val j by years - 1969
-            val k by years - 1972
-            listOf(years, j, k)
-        }
-        println(retire.eval())
-        (AlgebraicBinaryScalar.allocs - startAllocs).assertString("62")
-    }
 
     @Test
-    fun `copy analysis with modelStartYear`() {
+    fun `cells shouldn't expand unnecessarily`() {
         val start = 2021
-        val end = start + 30
+        val end = start + 4
         val allYears = end - start + 1
-        val startAllocs = AlgebraicBinaryScalar.allocs
-        val modelStartYear by randomOf(1928.0 to 2019.0)
-        val retire = sheetOf {
-            val years by columnOf(allYears) { constant(start + it) }
-            val j by years - 1969
-            val k by years - 1972
-            val modelYear by years - start + modelStartYear
-            listOf(years, j, k, modelYear)
-        }
-        println(retire.eval())
-        (AlgebraicBinaryScalar.allocs - startAllocs).assertString("247")
-    }
-
-    @Test
-    fun `copy analysis with with stock, bond, and inflation`() {
-        val start = 2021
-        val end = start + 30
-        val allYears = end - start + 1
-        val startAllocs = AlgebraicBinaryScalar.allocs
-        val modelStartYear by randomOf(1928.0 to 2019.0)
-        val retire = sheetOf {
-            val years by columnOf(allYears) { constant(start + it) }
-            val j by years - 1969
-            val k by years - 1972
-            val modelYear by years - start + modelStartYear
-            val stock by sp500(modelYear)
-            val bond by baaCorporateBond(modelYear)
-            val inflation by usInflation(modelYear)
-            listOf(years, j, k, modelYear, stock, bond, inflation)
-        }
-        println(retire.eval())
-        (AlgebraicBinaryScalar.allocs - startAllocs).assertString("619")
-
-    }
-
-    @Test
-    fun `copy analysis with with pre and post tax`() {
-        val start = 2021
-        val end = start + 30
-        val allYears = end - start + 1
-        val startAllocs = AlgebraicBinaryScalar.allocs
         val modelStartYear by randomOf(1928.0 to 2019.0)
         val pre1 by dollars(25)
         val pre2 by dollars(25)
-        val pre3 by dollars(25)
-        val pre4 by dollars(25)
-        val initialPreTax by pre1 + pre2 + pre3 + pre4
+        val initialPreTax by pre1 + pre2
         val post1 by dollars(250)
         val post2 by dollars(25)
-        val post3 by dollars(25)
-        val post4 by dollars(25)
-        val initialPostTax by post1 + post2 + post3 + post4
+        val initialPostTax by post1 + post2
 
         val retire = sheetOf {
             val stockRatio by percent(0.7)
             val years by columnOf(allYears) { constant(start + it) }
             val j by years - 1969
-            val k by years - 1972
             val modelYear by years - start + modelStartYear
             val stock by sp500(modelYear)
             val bond by baaCorporateBond(modelYear)
             val inflation by usInflation(modelYear)
-            val multiplier by 1.0 + stock * stockRatio + bond * (1.0 - stockRatio)
-            val preTax by initialPreTax stack (multiplier * up)
-            val postTax by initialPostTax stack (multiplier * up)
+            val mult by 1.0 + stock * stockRatio + bond * (1.0 - stockRatio)
+            val preTax by initialPreTax stack (mult * up)
+            val postTax by initialPostTax stack (mult * up)
             val total by preTax + postTax
-            listOf(years, j, k, modelYear, stock, bond, inflation, multiplier, preTax, postTax)
+            listOf(years, j, modelYear, stock, bond, inflation, mult, preTax, postTax, total)
         }
-        println(retire.eval())
-        // (AlgebraicBinaryScalar.allocs - startAllocs).assertString("619")
+        retire.assertString(
+            """
+              years    j            modelYear          stock           bond            inflation                   mult                 preTax    postTax   total 
+              ----- ------- ------------------------ --------- -------------------- --------------- --------------------------------- --------- ----------- ----- 
+            1  2021 A1-1969 (A1-2021)+modelStartYear sp500(C1) baacorporatebond(C1) usinflation(C1) 1+D1*stockRatio+E1*(1-stockRatio) pre1+pre2 post1+post2 H1+I1 
+            2  2022 A2-1969 (A2-2021)+modelStartYear sp500(C2) baacorporatebond(C2) usinflation(C2) 1+D2*stockRatio+E2*(1-stockRatio)     G1*H1       G1*I1 H2+I2 
+            3  2023 A3-1969 (A3-2021)+modelStartYear sp500(C3) baacorporatebond(C3) usinflation(C3) 1+D3*stockRatio+E3*(1-stockRatio)     G2*H2       G2*I2 H3+I3 
+            4  2024 A4-1969 (A4-2021)+modelStartYear sp500(C4) baacorporatebond(C4) usinflation(C4) 1+D4*stockRatio+E4*(1-stockRatio)     G3*H3       G3*I3 H4+I4 
+            5  2025 A5-1969 (A5-2021)+modelStartYear sp500(C5) baacorporatebond(C5) usinflation(C5) 1+D5*stockRatio+E5*(1-stockRatio)     G4*H4       G4*I4 H5+I5 
+            6                                                                                                                             G5*H5       G5*I5 H6+I6 
+            initialPostTax=post1+post2
+            initialPreTax=pre1+pre2
+            modelStartYear=random(1928.0 to 2019.0)
+            post1=${'$'}250
+            post2=${'$'}25
+            pre1=${'$'}25
+            pre2=${'$'}25
+            stockRatio=70%
+        """.trimIndent()
+        )
+        retire.eval().assertString(
+            """
+              years  j modelYear stock bond inflation mult preTax postTax total 
+              ----- -- --------- ----- ---- --------- ---- ------ ------- ----- 
+            1  2021 52      1974   14%   6%        3% 113%    ${'$'}50    ${'$'}275  ${'$'}325 
+            2  2022 53      1975   14%   6%        3% 112%    ${'$'}56    ${'$'}309  ${'$'}365 
+            3  2023 54      1976   14%   6%        3% 112%    ${'$'}60    ${'$'}334  ${'$'}395 
+            4  2024 55      1977   14%   6%        3% 112%    ${'$'}66    ${'$'}367  ${'$'}433 
+            5  2025 56      1978   14%   7%        3% 112%    ${'$'}72    ${'$'}396  ${'$'}468 
+            6                                                 ${'$'}80    ${'$'}443  ${'$'}523 
+            initialPostTax=${'$'}275
+            initialPreTax=${'$'}50
+            modelStartYear=1974
+            post1=${'$'}250
+            post2=${'$'}25
+            pre1=${'$'}25
+            pre2=${'$'}25
+            stockRatio=70%
+        """.trimIndent()
+        )
     }
+
 }

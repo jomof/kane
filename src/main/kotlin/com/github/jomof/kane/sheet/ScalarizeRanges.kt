@@ -39,6 +39,7 @@ private fun Expr.ranges(): Set<SheetRange> {
         is Tiling<*>,
         is ValueExpr<*>,
         is ConstantScalar,
+        is NamedScalarVariable,
         is DiscreteUniformRandomVariable -> setOf()
         else ->
             error("$javaClass")
@@ -70,7 +71,7 @@ fun SheetBuilderImpl.scalarizeRanges(cells: Cells): Cells {
             .filter { it.second.isNotEmpty() }
             .map { it.first }
             .reversed()
-        val cellsCoordinates = result.map { it.key }.filter { it is Coordinate }.map { Identifier.coordinate(it) }
+        val cellsCoordinates = result.map { it.key }.filterIsInstance<Coordinate>()
         val columns = cellsCoordinates.map { it.column }.toSet()
         val rows = cellsCoordinates.map { it.row }.toSet().sorted()
         for (name in cellsWithRanges) {

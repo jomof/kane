@@ -1,7 +1,13 @@
 package com.github.jomof.kane
 
+import com.github.jomof.kane.ComputableIndex.MoveableIndex
 import com.github.jomof.kane.functions.*
+import com.github.jomof.kane.sheet.CoerceScalar
+import com.github.jomof.kane.sheet.Sheet
+import com.github.jomof.kane.sheet.SheetRangeExpr
 import com.github.jomof.kane.types.AlgebraicType
+import com.github.jomof.kane.types.DoubleAlgebraicType
+import com.github.jomof.kane.visitor.RewritingVisitor
 import com.github.jomof.kane.visitor.visit
 
 class LinearModel(val type : AlgebraicType) {
@@ -271,12 +277,11 @@ private fun AlgebraicExpr.linearizeExpr(model : LinearModel = LinearModel(type))
 
 private fun AlgebraicExpr.claimScalarVariables(model : LinearModel = LinearModel(type)) {
     visit {
-        if (it is NamedScalarAssign)
-            model.registerNamedScalarVariable(it.left)
-        if (it is NamedScalarVariable)
-            model.registerNamedScalarVariable(it)
-        if (it is RandomVariableExpr)
-            model.registerRandomVariable(it)
+        when (it) {
+            is NamedScalarAssign -> model.registerNamedScalarVariable(it.left)
+            is NamedScalarVariable -> model.registerNamedScalarVariable(it)
+            is RandomVariableExpr -> model.registerRandomVariable(it)
+        }
     }
 }
 
@@ -318,10 +323,22 @@ private fun AlgebraicExpr.evalSpace(space : DoubleArray) : Double {
     }
 }
 
-private fun AlgebraicExpr.gatherNamedExprs() : Set<NamedAlgebraicExpr> {
+private fun Expr.gatherNamedExprs(): Set<NamedAlgebraicExpr> {
     val result = mutableSetOf<NamedAlgebraicExpr>()
     visit { expr ->
-        if (expr is NamedAlgebraicExpr) result += expr
+        when (expr) {
+            is NamedAlgebraicExpr -> result += expr
+            is Sheet -> {
+                expr.cells.forEach { (name, cell) ->
+                    when (cell) {
+                        is NamedAlgebraicExpr -> result += cell
+                        is AlgebraicExpr -> result += cell.toNamed(name)
+                        else ->
+                            error("${cell.javaClass}")
+                    }
+                }
+            }
+        }
     }
     return result
 }
@@ -372,84 +389,68 @@ private fun Expr.terminal() : Boolean = when (this) {
     is AlgebraicUnaryScalar -> false
     is AlgebraicUnaryScalarStatistic -> false
     is DiscreteUniformRandomVariable -> true
+    is CoerceScalar -> false
     else ->
         error("$javaClass")
 }
 
 fun AlgebraicExpr.rollUpCommonSubexpressions(model : LinearModel) : AlgebraicExpr {
-    return when {
-        this is AlgebraicUnaryScalar && value.terminal() ->
-            linearizeExpr(model) as ScalarExpr
-        this is AlgebraicBinaryScalar && left.terminal() && right.terminal() ->
-            linearizeExpr(model) as ScalarExpr
-        this is ConstantScalar -> this
-        this is MatrixVariableElement -> this
-        this is NamedScalarVariable -> this
-        this is NamedMatrixVariable -> this
-        this is RandomVariableExpr -> this
-        this is Slot -> this
-        this is NamedScalar -> {
-            val scalar = scalar.rollUpCommonSubexpressions(model) as ScalarExpr
-            if (this.scalar !== scalar) (copy(scalar = scalar) as ScalarExpr).rollUpCommonSubexpressions(model)
-            else this
+    return object : RewritingVisitor() {
+        override fun rewrite(expr: AlgebraicUnaryScalar): Expr {
+            if (expr.value.terminal()) return expr.linearizeExpr(model) as ScalarExpr
+            return super.rewrite(expr)
         }
-        this is AlgebraicUnaryScalar -> {
-            val value = value.rollUpCommonSubexpressions(model) as ScalarExpr
-            if (this.value !== value) copy(value = value).rollUpCommonSubexpressions(model)
-            else this
+
+        override fun rewrite(expr: AlgebraicBinaryScalar): Expr {
+            if (expr.left.terminal() && expr.right.terminal()) return expr.linearizeExpr(model) as ScalarExpr
+            return super.rewrite(expr)
         }
-        this is AlgebraicUnaryScalarStatistic -> {
-            val value = value.rollUpCommonSubexpressions(model)
-            assert(value is ScalarExpr) {
-                "Expected ScalarExpr but was '${value.javaClass.simpleName}'}"
+
+        override fun rewrite(expr: SheetRangeExpr): Expr {
+            return when (expr.range) {
+                is CellRange -> {
+                    // done = false
+                    expr
+                }
+                else ->
+                    error("${expr.range.javaClass}")
             }
-            if (this.value !== value) copy(value = value).rollUpCommonSubexpressions(model)
-            else this
         }
-        this is AlgebraicBinaryScalarStatistic -> {
-            val left = left.rollUpCommonSubexpressions(model) as ScalarExpr
-            val right = right.rollUpCommonSubexpressions(model) as ScalarExpr
-            if (this.left !== left || this.right !== right) copy(left = left, right = right).rollUpCommonSubexpressions(model)
-            else this
-        }
-        this is AlgebraicBinaryScalar -> {
-            val left = left.rollUpCommonSubexpressions(model) as ScalarExpr
-            val right = right.rollUpCommonSubexpressions(model) as ScalarExpr
-            if (this.left !== left || this.right !== right) copy(left = left, right = right).rollUpCommonSubexpressions(model)
-            else this
-        }
-        this is NamedScalarAssign -> {
-            val right = right.rollUpCommonSubexpressions(model) as ScalarExpr
-            if (this.right !== right) copy(right = right).rollUpCommonSubexpressions(model)
-            else this
-        }
-        this is NamedMatrix -> {
-            val matrix = matrix.rollUpCommonSubexpressions(model) as MatrixExpr
-            if (this.matrix !== matrix) copy(matrix = matrix)
-            else this
-        }
-        this is NamedMatrixAssign -> {
-            val right = right.rollUpCommonSubexpressions(model) as MatrixExpr
-            if (this.right !== right) copy(right = right)
-            else this
-        }
-        this is DataMatrix -> map { it.rollUpCommonSubexpressions(model) as ScalarExpr }
-        this is Tableau -> copy(children = children.map { child ->
-            child.rollUpCommonSubexpressions(model) as NamedAlgebraicExpr
-        })
-        else -> error("$javaClass")
-    }
+    }.algebraic(this)
 }
 
-fun AlgebraicExpr.linearize() : LinearModel {
-    val names = gatherNamedExprs().toList().map { it.eval() }
-    with(Tableau(names, type)) {
+fun Expr.replaceSheetRanges(): Expr {
+    return object : RewritingVisitor() {
+        override fun rewrite(expr: CoerceScalar): Expr {
+            if (expr.value is SheetRangeExpr) {
+                if (
+                    expr.value.range is CellRange &&
+                    expr.value.range.column is MoveableIndex &&
+                    expr.value.range.row is MoveableIndex
+                ) {
+                    return NamedScalarVariable(
+                        expr.value.range.toCoordinate(),
+                        0.0,
+                        expr.type
+                    )
+                }
+                error("${expr.value.range.javaClass}")
+            }
+
+            return super.rewrite(expr)
+        }
+    }.rewrite(this)
+}
+
+fun Expr.linearize(): LinearModel {
+    val names = replaceSheetRanges().gatherNamedExprs().toList().map { it.eval() }
+    with(Tableau(names, DoubleAlgebraicType.kaneType)) {
         val model = LinearModel(type)
         claimMatrixVariables(model)
         claimScalarVariables(model)
-        var stripped = stripNames()
-        stripped = stripped.rollUpCommonSubexpressions(model)
-        stripped.linearizeExpr(model)
+        val stripped = stripNames()
+        val rolledUp = stripped.rollUpCommonSubexpressions(model)
+        rolledUp.linearizeExpr(model)
         return model
     }
 }

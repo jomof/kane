@@ -195,14 +195,15 @@ private fun Expr.expandSheetCells(sheet: Sheet, excludeVariables: Set<Id>): Expr
                 val coordinate = expr.range.toCoordinate()
                 when (val result = sheet.cells[coordinate]) {
                     null -> return expr
-                    is ScalarExpr -> return result
-                    is ScalarVariable -> constant(result.initial, result.type)
+                    // is ScalarExpr -> return result
+                    is ConstantScalar -> return result
+                    is ScalarVariable -> return constant(result.initial, result.type)
                     else -> return this
                 }
             }
             val list = sheet.cells.toMap().filter { range.contains(it.key) }.map {
                 val result = when (val value = it.value) {
-                    is ScalarExpr -> value
+                    is ConstantScalar -> value
                     is ScalarVariable -> constant(value.initial, value.type)
                     else ->
                         return this
@@ -271,6 +272,8 @@ private fun Expr.accumulateStatistics(incoming: Expr) {
             }
         }
         this is SheetRangeExpr && incoming is SheetRangeExpr -> {
+        }
+        this is NamedScalarVariable && incoming is NamedScalarVariable -> {
         }
         this is CoerceScalar && incoming is CoerceScalar -> value.accumulateStatistics(incoming.value)
         this is DataMatrix && incoming is DataMatrix -> {
@@ -381,6 +384,7 @@ fun Expr.eval(
         mapOf(),
         mutableMapOf()
     )
+//    val model = reduced.linearize()
     cartesianOf(randomVariableElements) { randomVariableValues ->
         val variableValues: Map<RandomVariableExpr, ConstantScalar> = (randomVariables zip randomVariableValues)
             .map { (variable, value) -> variable to (value as ConstantScalar) }

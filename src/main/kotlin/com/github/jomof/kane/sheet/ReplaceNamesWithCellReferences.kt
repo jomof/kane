@@ -39,6 +39,7 @@ private class ReplaceNamesWithCellReferences(val excluding: Id) {
 //                        NamedScalarVariable(name, scalar.value, scalar.type)
 //                    }
                     scalar is ConstantScalar -> this
+                    scalar is DiscreteUniformRandomVariable -> this
                     else -> scalar.replace()
                 }
             is NamedMatrix -> copy(matrix = matrix.replace())
@@ -71,7 +72,8 @@ private class ReplaceNamesWithCellReferences(val excluding: Id) {
             //is AlgebraicUnaryRangeStatistic -> this
             is AlgebraicBinaryRangeStatistic -> copy(right = right.replace())
             is ConstantScalar -> this
-            is DiscreteUniformRandomVariable -> this
+            is DiscreteUniformRandomVariable ->
+                this
             is NamedScalarVariable -> this
             is SheetRangeExpr -> this
             is ValueExpr<*> -> this

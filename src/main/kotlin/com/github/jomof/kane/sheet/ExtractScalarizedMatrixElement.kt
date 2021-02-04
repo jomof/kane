@@ -7,35 +7,72 @@ import com.github.jomof.kane.visitor.RewritingVisitor
 
 
 fun extractScalarizedMatrixElement(
-    matrix : MatrixExpr,
-    coordinate : Coordinate
+    matrix: MatrixExpr,
+    coordinate: Coordinate,
+    namedColumns: Map<String, Int>
 ) : ScalarExpr {
     return when(matrix) {
         is AlgebraicBinaryMatrixScalar -> {
-            val left = extractScalarizedMatrixElement(matrix.left, coordinate)
+            val left = extractScalarizedMatrixElement(matrix.left, coordinate, namedColumns)
             AlgebraicBinaryScalar(matrix.op, left, matrix.right)
         }
         is AlgebraicBinaryScalarMatrix -> {
-            val right = extractScalarizedMatrixElement(matrix.right, coordinate)
+            val right = extractScalarizedMatrixElement(matrix.right, coordinate, namedColumns)
             AlgebraicBinaryScalar(matrix.op, matrix.left, right)
         }
         is AlgebraicBinaryMatrix -> {
-            val left = extractScalarizedMatrixElement(matrix.left, coordinate)
-            val right = extractScalarizedMatrixElement(matrix.right, coordinate)
+            val left = extractScalarizedMatrixElement(matrix.left, coordinate, namedColumns)
+            val right = extractScalarizedMatrixElement(matrix.right, coordinate, namedColumns)
             AlgebraicBinaryScalar(matrix.op, left, right)
         }
         is AlgebraicUnaryMatrix -> {
-            val value = extractScalarizedMatrixElement(matrix.value, coordinate)
+            val value = extractScalarizedMatrixElement(matrix.value, coordinate, namedColumns)
             AlgebraicUnaryScalar(matrix.op, value, value.type)
         }
         is NamedMatrix -> {
-            if (matrix.name is Coordinate) {
-                val offsetCoordinate = matrix.name + coordinate
-                val unnamed = matrix[coordinate]
-                NamedScalar(name = offsetCoordinate, unnamed)
-            } else matrix[coordinate]
+            when (matrix.name) {
+                is Coordinate -> {
+                    val offsetCoordinate = matrix.name + coordinate
+                    val unnamed = matrix[coordinate]
+                    NamedScalar(name = offsetCoordinate, unnamed)
+                }
+                is String -> {
+                    val column = namedColumns.getValue(matrix.name)
+                    val offsetCoordinate = coordinate.copy(column = column + coordinate.column)
+                    val unnamed = matrix[coordinate]
+                    NamedScalar(name = offsetCoordinate, unnamed)
+                }
+                else -> error("")
+            }
         }
-        is AlgebraicDeferredDataMatrix -> extractScalarizedMatrixElement(matrix.data, coordinate)
+        is AlgebraicDeferredDataMatrix -> when (matrix.op) {
+            STACK -> {
+                val left = when (matrix.left) {
+                    is MatrixExpr -> matrix.left
+                    is ScalarExpr -> repeated(matrix.columns, 1, matrix.left)
+                    else -> error("")
+
+                }
+                val right = when (matrix.right) {
+                    is MatrixExpr -> matrix.right
+                    is ScalarExpr -> repeated(matrix.columns, 1, matrix.right)
+                    else -> error("")
+
+                }
+                val result =
+                    if (coordinate.row < left.rows)
+                        extractScalarizedMatrixElement(left, coordinate, namedColumns)
+                    else
+                        extractScalarizedMatrixElement(
+                            right,
+                            coordinate.copy(row = coordinate.row - left.rows),
+                            namedColumns
+                        )
+                result
+            }
+            else -> error("")
+        }
+
         is DataMatrix -> matrix[coordinate]
         else ->
             error("${matrix.javaClass}")

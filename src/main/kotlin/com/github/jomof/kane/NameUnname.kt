@@ -12,6 +12,7 @@ fun ScalarExpr.toNamed(name: Id) = NamedScalar(name, this)
 fun MatrixExpr.toNamed(name: Id) = NamedMatrix(name, this)
 fun UntypedScalar.toNamed(name: Id) = NamedUntypedScalar(name, this)
 fun SheetRangeExpr.toNamed(name: Id) = NamedSheetRangeExpr(name, this)
+fun AlgebraicExpr.toNamed(name: Id) = (this as Expr).toNamed(name) as NamedAlgebraicExpr
 fun <E : Any> ValueExpr<E>.toNamed(name: Id) = toNamedValueExpr(name)
 fun <E : Any> Tiling<E>.toNamed(name: Id) = toNamedTilingExpr(name)
 

@@ -11,7 +11,7 @@ private fun AlgebraicExpr.expandUnaryOperations(): AlgebraicExpr {
         is NamedScalar -> copy(scalar = scalar.self())
         is AlgebraicUnaryMatrixScalar -> {
             val data = DataMatrix(value.columns, value.rows, value.coordinates.map { offset ->
-                extractScalarizedMatrixElement(value, offset)
+                extractScalarizedMatrixElement(value, offset, mapOf())
             })
             val result = op.reduceArithmetic(data)
             result?.self() ?: this

@@ -2,15 +2,18 @@ package com.github.jomof.kane.functions
 
 import com.github.jomof.kane.*
 
+val STACK = BinaryOp(op = " stack ", precedence = 5, associative = true, infix = true)
+
 // Stack Matrix function
 private fun stackMatrix(
-    leftDisplay : TypedExpr<Double>,
-    rightDisplay : TypedExpr<Double>,
-    left : MatrixExpr,
-    right : MatrixExpr) : MatrixExpr {
+    leftDisplay: TypedExpr<Double>,
+    rightDisplay: TypedExpr<Double>,
+    left: MatrixExpr,
+    right: MatrixExpr
+): MatrixExpr {
     assert(left.columns == right.columns)
     return AlgebraicDeferredDataMatrix(
-        BinaryOp(op = " stack ", precedence = 5, associative = true, infix = true),
+        STACK,
         leftDisplay,
         rightDisplay,
         matrixOf(left.columns, left.rows + right.rows) { (column, row) ->
