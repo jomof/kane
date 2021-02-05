@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.github.jomof.kane.GroupByTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2021-02-05T17:22:35" hostname="fv-az183-280" time="0.197">
+  <properties/>
+  <testcase name="measurements statistics" classname="com.github.jomof.kane.GroupByTest" time="0.03"/>
+  <testcase name="keys of groups" classname="com.github.jomof.kane.GroupByTest" time="0.009"/>
+  <testcase name="repro range issue" classname="com.github.jomof.kane.GroupByTest" time="0.016"/>
+  <testcase name="animal statistics" classname="com.github.jomof.kane.GroupByTest" time="0.001"/>
+  <testcase name="basic aggregation" classname="com.github.jomof.kane.GroupByTest" time="0.005"/>
+  <testcase name="group by column name" classname="com.github.jomof.kane.GroupByTest" time="0.005"/>
+  <testcase name="repro formula adjustment in grouping" classname="com.github.jomof.kane.GroupByTest" time="0.011"/>
+  <testcase name="aggregate list of statistics function" classname="com.github.jomof.kane.GroupByTest" time="0.005"/>
+  <testcase name="basic" classname="com.github.jomof.kane.GroupByTest" time="0.006"/>
+  <testcase name="measurements group statistics" classname="com.github.jomof.kane.GroupByTest" time="0.023"/>
+  <testcase name="repro formula adjustment in filtering" classname="com.github.jomof.kane.GroupByTest" time="0.021"/>
+  <system-out><![CDATA[Read 10 rows with 4 columns
+Read 5 rows with 4 columns
+Read 10 rows with 4 columns
+Read 5 rows with 4 columns
+Read 10 rows with 4 columns
+Read 5 rows with 4 columns
+Read 10 rows with 4 columns
+Read 5 rows with 4 columns
+Read 10 rows with 4 columns
+Read 5 rows with 4 columns
+Read 10 rows with 4 columns
+Read 5 rows with 4 columns
+Read 2 rows with 3 columns
+     key selector 
+     ------------ 
+cats         cats 
+dogs         dogs 
+Read 10 rows with 4 columns
+Read 5 rows with 4 columns
+Read 10 rows with 4 columns
+Read 5 rows with 4 columns
+Read 10 rows with 4 columns
+Read 5 rows with 4 columns
+Read 2 rows with 3 columns
+     key selector 
+     ------------ 
+key1       2*cats 
+key2    cats*dogs 
+Read 10 rows with 4 columns
+Read 5 rows with 4 columns
+Read 10 rows with 4 columns
+Read 5 rows with 4 columns
+]]></system-out>
+  <system-err><![CDATA[SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
+]]></system-err>
+</testsuite>

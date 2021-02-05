@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.github.jomof.kane.FunctionalTest" tests="12" skipped="0" failures="0" errors="0" timestamp="2021-02-05T17:22:59" hostname="fv-az183-280" time="0.085">
+  <properties/>
+  <testcase name="column types" classname="com.github.jomof.kane.FunctionalTest" time="0.049"/>
+  <testcase name="statistics of column" classname="com.github.jomof.kane.FunctionalTest" time="0.001"/>
+  <testcase name="sample" classname="com.github.jomof.kane.FunctionalTest" time="0.003"/>
+  <testcase name="individual statistics of column" classname="com.github.jomof.kane.FunctionalTest" time="0.001"/>
+  <testcase name="filtering rows" classname="com.github.jomof.kane.FunctionalTest" time="0.001"/>
+  <testcase name="statistics" classname="com.github.jomof.kane.FunctionalTest" time="0.001"/>
+  <testcase name="head" classname="com.github.jomof.kane.FunctionalTest" time="0.017"/>
+  <testcase name="tail" classname="com.github.jomof.kane.FunctionalTest" time="0.002"/>
+  <testcase name="get columns by Excel-like name" classname="com.github.jomof.kane.FunctionalTest" time="0.002"/>
+  <testcase name="individual statistics of sheet" classname="com.github.jomof.kane.FunctionalTest" time="0.001"/>
+  <testcase name="ordinalRows" classname="com.github.jomof.kane.FunctionalTest" time="0.002"/>
+  <testcase name="getColumns" classname="com.github.jomof.kane.FunctionalTest" time="0.003"/>
+  <system-out><![CDATA[Read 3009 rows with 2 columns
+Read 22 rows with 3 columns
+Read 22 rows with 3 columns
+   animal [A] uniq_id [B] water_need [C] 
+   ---------- ----------- -------------- 
+ 1   elephant        1001            500 
+ 2   elephant        1002            600 
+ 3   elephant        1003            550 
+ 4      tiger        1004            300 
+ 5      tiger        1005            320 
+ 6      tiger        1006            330 
+ 7      tiger        1007            290 
+ 8      tiger        1008            310 
+ 9      zebra        1009            200 
+10      zebra        1010            220 
+...and 12 more rows
+   animal [A] uniq_id [B] water_need [C] 
+   ---------- ----------- -------------- 
+ 3   elephant        1003            550 
+ 5      tiger        1005            320 
+ 7      tiger        1007            290 
+12      zebra        1012            230 
+16       lion        1016            420 
+Read 22 rows with 3 columns
+Read 22 rows with 3 columns
+Read 22 rows with 3 columns
+Read 22 rows with 3 columns
+    animal  uniq_id water_need 
+   -------- ------- ---------- 
+ 1 elephant    1001        500 
+ 2 elephant    1002        600 
+ 3 elephant    1003        550 
+ 4    tiger    1004        300 
+ 5    tiger    1005        320 
+ 6    tiger    1006        330 
+ 7    tiger    1007        290 
+ 8    tiger    1008        310 
+ 9    zebra    1009        200 
+10    zebra    1010        220 
+...and 12 more rows
+   animal  uniq_id water_need 
+  -------- ------- ---------- 
+1 elephant    1001        500 
+2 elephant    1002        600 
+3 elephant    1003        550 
+4    tiger    1004        300 
+5    tiger    1005        320 
+Read 22 rows with 3 columns
+    animal  uniq_id water_need 
+   -------- ------- ---------- 
+ 1 elephant    1001        500 
+ 2 elephant    1002        600 
+ 3 elephant    1003        550 
+ 4    tiger    1004        300 
+ 5    tiger    1005        320 
+ 6    tiger    1006        330 
+ 7    tiger    1007        290 
+ 8    tiger    1008        310 
+ 9    zebra    1009        200 
+10    zebra    1010        220 
+...and 12 more rows
+    animal  uniq_id water_need 
+   -------- ------- ---------- 
+18     lion    1018        500 
+19     lion    1019        390 
+20 kangaroo    1020        410 
+21 kangaroo    1021        430 
+22 kangaroo    1022        410 
+Read 22 rows with 3 columns
+   uniq_id water_need 
+   ------- ---------- 
+ 1    1001        500 
+ 2    1002        600 
+ 3    1003        550 
+ 4    1004        300 
+ 5    1005        320 
+ 6    1006        330 
+ 7    1007        290 
+ 8    1008        310 
+ 9    1009        200 
+10    1010        220 
+...and 12 more rows
+Read 22 rows with 3 columns
+Read 22 rows with 3 columns
+    animal  uniq_id water_need 
+   -------- ------- ---------- 
+ 1 elephant    1001        500 
+ 2 elephant    1002        600 
+ 3 elephant    1003        550 
+ 4    tiger    1004        300 
+ 5    tiger    1005        320 
+ 6    tiger    1006        330 
+ 7    tiger    1007        290 
+ 8    tiger    1008        310 
+ 9    zebra    1009        200 
+10    zebra    1010        220 
+...and 12 more rows
+   animal  uniq_id water_need 
+  -------- ------- ---------- 
+2 elephant    1002        600 
+3 elephant    1003        550 
+4    tiger    1004        300 
+Read 22 rows with 3 columns
+    animal  uniq_id water_need 
+   -------- ------- ---------- 
+ 1 elephant    1001        500 
+ 2 elephant    1002        600 
+ 3 elephant    1003        550 
+ 4    tiger    1004        300 
+ 5    tiger    1005        320 
+ 6    tiger    1006        330 
+ 7    tiger    1007        290 
+ 8    tiger    1008        310 
+ 9    zebra    1009        200 
+10    zebra    1010        220 
+...and 12 more rows
+    animal  water_need 
+   -------- ---------- 
+ 1 elephant        500 
+ 2 elephant        600 
+ 3 elephant        550 
+ 4    tiger        300 
+ 5    tiger        320 
+ 6    tiger        330 
+ 7    tiger        290 
+ 8    tiger        310 
+ 9    zebra        200 
+10    zebra        220 
+...and 12 more rows
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
