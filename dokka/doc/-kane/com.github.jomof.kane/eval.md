@@ -1,0 +1,17 @@
+//[Kane](../index.md)/[com.github.jomof.kane](index.md)/[eval](eval.md)
+
+
+
+# eval  
+[jvm]  
+Content  
+fun [Expr](-expr/index.md).[eval](eval.md)(rangeExprProvider: [RangeExprProvider](../com.github.jomof.kane.sheet/-range-expr-provider/index.md), reduceVariables: [Boolean](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html), excludeVariables: [Set](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html)<[Any](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)>): [Expr](-expr/index.md)  
+fun [NamedMatrix](-named-matrix/index.md).[eval](eval.md)(rangeExprProvider: [RangeExprProvider](../com.github.jomof.kane.sheet/-range-expr-provider/index.md), reduceVariables: [Boolean](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html), excludeVariables: [Set](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html)<[Any](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)>): [NamedMatrix](-named-matrix/index.md)  
+fun [NamedScalar](-named-scalar/index.md).[eval](eval.md)(rangeExprProvider: [RangeExprProvider](../com.github.jomof.kane.sheet/-range-expr-provider/index.md), reduceVariables: [Boolean](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html), excludeVariables: [Set](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html)<[Any](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)>): [NamedScalar](-named-scalar/index.md)  
+fun [NamedAlgebraicExpr](-named-algebraic-expr/index.md).[eval](eval.md)(rangeExprProvider: [RangeExprProvider](../com.github.jomof.kane.sheet/-range-expr-provider/index.md), reduceVariables: [Boolean](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html), excludeVariables: [Set](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html)<[Any](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)>): [NamedAlgebraicExpr](-named-algebraic-expr/index.md)  
+fun [Sheet](../com.github.jomof.kane.sheet/-sheet/index.md).[eval](eval.md)(rangeExprProvider: [RangeExprProvider](../com.github.jomof.kane.sheet/-range-expr-provider/index.md), reduceVariables: [Boolean](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html), excludeVariables: [Set](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html)<[Any](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)>): [Sheet](../com.github.jomof.kane.sheet/-sheet/index.md)  
+fun [ScalarExpr](-scalar-expr/index.md).[eval](eval.md)(rangeExprProvider: [RangeExprProvider](../com.github.jomof.kane.sheet/-range-expr-provider/index.md), reduceVariables: [Boolean](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html), excludeVariables: [Set](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html)<[Any](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)>): [ScalarExpr](-scalar-expr/index.md)  
+fun [MatrixExpr](-matrix-expr/index.md).[eval](eval.md)(rangeExprProvider: [RangeExprProvider](../com.github.jomof.kane.sheet/-range-expr-provider/index.md), reduceVariables: [Boolean](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html), excludeVariables: [Set](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html)<[Any](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)>): [MatrixExpr](-matrix-expr/index.md)  
+
+
+
