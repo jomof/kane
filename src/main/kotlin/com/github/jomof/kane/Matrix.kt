@@ -4,7 +4,7 @@ import com.github.jomof.kane.functions.divide
 import com.github.jomof.kane.functions.multiply
 import com.github.jomof.kane.functions.subtract
 import com.github.jomof.kane.types.AlgebraicType
-import com.github.jomof.kane.types.DoubleAlgebraicType
+import com.github.jomof.kane.types.kaneDouble
 
 interface Matrix {
     val columns : Int
@@ -73,11 +73,11 @@ fun Matrix.render(): String {
 
 
 fun valueMatrixOf(columns : Int, rows : Int, vararg values : Double) =
-    ValueMatrix(columns, rows, DoubleAlgebraicType.kaneType, values.toList())
+    ValueMatrix(columns, rows, kaneDouble, values.toList())
 fun DoubleArray.toColumnMatrix() =
-    ValueMatrix(1, size, DoubleAlgebraicType.kaneType, toList())
+    ValueMatrix(1, size, kaneDouble, toList())
 fun DoubleArray.toRowMatrix() =
-    ValueMatrix(size, 1, DoubleAlgebraicType.kaneType, toList())
+    ValueMatrix(size, 1, kaneDouble, toList())
 
 data class ValueMatrix(
     override val columns: Int,

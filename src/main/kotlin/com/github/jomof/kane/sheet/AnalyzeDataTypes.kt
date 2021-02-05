@@ -1,3 +1,4 @@
+@file:Suppress("UNCHECKED_CAST")
 package com.github.jomof.kane.sheet
 
 import com.github.jomof.kane.ConstantScalar
@@ -47,7 +48,7 @@ private class StringAdmissibleDataType : AdmissibleDataType<String> {
 }
 
 internal class DoubleAdmissibleDataType : AdmissibleDataType<Double> {
-    override val type = DoubleAlgebraicType.kaneType
+    override val type = kaneDouble
     override fun tryParse(string: String) =
         if (string.isBlank()) Double.NaN else string.toDoubleOrNull()
 
@@ -62,6 +63,7 @@ private class DollarsAndCentsAdmissibleDataType : AdmissibleDataType<Double> {
         if (string.isBlank()) return Double.NaN
         return format.parse(string)?.toDouble()
     }
+
     override fun toString() = "currency (${type.render(1000.12)})"
 }
 
@@ -74,6 +76,7 @@ private class DollarsAdmissibleDataType : AdmissibleDataType<Double> {
         if (string.isBlank()) return Double.NaN
         return format.parse(string)?.toDouble()
     }
+
     override fun toString() = "currency (${type.render(1000.12)})"
 }
 
@@ -83,6 +86,7 @@ private class DateTimeAdmissibleDataType(val formatting : String) : AdmissibleDa
         override val simpleName get() = "date"
         override fun render(value: Date) = format.format(value)
     }
+
     override fun toString() = formatting
     override fun tryParse(string: String) : Date? {
         return try {

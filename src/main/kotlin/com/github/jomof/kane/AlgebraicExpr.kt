@@ -6,9 +6,9 @@ import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.sheet.CoerceScalar
 import com.github.jomof.kane.sheet.NamedSheetRangeExpr
 import com.github.jomof.kane.types.AlgebraicType
-import com.github.jomof.kane.types.DoubleAlgebraicType
 import com.github.jomof.kane.types.KaneType
 import com.github.jomof.kane.types.StringKaneType
+import com.github.jomof.kane.types.kaneDouble
 import kotlin.reflect.KProperty
 
 interface Expr
@@ -18,7 +18,7 @@ interface TypedExpr<E : Any> : Expr {
 }
 
 interface AlgebraicExpr : Expr {
-    val type: AlgebraicType get() = DoubleAlgebraicType.kaneType
+    //val type: AlgebraicType get() = DoubleAlgebraicType.kaneType
 }
 
 interface ScalarExpr : AlgebraicExpr
@@ -214,7 +214,7 @@ data class MatrixVariableElement(
  */
 data class RetypeScalar(
     val scalar: ScalarExpr,
-    override val type: AlgebraicType
+    val type: AlgebraicType
 ) : ScalarExpr {
     init {
         track()
@@ -228,7 +228,7 @@ data class RetypeScalar(
  */
 data class RetypeMatrix(
     val matrix: MatrixExpr,
-    override val type: AlgebraicType
+    val type: AlgebraicType
 ) : MatrixExpr {
     init {
         track()
@@ -391,7 +391,7 @@ fun constant(value : String) = ValueExpr(value, StringKaneType.kaneType)
 //inline fun <reified E:Any> constant(value : E) = ValueExpr(value, object : KaneType<E>(E::class.java) { })
 
 // Tableau
-fun tableauOf(type: AlgebraicType, vararg elements: NamedAlgebraicExpr): Tableau = Tableau(elements.toList())
+fun tableauOf(vararg elements: NamedAlgebraicExpr): Tableau = Tableau(elements.toList())
 
 // Misc
 fun repeated(columns: Int, rows: Int, value: Double): MatrixExpr =
@@ -717,7 +717,7 @@ fun Expr.render(entryPoint: Boolean = true, outerType: AlgebraicType? = null): S
             if (entryPoint) "$name=${range.self()}"
             else Identifier.string(name)
         is ScalarVariable ->
-            (outerType ?: this.type).render(initial)
+            (outerType ?: kaneDouble).render(initial)
         is NamedScalarAssign -> "${left.self()} <- ${right.self()}"
         is NamedMatrixAssign -> "${left.self()} <- ${right.self()}"
         is AlgebraicUnaryMatrix -> when {
@@ -792,7 +792,7 @@ fun Expr.render(entryPoint: Boolean = true, outerType: AlgebraicType? = null): S
             }
         }
         is MatrixVariableElement -> "${matrix.name}[$column,$row]"
-        is ConstantScalar -> (outerType ?: this.type).render(value)
+        is ConstantScalar -> (outerType ?: kaneDouble).render(value)
         is AlgebraicUnaryMatrixScalar -> "${op.meta.op}(${value.self()})"
         is AlgebraicUnaryScalarStatistic -> "${op.meta.op}(${value.self()})"
         is AlgebraicUnaryScalar -> when {

@@ -3,8 +3,8 @@ package com.github.jomof.kane
 
 import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.sheet.describe
-import com.github.jomof.kane.types.DoubleAlgebraicType
 import com.github.jomof.kane.types.dollars
+import com.github.jomof.kane.types.kaneDouble
 import org.junit.Test
 import java.util.*
 import kotlin.math.abs
@@ -88,7 +88,7 @@ class KaneTest {
             mvar2[0,2]|mvar2[1,2]|mvar2[2,2]
             mvar2[0,3]|mvar2[1,3]|mvar2[2,3]
         """.trimIndent())
-        val tableau = tableauOf(m1.type,m1,m2)
+        val tableau = tableauOf(m1, m2)
         tableau.assertString("""
             m1
             ------
@@ -169,7 +169,7 @@ class KaneTest {
         val error by pow(target - y, 2.0)
         val ds by s - 0.1 * differentiate(d(error) / d(s))
         val ass: NamedAlgebraicExpr by assign(ds to s)
-        val tab = tableauOf(m.type, m, b, ass)
+        val tab = tableauOf(m, b, ass)
         val model = tab.linearize()
         val space = model.allocateSpace()
         println(model)
@@ -211,7 +211,7 @@ class KaneTest {
         val error by 0.5 * pow(target - y, 2.0)
         val da by a - r * differentiate(d(error)/d(a))
         val aa by assign(da to a)
-        val tab = tableauOf(m.type,m,b,aa)
+        val tab = tableauOf(m, b, aa)
         println(tab)
         val layout = tab.linearize()
         println("---")
@@ -307,7 +307,7 @@ class KaneTest {
         """.trimIndent()
         )
 
-        val layout = tableauOf(output.type,output, db0, db1, dw0, dw1).linearize()
+        val layout = tableauOf(output, db0, db1, dw0, dw1).linearize()
         println(layout)
     }
 
@@ -332,8 +332,8 @@ class KaneTest {
         val aw0 by assign(dw0 to w0)
         val aw1 by assign(dw1 to w1)
         val targetElement by target[0,0]
-        val answer by output[0,0]
-        val tab = tableauOf(left.type,left,right,targetElement,error,answer,aw0,aw1)
+        val answer by output[0, 0]
+        val tab = tableauOf(left, right, targetElement, error, answer, aw0, aw1)
         val layout = tab.linearize()
         println(layout)
         val space = layout.allocateSpace()
@@ -392,7 +392,7 @@ class KaneTest {
         val o by w cross h2
         val yhat by softmax(o)
         val step by assign(h2 to h1)
-        val model = tableauOf(yhat.type, yhat, o, step).linearize()
+        val model = tableauOf(yhat, o, step).linearize()
         val space = model.allocateSpace()
         model.eval(space)
         val yhatref = model.shape(yhat).ref(space)
@@ -469,7 +469,7 @@ class KaneTest {
 
     @Test
     fun `autoencode gaussian random into 8 bits`() {
-        val type = DoubleAlgebraicType.kaneType
+        val type = kaneDouble
         val random = Random(3)
         val learningRate = 0.1
         val batchSize = 100.0
@@ -495,18 +495,18 @@ class KaneTest {
         val target by matrixVariable(output.columns, output.rows, type) { 0.0 }
         val error by sum(0.5 * pow(target - output, 2.0))
         val sumdw0 by matrixVariable(w0.columns, w0.rows, type) { 0.0 }
-        val sumdw1 by matrixVariable(w1.columns,w1.rows,type) { 0.0 }
-        val sumdw2 by matrixVariable(w2.columns,w2.rows,type) { 0.0 }
-        val sumdw3 by matrixVariable(w3.columns,w3.rows,type) { 0.0 }
-        val dw0 by sumdw0 + type.coerceFrom(learningRate/batchSize) * differentiate(d(error) / d(w0))
-        val dw1 by sumdw1 + type.coerceFrom(learningRate/batchSize) * differentiate(d(error) / d(w1))
-        val dw2 by sumdw2 + type.coerceFrom(learningRate/batchSize) * differentiate(d(error) / d(w2))
-        val dw3 by sumdw3 + type.coerceFrom(learningRate/batchSize) * differentiate(d(error) / d(w3))
+        val sumdw1 by matrixVariable(w1.columns, w1.rows, type) { 0.0 }
+        val sumdw2 by matrixVariable(w2.columns, w2.rows, type) { 0.0 }
+        val sumdw3 by matrixVariable(w3.columns, w3.rows, type) { 0.0 }
+        val dw0 by sumdw0 + type.coerceFrom(learningRate / batchSize) * differentiate(d(error) / d(w0))
+        val dw1 by sumdw1 + type.coerceFrom(learningRate / batchSize) * differentiate(d(error) / d(w1))
+        val dw2 by sumdw2 + type.coerceFrom(learningRate / batchSize) * differentiate(d(error) / d(w2))
+        val dw3 by sumdw3 + type.coerceFrom(learningRate / batchSize) * differentiate(d(error) / d(w3))
         val adw0 by assign(dw0 to sumdw0)
         val adw1 by assign(dw1 to sumdw1)
         val adw2 by assign(dw2 to sumdw2)
         val adw3 by assign(dw3 to sumdw3)
-        val tab = tableauOf(output.type,output,error,dw0,dw1,dw2,dw3,h2,adw0,adw1,adw2,adw3)
+        val tab = tableauOf(output, error, dw0, dw1, dw2, dw3, h2, adw0, adw1, adw2, adw3)
         val layout = tab.linearize()
         println(layout)
         val space = layout.allocateSpace()
@@ -523,9 +523,9 @@ class KaneTest {
         val sumdw2ref = layout.shape(sumdw2).ref(space)
         val sumdw3ref = layout.shape(sumdw3).ref(space)
 
-        fun train() : Any {
+        fun train(): Any {
             val roll = abs(random.nextInt(2000))
-            val target = if(roll < 1)
+            val target = if (roll < 1)
                 space[abs(random.nextInt()) % space.size]
             else
                 type.coerceFrom(random.nextGaussian())
@@ -557,10 +557,10 @@ class KaneTest {
             if (totalError < lastError) {
 
                 val func = layout.toFunc(space, h2, output)
-                val result = mutableListOf<Pair<Double,String>>()
+                val result = mutableListOf<Pair<Double, String>>()
                 (0 until 256).map { value ->
                     val bits = bitsToArray(value, 8).toColumnMatrix()
-                    val predicted = func(bits)[0,0]
+                    val predicted = func(bits)[0, 0]
 
                     result.add(predicted to "$bits")
                 }
@@ -605,8 +605,8 @@ class KaneTest {
         val aw0 by assign(dw0 to w0)
         val aw1 by assign(dw1 to w1)
         val targetElement by target[0,0]
-        val answer by output[0,0]
-        val tab = tableauOf(left.type,left,right,targetElement,error,answer,aw0,aw1,dw0,dw1)
+        val answer by output[0, 0]
+        val tab = tableauOf(left, right, targetElement, error, answer, aw0, aw1, dw0, dw1)
         val layout = tab.linearize()
         println(layout)
 

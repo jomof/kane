@@ -5,6 +5,7 @@ import com.github.jomof.kane.sheet.*
 import com.github.jomof.kane.types.AlgebraicType
 import com.github.jomof.kane.types.DollarAlgebraicType
 import com.github.jomof.kane.types.DollarsAndCentsAlgebraicType
+import com.github.jomof.kane.types.algebraicType
 import kotlin.math.min
 import kotlin.reflect.KProperty
 
@@ -57,22 +58,14 @@ interface AlgebraicBinaryScalarFunction {
         variable : ScalarExpr) : ScalarExpr
 }
 
-fun binaryOf(op: AlgebraicBinaryScalarFunction, left: ScalarExpr, right: ScalarExpr): ScalarExpr {
-    val type = op.type(left.type, right.type)
-    val binary = AlgebraicBinaryScalar(op, left, right)
-//    if (type == DoubleAlgebraicType.kaneType) return binary
-//    return RetypeScalar(binary, type)
-    return binary
-}
+fun binaryOf(op: AlgebraicBinaryScalarFunction, left: ScalarExpr, right: ScalarExpr) =
+    AlgebraicBinaryScalar(op, left, right)
 
 data class AlgebraicBinaryScalar(
     val op: AlgebraicBinaryScalarFunction,
     val left: ScalarExpr,
     val right: ScalarExpr
 ) : ScalarExpr {
-    init {
-    }
-
     private val hashCode = op.hashCode() * 3 + left.hashCode() * 7 + right.hashCode() * 9
     override fun hashCode() = hashCode
 
@@ -82,7 +75,7 @@ data class AlgebraicBinaryScalar(
         if (op != other.op) return false
         if (left != other.left) return false
         if (right != other.right) return false
-        if (type != other.type) return false
+        if (algebraicType != other.algebraicType) return false
         return true
     }
 
@@ -110,8 +103,7 @@ data class AlgebraicBinaryMatrixScalar(
     override val columns: Int,
     override val rows: Int,
     val left: MatrixExpr,
-    val right: ScalarExpr,
-    override val type: AlgebraicType = op.type(left.type, right.type)
+    val right: ScalarExpr
 ) : MatrixExpr {
     init {
         track()
@@ -126,8 +118,7 @@ data class AlgebraicBinaryScalarMatrix(
     override val columns: Int,
     override val rows: Int,
     val left: ScalarExpr,
-    val right: MatrixExpr,
-    override val type: AlgebraicType = op.type(left.type, right.type)
+    val right: MatrixExpr
 ) : MatrixExpr {
     init {
         track()
@@ -142,8 +133,7 @@ data class AlgebraicBinaryMatrix(
     override val columns: Int,
     override val rows: Int,
     val left: MatrixExpr,
-    val right: MatrixExpr,
-    override val type: AlgebraicType = op.type(left.type, right.type)
+    val right: MatrixExpr
 ) : MatrixExpr {
     init {
         track()
@@ -200,8 +190,7 @@ data class AlgebraicUnaryScalar(
 
 data class AlgebraicUnaryMatrix(
     val op: AlgebraicUnaryScalarFunction,
-    val value: MatrixExpr,
-    override val type: AlgebraicType = value.type
+    val value: MatrixExpr
 ) : MatrixExpr {
     init {
         track()
@@ -249,7 +238,7 @@ interface AlgebraicUnaryScalarStatisticFunction {
         elements.forEach {
             statistic.insert(it.getConstant())
         }
-        return reduceArithmetic(ScalarStatistic(statistic, elements[0].type))
+        return reduceArithmetic(ScalarStatistic(statistic))
     }
 
     fun reduceArithmetic(value: MatrixExpr) = reduceArithmetic(value.elements)
@@ -335,7 +324,6 @@ data class AlgebraicUnaryMatrixScalar(
     val op: AlgebraicUnaryMatrixScalarFunction,
     val value: MatrixExpr
 ) : ScalarExpr {
-    override val type get() = value.type
     override fun toString() = render()
 }
 
@@ -344,8 +332,7 @@ data class AlgebraicDeferredDataMatrix(
     val op: BinaryOp,
     val left: AlgebraicExpr,
     val right: AlgebraicExpr,
-    val data: DataMatrix,
-    override val type: AlgebraicType = data.type
+    val data: DataMatrix
 ) : MatrixExpr {
     init { track() }
     override val columns = data.columns

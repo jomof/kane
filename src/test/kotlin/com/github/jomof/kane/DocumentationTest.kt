@@ -2,6 +2,7 @@ package com.github.jomof.kane
 
 import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.sheet.*
+import com.github.jomof.kane.types.type
 import org.junit.Test
 
 /**

@@ -6,6 +6,7 @@ import com.github.jomof.kane.sheet.CoerceScalar
 import com.github.jomof.kane.sheet.Sheet
 import com.github.jomof.kane.sheet.SheetRangeExpr
 import com.github.jomof.kane.types.AlgebraicType
+import com.github.jomof.kane.types.kaneDouble
 import com.github.jomof.kane.visitor.RewritingVisitor
 import com.github.jomof.kane.visitor.visit
 
@@ -61,7 +62,7 @@ class LinearModel(val type : AlgebraicType) {
 
     fun registerMatrixVariableElement(expr : MatrixVariableElement) : Slot {
         registerNamedMatrixShape(expr.matrix.name) {
-            LinearMatrixShape(expr.matrix.columns, expr.matrix.rows, slots.size, expr.type)
+            LinearMatrixShape(expr.matrix.columns, expr.matrix.rows, slots.size, kaneDouble)
         }
         val name = "${expr.matrix.name}[${expr.column},${expr.row}]"
         return namedScalars.computeIfAbsent(name) {
@@ -170,8 +171,8 @@ class LinearModel(val type : AlgebraicType) {
     }
 }
 
-private fun AlgebraicExpr.linearizeExpr(model : LinearModel = LinearModel(type)) : AlgebraicExpr {
-    if(this is ScalarExpr && model.contains(this)) return model.getValue(this)
+private fun AlgebraicExpr.linearizeExpr(model: LinearModel = LinearModel(kaneDouble)): AlgebraicExpr {
+    if (this is ScalarExpr && model.contains(this)) return model.getValue(this)
     val result = when (this) {
         is Slot -> this
         is ConstantScalar -> this
@@ -212,16 +213,16 @@ private fun AlgebraicExpr.linearizeExpr(model : LinearModel = LinearModel(type))
                         val matrix = it.matrix.linearizeExpr(model) as MatrixExpr
                         val pure = matrix.elements.all { element -> element is Slot }
                         if (!pure) {
-                            LookupOrConstantsMatrixShape(it.columns, it.rows, matrix.elements, it.type)
+                            LookupOrConstantsMatrixShape(it.columns, it.rows, matrix.elements, kaneDouble)
                         } else {
                             val slots = matrix.elements.map { element -> (element as Slot).slot }.toList()
                             val start = slots[0]
                             val linear = slots.indices.all { index -> slots[index] != start + index }
                             model.registerNamedMatrixShape(it.name) {
                                 if (linear) {
-                                    LinearMatrixShape(it.columns, it.rows, start, it.type)
+                                    LinearMatrixShape(it.columns, it.rows, start, kaneDouble)
                                 } else {
-                                    LookupMatrixShape(it.columns, it.rows, slots, it.type)
+                                    LookupMatrixShape(it.columns, it.rows, slots, kaneDouble)
                                 }
                             }
                         }
@@ -271,7 +272,7 @@ private fun AlgebraicExpr.linearizeExpr(model : LinearModel = LinearModel(type))
     return result
 }
 
-private fun AlgebraicExpr.claimScalarVariables(model : LinearModel = LinearModel(type)) {
+private fun AlgebraicExpr.claimScalarVariables(model: LinearModel = LinearModel(kaneDouble)) {
     visit {
         when (it) {
             is NamedScalarAssign -> model.registerNamedScalarVariable(it.left)
@@ -282,7 +283,7 @@ private fun AlgebraicExpr.claimScalarVariables(model : LinearModel = LinearModel
 }
 
 
-private fun AlgebraicExpr.claimMatrixVariables(model : LinearModel = LinearModel(type)) {
+private fun AlgebraicExpr.claimMatrixVariables(model: LinearModel = LinearModel(kaneDouble)) {
     val seen = mutableSetOf<Id>()
     visit {
         if (it is MatrixVariableElement) {
@@ -445,7 +446,7 @@ fun Expr.replaceSheetRanges(): Expr {
 fun Expr.linearize(): LinearModel {
     val names = replaceSheetRanges().gatherNamedExprs().toList().map { it.eval() }
     with(Tableau(names)) {
-        val model = LinearModel(type)
+        val model = LinearModel(kaneDouble)
         claimMatrixVariables(model)
         claimScalarVariables(model)
         val stripped = stripNames()

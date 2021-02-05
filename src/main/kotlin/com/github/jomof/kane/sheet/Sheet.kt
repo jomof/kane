@@ -1,10 +1,10 @@
+@file:Suppress("UNCHECKED_CAST")
 package com.github.jomof.kane.sheet
 
 import com.github.jomof.kane.*
 import com.github.jomof.kane.functions.*
-import com.github.jomof.kane.types.AlgebraicType
-import com.github.jomof.kane.types.DoubleAlgebraicType
 import com.github.jomof.kane.types.KaneType
+import com.github.jomof.kane.types.kaneDouble
 import com.github.jomof.kane.visitor.RewritingVisitor
 import com.github.jomof.kane.visitor.visit
 import java.lang.Integer.max
@@ -62,23 +62,10 @@ data class CoerceScalar(
         assert(value !is CoerceScalar) {
             "coerce of coerce?"
         }
-        assert(value !is TypedExpr<*> || type != value.type) {
-            "coerce to same type? ${type.simpleName}"
-        }
         track()
     }
 
-    override val type: AlgebraicType
-        get() = DoubleAlgebraicType.kaneType
-
     override fun toString() = render()
-//    fun copy(value: Expr): ScalarExpr {
-//        return when {
-//            value === this.value -> this
-//            value is ScalarExpr -> value
-//            else -> CoerceScalar(value)
-//        }
-//    }
 }
 
 data class ColumnDescriptor(val name: Id, val type: AdmissibleDataType<*>?)
@@ -90,7 +77,7 @@ data class SheetDescriptor(
 
 data class Cells(private val map: Map<Id, Expr>) {
     init {
-        map.forEach { (id, expr) -> Identifier.validate(id) }
+        map.forEach { (id, _) -> Identifier.validate(id) }
     }
 
     fun <R : Any> mapNotNull(transform: (Map.Entry<Id, Expr>) -> R?): List<R> {
@@ -395,7 +382,6 @@ class SheetBuilderImpl(
     }
 
     fun set(cell : Coordinate, value : Any, type : KaneType<*>) {
-        val name = CellRange.moveable(cell).toString()
         add(
             if (value is Double) NamedScalar(cell, constant(value))
             else NamedValueExpr(cell, value, type as KaneType<Any>)
@@ -513,8 +499,8 @@ fun Sheet.minimize(
     }
 
     println(
-        "Target '$target' reduced from ${DoubleAlgebraicType.kaneType.render(originalTarget)} to ${
-            DoubleAlgebraicType.kaneType.render(
+        "Target '$target' reduced from ${kaneDouble.render(originalTarget)} to ${
+            kaneDouble.render(
                 priorTarget
             )
         }"

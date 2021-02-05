@@ -1,8 +1,6 @@
 package com.github.jomof.kane.sheet
 
 import com.github.jomof.kane.*
-import com.github.jomof.kane.types.KaneType
-import com.github.jomof.kane.types.kaneType
 import kotlin.math.min
 import kotlin.random.Random
 
@@ -24,9 +22,9 @@ fun Sheet.tail(count : Int = 5) = ordinalRows(rows - count + 1 .. rows)
  * Retrieve the last [count] elements of a sheet.
  */
 fun Sheet.sample(count : Int = 5, random : Random = Random(7)) : Sheet {
-    val count = min(count, rows)
+    val countMin = min(count, rows)
     val samples = mutableSetOf<Int>()
-    while(samples.size < count) {
+    while (samples.size < countMin) {
         samples.add(random.nextInt(rows))
     }
     return ordinalRows(samples.toList().sorted())
@@ -143,9 +141,9 @@ fun Sheet.filterRows(predicate: (RowView) -> Boolean): Sheet {
     return ordinalRows(rows)
 }
 
-private fun Sheet.columnType(column : Int) : AdmissibleDataType<*> {
+fun Sheet.columnType(column: Int): AdmissibleDataType<*> {
     var acceptedDataTypes = possibleDataFormats
-    for((name, expr) in cells) {
+    for ((name, expr) in cells) {
         if (name is Coordinate && column == name.column) {
             acceptedDataTypes = acceptedDataTypes
                 .filter { tryType -> tryType.tryParse(expr.toString()) != null }
@@ -177,29 +175,6 @@ val Sheet.types : Sheet get() {
     }.showExcelColumnTags(false)
 }
 
-
-/**
- * Get the type of an expression.
- */
-val Expr.type: KaneType<*>
-    get() = when (this) {
-        is Sheet -> if (columns == 1) columnType(0).type else String::class.java.kaneType
-        is SheetRangeExpr -> String::class.java.kaneType
-        is AlgebraicExpr -> type
-        else -> error("$javaClass")
-    }
-
-/**
- * Get the type of an expression.
- */
-fun Expr.canGetType() = when (this) {
-    is Sheet -> false
-    is SheetRangeExpr -> false
-    is AlgebraicExpr -> true
-    else -> false
-}
-
-
 /**
  * Return a subsection of a sheet
  */
@@ -217,7 +192,7 @@ operator fun Sheet.get(column: Int, row: Int): Expr {
 
 internal fun Sheet.tryConvertToColumnIndex(range: String): Int? {
     val columnByName = columnDescriptors
-        .filter { (column, descriptor) -> descriptor.name == range }
+        .filter { (_, descriptor) -> descriptor.name == range }
         .toList()
         .firstOrNull()
     if (columnByName != null) {

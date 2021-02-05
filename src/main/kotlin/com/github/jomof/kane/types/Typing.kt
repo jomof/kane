@@ -1,5 +1,12 @@
 package com.github.jomof.kane.types
 
+import com.github.jomof.kane.AlgebraicExpr
+import com.github.jomof.kane.Expr
+import com.github.jomof.kane.RetypeMatrix
+import com.github.jomof.kane.RetypeScalar
+import com.github.jomof.kane.sheet.Sheet
+import com.github.jomof.kane.sheet.SheetRangeExpr
+import com.github.jomof.kane.sheet.columnType
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -37,8 +44,8 @@ class ObjectKaneType : KaneType<Any>(Any::class.java) {
 
 val <T:Any> Class<T>.kaneType: KaneType<T>
     get() {
-        return when(this) {
-            Double::class.java -> DoubleAlgebraicType.kaneType
+        return when (this) {
+            Double::class.java -> kaneDouble
             String::class.java -> StringKaneType.kaneType
             Integer::class.java -> IntegerKaneType.kaneType
             Object::class.java -> ObjectKaneType.kaneType
@@ -58,13 +65,30 @@ class DoubleAlgebraicType(
         if (value.isNaN()) return ""
         val result = BigDecimal(value).setScale(precision, RoundingMode.HALF_EVEN).toString()
         val trimmed = if (result.contains(".") && trimLeastSignificantZeros)
-                result.trimEnd('0').trimEnd('.')
-            else result
+            result.trimEnd('0').trimEnd('.')
+        else result
         return prefix + trimmed
     }
-    override fun coerceFrom(value : Number) = value.toDouble()
 
-    companion object {
-        val kaneType = DoubleAlgebraicType()
-    }
+    override fun coerceFrom(value: Number) = value.toDouble()
 }
+
+val kaneDouble = DoubleAlgebraicType()
+
+val AlgebraicExpr.algebraicType: AlgebraicType
+    get() = when (this) {
+        is RetypeScalar -> type
+        is RetypeMatrix -> type
+        else -> kaneDouble
+    }
+
+/**
+ * Get the type of an expression.
+ */
+val Expr.type: KaneType<*>
+    get() = when (this) {
+        is Sheet -> if (columns == 1) columnType(0).type else String::class.java.kaneType
+        is SheetRangeExpr -> String::class.java.kaneType
+        is AlgebraicExpr -> algebraicType
+        else -> error("$javaClass")
+    }

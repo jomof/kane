@@ -1,7 +1,6 @@
 package com.github.jomof.kane
 
-import com.github.jomof.kane.types.AlgebraicType
-import com.github.jomof.kane.types.DoubleAlgebraicType
+import com.github.jomof.kane.types.algebraicType
 import com.github.jomof.kane.visitor.visit
 import kotlin.random.Random
 import kotlin.reflect.KProperty
@@ -11,8 +10,7 @@ interface RandomVariableExpr : ScalarExpr {
 }
 
 class DiscreteUniformRandomVariable(
-    val values: List<Double>,
-    override val type: AlgebraicType
+    val values: List<Double>
 ) : RandomVariableExpr, ScalarExpr {
     init {
         track()
@@ -32,22 +30,21 @@ class DiscreteUniformRandomVariable(
         return "random($min to $max)"
     }
 
-    fun copy(values: List<Double> = this.values, type: AlgebraicType = this.type): Nothing =
+    fun copy(values: List<Double> = this.values): Nothing =
         error("Shouldn't copy DiscreteUniformRandomVariable")
 }
 
 class ScalarStatistic(
-    val statistic : StreamingSamples,
-    override val type : AlgebraicType
+    val statistic: StreamingSamples
 ) : ScalarExpr {
     override fun toString(): String {
-        return type.render(statistic.median)
+        return this.algebraicType.render(statistic.median)
 //        if (statistic.count == 1) return type.render(statistic.median)
 //        return type.render(statistic.mean) + "±" + type.render(statistic.stddev)
     }
 
-    fun copy(statistic: StreamingSamples = this.statistic, type: AlgebraicType = this.type) =
-        ScalarStatistic(statistic, type)
+    fun copy(statistic: StreamingSamples = this.statistic) =
+        ScalarStatistic(statistic)
 }
 
 fun randomOf(range : Pair<Double, Double>, step : Double = 1.0) : DiscreteUniformRandomVariable {
@@ -58,7 +55,7 @@ fun randomOf(range : Pair<Double, Double>, step : Double = 1.0) : DiscreteUnifor
         elements += current
         current += step
     }
-    return DiscreteUniformRandomVariable(elements, DoubleAlgebraicType.kaneType)
+    return DiscreteUniformRandomVariable(elements)
 }
 
 

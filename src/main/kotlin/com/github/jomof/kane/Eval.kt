@@ -3,7 +3,8 @@ package com.github.jomof.kane
 import com.github.jomof.kane.ComputableIndex.MoveableIndex
 import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.sheet.*
-import com.github.jomof.kane.types.DoubleAlgebraicType
+import com.github.jomof.kane.types.algebraicType
+import com.github.jomof.kane.types.kaneDouble
 import com.github.jomof.kane.visitor.RewritingVisitor
 
 private val reduceNamedMatrix = object : RewritingVisitor() {
@@ -24,10 +25,10 @@ private class ReduceAlgebraicBinaryScalar : RewritingVisitor() {
                 sub.left is ScalarListExpr -> sub.left.copy(sub.left.values.map { sub.copy(left = it) })
                 sub.right is ScalarListExpr -> sub.right.copy(sub.right.values.map { sub.copy(right = it) })
                 else -> {
-                    val type = sub.op.type(sub.left.type, sub.right.type)
+                    val type = sub.op.type(sub.left.algebraicType, sub.right.algebraicType)
                     val reduced = sub.op.reduceArithmetic(sub.left, sub.right)
                     val typed =
-                        if (reduced != null && type != DoubleAlgebraicType.kaneType)
+                        if (reduced != null && type != kaneDouble)
                             RetypeScalar(reduced, type)
                         else reduced
                     typed ?: sub
@@ -188,7 +189,7 @@ private val convertVariablesToStatistics = object : RewritingVisitor() {
     override fun rewrite(expr: ConstantScalar): Expr {
         val stream = StreamingSamples()
         stream.insert(expr.value)
-        return ScalarStatistic(stream, expr.type)
+        return ScalarStatistic(stream)
     }
 }
 
@@ -233,8 +234,8 @@ private fun Expr.expandSheetCells(sheet: Sheet, excludeVariables: Set<Id>): Expr
                 left = leftRewritten,
                 right = rightRewritten
             )
-            val newImpliedType = expr.op.type(leftRewritten.type, rightRewritten.type)
-            if (newImpliedType == DoubleAlgebraicType.kaneType) return op
+            val newImpliedType = expr.op.type(leftRewritten.algebraicType, rightRewritten.algebraicType)
+            if (newImpliedType == kaneDouble) return op
             return RetypeScalar(op, newImpliedType)
         }
 
