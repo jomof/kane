@@ -20,8 +20,8 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: '11'
-    - name: Build and Test
-      run: ./gradlew -Pversion=0.1.${{ github.run_number }} dokkaGfm 
+    - name: Build Documentation
+      run: ./gradlew -Pversion=0.1.${{ github.run_number }} assemble dokkaGfm 
     - name: Publish Documentation
       uses: peaceiris/actions-gh-pages@v3
       with:
