@@ -1,5 +1,7 @@
 package com.github.jomof.kane
 
+import com.github.jomof.kane.impl.cartesianOf
+import com.github.jomof.kane.impl.cartesianOfIndices
 import org.junit.Test
 
 class CartesianProductTest {

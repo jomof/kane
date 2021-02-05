@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     kotlin("jvm") version "1.4.10"
     id("maven-publish")
-    id("org.jetbrains.dokka") version ("1.4.0")
+    id("org.jetbrains.dokka") version ("1.4.20")
 }
 //group = "com.github.jomof"
 //version = project.property("version") ?: "0.1-SNAPSHOT"
@@ -46,9 +46,6 @@ val dokkaHtmlJar by tasks.register<Jar>("dokkaHtmlJar") {
     archiveClassifier.set("html-doc")
 }
 
-tasks.dokkaGfm.configure {
-    outputDirectory.set(buildDir.resolve("doc"))
-}
 
 publishing {
     publications {

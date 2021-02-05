@@ -1,7 +1,7 @@
 package com.github.jomof.kane.functions
 
-import com.github.jomof.kane.*
-import com.github.jomof.kane.sheet.SheetRange
+import com.github.jomof.kane.impl.*
+import com.github.jomof.kane.impl.sheet.SheetRange
 
 val MINUS by BinaryOp(op = "-", precedence = 4, infix = true)
 

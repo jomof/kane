@@ -5,9 +5,9 @@ When a CSV file is very large it can be useful to reduce it to a useful subset. 
 ```kotlin
 @file:DependsOn("com.github.jomof:kane:0.1.79")
 import com.github.jomof.kane.*
-import com.github.jomof.kane.types.*
+import com.github.jomof.kane.impl.types.*
 import com.github.jomof.kane.functions.*
-import com.github.jomof.kane.sheet.*
+import com.github.jomof.kane.impl.sheet.*
 import java.io.File
 
 ```

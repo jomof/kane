@@ -1,8 +1,8 @@
 package com.github.jomof.kane.functions
 
-import com.github.jomof.kane.ScalarExpr
-import com.github.jomof.kane.UnaryOp
-import com.github.jomof.kane.constant
+import com.github.jomof.kane.impl.ScalarExpr
+import com.github.jomof.kane.impl.UnaryOp
+import com.github.jomof.kane.impl.constant
 
 val STEP by UnaryOp()
 

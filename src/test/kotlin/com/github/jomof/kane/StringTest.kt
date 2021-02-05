@@ -1,8 +1,8 @@
 package com.github.jomof.kane
 
-import com.github.jomof.kane.padCenter
-import com.github.jomof.kane.padLeft
-import com.github.jomof.kane.padRight
+import com.github.jomof.kane.impl.padCenter
+import com.github.jomof.kane.impl.padLeft
+import com.github.jomof.kane.impl.padRight
 import org.junit.Test
 
 class StringTest {

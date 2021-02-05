@@ -1,11 +1,11 @@
 package com.github.jomof.kane.functions
 
-import com.github.jomof.kane.ScalarExpr
-import com.github.jomof.kane.UnaryOp
-import com.github.jomof.kane.canGetConstant
-import com.github.jomof.kane.getConstant
-import com.github.jomof.kane.types.PercentAlgebraicType
-import com.github.jomof.kane.types.percent
+import com.github.jomof.kane.impl.ScalarExpr
+import com.github.jomof.kane.impl.UnaryOp
+import com.github.jomof.kane.impl.canGetConstant
+import com.github.jomof.kane.impl.getConstant
+import com.github.jomof.kane.impl.types.PercentAlgebraicType
+import com.github.jomof.kane.impl.types.percent
 
 private val usInflationMap = mapOf(
     1916 to 0.079,

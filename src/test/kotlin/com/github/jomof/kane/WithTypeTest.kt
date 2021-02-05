@@ -1,8 +1,10 @@
 package com.github.jomof.kane
 
 import com.github.jomof.kane.functions.plus
-import com.github.jomof.kane.types.dollars
-import com.github.jomof.kane.types.percent
+import com.github.jomof.kane.impl.eval
+import com.github.jomof.kane.impl.rowOf
+import com.github.jomof.kane.impl.types.dollars
+import com.github.jomof.kane.impl.types.percent
 import org.junit.Test
 
 class WithTypeTest {

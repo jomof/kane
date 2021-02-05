@@ -1,7 +1,7 @@
 package com.github.jomof.kane.functions
 
-import com.github.jomof.kane.StreamingSamples
-import com.github.jomof.kane.UnaryOp
+import com.github.jomof.kane.impl.StreamingSamples
+import com.github.jomof.kane.impl.UnaryOp
 
 private val MIN by UnaryOp()
 

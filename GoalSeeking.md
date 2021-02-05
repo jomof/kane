@@ -14,9 +14,9 @@ Topics covered:
 ```kotlin
 @file:DependsOn("com.github.jomof:kane:0.1.90")
 import com.github.jomof.kane.*
-import com.github.jomof.kane.types.*
+import com.github.jomof.kane.impl.types.*
 import com.github.jomof.kane.functions.*
-import com.github.jomof.kane.sheet.*
+import com.github.jomof.kane.impl.sheet.*
 import java.io.File
 
 ```

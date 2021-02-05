@@ -1,9 +1,10 @@
 package com.github.jomof.kane
 
 import com.github.jomof.kane.functions.*
-import com.github.jomof.kane.sheet.Sheet
-import com.github.jomof.kane.sheet.possibleDataFormats
-import com.github.jomof.kane.sheet.sheetOf
+import com.github.jomof.kane.impl.columnOf
+import com.github.jomof.kane.impl.sheet.Sheet
+import com.github.jomof.kane.impl.sheet.possibleDataFormats
+import com.github.jomof.kane.impl.sheet.sheetOf
 
 class Kane {
     companion object {

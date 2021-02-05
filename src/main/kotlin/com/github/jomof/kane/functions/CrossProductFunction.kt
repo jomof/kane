@@ -1,6 +1,6 @@
 package com.github.jomof.kane.functions
 
-import com.github.jomof.kane.*
+import com.github.jomof.kane.impl.*
 
 val CROSS by BinaryOp(op = " cross ", precedence = 5, associative = false, infix = true)
 

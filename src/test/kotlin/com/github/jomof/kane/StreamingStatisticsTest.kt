@@ -1,5 +1,6 @@
 package com.github.jomof.kane
 
+import com.github.jomof.kane.impl.StreamingSamples
 import org.junit.Test
 
 class StreamingStatisticsTest {

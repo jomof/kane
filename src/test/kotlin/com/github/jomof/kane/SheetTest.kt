@@ -2,9 +2,10 @@ package com.github.jomof.kane
 
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
 import com.github.jomof.kane.functions.*
-import com.github.jomof.kane.sheet.*
-import com.github.jomof.kane.types.dollars
-import com.github.jomof.kane.types.percent
+import com.github.jomof.kane.impl.*
+import com.github.jomof.kane.impl.sheet.*
+import com.github.jomof.kane.impl.types.dollars
+import com.github.jomof.kane.impl.types.percent
 import org.junit.Test
 import java.io.File
 import java.util.*

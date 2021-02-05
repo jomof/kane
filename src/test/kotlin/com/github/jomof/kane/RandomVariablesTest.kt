@@ -1,8 +1,9 @@
 package com.github.jomof.kane
 
 import com.github.jomof.kane.functions.*
-import com.github.jomof.kane.sheet.get
-import com.github.jomof.kane.sheet.sheetOf
+import com.github.jomof.kane.impl.*
+import com.github.jomof.kane.impl.sheet.get
+import com.github.jomof.kane.impl.sheet.sheetOf
 import org.junit.Test
 
 class RandomVariablesTest {

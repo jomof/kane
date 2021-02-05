@@ -1,6 +1,6 @@
 package com.github.jomof.kane.functions
 
-import com.github.jomof.kane.*
+import com.github.jomof.kane.impl.*
 
 // Source: https://www.multpl.com/shiller-pe/table/by-year
 // Year is on January 1st of that year.

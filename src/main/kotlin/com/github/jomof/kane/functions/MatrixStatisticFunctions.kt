@@ -1,7 +1,7 @@
 package com.github.jomof.kane.functions
 
-import com.github.jomof.kane.MatrixExpr
-import com.github.jomof.kane.ScalarExpr
+import com.github.jomof.kane.impl.MatrixExpr
+import com.github.jomof.kane.impl.ScalarExpr
 
 fun softmax(expr: MatrixExpr) = exp(expr) / sum(exp(expr))
 fun softmax(expr: MatrixExpr, sigma: ScalarExpr): MatrixExpr {

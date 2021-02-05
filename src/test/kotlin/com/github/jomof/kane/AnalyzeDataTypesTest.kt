@@ -1,6 +1,6 @@
 package com.github.jomof.kane
 
-import com.github.jomof.kane.sheet.analyzeDataTypes
+import com.github.jomof.kane.impl.sheet.analyzeDataTypes
 import org.junit.Test
 
 class AnalyzeDataTypesTest {

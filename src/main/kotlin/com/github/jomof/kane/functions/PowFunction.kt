@@ -1,6 +1,6 @@
 package com.github.jomof.kane.functions
 
-import com.github.jomof.kane.*
+import com.github.jomof.kane.impl.*
 import kotlin.math.pow
 
 val POW by BinaryOp(precedence = 0)

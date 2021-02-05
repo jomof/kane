@@ -1,7 +1,7 @@
 package com.github.jomof.kane.functions
 
-import com.github.jomof.kane.ScalarExpr
-import com.github.jomof.kane.UnaryOp
+import com.github.jomof.kane.impl.ScalarExpr
+import com.github.jomof.kane.impl.UnaryOp
 import kotlin.math.exp
 
 val EXP by UnaryOp()

@@ -1,6 +1,6 @@
 package com.github.jomof.kane.functions
 
-import com.github.jomof.kane.*
+import com.github.jomof.kane.impl.*
 
 val STACK = BinaryOp(op = " stack ", precedence = 5, associative = true, infix = true)
 

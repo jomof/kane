@@ -1,11 +1,11 @@
 package com.github.jomof.kane.functions
 
-import com.github.jomof.kane.*
-import com.github.jomof.kane.sheet.*
-import com.github.jomof.kane.types.AlgebraicType
-import com.github.jomof.kane.types.DollarAlgebraicType
-import com.github.jomof.kane.types.DollarsAndCentsAlgebraicType
-import com.github.jomof.kane.types.algebraicType
+import com.github.jomof.kane.impl.*
+import com.github.jomof.kane.impl.sheet.*
+import com.github.jomof.kane.impl.types.AlgebraicType
+import com.github.jomof.kane.impl.types.DollarAlgebraicType
+import com.github.jomof.kane.impl.types.DollarsAndCentsAlgebraicType
+import com.github.jomof.kane.impl.types.algebraicType
 import kotlin.math.min
 import kotlin.reflect.KProperty
 
@@ -56,13 +56,15 @@ interface AlgebraicBinaryScalarFunction {
             else -> left
         }
     }
-    fun  reduceArithmetic(p1 : ScalarExpr, p2 : ScalarExpr) : ScalarExpr?
-    fun  differentiate(
-        p1 : ScalarExpr,
-        p1d : ScalarExpr,
-        p2 : ScalarExpr,
-        p2d : ScalarExpr,
-        variable : ScalarExpr) : ScalarExpr
+
+    fun reduceArithmetic(p1: ScalarExpr, p2: ScalarExpr): ScalarExpr?
+    fun differentiate(
+        p1: ScalarExpr,
+        p1d: ScalarExpr,
+        p2: ScalarExpr,
+        p2d: ScalarExpr,
+        variable: ScalarExpr
+    ): ScalarExpr
 }
 
 fun binaryOf(op: AlgebraicBinaryScalarFunction, left: ScalarExpr, right: ScalarExpr) =
