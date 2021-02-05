@@ -1,0 +1,11 @@
+//[Kane](../../index.md)/[com.github.jomof.kane.functions](../index.md)/[AlgebraicDeferredDataMatrix](index.md)/[right](right.md)
+
+
+
+# right  
+[jvm]  
+Content  
+val [right](right.md): [AlgebraicExpr](../../com.github.jomof.kane.impl/-algebraic-expr/index.md)  
+
+
+
