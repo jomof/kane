@@ -21,15 +21,12 @@ interface AlgebraicExpr : TypedExpr<Double> {
 }
 interface ScalarExpr : AlgebraicExpr
 
-interface ParentExpr<T:Any> : TypedExpr<T> {
-    val children : Iterable<TypedExpr<T>>
+interface MatrixExpr : AlgebraicExpr {
+    val columns: Int
+    val rows: Int
+    operator fun get(column: Int, row: Int): ScalarExpr
 }
-interface MatrixExpr : AlgebraicExpr, ParentExpr<Double> {
-    val columns : Int
-    val rows : Int
-    operator fun get(column : Int, row : Int) : ScalarExpr
-    override val children : Iterable<ScalarExpr> get() = elements.asIterable()
-}
+
 interface VariableExpr : AlgebraicExpr
 interface ScalarVariableExpr : ScalarExpr, VariableExpr
 interface MatrixVariableExpr : MatrixExpr, VariableExpr
@@ -159,14 +156,16 @@ data class NamedMatrixVariable(
         assert(row < rows) { "$row greater than columns $rows of matrix $name" }
         MatrixVariableElement(column, row, this, initial[coordinateToIndex(column, row)])
     }
-    fun get(coordinate : Coordinate) = get(coordinate.column, coordinate.row)
+
+    fun get(coordinate: Coordinate) = get(coordinate.column, coordinate.row)
     val elements get() = coordinates.map { get(it) }
     override fun toString() = render()
 }
+
 data class NamedScalar(
     override val name: Id,
     val scalar: ScalarExpr
-) : NamedScalarExpr, ParentExpr<Double> {
+) : NamedScalarExpr {
     init {
         track()
         if (scalar is NamedScalar && scalar.name == name) {
@@ -175,10 +174,9 @@ data class NamedScalar(
         Identifier.validate(name)
     }
 
-    override val children get() = listOf(scalar)
-
     override fun toString() = render()
 }
+
 data class NamedMatrix(
     override val name: Id,
     val matrix: MatrixExpr
@@ -277,10 +275,13 @@ data class DataMatrix(
 }
 
 data class Tableau(
-    override val children: List<NamedAlgebraicExpr>,
-    override val type : AlgebraicType
-) : AlgebraicExpr, ParentExpr<Double> {
-    init { track() }
+    val children: List<NamedAlgebraicExpr>,
+    override val type: AlgebraicType
+) : AlgebraicExpr {
+    init {
+        track()
+    }
+
     override fun toString() = render()
 }
 
@@ -327,7 +328,7 @@ data class NamedScalarAssign(
     override val name: Id,
     val left: NamedScalarVariable,
     val right: ScalarExpr
-) : NamedAlgebraicExpr, ParentExpr<Double> {
+) : NamedAlgebraicExpr {
     override val type get() = left.type
 
     init {
@@ -335,15 +336,15 @@ data class NamedScalarAssign(
     }
 
     override fun toString() = render()
-    override val children = listOf(right)
 }
 
 data class NamedMatrixAssign(
     override val name: Id,
     val left: NamedMatrixVariable,
     val right: MatrixExpr
-) : NamedAlgebraicExpr, ParentExpr<Double> {
+) : NamedAlgebraicExpr {
     override val type get() = left.type
+
     init {
         track()
         fun lm() = "matrix '${left.name}'"
@@ -357,7 +358,6 @@ data class NamedMatrixAssign(
     }
 
     override fun toString() = render()
-    override val children = listOf(right)
 }
 
 data class NamedUntypedScalar(

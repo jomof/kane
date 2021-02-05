@@ -5,7 +5,6 @@ import com.github.jomof.kane.sheet.*
 import com.github.jomof.kane.types.AlgebraicType
 import com.github.jomof.kane.types.DollarAlgebraicType
 import com.github.jomof.kane.types.DollarsAndCentsAlgebraicType
-import com.github.jomof.kane.types.DoubleAlgebraicType
 import kotlin.math.min
 import kotlin.reflect.KProperty
 
@@ -70,11 +69,8 @@ data class AlgebraicBinaryScalar(
     val op: AlgebraicBinaryScalarFunction,
     val left: ScalarExpr,
     val right: ScalarExpr
-) : ScalarExpr, ParentExpr<Double> {
+) : ScalarExpr {
     init {
-        assert(type == DoubleAlgebraicType.kaneType) {
-            "what"
-        }
     }
 
     private val hashCode = op.hashCode() * 3 + left.hashCode() * 7 + right.hashCode() * 9
@@ -99,7 +95,6 @@ data class AlgebraicBinaryScalar(
         var allocs = 0
     }
 
-    override val children get() = listOf(left, right)
     override fun toString() = render()
     fun copy(
         left: ScalarExpr = this.left,
@@ -195,13 +190,7 @@ interface AlgebraicUnaryScalarFunction {
 data class AlgebraicUnaryScalar(
     val op: AlgebraicUnaryScalarFunction,
     val value: ScalarExpr
-) : ScalarExpr, ParentExpr<Double> {
-    init {
-        track()
-    }
-
-    override val children get() = listOf(value)
-
+) : ScalarExpr {
     override fun toString() = render()
     fun copy(value: ScalarExpr): AlgebraicUnaryScalar {
         return if (value === this.value) return this
@@ -345,13 +334,8 @@ interface AlgebraicUnaryMatrixScalarFunction {
 data class AlgebraicUnaryMatrixScalar(
     val op: AlgebraicUnaryMatrixScalarFunction,
     val value: MatrixExpr
-) : ScalarExpr, ParentExpr<Double> {
-    init {
-        track()
-    }
-
+) : ScalarExpr {
     override val type get() = value.type
-    override val children: Iterable<ScalarExpr> get() = value.elements.asIterable()
     override fun toString() = render()
 }
 
