@@ -4,9 +4,7 @@ import com.github.jomof.kane.*
 import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.sheet.*
 
-open class RewritingVisitor(
-    val assertTypeChange: Boolean = true
-) {
+open class RewritingVisitor {
     private var depth = 0
     protected val checkIdentity = false
     open fun rewrite(expr: CoerceScalar): Expr = with(expr) {
@@ -265,11 +263,6 @@ open class RewritingVisitor(
                 is RetypeScalar -> rewrite(expr)
                 is RetypeMatrix -> rewrite(expr)
                 else -> error("${expr.javaClass}")
-            }
-            if (assertTypeChange && expr.canGetType() && result.canGetType()) {
-                assert(expr.type == result.type) {
-                    "Unexpected type change"
-                }
             }
             if (checkIdentity && result !== expr) {
                 assert(result != expr) {

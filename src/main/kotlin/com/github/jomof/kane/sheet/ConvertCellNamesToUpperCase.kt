@@ -11,8 +11,20 @@ fun Expr.convertCellNamesToUpperCase(): Expr {
         return if (looksLikeCellName(upper)) cellNameToCoordinate(upper) else this
     }
     return object : RewritingVisitor() {
-        override fun rewrite(expr: NamedMatrix) = expr.copy(name = expr.name.upper(), matrix = matrix(expr.matrix))
-        override fun rewrite(expr: NamedScalar) = expr.copy(name = expr.name.upper(), scalar = scalar(expr.scalar))
+        override fun rewrite(expr: NamedMatrix): Expr = with(expr) {
+            val rewritten = matrix(matrix)
+            val name = expr.name.upper()
+            return if (rewritten === matrix && name == expr.name) this
+            else copy(name = name, matrix = rewritten)
+        }
+
+        override fun rewrite(expr: NamedScalar): Expr = with(expr) {
+            val rewritten = scalar(scalar)
+            val name = expr.name.upper()
+            return if (rewritten === scalar && name == expr.name) this
+            else copy(name = name, scalar = rewritten)
+        }
+
         override fun rewrite(expr: NamedScalarVariable) = expr.copy(name = expr.name.upper())
     }.rewrite(this)
 }

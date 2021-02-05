@@ -10,7 +10,7 @@ private val reduceNamedMatrix = object : RewritingVisitor() {
     override fun rewrite(expr: NamedMatrix) = expr.matrix
 }
 
-private class ReduceAlgebraicBinaryScalar : RewritingVisitor(assertTypeChange = false) {
+private class ReduceAlgebraicBinaryScalar : RewritingVisitor() {
     override fun rewrite(expr: AlgebraicBinaryScalar): Expr {
         val result = when (val sub = super.rewrite(expr)) {
             is AlgebraicBinaryScalar -> when {
@@ -39,7 +39,7 @@ private class ReduceAlgebraicBinaryScalar : RewritingVisitor(assertTypeChange = 
     }
 }
 
-private class ReduceAlgebraicUnaryScalar : RewritingVisitor(assertTypeChange = false) {
+private class ReduceAlgebraicUnaryScalar : RewritingVisitor() {
     override fun rewrite(expr: AlgebraicUnaryScalar): Expr {
         return when (val sub = super.rewrite(expr)) {
             is AlgebraicUnaryScalar -> when (sub.value) {
@@ -71,7 +71,7 @@ private class ReduceAlgebraicUnaryScalar : RewritingVisitor(assertTypeChange = f
     }
 }
 
-private val reduceAlgebraicBinaryMatrix = object : RewritingVisitor(assertTypeChange = false) {
+private val reduceAlgebraicBinaryMatrix = object : RewritingVisitor() {
     override fun rewrite(expr: AlgebraicBinaryMatrix): Expr = with(expr) {
         val left = left.toDataMatrix()
         val right = right.toDataMatrix()
@@ -87,7 +87,7 @@ private val reduceAlgebraicUnaryMatrix = object : RewritingVisitor() {
         AlgebraicUnaryScalar(expr.op, it)
     }
 }
-private val reduceAlgebraicUnaryScalarStatistic = object : RewritingVisitor(assertTypeChange = false) {
+private val reduceAlgebraicUnaryScalarStatistic = object : RewritingVisitor() {
     override fun rewrite(expr: AlgebraicUnaryScalarStatistic): Expr = with(expr) {
         return when (expr.value) {
             is RetypeScalar -> rewrite(expr.value.copy(expr.copy(value = expr.value.scalar)))
@@ -96,7 +96,7 @@ private val reduceAlgebraicUnaryScalarStatistic = object : RewritingVisitor(asse
     }
 }
 
-private val reduceAlgebraicBinaryScalarStatistic = object : RewritingVisitor(assertTypeChange = false) {
+private val reduceAlgebraicBinaryScalarStatistic = object : RewritingVisitor() {
     override fun rewrite(expr: AlgebraicBinaryScalarStatistic): Expr = with(expr) {
 
         return when {
@@ -204,7 +204,7 @@ private val reduceCoerceScalar = object : RewritingVisitor() {
     }
 }
 
-private val reduceRetypeOfRetype = object : RewritingVisitor(assertTypeChange = false) {
+private val reduceRetypeOfRetype = object : RewritingVisitor() {
     override fun rewrite(expr: RetypeScalar): Expr {
         if (expr.scalar is RetypeScalar)
             return RetypeScalar(scalar = expr.scalar.scalar, type = expr.type)
@@ -214,7 +214,7 @@ private val reduceRetypeOfRetype = object : RewritingVisitor(assertTypeChange = 
 
 
 private fun Expr.expandSheetCells(sheet: Sheet, excludeVariables: Set<Id>): Expr {
-    return object : RewritingVisitor(assertTypeChange = false) {
+    return object : RewritingVisitor() {
         override fun rewrite(expr: AlgebraicBinaryRangeStatistic): Expr = with(expr) {
             val leftRewritten = rewrite(left)
             val rightRewritten = scalar(right)

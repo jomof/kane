@@ -397,7 +397,7 @@ private fun Expr.terminal(): Boolean =
     }
 
 fun AlgebraicExpr.rollUpCommonSubexpressions(model : LinearModel) : AlgebraicExpr {
-    return object : RewritingVisitor(assertTypeChange = false) {
+    return object : RewritingVisitor() {
         override fun rewrite(expr: AlgebraicUnaryScalar): Expr {
             if (expr.value.terminal()) return expr.linearizeExpr(model) as ScalarExpr
             return super.rewrite(expr)

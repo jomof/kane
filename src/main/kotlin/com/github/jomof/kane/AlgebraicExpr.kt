@@ -165,8 +165,7 @@ data class NamedMatrixVariable(
 }
 data class NamedScalar(
     override val name: Id,
-    val scalar: ScalarExpr,
-    override val type: AlgebraicType = scalar.type
+    val scalar: ScalarExpr
 ) : NamedScalarExpr, ParentExpr<Double> {
     init {
         track()
@@ -182,8 +181,7 @@ data class NamedScalar(
 }
 data class NamedMatrix(
     override val name: Id,
-    val matrix: MatrixExpr,
-    override val type: AlgebraicType = matrix.type
+    val matrix: MatrixExpr
 ) : NamedMatrixExpr {
     init {
         track()
@@ -252,8 +250,7 @@ data class RetypeMatrix(
 data class DataMatrix(
     override val columns: Int,
     override val rows: Int,
-    val elements: List<ScalarExpr>,
-    override val type: AlgebraicType = elements[0].type
+    val elements: List<ScalarExpr>
 ) : MatrixExpr {
     init {
         track()
