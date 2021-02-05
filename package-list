@@ -1,0 +1,9 @@
+$dokka.format:html-v1
+$dokka.linkExtension:html
+
+com.github.jomof.kane
+com.github.jomof.kane.functions
+com.github.jomof.kane.sheet
+com.github.jomof.kane.types
+com.github.jomof.kane.visitor
+
