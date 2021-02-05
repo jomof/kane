@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.github.jomof.kane.CartesianProductTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2021-02-05T17:22:35" hostname="fv-az183-280" time="0.003">
-  <properties/>
-  <testcase name="cartesian check" classname="com.github.jomof.kane.CartesianProductTest" time="0.001"/>
-  <testcase name="indices check" classname="com.github.jomof.kane.CartesianProductTest" time="0.001"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>
