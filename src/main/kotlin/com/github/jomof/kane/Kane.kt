@@ -5,6 +5,9 @@ import com.github.jomof.kane.impl.columnOf
 import com.github.jomof.kane.impl.sheet.Sheet
 import com.github.jomof.kane.impl.sheet.possibleDataFormats
 
+/**
+ * Global metadata about the Kane system.
+ */
 class Kane {
     companion object {
         /**

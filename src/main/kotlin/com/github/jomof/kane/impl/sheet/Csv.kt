@@ -10,7 +10,7 @@ import kotlin.random.Random
 /**
  * Parse CSV from string in [data] parameter.
  */
-fun parseCsv(
+internal fun parseCsv(
     data: String,
     names: List<String> = listOf(),
     sample: Double = 1.0,
