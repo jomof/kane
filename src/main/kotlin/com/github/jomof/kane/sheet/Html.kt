@@ -3,7 +3,6 @@ package com.github.jomof.kane.sheet
 import com.github.jomof.kane.Coordinate
 import com.github.jomof.kane.Identifier
 import com.github.jomof.kane.coordinate
-import com.github.jomof.kane.indexToColumnName
 
 /**
  * Render the sheet as HTML
@@ -23,15 +22,13 @@ val Sheet.html: String
 //    """.trimIndent()
 //        )
 
-        fun colName(column: Int) = columnDescriptors[column]?.name ?: indexToColumnName(column)
-        fun rowName(row: Int) = rowDescriptors[row]?.name ?: "$row"
         sb.append("\n<table id=\"table_id\" class=\"display\">\n")
 
         // Column headers
         sb.append("<thead><tr>\n")
         sb.append("  <th/>")
         (0 until columns).forEach { column ->
-            val columnName = colName(column)
+            val columnName = columnName(column)
             sb.append("<th>$columnName</th>")
         }
         sb.append("</thead></tr>\n")

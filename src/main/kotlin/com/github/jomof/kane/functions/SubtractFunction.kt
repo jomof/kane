@@ -17,7 +17,7 @@ private class SubtractFunction : AlgebraicBinaryScalarFunction {
             leftIsConst && p1.getConstant() == -0.0 -> -p2
             rightIsConst && p2.getConstant() == 0.0 -> p1
             rightIsConst && p2.getConstant() == -0.0 -> p1
-            leftIsConst && rightIsConst -> constant(invoke(p1.getConstant(), p2.getConstant()), p1.type)
+            leftIsConst && rightIsConst -> constant(invoke(p1.getConstant(), p2.getConstant()))
             rightIsConst && p1 is AlgebraicBinaryScalar && p1.op == add && p1.right is ConstantScalar -> {
                 p1.left + (p1.right - p2.getConstant())
             }

@@ -271,15 +271,15 @@ class DocumentationTest {
         }
         sheet.assertString(
             """
-              x actual prediction     error    
-              - ------ ---------- ------------ 
-            1 1   -0.5     m*A1+b (m*A1+b-B1)² 
-            2 2     -1     m*A2+b (m*A2+b-B2)² 
-            3 3   -1.5     m*A3+b (m*A3+b-B3)² 
-            4 4     -2     m*A4+b (m*A4+b-B4)² 
-            b=0
-            m=0
-            totalError=sum((m*A+b-B)²)
+          x [A] actual [B] prediction [C]   error [D]  
+          ----- ---------- -------------- ------------ 
+        1     1       -0.5         m*A1+b (m*A1+b-B1)² 
+        2     2         -1         m*A2+b (m*A2+b-B2)² 
+        3     3       -1.5         m*A3+b (m*A3+b-B3)² 
+        4     4         -2         m*A4+b (m*A4+b-B4)² 
+        b=0
+        m=0
+        totalError=sum((m*A+b-B)²)
         """.trimIndent()
         )
 

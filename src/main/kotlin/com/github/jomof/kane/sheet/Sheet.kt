@@ -49,9 +49,11 @@ data class NamedSheetRangeExpr(
     val right get() = right(1)
 }
 
+/**
+ * Turn an expression into a ScalarExpr based on context.
+ */
 data class CoerceScalar(
-    val value: Expr,
-    override val type: AlgebraicType
+    val value: Expr
 ) : ScalarExpr {
     init {
         assert(value !is ScalarExpr) {
@@ -66,19 +68,25 @@ data class CoerceScalar(
         track()
     }
 
+    override val type: AlgebraicType
+        get() = DoubleAlgebraicType.kaneType
+
     override fun toString() = render()
-    fun copy(value: Expr): ScalarExpr {
-        return when {
-            value === this.value -> this
-            value is ScalarExpr -> value
-            else -> CoerceScalar(value, type)
-        }
-    }
+//    fun copy(value: Expr): ScalarExpr {
+//        return when {
+//            value === this.value -> this
+//            value is ScalarExpr -> value
+//            else -> CoerceScalar(value)
+//        }
+//    }
 }
 
 data class ColumnDescriptor(val name: Id, val type: AdmissibleDataType<*>?)
 data class RowDescriptor(val name: List<Expr>)
-data class SheetDescriptor(val limitOutputLines: Int = Int.MAX_VALUE)
+data class SheetDescriptor(
+    val limitOutputLines: Int = Int.MAX_VALUE,
+    val showColumnTags: Boolean = true
+)
 
 data class Cells(private val map: Map<Id, Expr>) {
     init {
@@ -181,6 +189,11 @@ interface Sheet : Expr {
      * Limit the number of output lines when rendering the sheet
      */
     fun limitOutputLines(limit: Int) = copy(sheetDescriptor = sheetDescriptor.copy(limitOutputLines = limit))
+
+    /**
+     * Whether to show Excel-like column tags in the column headers
+     */
+    fun showExcelColumnTags(show: Boolean = true) = copy(sheetDescriptor = sheetDescriptor.copy(showColumnTags = show))
 
     /**
      * Create a new sheet with cell values changed.
@@ -384,7 +397,7 @@ class SheetBuilderImpl(
     fun set(cell : Coordinate, value : Any, type : KaneType<*>) {
         val name = CellRange.moveable(cell).toString()
         add(
-            if (value is Double) NamedScalar(cell, constant(value, type as AlgebraicType))
+            if (value is Double) NamedScalar(cell, constant(value))
             else NamedValueExpr(cell, value, type as KaneType<Any>)
         )
     }
@@ -517,7 +530,20 @@ fun Sheet.minimize(
     return copy(cells = new.toCells())
 }
 
-fun Sheet.render() : String {
+fun Sheet.columnName(column: Int): String {
+    val namedColumnOrNull = columnDescriptors[column]?.name
+    val excelColumnName = indexToColumnName(column)
+    return when {
+        namedColumnOrNull == null -> excelColumnName
+        namedColumnOrNull is String && namedColumnOrNull.toUpperCase() == excelColumnName -> namedColumnOrNull
+        namedColumnOrNull is String && sheetDescriptor.showColumnTags -> "$namedColumnOrNull [$excelColumnName]"
+        else -> Identifier.string(namedColumnOrNull)
+    }
+}
+
+fun Sheet.rowName(row: Int) = rowDescriptors[row]?.name?.joinToString(" ") ?: "$row"
+
+fun Sheet.render(): String {
     if (cells.isEmpty()) return ""
     val sb = StringBuilder()
     val widths = Array(columns + 1) {
@@ -527,9 +553,6 @@ fun Sheet.render() : String {
             else Identifier.width(name)
         } else 0
     }
-
-    fun colName(column: Int) = columnDescriptors[column]?.name ?: indexToColumnName(column)
-    fun rowName(row: Int) = rowDescriptors[row]?.name?.joinToString(" ") ?: "$row"
 
     // Effective row count for formatting
     val rows = min(rows, sheetDescriptor.limitOutputLines)
@@ -541,7 +564,7 @@ fun Sheet.render() : String {
 
     // Calculate widths of column headers
     for(column in 0 until columns) {
-        widths[column + 1] = max(widths[column + 1], Identifier.width(colName(column)))
+        widths[column + 1] = max(widths[column + 1], columnName(column).length)
     }
 
     // Calculate widths
@@ -558,8 +581,8 @@ fun Sheet.render() : String {
         val width = widths[index]
         if (index == 0) sb.append(" ".repeat(width) + " ")
         else {
-            val columnName = colName(index - 1)
-            sb.append(padCenter(Identifier.string(columnName), width) + " ")
+            val columnName = columnName(index - 1)
+            sb.append(padCenter(columnName, width) + " ")
         }
     }
     sb.append("\n")

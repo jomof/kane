@@ -33,6 +33,8 @@ private fun AlgebraicExpr.expandUnaryOperations(): AlgebraicExpr {
         is DiscreteUniformRandomVariable -> this
         is NamedScalarVariable -> this
         is CoerceScalar -> copy(value = value.expandUnaryOperations())
+        is RetypeScalar -> copy(scalar = scalar.self())
+        is RetypeMatrix -> copy(matrix = matrix.self())
         else -> error("$javaClass")
     }
 }

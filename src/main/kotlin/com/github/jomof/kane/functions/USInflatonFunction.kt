@@ -4,6 +4,7 @@ import com.github.jomof.kane.ScalarExpr
 import com.github.jomof.kane.UnaryOp
 import com.github.jomof.kane.canGetConstant
 import com.github.jomof.kane.getConstant
+import com.github.jomof.kane.types.PercentAlgebraicType
 import com.github.jomof.kane.types.percent
 
 private val usInflationMap = mapOf(
@@ -122,6 +123,7 @@ private val USINFLATION by UnaryOp()
 
 private class USInflationFunction : AlgebraicUnaryScalarFunction {
     override val meta = USINFLATION
+    override val type = PercentAlgebraicType.kaneType
     override fun doubleOp(value: Double) = usInflation(value.toInt())
 
     override fun reduceArithmetic(value: ScalarExpr): ScalarExpr? {

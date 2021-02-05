@@ -27,7 +27,7 @@ fun extractScalarizedMatrixElement(
         }
         is AlgebraicUnaryMatrix -> {
             val value = extractScalarizedMatrixElement(matrix.value, coordinate, namedColumns)
-            AlgebraicUnaryScalar(matrix.op, value, value.type)
+            AlgebraicUnaryScalar(matrix.op, value)
         }
         is NamedMatrix -> {
             when (matrix.name) {
@@ -72,7 +72,10 @@ fun extractScalarizedMatrixElement(
             }
             else -> error("")
         }
-
+        is RetypeMatrix -> {
+            val value = extractScalarizedMatrixElement(matrix.matrix, coordinate, namedColumns)
+            RetypeScalar(value, matrix.type)
+        }
         is DataMatrix -> matrix[coordinate]
         else ->
             error("${matrix.javaClass}")

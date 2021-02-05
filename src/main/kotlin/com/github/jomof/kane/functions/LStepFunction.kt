@@ -15,7 +15,7 @@ private class LStepFunction : AlgebraicUnaryScalarFunction {
         exprd : ScalarExpr,
         variable : ScalarExpr
     ): ScalarExpr {
-        return constant(0.0, expr.type)
+        return constant(0.0)
     }
 }
 

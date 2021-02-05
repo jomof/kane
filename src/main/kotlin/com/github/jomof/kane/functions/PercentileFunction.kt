@@ -16,13 +16,13 @@ class PercentileFunction : AlgebraicBinaryScalarStatisticFunction {
             if (!it.canGetConstant()) return null
             statistic.insert(it.getConstant())
         }
-        return ConstantScalar(statistic.percentile(right), left.first().type)
+        return ConstantScalar(statistic.percentile(right))
     }
 
     override fun reduceArithmetic(left: ScalarStatistic, right: ScalarExpr): ScalarExpr {
         return when (right) {
-            is ConstantScalar -> constant(left.statistic.percentile(right.value), left.type)
-            is ScalarStatistic -> constant(left.statistic.percentile(right.statistic.mean), left.type)
+            is ConstantScalar -> constant(left.statistic.percentile(right.value))
+            is ScalarStatistic -> constant(left.statistic.percentile(right.statistic.mean))
             else -> error("${left.javaClass} ${right.javaClass}")
         }
     }

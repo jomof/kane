@@ -15,7 +15,7 @@ private class DivideFunction : AlgebraicBinaryScalarFunction {
         return when {
             leftIsConst && p1.getConstant() == 0.0 -> p1
             rightIsConst && p2.getConstant() == 1.0 -> p1
-            leftIsConst && rightIsConst -> constant(invoke(p1.getConstant(), p2.getConstant()), p1.type)
+            leftIsConst && rightIsConst -> constant(invoke(p1.getConstant(), p2.getConstant()))
             p1 is AlgebraicUnaryScalar && p1.op == negate && p2 is AlgebraicUnaryScalar && p2.op == negate -> p1.value / p2.value
             p2 is AlgebraicBinaryScalar && p2.op == pow -> p1 * pow(p2.left, -p2.right)
             else -> null

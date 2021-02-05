@@ -288,7 +288,9 @@ fun looksLikeColumnName(tag : String) : Boolean {
 }
 
 fun cellNameToCoordinate(tag: String): Coordinate {
-    assert(looksLikeCellName(tag))
+    assert(looksLikeCellName(tag)) {
+        "$tag doesn't look like a cell name"
+    }
     val column = cellNameToColumnIndex(tag)
     val row = cellNameToRowIndex(tag)
     return coordinate(

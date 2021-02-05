@@ -21,7 +21,7 @@ class DiscreteUniformRandomVariable(
     override fun sample(random: Random): ConstantScalar {
         val index = random.nextInt(values.size)
         val sample = values[index]
-        return ConstantScalar(sample, type)
+        return ConstantScalar(sample)
     }
 
     operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
@@ -31,17 +31,23 @@ class DiscreteUniformRandomVariable(
         val max = values.maxByOrNull { it } ?: 0.0
         return "random($min to $max)"
     }
+
+    fun copy(values: List<Double> = this.values, type: AlgebraicType = this.type): Nothing =
+        error("Shouldn't copy DiscreteUniformRandomVariable")
 }
 
 class ScalarStatistic(
     val statistic : StreamingSamples,
     override val type : AlgebraicType
 ) : ScalarExpr {
-    override fun toString() : String {
+    override fun toString(): String {
         return type.render(statistic.median)
 //        if (statistic.count == 1) return type.render(statistic.median)
 //        return type.render(statistic.mean) + "±" + type.render(statistic.stddev)
     }
+
+    fun copy(statistic: StreamingSamples = this.statistic, type: AlgebraicType = this.type) =
+        ScalarStatistic(statistic, type)
 }
 
 fun randomOf(range : Pair<Double, Double>, step : Double = 1.0) : DiscreteUniformRandomVariable {

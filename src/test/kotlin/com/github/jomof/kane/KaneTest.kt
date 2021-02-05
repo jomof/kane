@@ -127,9 +127,19 @@ class KaneTest {
         val b by variable()
         val t by variable()
         val error by 0.5 * pow(t - ((m * x) + b), 2.0)
-        val dm by differentiate(d(error)/d(m))
+        val dm by differentiate(d(error) / d(m))
         dm.assertString("dm=-(t-(m*x+b))*x")
     }
+
+    @Test
+    fun `repro rearrange constants issue`() {
+        val x by variable()
+        val m by variable()
+        val error by 0.5 * pow(m * x, 2.0)
+        val dm by differentiate(d(error) / d(m))
+        dm.assertString("dm=m*x²")
+    }
+
 
     @Test
     fun `render formulas`() {

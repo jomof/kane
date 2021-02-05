@@ -1,7 +1,6 @@
 package com.github.jomof.kane.sheet
 
 import com.github.jomof.kane.*
-import com.github.jomof.kane.types.AlgebraicType
 
 
 /**
@@ -37,14 +36,16 @@ fun MatrixExpr.describe(name: Id = "matrix"): Sheet {
     val cells = mutableMapOf<Id, Expr>()
     for (row in Kane.unaryStatisticsFunctions.indices) {
         val result = Kane.unaryStatisticsFunctions[row].lookupStatistic(statistic)
-        cells[coordinate(0, row)] = constant(result, type)
+        cells[coordinate(0, row)] = constant(result)
     }
     return Sheet.of(
         cells = cells.toCells(),
         rowDescriptors = rowDescriptors,
         columnDescriptors = columnDescriptors,
         sheetDescriptor = SheetDescriptor()
-    ).limitOutputLines(Kane.unaryStatisticsFunctions.size)
+    )
+        .limitOutputLines(Kane.unaryStatisticsFunctions.size)
+        .showExcelColumnTags(false)
 }
 
 /**
@@ -61,15 +62,15 @@ fun Sheet.describe(): Sheet {
         if (columnInfo.type!!.type.java != Double::class.java) continue
         relevantColumns += column
         val statistic = statistics[column]
-        val type = columnInfo.type.type as AlgebraicType
         for (row in Kane.unaryStatisticsFunctions.indices) {
             val result = Kane.unaryStatisticsFunctions[row].lookupStatistic(statistic)
-            cells[coordinate(column, row)] = constant(result, type)
+            cells[coordinate(column, row)] = constant(result)
         }
     }
     return copy(cells = cells.toCells(), rowDescriptors = rowDescriptors)
         .ordinalColumns(relevantColumns)
         .limitOutputLines(Kane.unaryStatisticsFunctions.size)
+        .showExcelColumnTags(false)
 }
 
 private fun Sheet.columnStatistics(): List<StreamingSamples> {

@@ -16,7 +16,7 @@ private class TanhFunction : AlgebraicUnaryScalarFunction {
         exprd : ScalarExpr,
         variable : ScalarExpr
     ): ScalarExpr {
-        return constant(1.0, expr.type) - pow(tanh(expr), 2.0) * exprd
+        return constant(1.0) - pow(tanh(expr), 2.0) * exprd
     }
 }
 

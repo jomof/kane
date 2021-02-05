@@ -52,13 +52,19 @@ fun Expr.visit(f: (expr : Expr) -> Unit) {
         is AlgebraicUnaryMatrix -> value.visit(f)
         is AlgebraicUnaryMatrixScalar -> value.visit(f)
         is CoerceScalar -> value.visit(f)
+        is RetypeScalar -> scalar.visit(f)
+        is RetypeMatrix -> matrix.visit(f)
         is NamedScalar -> scalar.visit(f)
         is NamedScalarAssign -> right.visit(f)
         is NamedMatrixAssign -> right.visit(f)
         is NamedMatrix -> matrix.visit(f)
         is NamedUntypedScalar -> expr.visit(f)
         is DataMatrix -> elements.forEach { it.visit(f) }
-        is AlgebraicDeferredDataMatrix -> data.visit(f)
+        is AlgebraicDeferredDataMatrix -> {
+            left.visit(f)
+            right.visit(f)
+            data.visit(f)
+        }
         is Tableau -> children.forEach { it.visit(f) }
         is NamedTiling<*> -> {
         }

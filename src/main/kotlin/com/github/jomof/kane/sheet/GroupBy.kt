@@ -34,7 +34,7 @@ class GroupBy(
             }
             val a1 by columnOf(keySelector.map { "${it.toUnnamed()}" })
             listOf(a1)
-        }
+        }.showExcelColumnTags(false)
     }
 
     val html: String get() = descriptiveSheet().html

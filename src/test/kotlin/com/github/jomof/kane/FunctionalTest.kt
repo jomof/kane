@@ -8,7 +8,7 @@ import org.junit.Test
 class FunctionalTest {
     @Test
     fun ordinalRows() {
-        val zoo = readCsv("data/zoo.csv")
+        val zoo = readCsv("data/zoo.csv").showExcelColumnTags(false)
         println(zoo)
         val picked = zoo.ordinalRows(2, 3, 4)
         println(picked)
@@ -31,7 +31,7 @@ class FunctionalTest {
 
     @Test
     fun head() {
-        val zoo = readCsv("data/zoo.csv")
+        val zoo = readCsv("data/zoo.csv").showExcelColumnTags(false)
         println(zoo)
         val head = zoo.head()
         println(head)
@@ -48,7 +48,7 @@ class FunctionalTest {
 
     @Test
     fun tail() {
-        val zoo = readCsv("data/zoo.csv")
+        val zoo = readCsv("data/zoo.csv").showExcelColumnTags(false)
         println(zoo)
         val tail = zoo.tail()
         println(tail)
@@ -69,20 +69,22 @@ class FunctionalTest {
         println(zoo)
         val sample = zoo.sample()
         println(sample)
-        sample.assertString("""
-                animal  uniq_id water_need 
-               -------- ------- ---------- 
-             3 elephant    1003        550 
-             5    tiger    1005        320 
-             7    tiger    1007        290 
-            12    zebra    1012        230 
-            16     lion    1016        420 
-        """.trimIndent())
+        sample.assertString(
+            """
+           animal [A] uniq_id [B] water_need [C] 
+           ---------- ----------- -------------- 
+         3   elephant        1003            550 
+         5      tiger        1005            320 
+         7      tiger        1007            290 
+        12      zebra        1012            230 
+        16       lion        1016            420 
+        """.trimIndent()
+        )
     }
 
     @Test
     fun getColumns() {
-        val zoo = readCsv("data/zoo.csv")
+        val zoo = readCsv("data/zoo.csv").showExcelColumnTags(false)
         println(zoo)
         val cols = zoo["animal", "water_need"]
         println(cols)
@@ -106,7 +108,7 @@ class FunctionalTest {
 
     @Test
     fun `get columns by Excel-like name`() {
-        val zoo = readCsv("data/zoo.csv")
+        val zoo = readCsv("data/zoo.csv").showExcelColumnTags(false)
         val cols = zoo["B", "C"]
         println(cols)
         cols.assertString("""
@@ -134,9 +136,9 @@ class FunctionalTest {
         }
         filtered.assertString(
             """
-              animal uniq_id water_need 
-              ------ ------- ---------- 
-            5  tiger    1005        320 
+          animal [A] uniq_id [B] water_need [C] 
+          ---------- ----------- -------------- 
+        5      tiger        1005            320 
         """.trimIndent()
         )
     }

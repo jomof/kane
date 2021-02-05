@@ -28,7 +28,7 @@ private fun GroupBy.buildAggregation(builder: SheetBuilderImpl): Sheet {
             column++
         }
         result
-    }
+    }.showExcelColumnTags(false)
 }
 
 fun GroupBy.aggregate(selector: SheetBuilder.() -> List<NamedExpr>): Sheet {

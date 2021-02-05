@@ -2,7 +2,6 @@ package com.github.jomof.kane.sheet
 
 import com.github.jomof.kane.*
 import com.github.jomof.kane.functions.*
-import com.github.jomof.kane.types.DoubleAlgebraicType
 
 
 private class ReplaceNamesWithCellReferences(val excluding: Id) {
@@ -18,7 +17,7 @@ private class ReplaceNamesWithCellReferences(val excluding: Id) {
                         CoerceScalar(
                             SheetRangeExpr(
                                 name.toComputableCoordinate()
-                            ), DoubleAlgebraicType.kaneType
+                            )
                         )
                     }
 
@@ -32,7 +31,7 @@ private class ReplaceNamesWithCellReferences(val excluding: Id) {
                         CoerceScalar(
                             SheetRangeExpr(
                                 name.toComputableCoordinate()
-                            ), type
+                            )
                         )
                     }
 //                    scalar is ConstantScalar -> {
@@ -79,6 +78,8 @@ private class ReplaceNamesWithCellReferences(val excluding: Id) {
             is ValueExpr<*> -> this
             is Tiling<*> -> this
             is DataMatrix -> map { it.replace() }
+            is RetypeScalar -> copy(scalar = scalar.replace())
+            is RetypeMatrix -> copy(matrix = matrix.replace())
             else ->
                 error("$javaClass")
         }

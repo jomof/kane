@@ -17,6 +17,11 @@ private fun Expr.ranges(): Set<SheetRange> {
         is NamedMatrix -> matrix.ranges()
         is NamedUntypedScalar -> expr.ranges()
         is AlgebraicUnaryMatrix -> value.ranges()
+        is AlgebraicDeferredDataMatrix -> {
+            left.ranges()
+            right.ranges()
+            data.ranges()
+        }
         is AlgebraicUnaryMatrixScalar -> value.ranges()
         is AlgebraicUnaryScalar -> value.ranges()
         is NamedScalar -> scalar.ranges()
@@ -25,6 +30,8 @@ private fun Expr.ranges(): Set<SheetRange> {
         is AlgebraicBinaryMatrixScalar -> left.ranges() + right.ranges()
         is AlgebraicBinaryScalar -> left.ranges() + right.ranges()
         is CoerceScalar -> value.ranges()
+        is RetypeScalar -> scalar.ranges()
+        is RetypeMatrix -> matrix.ranges()
         is NamedSheetRangeExpr -> range.ranges()
         is SheetRangeExpr -> when (range) {
             is ColumnRange -> setOf(range)

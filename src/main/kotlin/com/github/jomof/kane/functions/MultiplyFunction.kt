@@ -24,7 +24,7 @@ private class MultiplyFunction : AlgebraicBinaryScalarFunction {
             leftIsConst && p1.getConstant() == 1.0 -> p2
             leftIsConst && p1.getConstant() == -1.0 -> -p2
             rightIsConst && p2.getConstant() == -1.0 -> -p1
-            leftIsConst && rightIsConst -> constant(p1.getConstant() * p2.getConstant(), type(p1.type, p2.type))
+            leftIsConst && rightIsConst -> constant(p1.getConstant() * p2.getConstant())
             p1 is AlgebraicUnaryScalar && p1.op == negate -> {
                 // -(x*y)*z -> -(x*y*z)
                 -(p1.value * p2)

@@ -176,6 +176,7 @@ private fun AlgebraicExpr.linearizeExpr(model : LinearModel = LinearModel(type))
     val result = when (this) {
         is Slot -> this
         is ConstantScalar -> this
+        is RetypeScalar -> copy(scalar = scalar.linearizeExpr(model) as ScalarExpr)
         is AlgebraicUnaryScalarStatistic ->
             when (value) {
                 is AlgebraicExpr -> copy(value = value.linearizeExpr(model) as ScalarExpr)
@@ -318,6 +319,7 @@ private fun AlgebraicExpr.evalSpace(space : DoubleArray) : Double {
         is NamedScalar -> scalar.evalSpace(space)
         is AlgebraicBinaryScalar -> op.doubleOp(left.evalSpace(space), right.evalSpace(space))
         is AlgebraicUnaryScalar -> op.doubleOp(value.evalSpace(space))
+        is RetypeScalar -> getConstant()
         else ->
             error("$javaClass")
     }
@@ -352,6 +354,7 @@ private fun AlgebraicExpr.stripNames() : AlgebraicExpr {
         is NamedScalarVariable -> this
         is NamedMatrixVariable -> this
         is DiscreteUniformRandomVariable -> this
+        is RetypeScalar -> scalar.self()
         is NamedMatrix -> matrix.self()
         is NamedScalar -> scalar.self()
         is AlgebraicUnaryScalarStatistic -> copy(value = value)
@@ -380,22 +383,21 @@ private fun AlgebraicExpr.stripNames() : AlgebraicExpr {
     }
 }
 
-private fun Expr.terminal() : Boolean = when (this) {
-    is ConstantScalar -> true
-    is Slot -> true
-    is NamedScalarVariable -> true
-    is MatrixVariableElement -> true
-    is AlgebraicBinaryScalar -> false
-    is AlgebraicUnaryScalar -> false
-    is AlgebraicUnaryScalarStatistic -> false
-    is DiscreteUniformRandomVariable -> true
-    is CoerceScalar -> false
-    else ->
-        error("$javaClass")
-}
+private fun Expr.terminal(): Boolean =
+    canGetConstant() || when (this) {
+        is Slot -> true
+        is NamedScalarVariable -> true
+        is MatrixVariableElement -> true
+        is DiscreteUniformRandomVariable -> true
+        is AlgebraicBinaryScalar -> false
+        is AlgebraicUnaryScalar -> false
+        is RetypeScalar -> false
+        else ->
+            error("$javaClass")
+    }
 
 fun AlgebraicExpr.rollUpCommonSubexpressions(model : LinearModel) : AlgebraicExpr {
-    return object : RewritingVisitor() {
+    return object : RewritingVisitor(assertTypeChange = false) {
         override fun rewrite(expr: AlgebraicUnaryScalar): Expr {
             if (expr.value.terminal()) return expr.linearizeExpr(model) as ScalarExpr
             return super.rewrite(expr)
@@ -404,6 +406,10 @@ fun AlgebraicExpr.rollUpCommonSubexpressions(model : LinearModel) : AlgebraicExp
         override fun rewrite(expr: AlgebraicBinaryScalar): Expr {
             if (expr.left.terminal() && expr.right.terminal()) return expr.linearizeExpr(model) as ScalarExpr
             return super.rewrite(expr)
+        }
+
+        override fun rewrite(expr: RetypeScalar): Expr {
+            return super.rewrite(expr.scalar)
         }
 
         override fun rewrite(expr: SheetRangeExpr): Expr {

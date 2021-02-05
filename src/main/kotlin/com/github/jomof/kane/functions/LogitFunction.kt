@@ -16,7 +16,7 @@ private class LogitFunction : AlgebraicUnaryScalarFunction {
         exprd : ScalarExpr,
         variable : ScalarExpr
     ): ScalarExpr {
-        return logit(expr) * (constant(1.0, expr.type) - logit(expr)) * exprd
+        return logit(expr) * (constant(1.0) - logit(expr)) * exprd
     }
 }
 

@@ -6,6 +6,7 @@ import com.github.jomof.kane.types.AlgebraicType
 import com.github.jomof.kane.types.DollarAlgebraicType
 import com.github.jomof.kane.types.DollarsAndCentsAlgebraicType
 import com.github.jomof.kane.types.DoubleAlgebraicType
+import kotlin.math.min
 import kotlin.reflect.KProperty
 
 // f(scalar,scalar)->scalar (extended to matrix 1<->1 mapping)
@@ -14,31 +15,31 @@ interface AlgebraicBinaryScalarFunction {
     operator fun invoke(p1 : Double, p2 : Double) = doubleOp(p1, p2)
     fun doubleOp(p1 : Double, p2 : Double) : Double
     operator fun  invoke(p1 : ScalarExpr, p2 : ScalarExpr) : ScalarExpr =
-        AlgebraicBinaryScalar(this, p1, p2)
+        binaryOf(this, p1, p2)
     operator fun  invoke(p1 : UntypedScalar, p2 : ScalarExpr) : ScalarExpr =
-        AlgebraicBinaryScalar(this, CoerceScalar(p1, p2.type), p2)
+        binaryOf(this, CoerceScalar(p1), p2)
     operator fun  invoke(p1 : UntypedScalar, p2 : UntypedScalar) : ScalarExpr =
-        AlgebraicBinaryScalar(this, CoerceScalar(p1, DoubleAlgebraicType.kaneType), CoerceScalar(p2, DoubleAlgebraicType.kaneType))
+        binaryOf(this, CoerceScalar(p1), CoerceScalar(p2))
     operator fun  invoke(p1 : ScalarExpr, p2 : UntypedScalar) : ScalarExpr =
-        AlgebraicBinaryScalar(this, p1, CoerceScalar(p2, p1.type))
+        binaryOf(this, p1, CoerceScalar(p2))
     operator fun  invoke(p1 : UntypedScalar, p2 : Double) : ScalarExpr =
-        AlgebraicBinaryScalar(this, CoerceScalar(p1, DoubleAlgebraicType.kaneType), constant(p2))
+        binaryOf(this, CoerceScalar(p1), constant(p2))
     operator fun  invoke(p1 : Double, p2 : UntypedScalar) : ScalarExpr =
-        AlgebraicBinaryScalar(this, constant(p1), CoerceScalar(p2, DoubleAlgebraicType.kaneType))
+        binaryOf(this, constant(p1), CoerceScalar(p2))
     operator fun  invoke(p1 : MatrixExpr, p2 : ScalarExpr) : MatrixExpr =
         AlgebraicBinaryMatrixScalar(this, p1.columns, p1.rows, p1, p2)
     operator fun  invoke(p1 : Double, p2 : MatrixExpr) : MatrixExpr =
-        AlgebraicBinaryScalarMatrix(this, p2.columns, p2.rows, constant(p1, p2.type), p2)
+        AlgebraicBinaryScalarMatrix(this, p2.columns, p2.rows, constant(p1), p2)
     operator fun  invoke(p1 : ScalarExpr, p2 : MatrixExpr) : MatrixExpr =
         AlgebraicBinaryScalarMatrix(this, p2.columns, p2.rows, p1, p2)
     operator fun  invoke(p1 : MatrixExpr, p2 : MatrixExpr) : MatrixExpr =
-        AlgebraicBinaryMatrix(this, p2.columns, p2.rows, p1, p2)
+        AlgebraicBinaryMatrix(this, min(p1.columns, p2.columns), min(p1.rows, p2.rows), p1, p2)
     operator fun  invoke(p1 : MatrixExpr, p2 : Double) : MatrixExpr =
         AlgebraicBinaryMatrixScalar(this, p1.columns, p1.rows, p1, constant(p2))
     operator fun  invoke(p1 : Double, p2 : ScalarExpr) : ScalarExpr = invoke(constant(p1), p2)
     operator fun  invoke(p1 : ScalarExpr, p2 : Double) : ScalarExpr = invoke(p1, constant(p2))
     operator fun  invoke(p1 : MatrixExpr, p2 : UntypedScalar) : MatrixExpr =
-        AlgebraicBinaryMatrixScalar(this, p1.columns, p1.rows, p1, CoerceScalar(p2, p1.type))
+        AlgebraicBinaryMatrixScalar(this, p1.columns, p1.rows, p1, CoerceScalar(p2))
     fun type(left : AlgebraicType, right : AlgebraicType) : AlgebraicType {
         return when {
             left == DollarAlgebraicType.kaneType -> DollarAlgebraicType.kaneType
@@ -57,19 +58,25 @@ interface AlgebraicBinaryScalarFunction {
         variable : ScalarExpr) : ScalarExpr
 }
 
-
-fun  binaryScalar(op : AlgebraicBinaryScalarFunction,
-                            left : ScalarExpr,
-                            right : ScalarExpr) : ScalarExpr {
-    return op.reduceArithmetic(left, right) ?: AlgebraicBinaryScalar(op, left, right)
+fun binaryOf(op: AlgebraicBinaryScalarFunction, left: ScalarExpr, right: ScalarExpr): ScalarExpr {
+    val type = op.type(left.type, right.type)
+    val binary = AlgebraicBinaryScalar(op, left, right)
+//    if (type == DoubleAlgebraicType.kaneType) return binary
+//    return RetypeScalar(binary, type)
+    return binary
 }
 
 data class AlgebraicBinaryScalar(
     val op: AlgebraicBinaryScalarFunction,
     val left: ScalarExpr,
-    val right: ScalarExpr,
-    override val type: AlgebraicType = op.type(left.type, right.type),
+    val right: ScalarExpr
 ) : ScalarExpr, ParentExpr<Double> {
+    init {
+        assert(type == DoubleAlgebraicType.kaneType) {
+            "what"
+        }
+    }
+
     private val hashCode = op.hashCode() * 3 + left.hashCode() * 7 + right.hashCode() * 9
     override fun hashCode() = hashCode
 
@@ -108,26 +115,29 @@ data class AlgebraicBinaryMatrixScalar(
     override val columns: Int,
     override val rows: Int,
     val left: MatrixExpr,
-    val right: ScalarExpr
+    val right: ScalarExpr,
+    override val type: AlgebraicType = op.type(left.type, right.type)
 ) : MatrixExpr {
     init {
         track()
     }
-
-    override val type get() = op.type(left.type, right.type)
     override fun get(column: Int, row: Int) = AlgebraicBinaryScalar(op, left[column, row], right)
     operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = render()
 }
 
 data class AlgebraicBinaryScalarMatrix(
-    val op : AlgebraicBinaryScalarFunction,
+    val op: AlgebraicBinaryScalarFunction,
     override val columns: Int,
     override val rows: Int,
-    val left : ScalarExpr,
-    val right : MatrixExpr) : MatrixExpr {
-    init { track() }
-    override val type get() = op.type(left.type, right.type)
+    val left: ScalarExpr,
+    val right: MatrixExpr,
+    override val type: AlgebraicType = op.type(left.type, right.type)
+) : MatrixExpr {
+    init {
+        track()
+    }
+
     override fun get(column: Int, row: Int) = AlgebraicBinaryScalar(op, left, right[column, row])
     override fun toString() = render()
 }
@@ -137,13 +147,17 @@ data class AlgebraicBinaryMatrix(
     override val columns: Int,
     override val rows: Int,
     val left: MatrixExpr,
-    val right: MatrixExpr
+    val right: MatrixExpr,
+    override val type: AlgebraicType = op.type(left.type, right.type)
 ) : MatrixExpr {
     init {
         track()
+        assert(left.rows >= rows)
+        assert(left.columns >= columns)
+        assert(right.rows >= rows)
+        assert(right.columns >= columns)
     }
 
-    override val type get() = op.type(left.type, right.type)
     override fun get(column: Int, row: Int) = AlgebraicBinaryScalar(op, left[column, row], right[column, row])
     override fun toString() = render()
     operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
@@ -152,14 +166,25 @@ data class AlgebraicBinaryMatrix(
 // f(scalar)->scalar
 interface AlgebraicUnaryScalarFunction {
     val meta: UnaryOp
+    val type: AlgebraicType? get() = null
+    private fun wrap(expr: ScalarExpr): ScalarExpr {
+        if (type == null) return expr
+        return RetypeScalar(expr, type!!)
+    }
+
+    private fun wrap(expr: MatrixExpr): MatrixExpr {
+        if (type == null) return expr
+        return RetypeMatrix(expr, type!!)
+    }
+
     operator fun invoke(value: Double) = doubleOp(value)
     fun doubleOp(value: Double): Double
-    operator fun invoke(value: ScalarExpr): ScalarExpr = AlgebraicUnaryScalar(this, value, value.type)
-    operator fun invoke(value: MatrixExpr): MatrixExpr = AlgebraicUnaryMatrix(this, value)
+    operator fun invoke(value: ScalarExpr): ScalarExpr = wrap(AlgebraicUnaryScalar(this, value))
+    operator fun invoke(value: MatrixExpr): MatrixExpr = wrap(AlgebraicUnaryMatrix(this, value))
     fun reduceArithmetic(value: ScalarExpr): ScalarExpr? {
         val isConstValue = value.canGetConstant()
         return when {
-            isConstValue -> constant(doubleOp(value.getConstant()), value.type)
+            isConstValue -> wrap(constant(doubleOp(value.getConstant())))
             else -> null
         }
     }
@@ -169,8 +194,7 @@ interface AlgebraicUnaryScalarFunction {
 
 data class AlgebraicUnaryScalar(
     val op: AlgebraicUnaryScalarFunction,
-    val value: ScalarExpr,
-    override val type: AlgebraicType
+    val value: ScalarExpr
 ) : ScalarExpr, ParentExpr<Double> {
     init {
         track()
@@ -181,13 +205,14 @@ data class AlgebraicUnaryScalar(
     override fun toString() = render()
     fun copy(value: ScalarExpr): AlgebraicUnaryScalar {
         return if (value === this.value) return this
-        else AlgebraicUnaryScalar(op, value, type)
+        else AlgebraicUnaryScalar(op, value)
     }
 }
 
 data class AlgebraicUnaryMatrix(
     val op: AlgebraicUnaryScalarFunction,
-    val value: MatrixExpr
+    val value: MatrixExpr,
+    override val type: AlgebraicType = value.type
 ) : MatrixExpr {
     init {
         track()
@@ -195,8 +220,7 @@ data class AlgebraicUnaryMatrix(
 
     override val columns get() = value.columns
     override val rows get() = value.rows
-    override val type get() = value.type
-    override fun get(column: Int, row: Int) = AlgebraicUnaryScalar(op, value[column, row], type)
+    override fun get(column: Int, row: Int) = AlgebraicUnaryScalar(op, value[column, row])
     operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = render()
 }
@@ -214,12 +238,11 @@ interface AlgebraicUnaryScalarStatisticFunction {
     operator fun invoke(expr: UntypedScalar): ScalarExpr =
         AlgebraicUnaryScalarStatistic(
             this,
-            CoerceScalar(expr, DoubleAlgebraicType.kaneType),
-            DoubleAlgebraicType.kaneType
+            CoerceScalar(expr)
         )
 
     operator fun invoke(expr: AlgebraicExpr): ScalarExpr =
-        AlgebraicUnaryScalarStatistic(this, expr, DoubleAlgebraicType.kaneType)
+        AlgebraicUnaryScalarStatistic(this, expr)
 
     operator fun invoke(expr: Expr): Expr = when (expr) {
         is AlgebraicExpr -> invoke(expr)
@@ -229,7 +252,7 @@ interface AlgebraicUnaryScalarStatisticFunction {
     }
 
     fun lookupStatistic(statistic: StreamingSamples): Double
-    fun reduceArithmetic(value: ScalarStatistic) = constant(lookupStatistic(value.statistic), value.type)
+    fun reduceArithmetic(value: ScalarStatistic) = constant(lookupStatistic(value.statistic))
     fun reduceArithmetic(elements: List<ScalarExpr>): ScalarExpr? {
         if (elements.isEmpty()) return null
         if (!elements.all { it.canGetConstant() }) return null
@@ -253,8 +276,7 @@ interface AlgebraicUnaryScalarStatisticFunction {
 
 data class AlgebraicUnaryScalarStatistic(
     val op: AlgebraicUnaryScalarStatisticFunction,
-    val value: AlgebraicExpr,
-    override val type: AlgebraicType
+    val value: AlgebraicExpr
 ) : ScalarExpr {
     init {
         track()
@@ -263,17 +285,6 @@ data class AlgebraicUnaryScalarStatistic(
     override fun toString() = render()
 }
 
-//data class AlgebraicUnaryRangeStatistic(
-//    val op: AlgebraicUnaryScalarStatisticFunction,
-//    val range: SheetRangeExpr
-//) : UntypedScalar {
-//    init {
-//        track()
-//    }
-//
-//    operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
-//    override fun toString() = "${op.meta.op}($range)"
-//}
 
 // f(scalar statistic, scalar)->scalar
 interface AlgebraicBinaryScalarStatisticFunction {
@@ -308,8 +319,6 @@ data class AlgebraicBinaryScalarStatistic(
     init {
         track()
     }
-
-    override val type get() = left.type
     override fun toString() = render()
 }
 
@@ -348,13 +357,13 @@ data class AlgebraicUnaryMatrixScalar(
 
 // f(expr, expr) -> matrix
 data class AlgebraicDeferredDataMatrix(
-    val op : BinaryOp,
-    val left : TypedExpr<Double>,
-    val right : TypedExpr<Double>,
-    val data : DataMatrix
+    val op: BinaryOp,
+    val left: TypedExpr<Double>,
+    val right: TypedExpr<Double>,
+    val data: DataMatrix,
+    override val type: AlgebraicType = data.type
 ) : MatrixExpr {
     init { track() }
-    override val type = data.type
     override val columns = data.columns
     override val rows = data.rows
     override fun get(column: Int, row: Int) = data[column, row]

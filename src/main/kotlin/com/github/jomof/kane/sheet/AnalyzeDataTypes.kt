@@ -2,6 +2,7 @@ package com.github.jomof.kane.sheet
 
 import com.github.jomof.kane.ConstantScalar
 import com.github.jomof.kane.Expr
+import com.github.jomof.kane.RetypeScalar
 import com.github.jomof.kane.ValueExpr
 import com.github.jomof.kane.types.*
 import java.text.NumberFormat
@@ -164,7 +165,7 @@ fun analyzeDataTypes(
 
 fun <T : Any> AdmissibleDataType<T>.parseToExpr(value: String): Expr {
     return when (val parsed = tryParse(value)!!) {
-        is Double -> ConstantScalar(parsed, type as AlgebraicType)
+        is Double -> RetypeScalar(ConstantScalar(parsed), type as AlgebraicType)
         else -> ValueExpr(parsed, type as KaneType<Any>)
     }
 }

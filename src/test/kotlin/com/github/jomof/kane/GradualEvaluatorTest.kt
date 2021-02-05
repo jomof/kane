@@ -217,14 +217,14 @@ class GradualEvaluatorTest {
         val filtered = bmi.filterRows { row -> row["gender"] == "male" }
         filtered.assertString(
             """
-                  date     height    weight  gender   bmi  
-               ---------- -------- --------- ------ ------ 
-             1 2000-01-01 42.84998 157.50055   male C1/B1² 
-             2 2000-01-02 49.60731 177.34041   male C2/B2² 
-             3 2000-01-03 56.29353 171.52464   male C3/B3² 
-             5 2000-01-05 46.55688 152.52621   male C4/B4² 
-             7 2000-01-07  70.7577 136.43147   male C5/B5² 
-            10 2000-01-10 45.30612 177.54092   male C6/B6²
+                date [A]  height [B] weight [C] gender [D] bmi [E] 
+               ---------- ---------- ---------- ---------- ------- 
+             1 2000-01-01   42.84998  157.50055       male  C1/B1² 
+             2 2000-01-02   49.60731  177.34041       male  C2/B2² 
+             3 2000-01-03   56.29353  171.52464       male  C3/B3² 
+             5 2000-01-05   46.55688  152.52621       male  C4/B4² 
+             7 2000-01-07    70.7577  136.43147       male  C5/B5² 
+            10 2000-01-10   45.30612  177.54092       male  C6/B6² 
             """.trimIndent()
         )
         filtered.eval().assertString(

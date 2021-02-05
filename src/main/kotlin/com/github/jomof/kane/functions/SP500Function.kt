@@ -4,6 +4,7 @@ import com.github.jomof.kane.ScalarExpr
 import com.github.jomof.kane.UnaryOp
 import com.github.jomof.kane.canGetConstant
 import com.github.jomof.kane.getConstant
+import com.github.jomof.kane.types.PercentAlgebraicType
 import com.github.jomof.kane.types.percent
 
 // %gain, including dividends at end of year
@@ -110,6 +111,7 @@ private val SP500 by UnaryOp()
 
 private class SP500Function : AlgebraicUnaryScalarFunction {
     override val meta = SP500
+    override val type = PercentAlgebraicType.kaneType
     override fun doubleOp(value: Double) = sp500(value.toInt())
 
     override fun reduceArithmetic(value: ScalarExpr) : ScalarExpr? {

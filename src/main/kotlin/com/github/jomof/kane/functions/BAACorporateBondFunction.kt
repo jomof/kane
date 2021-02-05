@@ -4,6 +4,7 @@ import com.github.jomof.kane.ScalarExpr
 import com.github.jomof.kane.UnaryOp
 import com.github.jomof.kane.canGetConstant
 import com.github.jomof.kane.getConstant
+import com.github.jomof.kane.types.PercentAlgebraicType
 import com.github.jomof.kane.types.percent
 
 // %gain at end of year
@@ -110,6 +111,7 @@ private val BAACORPORATEBOND by UnaryOp()
 
 private class BAACorporateBondFunctionFunction : AlgebraicUnaryScalarFunction {
     override val meta = BAACORPORATEBOND
+    override val type = PercentAlgebraicType.kaneType
     override fun doubleOp(value: Double) = baaCorporateBond(value.toInt())
 
     override fun reduceArithmetic(value: ScalarExpr): ScalarExpr? {

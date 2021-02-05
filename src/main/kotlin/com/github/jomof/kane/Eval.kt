@@ -3,15 +3,16 @@ package com.github.jomof.kane
 import com.github.jomof.kane.ComputableIndex.MoveableIndex
 import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.sheet.*
+import com.github.jomof.kane.types.DoubleAlgebraicType
 import com.github.jomof.kane.visitor.RewritingVisitor
 
 private val reduceNamedMatrix = object : RewritingVisitor() {
     override fun rewrite(expr: NamedMatrix) = expr.matrix
 }
 
-private class ReduceAlgebraicBinaryScalar(memo: MutableMap<Expr, Expr>) : RewritingVisitor(memo) {
+private class ReduceAlgebraicBinaryScalar : RewritingVisitor(assertTypeChange = false) {
     override fun rewrite(expr: AlgebraicBinaryScalar): Expr {
-        return when (val sub = super.rewrite(expr)) {
+        val result = when (val sub = super.rewrite(expr)) {
             is AlgebraicBinaryScalar -> when {
                 sub.left is ScalarListExpr && sub.right is ScalarListExpr ->
                     ScalarListExpr((sub.left.values zip sub.right.values).map { (l, r) ->
@@ -23,55 +24,89 @@ private class ReduceAlgebraicBinaryScalar(memo: MutableMap<Expr, Expr>) : Rewrit
                 sub.left is ScalarListExpr -> sub.left.copy(sub.left.values.map { sub.copy(left = it) })
                 sub.right is ScalarListExpr -> sub.right.copy(sub.right.values.map { sub.copy(right = it) })
                 else -> {
+                    val type = sub.op.type(sub.left.type, sub.right.type)
                     val reduced = sub.op.reduceArithmetic(sub.left, sub.right)
-                    reduced ?: sub
+                    val typed =
+                        if (reduced != null && type != DoubleAlgebraicType.kaneType)
+                            RetypeScalar(reduced, type)
+                        else reduced
+                    typed ?: sub
                 }
             }
             else -> sub
         }
+        return result
     }
 }
 
-private class ReduceAlgebraicUnaryScalar(memo: MutableMap<Expr, Expr>) : RewritingVisitor(memo) {
+private class ReduceAlgebraicUnaryScalar : RewritingVisitor(assertTypeChange = false) {
     override fun rewrite(expr: AlgebraicUnaryScalar): Expr {
         return when (val sub = super.rewrite(expr)) {
             is AlgebraicUnaryScalar -> when (sub.value) {
                 is ScalarListExpr -> sub.value.copy(sub.value.values.map { sub.copy(it) })
+                is RetypeScalar -> {
+                    val reduced = sub.op.reduceArithmetic(sub.value)
+                    if (reduced == null) sub
+                    else sub.value.copy(scalar = reduced)
+                }
                 else -> sub.op.reduceArithmetic(sub.value) ?: sub
             }
             else -> sub
         }
     }
+
+    override fun rewrite(expr: RetypeScalar): Expr {
+        return when (val scalar = scalar(expr.scalar)) {
+            is CoerceScalar -> when (scalar.value) {
+                is SheetRangeExpr -> expr
+                else ->
+                    error("${scalar.value.javaClass}")
+            }
+            is ScalarListExpr -> scalar.copy(scalar.values.map { expr.copy(scalar = it) })
+            is ConstantScalar ->
+                if (expr.scalar === scalar) return expr
+                else expr.copy(scalar = scalar)
+            else -> if (scalar === expr.scalar) return expr else expr.copy(scalar = scalar)
+        }
+    }
 }
-private val reduceAlgebraicBinaryMatrix = object : RewritingVisitor() {
+
+private val reduceAlgebraicBinaryMatrix = object : RewritingVisitor(assertTypeChange = false) {
     override fun rewrite(expr: AlgebraicBinaryMatrix): Expr = with(expr) {
         val left = left.toDataMatrix()
         val right = right.toDataMatrix()
         assert(left.columns == right.columns)
         assert(left.rows == right.rows)
         return DataMatrix(left.columns, left.rows, (left.elements zip right.elements).map { (l, r) ->
-            AlgebraicBinaryScalar(op, l, r, op.type(l.type, r.type))
+            binaryOf(op, l, r)
         })
     }
 }
 private val reduceAlgebraicUnaryMatrix = object : RewritingVisitor() {
     override fun rewrite(expr: AlgebraicUnaryMatrix) = expr.value.map {
-        AlgebraicUnaryScalar(expr.op, it, expr.value.type)
+        AlgebraicUnaryScalar(expr.op, it)
     }
 }
-private val reduceAlgebraicUnaryScalarStatistic = object : RewritingVisitor() {
+private val reduceAlgebraicUnaryScalarStatistic = object : RewritingVisitor(assertTypeChange = false) {
     override fun rewrite(expr: AlgebraicUnaryScalarStatistic): Expr = with(expr) {
-        return op.reduceArithmetic(value) ?: super.rewrite(expr)
+        return when (expr.value) {
+            is RetypeScalar -> rewrite(expr.value.copy(expr.copy(value = expr.value.scalar)))
+            else -> op.reduceArithmetic(value) ?: super.rewrite(expr)
+        }
     }
 }
 
-private val reduceAlgebraicBinaryScalarStatistic = object : RewritingVisitor() {
+private val reduceAlgebraicBinaryScalarStatistic = object : RewritingVisitor(assertTypeChange = false) {
     override fun rewrite(expr: AlgebraicBinaryScalarStatistic): Expr = with(expr) {
 
         return when {
             left is ScalarStatistic -> op.reduceArithmetic(left, right)
             left is ScalarListExpr -> op.reduceArithmetic(left.values, right) ?: expr
             left is NamedScalar && left.scalar is ScalarStatistic -> op.reduceArithmetic(left.scalar, right)
+            left is RetypeScalar && left.scalar is ScalarStatistic -> {
+                val result = left.copy(scalar = op.reduceArithmetic(left.scalar, right))
+                result
+            }
             else ->
                 error("${left.javaClass}")
         }
@@ -79,8 +114,7 @@ private val reduceAlgebraicBinaryScalarStatistic = object : RewritingVisitor() {
 }
 
 private val reduceNakedScalarStatistic = object : RewritingVisitor() {
-    override fun rewrite(expr: ScalarStatistic) =
-        constant(expr.statistic.median, expr.type)
+    override fun rewrite(expr: ScalarStatistic) = constant(expr.statistic.median)
 }
 
 private class ReduceRandomVariables(val variables: Map<RandomVariableExpr, ConstantScalar>) :
@@ -108,24 +142,30 @@ private class ReduceNamedVariables(
     val namedVariableLookup: Cells
 ) : RewritingVisitor() {
     private var recursionDetected = false
+
+    override fun rewrite(expr: NamedMatrix): Expr = with(expr) {
+        if (excludeVariables.contains(expr.name)) return expr
+        return matrix(matrix)
+    }
+
     override fun rewrite(expr: NamedScalar): Expr {
         if (excludeVariables.contains(expr.name)) return expr
         val lookup = namedVariableLookup[expr.name] ?: return expr.scalar
-        if (lookup is ScalarVariable) return constant(lookup.initial, expr.type)
+        if (lookup is ScalarVariable) return constant(lookup.initial)
         return lookup
     }
 
     override fun rewrite(expr: NamedScalarVariable): Expr {
         if (!reduceVariables) return expr
         if (excludeVariables.contains(expr.name)) return expr
-        val lookup = namedVariableLookup[expr.name] ?: return constant(expr.initial, expr.type)
-        if (lookup is ScalarVariable) return constant(lookup.initial, expr.type)
+        val lookup = namedVariableLookup[expr.name] ?: return constant(expr.initial)
+        if (lookup is ScalarVariable) return constant(lookup.initial)
         return lookup
     }
 
     override fun rewrite(expr: MatrixVariableElement): Expr {
         if (!reduceVariables) return expr
-        return constant(expr.matrix[expr.column, expr.row].initial, expr.type)
+        return constant(expr.matrix[expr.column, expr.row].initial)
     }
 
     override fun beginRewrite(expr: Expr, depth: Int) {
@@ -157,15 +197,24 @@ private val reduceCoerceScalar = object : RewritingVisitor() {
     override fun rewrite(expr: CoerceScalar): Expr {
         return when (expr.value) {
             is Sheet ->
-                ScalarListExpr(expr.value.cells.map { expr.copy(value = it.value) }, expr.type)
+                ScalarListExpr(expr.value.cells.map { it.value as ScalarExpr }, expr.type)
             is SheetRangeExpr -> expr
             else -> error("${expr.value.javaClass}")
         }
     }
 }
 
+private val reduceRetypeOfRetype = object : RewritingVisitor(assertTypeChange = false) {
+    override fun rewrite(expr: RetypeScalar): Expr {
+        if (expr.scalar is RetypeScalar)
+            return RetypeScalar(scalar = expr.scalar.scalar, type = expr.type)
+        return super.rewrite(expr)
+    }
+}
+
+
 private fun Expr.expandSheetCells(sheet: Sheet, excludeVariables: Set<Id>): Expr {
-    return object : RewritingVisitor() {
+    return object : RewritingVisitor(assertTypeChange = false) {
         override fun rewrite(expr: AlgebraicBinaryRangeStatistic): Expr = with(expr) {
             val leftRewritten = rewrite(left)
             val rightRewritten = scalar(right)
@@ -177,11 +226,23 @@ private fun Expr.expandSheetCells(sheet: Sheet, excludeVariables: Set<Id>): Expr
             }
         }
 
+        override fun rewrite(expr: AlgebraicBinaryScalar): Expr = with(expr) {
+            val leftRewritten = scalar(left)
+            val rightRewritten = scalar(right)
+            if (leftRewritten === left && rightRewritten === right) return this
+            val op = copy(
+                left = leftRewritten,
+                right = rightRewritten
+            )
+            val newImpliedType = expr.op.type(leftRewritten.type, rightRewritten.type)
+            if (newImpliedType == DoubleAlgebraicType.kaneType) return op
+            return RetypeScalar(op, newImpliedType)
+        }
+
         override fun rewrite(expr: CoerceScalar): Expr = with(expr) {
             val rewritten = rewrite(value)
             if (rewritten === value) return this
-            if (rewritten is ScalarExpr && type == rewritten.type) return rewritten
-            return copy(value = rewritten)
+            return rewritten
         }
 
         override fun rewrite(expr: SheetRangeExpr): Expr = with(expr) {
@@ -197,14 +258,15 @@ private fun Expr.expandSheetCells(sheet: Sheet, excludeVariables: Set<Id>): Expr
                     null -> return expr
                     // is ScalarExpr -> return result
                     is ConstantScalar -> return result
-                    is ScalarVariable -> return constant(result.initial, result.type)
+                    is ScalarVariable -> return constant(result.initial)
+                    is RetypeScalar -> return if (result.canGetConstant()) result else this
                     else -> return this
                 }
             }
             val list = sheet.cells.toMap().filter { range.contains(it.key) }.map {
                 val result = when (val value = it.value) {
                     is ConstantScalar -> value
-                    is ScalarVariable -> constant(value.initial, value.type)
+                    is ScalarVariable -> constant(value.initial)
                     else ->
                         return this
                 }
@@ -220,8 +282,11 @@ private fun Expr.expandSheetCells(sheet: Sheet, excludeVariables: Set<Id>): Expr
 
 private class ReduceProvidedSheetRangeExprs(val rangeExprProvider: RangeExprProvider) :
     RewritingVisitor() {
-    override fun rewrite(expr: SheetRangeExpr) =
-        rangeExprProvider.range(expr)
+    override fun rewrite(expr: SheetRangeExpr): Expr {
+        val result = rangeExprProvider.range(expr)
+        return result
+    }
+
 }
 
 private class ExpandSheetCells(val excludeVariables: Set<Id>) : RewritingVisitor() {
@@ -254,6 +319,9 @@ private fun Expr.accumulateStatistics(incoming: Expr) {
         }
         this is AlgebraicUnaryScalarStatistic && incoming is AlgebraicUnaryScalarStatistic -> {
             value.accumulateStatistics(incoming.value)
+        }
+        this is RetypeScalar && incoming is RetypeScalar -> {
+            this.scalar.accumulateStatistics(incoming.scalar)
         }
         this is AlgebraicUnaryScalar && incoming is AlgebraicUnaryScalar -> {
             this.value.accumulateStatistics(incoming.value)
@@ -304,8 +372,8 @@ private fun Expr.evalGradualSingleSample(
     val reduceRandomVariables = ReduceRandomVariables(randomVariableValues)
     val expandSheetCells = ExpandSheetCells(excludeVariables)
     val reduceProvidedSheetRangeExprs = ReduceProvidedSheetRangeExprs(rangeExprProvider)
-    val reduceAlgebraicBinaryScalar = ReduceAlgebraicBinaryScalar(memo)
-    val reduceAlgebraicUnaryScalar = ReduceAlgebraicUnaryScalar(memo)
+    val reduceAlgebraicBinaryScalar = ReduceAlgebraicBinaryScalar()
+    val reduceAlgebraicUnaryScalar = ReduceAlgebraicUnaryScalar()
     while (true) {
         if (--allowedReductions == 0) error("Reduction took too long")
         val namedVariableLookup = if (last is Sheet) last.cells else Cells(mapOf())
@@ -319,7 +387,8 @@ private fun Expr.evalGradualSingleSample(
         val reducedAlgebraicBinaryScalar = reduceAlgebraicBinaryScalar(reducedAlgebraicUnaryScalar)
         val reducedProvidedSheetRangeExprs = reduceProvidedSheetRangeExprs(reducedAlgebraicBinaryScalar)
         val expandedSheetCells = expandSheetCells(reducedProvidedSheetRangeExprs)
-        val reducedCoerceScalar = reduceCoerceScalar(expandedSheetCells)
+        val reducedRetypeOfRetype = reduceRetypeOfRetype(expandedSheetCells)
+        val reducedCoerceScalar = reduceCoerceScalar(reducedRetypeOfRetype)
 
         if (reducedCoerceScalar === last) {
             if (this is NamedExpr && reducedCoerceScalar !is NamedExpr) {
@@ -372,9 +441,7 @@ fun Expr.eval(
     )
     var stats: Expr? = null
     val randomVariableElements = randomVariables.map { variable ->
-        (variable as DiscreteUniformRandomVariable).values.map { value ->
-            constant(value, variable.type)
-        }
+        (variable as DiscreteUniformRandomVariable).values.map { value -> constant(value) }
     }
 
     val reduced = evalGradualSingleSample(
@@ -423,7 +490,7 @@ fun Sheet.eval(
     rangeExprProvider: RangeExprProvider = NopRangeExprProvider(),
     reduceVariables: Boolean = false,
     excludeVariables: Set<Id> = setOf(),
-) = (this as Expr).eval(rangeExprProvider, reduceVariables, excludeVariables) as Sheet
+) = ((this as Expr).eval(rangeExprProvider, reduceVariables, excludeVariables) as Sheet).showExcelColumnTags(false)
 
 fun ScalarExpr.eval(
     rangeExprProvider: RangeExprProvider = NopRangeExprProvider(),

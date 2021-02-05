@@ -102,7 +102,7 @@ class SheetTest {
             listOf(b1)
         }.eval()
         println(plan)
-        plan["B1"].assertString("$16")
+        plan["B1"].assertString("\$16.54")
     }
 
     @Test
@@ -131,10 +131,10 @@ class SheetTest {
         }
         sheet.assertString(
             """
-              A   B   columnC 
-              - ----- ------- 
-            1 0               
-            2   C1*D2            
+          A   B   columnC [C] 
+          - ----- ----------- 
+        1 0                   
+        2   C1*D2            
         """.trimIndent()
         )
     }
@@ -156,12 +156,12 @@ class SheetTest {
         }
         sheet.assertString(
             """
-              x B    C   
-              - - ------ 
-            1 1   m*A1+b 
-            2 2   m*A2+b 
-            b=0
-            m=0
+          x [A] B    C   
+          ----- - ------ 
+        1     1   m*A1+b 
+        2     2   m*A2+b 
+        b=0
+        m=0
         """.trimIndent()
         )
     }
@@ -209,12 +209,12 @@ class SheetTest {
         }
         sheet.assertString(
             """
-              x prediction 
-              - ---------- 
-            1 1     m*A1+b 
-            2 2     m*A2+b 
-            b=0
-            m=0
+          x [A] prediction [B] 
+          ----- -------------- 
+        1     1         m*A1+b 
+        2     2         m*A2+b 
+        b=0
+        m=0
         """.trimIndent()
         )
     }
@@ -237,12 +237,12 @@ class SheetTest {
         }
         sheet.assertString(
             """
-              x prediction   error  
-              - ---------- -------- 
-            1 1     m*A1+b m*A1+b-5 
-            2 2     m*A2+b m*A2+b-5 
-            b=0
-            m=0
+          x [A] prediction [B] error [C] 
+          ----- -------------- --------- 
+        1     1         m*A1+b  m*A1+b-5 
+        2     2         m*A2+b  m*A2+b-5 
+        b=0
+        m=0
         """.trimIndent()
         )
     }
@@ -262,11 +262,11 @@ class SheetTest {
         }
         sheet.assertString(
             """
-              x 
-              - 
-            1 1 
-            2 2 
-            total=sum(A)
+          x [A] 
+          ----- 
+        1     1 
+        2     2 
+        total=sum(A)
         """.trimIndent()
         )
     }
@@ -338,8 +338,10 @@ class SheetTest {
             val a3 by a1 * a2
             val a4 by up(3) * a2
             val a5 by a1 * up(3)
+            val x = a2
             listOf(a3, a4, a5)
         }
+        println(sheet)
         val evaluated = sheet.eval()
         println(evaluated)
         evaluated["A1"].assertString("15%")
@@ -459,10 +461,10 @@ class SheetTest {
         }
         retire.assertString(
             """
-              cats dogs  sum  
-              ---- ---- ----- 
-            1    1    2 A1+B1 
-            2    3    4 A2+B2
+              cats [A] dogs [B] sum [C] 
+              -------- -------- ------- 
+            1        1        2   A1+B1 
+            2        3        4   A2+B2 
             """.trimIndent()
         )
     }
@@ -664,12 +666,12 @@ class SheetTest {
         }
         sheet.assertString(
             """
-              tiling 
-              ------ 
-            1      a 
-            2      b 
-            3      c 
-        """.trimIndent()
+              tiling [A] 
+              ---------- 
+            1          a 
+            2          b 
+            3          c 
+            """.trimIndent()
         )
     }
 
@@ -1216,74 +1218,93 @@ class SheetTest {
 
     }
 
-
     @Test
-    fun `cells shouldn't expand unnecessarily`() {
-        val start = 2021
-        val end = start + 4
-        val allYears = end - start + 1
-        val modelStartYear by randomOf(1928.0 to 2019.0)
-        val pre1 by dollars(25)
-        val pre2 by dollars(25)
-        val initialPreTax by pre1 + pre2
-        val post1 by dollars(250)
-        val post2 by dollars(25)
-        val initialPostTax by post1 + post2
-
+    fun `repro matrix out of range issue`() {
         val retire = sheetOf {
-            val stockRatio by percent(0.7)
-            val years by columnOf(allYears) { constant(start + it) }
-            val j by years - 1969
-            val modelYear by years - start + modelStartYear
-            val stock by sp500(modelYear)
-            val bond by baaCorporateBond(modelYear)
-            val inflation by usInflation(modelYear)
-            val mult by 1.0 + stock * stockRatio + bond * (1.0 - stockRatio)
-            val preTax by initialPreTax stack (mult * up)
-            val postTax by initialPostTax stack (mult * up)
-            val total by preTax + postTax
-            listOf(years, j, modelYear, stock, bond, inflation, mult, preTax, postTax, total)
+            val a by columnOf(2) { 1.0 }
+            val b by a * (1.0 stack a * up)
+            listOf(a, b)
         }
         retire.assertString(
             """
-              years    j            modelYear          stock           bond            inflation                   mult                 preTax    postTax   total 
-              ----- ------- ------------------------ --------- -------------------- --------------- --------------------------------- --------- ----------- ----- 
-            1  2021 A1-1969 (A1-2021)+modelStartYear sp500(C1) baacorporatebond(C1) usinflation(C1) 1+D1*stockRatio+E1*(1-stockRatio) pre1+pre2 post1+post2 H1+I1 
-            2  2022 A2-1969 (A2-2021)+modelStartYear sp500(C2) baacorporatebond(C2) usinflation(C2) 1+D2*stockRatio+E2*(1-stockRatio)     G1*H1       G1*I1 H2+I2 
-            3  2023 A3-1969 (A3-2021)+modelStartYear sp500(C3) baacorporatebond(C3) usinflation(C3) 1+D3*stockRatio+E3*(1-stockRatio)     G2*H2       G2*I2 H3+I3 
-            4  2024 A4-1969 (A4-2021)+modelStartYear sp500(C4) baacorporatebond(C4) usinflation(C4) 1+D4*stockRatio+E4*(1-stockRatio)     G3*H3       G3*I3 H4+I4 
-            5  2025 A5-1969 (A5-2021)+modelStartYear sp500(C5) baacorporatebond(C5) usinflation(C5) 1+D5*stockRatio+E5*(1-stockRatio)     G4*H4       G4*I4 H5+I5 
-            6                                                                                                                             G5*H5       G5*I5 H6+I6 
-            initialPostTax=post1+post2
-            initialPreTax=pre1+pre2
-            modelStartYear=random(1928.0 to 2019.0)
-            post1=${'$'}250
-            post2=${'$'}25
-            pre1=${'$'}25
-            pre2=${'$'}25
-            stockRatio=70%
+          a     b    
+          - -------- 
+        1 1     A1*1 
+        2 1 A2*A1*B1 
         """.trimIndent()
         )
         retire.eval().assertString(
             """
-              years  j modelYear stock bond inflation mult preTax postTax total 
-              ----- -- --------- ----- ---- --------- ---- ------ ------- ----- 
-            1  2021 52      1974   14%   6%        3% 113%    ${'$'}50    ${'$'}275  ${'$'}325 
-            2  2022 53      1975   14%   6%        3% 112%    ${'$'}56    ${'$'}309  ${'$'}365 
-            3  2023 54      1976   14%   6%        3% 112%    ${'$'}60    ${'$'}334  ${'$'}395 
-            4  2024 55      1977   14%   6%        3% 112%    ${'$'}66    ${'$'}367  ${'$'}433 
-            5  2025 56      1978   14%   7%        3% 112%    ${'$'}72    ${'$'}396  ${'$'}468 
-            6                                                 ${'$'}80    ${'$'}443  ${'$'}523 
-            initialPostTax=${'$'}275
-            initialPreTax=${'$'}50
-            modelStartYear=1974
-            post1=${'$'}250
-            post2=${'$'}25
-            pre1=${'$'}25
-            pre2=${'$'}25
-            stockRatio=70%
+          a b 
+          - - 
+        1 1 1 
+        2 1 1 
         """.trimIndent()
         )
+    }
+
+    @Test
+    fun `repro percent type propagates`() {
+
+        val retire = sheetOf {
+            val years by columnOf(1) { it }
+            val preTax by dollars(1) + dollars(1) stack (years + up)
+            val total by preTax + preTax
+            val preTaxRatio by percent(preTax / total)
+            val x = preTaxRatio
+            listOf(preTaxRatio)
+        }
+        println(retire)
+        val evaled = retire.eval()
+        println(evaled)
+        evaled["A2"].assertString("50%")
+    }
+
+
+    @Test
+    fun `cells shouldn't expand unnecessarily`() {
+        val start = 2021
+        val end = start + 5
+        val allYears = end - start + 1
+        val retirementYear = 2023
+        val modelStartYear by randomOf(1928.0 to 2019.0)
+        val pre1 by dollars(500_000)
+        val pre2 by dollars(500_000)
+        val initialPreTax by pre1 + pre2
+        val post1 by dollars(500_000)
+        val post2 by dollars(500_000)
+        val initialPostTax by post1 + post2
+        val initialPreTaxSave by dollars(26_000) * 2.0
+        val initialPostTaxSave by dollars(48_000)
+        val initialRetirementSpend by dollars(180_000)
+        val steepness = 10000.0
+
+        val retire = sheetOf {
+            val equit by percent(0.7)
+            val years by columnOf(allYears) { constant(start + it) }
+            val j by years - 1969
+            val modelYear by years - start + modelStartYear
+            val retired by logit(steepness * ((years - 0.5) - retirementYear))
+            val working by 1.0 - retired
+            val stock by sp500(modelYear)
+            val bond by baaCorporateBond(modelYear)
+            val inflation by usInflation(modelYear)
+            val preTaxSavings by working * (initialPreTaxSave stack ((1.0 + inflation) * up))
+            val postTaxSavings by working * (initialPostTaxSave stack ((1.0 + inflation) * up))
+            val spend by (initialRetirementSpend stack ((1.0 + inflation) * up))
+            val retirementSpend by spend * retired
+            val mult by 1.0 + stock * equit + bond * (1.0 - equit)
+            val preTax by (initialPreTax stack (mult * up + preTaxSavings))
+            val postTax by initialPostTax stack (mult * up + postTaxSavings)
+            val total by preTax + postTax
+            val preTaxRatio by percent(preTax / total)
+            listOf(
+                years, j, retired, working, modelYear, stock, bond, inflation, mult, preTax,
+                postTax, total, preTaxSavings, postTaxSavings, spend, retirementSpend, preTaxRatio
+            )
+        }
+        println(retire)
+        println(retire.eval())
     }
 
 }

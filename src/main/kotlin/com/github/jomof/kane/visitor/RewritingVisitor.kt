@@ -5,7 +5,7 @@ import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.sheet.*
 
 open class RewritingVisitor(
-    val memo: MutableMap<Expr, Expr>? = null
+    val assertTypeChange: Boolean = true
 ) {
     private var depth = 0
     protected val checkIdentity = false
@@ -15,10 +15,23 @@ open class RewritingVisitor(
         else copy(value = rewritten)
     }
 
+    open fun rewrite(expr: RetypeScalar): Expr = with(expr) {
+        val rewritten = scalar(scalar)
+        return if (rewritten === scalar) this
+        else copy(scalar = rewritten)
+    }
+
+    open fun rewrite(expr: RetypeMatrix): Expr = with(expr) {
+        val rewritten = matrix(matrix)
+        return if (rewritten === matrix) this
+        else copy(matrix = rewritten)
+    }
+
     open fun rewrite(expr: ScalarStatistic): Expr = expr
     open fun rewrite(expr: ConstantScalar): Expr = expr
     open fun rewrite(expr: DiscreteUniformRandomVariable): Expr = expr
     open fun rewrite(expr: SheetRangeExpr): Expr = expr
+    open fun rewrite(expr: SheetBuilderRange): Expr = expr
     open fun rewrite(expr: Tiling<*>): Expr = expr
     open fun rewrite(expr: ValueExpr<*>): Expr = expr
     open fun rewrite(expr: NamedScalarVariable): Expr = expr
@@ -214,18 +227,11 @@ open class RewritingVisitor(
         try {
             ++depth
             beginRewrite(expr, depth)
-            when (expr) {
-                is ConstantScalar -> return rewrite(expr)
-                is DiscreteUniformRandomVariable -> return rewrite(expr)
-                is ScalarStatistic -> return rewrite(expr)
-            }
-            if (memo != null) {
-                val lookup = memo[expr]
-                if (lookup != null) {
-                    return lookup
-                }
-            }
+
             val result = when (expr) {
+                is ConstantScalar -> rewrite(expr)
+                is DiscreteUniformRandomVariable -> rewrite(expr)
+                is ScalarStatistic -> rewrite(expr)
                 is AlgebraicBinaryMatrix -> rewrite(expr)
                 is AlgebraicBinaryMatrixScalar -> rewrite(expr)
                 is AlgebraicBinaryRangeStatistic -> rewrite(expr)
@@ -255,16 +261,21 @@ open class RewritingVisitor(
                 is NamedScalarAssign -> rewrite(expr)
                 is NamedMatrixAssign -> rewrite(expr)
                 is Tableau -> rewrite(expr)
+                is SheetBuilderRange -> rewrite(expr)
+                is RetypeScalar -> rewrite(expr)
+                is RetypeMatrix -> rewrite(expr)
                 else -> error("${expr.javaClass}")
+            }
+            if (assertTypeChange && expr.canGetType() && result.canGetType()) {
+                assert(expr.type == result.type) {
+                    "Unexpected type change"
+                }
             }
             if (checkIdentity && result !== expr) {
                 assert(result != expr) {
                     rewrite(expr)
                     "Change for no reason"
                 }
-            }
-            if (memo != null && result !== expr) {
-                memo[expr] = result
             }
             return result
         } finally {

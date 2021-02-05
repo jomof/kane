@@ -174,7 +174,7 @@ val Sheet.types : Sheet get() {
         val b1 by columnOf(descriptors.map { it.type!!.type.simpleName })
         val c1 by columnOf(descriptors.map { it.type.toString() })
         listOf(a1, b1, c1)
-    }
+    }.showExcelColumnTags(false)
 }
 
 
@@ -184,8 +184,20 @@ val Sheet.types : Sheet get() {
 val Expr.type: KaneType<*>
     get() = when (this) {
         is Sheet -> if (columns == 1) columnType(0).type else String::class.java.kaneType
+        is SheetRangeExpr -> String::class.java.kaneType
+        is AlgebraicExpr -> type
         else -> error("$javaClass")
     }
+
+/**
+ * Get the type of an expression.
+ */
+fun Expr.canGetType() = when (this) {
+    is Sheet -> false
+    is SheetRangeExpr -> false
+    is AlgebraicExpr -> true
+    else -> false
+}
 
 
 /**

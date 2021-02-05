@@ -1,7 +1,6 @@
 package com.github.jomof.kane
 
 import com.github.jomof.kane.sheet.SheetBuilderImpl
-import com.github.jomof.kane.types.DoubleAlgebraicType
 import com.github.jomof.kane.types.KaneType
 import com.github.jomof.kane.types.kaneType
 import kotlin.reflect.KProperty
@@ -23,7 +22,7 @@ data class Tiling<E : Any>(
 
     fun getUnnamedElement(coordinate: Coordinate): Expr {
         return when (val element = data[coordinate.row * columns + coordinate.column]) {
-            is Double -> ConstantScalar(element, DoubleAlgebraicType.kaneType)
+            is Double -> ConstantScalar(element)
             else -> ValueExpr(element, element.javaClass.kaneType)
         }
     }

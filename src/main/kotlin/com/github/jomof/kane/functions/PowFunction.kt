@@ -17,9 +17,9 @@ private class PowFunction : AlgebraicBinaryScalarFunction {
             leftIsConst && p1.getConstant() == 0.0 -> p1
             leftIsConst && p1.getConstant() == -0.0 -> p1
             rightIsConst && p2.getConstant() == 1.0 -> p1
-            rightIsConst && p2.getConstant() == 0.0 -> ConstantScalar(1.0, p1.type)
-            rightIsConst && p2.getConstant() == -0.0 -> ConstantScalar(1.0, p1.type)
-            leftIsConst && rightIsConst -> constant(invoke(p1.getConstant(), p2.getConstant()), p1.type)
+            rightIsConst && p2.getConstant() == 0.0 -> ConstantScalar(1.0)
+            rightIsConst && p2.getConstant() == -0.0 -> ConstantScalar(1.0)
+            leftIsConst && rightIsConst -> constant(invoke(p1.getConstant(), p2.getConstant()))
             p1 is AlgebraicBinaryScalar && p1.op == pow ->
                 pow(p1.left, p2 * p1.right)
             else -> null

@@ -81,24 +81,24 @@ class GroupByTest {
         val gb = measurements.groupBy("gender")
         gb["male"].assertString(
             """
-                  date     height    weight  gender 
-               ---------- -------- --------- ------ 
-             1 2000-01-01 42.84998 157.50055   male 
-             2 2000-01-02 49.60731 177.34041   male 
-             3 2000-01-03 56.29353 171.52464   male 
-             5 2000-01-05 46.55688 152.52621   male 
-             7 2000-01-07  70.7577 136.43147   male 
-            10 2000-01-10 45.30612 177.54092   male
+            date [A]  height [B] weight [C] gender [D] 
+           ---------- ---------- ---------- ---------- 
+         1 2000-01-01   42.84998  157.50055       male 
+         2 2000-01-02   49.60731  177.34041       male 
+         3 2000-01-03   56.29353  171.52464       male 
+         5 2000-01-05   46.55688  152.52621       male 
+         7 2000-01-07    70.7577  136.43147       male 
+        10 2000-01-10   45.30612  177.54092       male 
         """.trimIndent()
         )
         gb["female"].assertString(
             """
-                 date     height    weight  gender 
-              ---------- -------- --------- ------ 
-            4 2000-01-04 48.42108 144.25199 female 
-            6 2000-01-06 68.44885 168.27297 female 
-            8 2000-01-08  58.9095 176.49975 female 
-            9 2000-01-09 76.43563  174.0941 female
+           date [A]  height [B] weight [C] gender [D] 
+          ---------- ---------- ---------- ---------- 
+        4 2000-01-04   48.42108  144.25199     female 
+        6 2000-01-06   68.44885  168.27297     female 
+        8 2000-01-08    58.9095  176.49975     female 
+        9 2000-01-09   76.43563   174.0941     female 
         """.trimIndent()
         )
     }
@@ -108,7 +108,7 @@ class GroupByTest {
         val bmi = measurements.copy {
             val bmi by range("weight") / pow(range("height"), 2.0)
             listOf(bmi)
-        }
+        }.showExcelColumnTags(false)
         bmi.head().assertString(
             """
                  date     height    weight  gender   bmi  
@@ -144,14 +144,14 @@ class GroupByTest {
         val filtered = bmi.filterRows { row -> row["gender"] == "male" }
         filtered.assertString(
             """
-                  date     height    weight  gender   bmi  
-               ---------- -------- --------- ------ ------ 
-             1 2000-01-01 42.84998 157.50055   male C1/B1² 
-             2 2000-01-02 49.60731 177.34041   male C2/B2² 
-             3 2000-01-03 56.29353 171.52464   male C3/B3² 
-             5 2000-01-05 46.55688 152.52621   male C4/B4² 
-             7 2000-01-07  70.7577 136.43147   male C5/B5² 
-            10 2000-01-10 45.30612 177.54092   male C6/B6²
+                date [A]  height [B] weight [C] gender [D] bmi [E] 
+               ---------- ---------- ---------- ---------- ------- 
+             1 2000-01-01   42.84998  157.50055       male  C1/B1² 
+             2 2000-01-02   49.60731  177.34041       male  C2/B2² 
+             3 2000-01-03   56.29353  171.52464       male  C3/B3² 
+             5 2000-01-05   46.55688  152.52621       male  C4/B4² 
+             7 2000-01-07    70.7577  136.43147       male  C5/B5² 
+            10 2000-01-10   45.30612  177.54092       male  C6/B6² 
             """.trimIndent()
         )
         filtered.eval().assertString(
