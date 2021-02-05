@@ -79,7 +79,18 @@ class DocumentationTest {
         /**
          * You can get a list of data formats supported by using Kane.dataFormats
          */
-        println(Kane.dataFormats)
+        Kane.dataFormats.assertString(
+            """
+                         format               type       
+                  -------------------- ----------------- 
+                1               double            double 
+                2    currency (${'$'}1,000)            dollar 
+                3 currency (${'$'}1,000.12) dollars and cents 
+                4  yyyy-MM-dd HH:mm:ss              date 
+                5           yyyy-MM-dd              date 
+                6               string            String 
+            """.trimIndent()
+        )
     }
 
     @Test

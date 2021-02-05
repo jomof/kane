@@ -16,7 +16,7 @@ class Kane {
             val a1 by columnOf(possibleDataFormats.map { it.toString() })
             val b1 by columnOf(possibleDataFormats.map { it.type.simpleName })
             listOf(a1, b1)
-        }
+        }.showExcelColumnTags(false)
 
         /**
          * List of statistics functions that take one parameter.
