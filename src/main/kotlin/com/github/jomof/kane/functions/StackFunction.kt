@@ -6,8 +6,8 @@ val STACK = BinaryOp(op = " stack ", precedence = 5, associative = true, infix =
 
 // Stack Matrix function
 private fun stackMatrix(
-    leftDisplay: TypedExpr<Double>,
-    rightDisplay: TypedExpr<Double>,
+    leftDisplay: AlgebraicExpr,
+    rightDisplay: AlgebraicExpr,
     left: MatrixExpr,
     right: MatrixExpr
 ): MatrixExpr {

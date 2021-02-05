@@ -73,8 +73,8 @@ open class RewritingVisitor {
     }
 
     open fun rewrite(expr: AlgebraicDeferredDataMatrix): Expr = with(expr) {
-        val leftRewritten = rewrite(expr.left) as TypedExpr<Double>
-        val rightRewritten = rewrite(expr.right) as TypedExpr<Double>
+        val leftRewritten = algebraic(expr.left)
+        val rightRewritten = algebraic(expr.right)
         val dataRewritten = rewrite(expr.data) as DataMatrix
         if (leftRewritten === left && rightRewritten === right && dataRewritten === data) return this
         else copy(left = leftRewritten, right = rightRewritten, data = dataRewritten)

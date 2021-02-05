@@ -177,11 +177,7 @@ private fun AlgebraicExpr.linearizeExpr(model : LinearModel = LinearModel(type))
         is Slot -> this
         is ConstantScalar -> this
         is RetypeScalar -> copy(scalar = scalar.linearizeExpr(model) as ScalarExpr)
-        is AlgebraicUnaryScalarStatistic ->
-            when (value) {
-                is AlgebraicExpr -> copy(value = value.linearizeExpr(model) as ScalarExpr)
-                else -> error("${value.javaClass}")
-            }
+        is AlgebraicUnaryScalarStatistic -> copy(value = value.linearizeExpr(model) as ScalarExpr)
         is AlgebraicBinaryScalarStatistic -> copy(
             left = left.linearizeExpr(model) as ScalarExpr,
             right = right.linearizeExpr(model) as ScalarExpr,

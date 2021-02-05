@@ -342,8 +342,8 @@ data class AlgebraicUnaryMatrixScalar(
 // f(expr, expr) -> matrix
 data class AlgebraicDeferredDataMatrix(
     val op: BinaryOp,
-    val left: TypedExpr<Double>,
-    val right: TypedExpr<Double>,
+    val left: AlgebraicExpr,
+    val right: AlgebraicExpr,
     val data: DataMatrix,
     override val type: AlgebraicType = data.type
 ) : MatrixExpr {

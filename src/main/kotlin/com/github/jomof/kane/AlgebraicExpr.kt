@@ -13,12 +13,14 @@ import kotlin.reflect.KProperty
 
 interface Expr
 interface UntypedScalar : Expr
-interface TypedExpr<E:Any> : Expr {
-    val type : KaneType<E>
+interface TypedExpr<E : Any> : Expr {
+    val type: KaneType<E>
 }
-interface AlgebraicExpr : TypedExpr<Double> {
-    override val type: AlgebraicType get() = DoubleAlgebraicType.kaneType
+
+interface AlgebraicExpr : Expr {
+    val type: AlgebraicType get() = DoubleAlgebraicType.kaneType
 }
+
 interface ScalarExpr : AlgebraicExpr
 
 interface MatrixExpr : AlgebraicExpr {
