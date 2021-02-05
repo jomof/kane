@@ -1,8 +1,13 @@
-package com.github.jomof.kane.impl.sheet
+package com.github.jomof.kane
 
 import com.github.jomof.kane.impl.Coordinate
 import com.github.jomof.kane.impl.Identifier
 import com.github.jomof.kane.impl.coordinate
+import com.github.jomof.kane.impl.sheet.Sheet
+import com.github.jomof.kane.impl.sheet.SheetRangeExpr
+import com.github.jomof.kane.impl.sheet.columnName
+import com.github.jomof.kane.impl.sheet.rowName
+
 
 /**
  * Render the sheet as HTML
@@ -49,7 +54,7 @@ val Sheet.html: String
         sb.append("</table>\n")
 
         // Non-cell data
-        val nonCells = cells.filter { !(it.key is Coordinate) }
+        val nonCells = cells.filter { it.key !is Coordinate }
         if (nonCells.isNotEmpty()) {
             nonCells.toMap().toList().sortedBy { Identifier.string(it.first) }.forEach {
                 if (it.second !is SheetRangeExpr) {

@@ -3,7 +3,6 @@ package com.github.jomof.kane
 
 import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.impl.*
-import com.github.jomof.kane.impl.sheet.describe
 import com.github.jomof.kane.impl.types.dollars
 import com.github.jomof.kane.impl.types.kaneDouble
 import org.junit.Test

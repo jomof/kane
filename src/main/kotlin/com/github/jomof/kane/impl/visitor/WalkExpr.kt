@@ -1,7 +1,7 @@
 package com.github.jomof.kane.impl.visitor
 
-import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.impl.*
+import com.github.jomof.kane.impl.functions.*
 import com.github.jomof.kane.impl.sheet.*
 
 internal fun Expr.visit(f: (expr: Expr) -> Unit) {

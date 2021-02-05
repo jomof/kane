@@ -1,5 +1,8 @@
-package com.github.jomof.kane.functions
+package com.github.jomof.kane.impl.functions
 
+import com.github.jomof.kane.describe
+import com.github.jomof.kane.filterRows
+import com.github.jomof.kane.get
 import com.github.jomof.kane.impl.*
 import com.github.jomof.kane.impl.sheet.*
 import com.github.jomof.kane.impl.types.AlgebraicType

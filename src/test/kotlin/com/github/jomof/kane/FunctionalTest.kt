@@ -1,8 +1,6 @@
 package com.github.jomof.kane
 
-import com.github.jomof.kane.functions.mean
-import com.github.jomof.kane.functions.median
-import com.github.jomof.kane.impl.sheet.*
+import com.github.jomof.kane.impl.sheet.ordinalRows
 import org.junit.Test
 
 class FunctionalTest {

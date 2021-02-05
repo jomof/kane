@@ -1,7 +1,11 @@
 package com.github.jomof.kane.functions
 
 import com.github.jomof.kane.impl.*
-import com.github.jomof.kane.impl.sheet.SheetRange
+import com.github.jomof.kane.impl.functions.AlgebraicBinaryScalar
+import com.github.jomof.kane.impl.functions.AlgebraicBinaryScalarFunction
+import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalar
+import com.github.jomof.kane.minus
+import com.github.jomof.kane.plus
 
 val MINUS by BinaryOp(op = "-", precedence = 4, infix = true)
 
@@ -37,19 +41,3 @@ private class SubtractFunction : AlgebraicBinaryScalarFunction {
 }
 
 val subtract : AlgebraicBinaryScalarFunction = SubtractFunction()
-
-// Minus
-operator fun <E : Number> ScalarExpr.minus(right: E) = subtract(this, right.toDouble())
-operator fun <E : Number> E.minus(right: ScalarExpr) = subtract(this.toDouble(), right)
-operator fun ScalarExpr.minus(right: ScalarExpr) = subtract(this, right)
-operator fun <E : Number> MatrixExpr.minus(right: E) = subtract(this, right.toDouble())
-operator fun MatrixExpr.minus(right: ScalarExpr) = subtract(this, right)
-operator fun <E : Number> E.minus(right: MatrixExpr) = subtract(this.toDouble(), right)
-operator fun ScalarExpr.minus(right: MatrixExpr) = subtract(this, right)
-operator fun MatrixExpr.minus(right: MatrixExpr) = subtract(this, right)
-operator fun ScalarExpr.minus(right: SheetRange) = subtract(this, right)
-operator fun SheetRange.minus(right: ScalarExpr) = subtract(this, right)
-operator fun <E : Number> SheetRange.minus(right: E) = subtract(this, right.toDouble())
-operator fun <E : Number> E.minus(right: SheetRange) = subtract(this.toDouble(), right)
-operator fun SheetRange.minus(right: SheetRange) = subtract(this, right)
-operator fun MatrixExpr.minus(right: SheetRange) = subtract(this, right)

@@ -2,6 +2,7 @@ package com.github.jomof.kane.functions
 
 import com.github.jomof.kane.impl.ScalarExpr
 import com.github.jomof.kane.impl.UnaryOp
+import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalarFunction
 
 val D by UnaryOp()
 

@@ -2,13 +2,16 @@
 
 package com.github.jomof.kane.impl
 
+import com.github.jomof.kane.eval
 import com.github.jomof.kane.functions.*
+import com.github.jomof.kane.impl.functions.*
 import com.github.jomof.kane.impl.sheet.CoerceScalar
 import com.github.jomof.kane.impl.sheet.NamedSheetRangeExpr
 import com.github.jomof.kane.impl.types.AlgebraicType
 import com.github.jomof.kane.impl.types.KaneType
 import com.github.jomof.kane.impl.types.StringKaneType
 import com.github.jomof.kane.impl.types.kaneDouble
+import com.github.jomof.kane.pow
 import kotlin.reflect.KProperty
 
 interface Expr

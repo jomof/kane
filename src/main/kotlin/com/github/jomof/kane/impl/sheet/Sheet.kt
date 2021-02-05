@@ -1,14 +1,13 @@
 @file:Suppress("UNCHECKED_CAST")
 package com.github.jomof.kane.impl.sheet
 
-import com.github.jomof.kane.functions.*
+import com.github.jomof.kane.eval
 import com.github.jomof.kane.impl.*
+import com.github.jomof.kane.impl.functions.AlgebraicBinaryRangeStatistic
 import com.github.jomof.kane.impl.types.KaneType
-import com.github.jomof.kane.impl.types.kaneDouble
 import com.github.jomof.kane.impl.visitor.RewritingVisitor
 import com.github.jomof.kane.impl.visitor.visit
 import java.lang.Integer.max
-import kotlin.math.abs
 import kotlin.math.min
 import kotlin.reflect.KProperty
 
@@ -404,7 +403,7 @@ class SheetBuilderImpl(
 }
 
 
-private fun Sheet.namedVariableOf(cell: Id): NamedScalarVariable {
+internal fun Sheet.namedVariableOf(cell: Id): NamedScalarVariable {
     val reduced = when (val value = cells.getValue(cell)) {
         is AlgebraicExpr -> value.eval()
         else ->
@@ -417,101 +416,12 @@ private fun Sheet.namedVariableOf(cell: Id): NamedScalarVariable {
     }
 }
 
-private fun Sheet.replaceNamesWithVariables(variables: Map<Id, NamedScalarVariable>): Sheet {
+internal fun Sheet.replaceNamesWithVariables(variables: Map<Id, NamedScalarVariable>): Sheet {
     return object : RewritingVisitor() {
         override fun rewrite(expr: NamedScalar): Expr {
             return variables[expr.name] ?: super.rewrite(expr)
         }
     }.rewrite(this) as Sheet
-}
-
-fun Sheet.minimize(
-    target: String,
-    variables: List<String>,
-    learningRate: Double = 0.001
-): Sheet {
-    val resolvedVariables = mutableMapOf<Id, NamedScalarVariable>()
-    val variableIds = variables.map { Identifier.normalizeUserInput(it) }
-
-    // Turn each 'variable' into a NamedScalarVariable
-    variableIds.forEach { cell ->
-        resolvedVariables[cell] = namedVariableOf(cell)
-    }
-
-    // Replace names with variables
-    val namesReplaced = replaceNamesWithVariables(resolvedVariables)
-
-    // Follow all expressions from 'target'
-    val reducedArithmetic = namesReplaced.eval(
-        reduceVariables = true,
-        excludeVariables = variableIds.toSet()
-    )
-    //val reducedArithmetic = reduceArithmetic(variables.toSet())
-    println("Expanding target expression '$target'")
-    val lookup = reducedArithmetic.cells + resolvedVariables
-    val targetId = Identifier.normalizeUserInput(target)
-    val targetExpr = reducedArithmetic.cells.getValue(targetId).expandNamedCells(lookup)
-    if (targetExpr !is ScalarExpr) {
-        error("'$target' was not a numeric expression")
-    }
-    val reduced = targetExpr.eval()
-    val namedTarget: NamedScalarExpr = NamedScalar(targetId, reduced)
-
-    // Differentiate target with respect to each variable
-    println("Differentiating target expression $target with respect to change variables: ${variableIds.joinToString(" ")}")
-    val diffs = resolvedVariables.map { (_, variable) ->
-        val name = "d$target/d${variable.name}"
-        val derivative = differentiate(d(namedTarget) / d(variable)).eval()
-        NamedScalar(name, derivative)
-    }
-
-    // Assign back variables updated by a delta of their respective derivative
-    val assignBacks = (resolvedVariables.values zip diffs).map { (variable, diff) ->
-        NamedScalarAssign(
-            "update(${variable.name})",
-            variable,
-            variable - multiply(learningRate, diff)
-        ).eval()
-    }
-
-    // Create the model, allocate space for it, and iterate. Break when the target didn't move much
-    val model = Tableau(resolvedVariables.values + diffs + namedTarget + assignBacks).linearize()
-    val space = model.allocateSpace()
-    println("Plan has ${model.slotCount()} common sub-expressions and uses ${space.size * 8} bytes")
-    model.eval(space)
-    var priorTarget: Double = Double.MAX_VALUE
-    val originalTarget: Double = model.shape(namedTarget).ref(space).value
-    println("Minimizing")
-    for (i in 0 until 100000) {
-//        val sb = StringBuilder()
-//        sb.append(resolvedVariables.values.joinToString(" ") {
-//            val value = model.shape(it).ref(space)
-//            "${it.name}: $value"
-//        })
-//        println(sb)
-        model.eval(space)
-        val newTarget = model.shape(namedTarget).ref(space).value
-        if (abs(newTarget - priorTarget) < 0.00000000000001)
-            break
-        priorTarget = newTarget
-    }
-
-    println(
-        "Target '$target' reduced from ${kaneDouble.render(originalTarget)} to ${
-            kaneDouble.render(
-                priorTarget
-            )
-        }"
-    )
-
-    // Extract the computed values and plug them back into a new sheet
-    val new = cells.toMutableMap()
-    resolvedVariables.values.forEach {
-        val value = model.shape(it).ref(space)
-        assert(new.containsKey(it.name))
-        new[it.name] = variable(value.value)
-    }
-    return copy(cells = new.toCells())
 }
 
 fun Sheet.columnName(column: Int): String {
@@ -605,10 +515,5 @@ fun Sheet.render(): String {
     return "$sb"
 }
 
-// Construction
-fun sheetOf(init: SheetBuilder.() -> List<NamedExpr>): Sheet {
-    val builder = SheetBuilderImpl()
-    init(builder as SheetBuilder).forEach { builder.add(it) }
-    return builder.build()
-}
+
 

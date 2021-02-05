@@ -1,6 +1,8 @@
 package com.github.jomof.kane.functions
 
 import com.github.jomof.kane.impl.*
+import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalar
+import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalarFunction
 
 val NEGATE by UnaryOp(op = "-")
 

@@ -1,6 +1,9 @@
 package com.github.jomof.kane.functions
 
 import com.github.jomof.kane.impl.*
+import com.github.jomof.kane.impl.functions.AlgebraicDeferredDataMatrix
+import com.github.jomof.kane.plus
+import com.github.jomof.kane.times
 
 val CROSS by BinaryOp(op = " cross ", precedence = 5, associative = false, infix = true)
 

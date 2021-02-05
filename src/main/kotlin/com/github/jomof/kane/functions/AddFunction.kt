@@ -1,7 +1,9 @@
 package com.github.jomof.kane.functions
 
 import com.github.jomof.kane.impl.*
-import com.github.jomof.kane.impl.sheet.SheetRange
+import com.github.jomof.kane.impl.functions.AlgebraicBinaryScalar
+import com.github.jomof.kane.impl.functions.AlgebraicBinaryScalarFunction
+import com.github.jomof.kane.plus
 
 val PLUS by BinaryOp(op = "+", precedence = 3, associative = true, infix = true)
 private class AddFunction : AlgebraicBinaryScalarFunction {
@@ -39,18 +41,4 @@ private class AddFunction : AlgebraicBinaryScalarFunction {
 
 val add : AlgebraicBinaryScalarFunction = AddFunction()
 
-// Plus
-operator fun <E : Number> ScalarExpr.plus(right: E) = add(this, right.toDouble())
-operator fun <E : Number> E.plus(right: ScalarExpr) = add(this.toDouble(), right)
-operator fun ScalarExpr.plus(right: ScalarExpr) = add(this, right)
-operator fun <E : Number> MatrixExpr.plus(right: E) = add(this, right.toDouble())
-operator fun MatrixExpr.plus(right: ScalarExpr) = add(this, right)
-operator fun <E : Number> E.plus(right: MatrixExpr) = add(this.toDouble(), right)
-operator fun ScalarExpr.plus(right: MatrixExpr) = add(this, right)
-operator fun MatrixExpr.plus(right: MatrixExpr) = add(this, right)
-operator fun ScalarExpr.plus(right: SheetRange) = add(this, right)
-operator fun SheetRange.plus(right: ScalarExpr) = add(this, right)
-operator fun <E : Number> SheetRange.plus(right: E) = add(this, right.toDouble())
-operator fun <E : Number> E.plus(right: SheetRange) = add(this.toDouble(), right)
-operator fun SheetRange.plus(right: SheetRange) = add(this, right)
-operator fun MatrixExpr.plus(right: SheetRange) = add(this, right)
+

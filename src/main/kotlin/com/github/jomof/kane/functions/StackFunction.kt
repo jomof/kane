@@ -1,6 +1,7 @@
 package com.github.jomof.kane.functions
 
 import com.github.jomof.kane.impl.*
+import com.github.jomof.kane.impl.functions.AlgebraicDeferredDataMatrix
 
 val STACK = BinaryOp(op = " stack ", precedence = 5, associative = true, infix = true)
 

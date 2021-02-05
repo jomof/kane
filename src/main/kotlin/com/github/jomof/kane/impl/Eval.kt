@@ -1,7 +1,7 @@
 package com.github.jomof.kane.impl
 
-import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.impl.ComputableIndex.MoveableIndex
+import com.github.jomof.kane.impl.functions.*
 import com.github.jomof.kane.impl.sheet.*
 import com.github.jomof.kane.impl.types.algebraicType
 import com.github.jomof.kane.impl.types.kaneDouble
@@ -419,11 +419,12 @@ private fun Expr.evalGradualReduceStatistics(
     }
 }
 
-fun Expr.eval(
-    rangeExprProvider: RangeExprProvider = NopRangeExprProvider(),
-    reduceVariables: Boolean = false,
-    excludeVariables: Set<Id> = setOf()
+internal fun Expr.evalImpl(
+    rangeExprProviderOrNull: RangeExprProvider?,
+    reduceVariables: Boolean,
+    excludeVariables: Set<Id>
 ): Expr {
+    val rangeExprProvider = rangeExprProviderOrNull ?: NopRangeExprProvider()
     if (excludeVariables.isNotEmpty()) {
         assert(reduceVariables) {
             "Variable exclusion without reducing variables"
@@ -461,39 +462,3 @@ fun Expr.eval(
     }
     return stats!!.evalGradualReduceStatistics(rangeExprProvider, reduceVariables, excludeVariables)
 }
-
-fun NamedMatrix.eval(
-    rangeExprProvider: RangeExprProvider = NopRangeExprProvider(),
-    reduceVariables: Boolean = false,
-    excludeVariables: Set<Id> = setOf(),
-) = (this as Expr).eval(rangeExprProvider, reduceVariables, excludeVariables) as NamedMatrix
-
-fun NamedScalar.eval(
-    rangeExprProvider: RangeExprProvider = NopRangeExprProvider(),
-    reduceVariables: Boolean = false,
-    excludeVariables: Set<Id> = setOf(),
-) = (this as Expr).eval(rangeExprProvider, reduceVariables, excludeVariables) as NamedScalar
-
-fun NamedAlgebraicExpr.eval(
-    rangeExprProvider: RangeExprProvider = NopRangeExprProvider(),
-    reduceVariables: Boolean = false,
-    excludeVariables: Set<Id> = setOf(),
-) = (this as Expr).eval(rangeExprProvider, reduceVariables, excludeVariables) as NamedAlgebraicExpr
-
-fun Sheet.eval(
-    rangeExprProvider: RangeExprProvider = NopRangeExprProvider(),
-    reduceVariables: Boolean = false,
-    excludeVariables: Set<Id> = setOf(),
-) = ((this as Expr).eval(rangeExprProvider, reduceVariables, excludeVariables) as Sheet).showExcelColumnTags(false)
-
-fun ScalarExpr.eval(
-    rangeExprProvider: RangeExprProvider = NopRangeExprProvider(),
-    reduceVariables: Boolean = false,
-    excludeVariables: Set<Id> = setOf(),
-) = (this as Expr).eval(rangeExprProvider, reduceVariables, excludeVariables) as ScalarExpr
-
-fun MatrixExpr.eval(
-    rangeExprProvider: RangeExprProvider = NopRangeExprProvider(),
-    reduceVariables: Boolean = false,
-    excludeVariables: Set<Id> = setOf(),
-) = (this as Expr).eval(rangeExprProvider, reduceVariables, excludeVariables) as MatrixExpr

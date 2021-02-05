@@ -2,44 +2,12 @@ package com.github.jomof.kane.impl.sheet
 
 import com.github.doyaaaaaken.kotlincsv.client.CsvReader
 import com.github.doyaaaaaken.kotlincsv.dsl.context.CsvReaderContext
-import com.github.jomof.kane.impl.Identifier
 import com.github.jomof.kane.impl.coordinate
-import com.github.jomof.kane.impl.indexToColumnName
 import java.io.File
 import java.io.InputStream
 import java.nio.charset.Charset
 import kotlin.random.Random
 
-/**
- * Read CSV from a file.
- */
-fun readCsv(
-    csv: String,
-    names: List<String> = listOf(),
-    sample: Double = 1.0,
-    keep: List<String> = listOf(), // List of columns to keep
-    charset: String = "UTF-8",
-    quoteChar: Char = '"',
-    delimiter: Char = ',',
-    escapeChar: Char = '"',
-    skipEmptyLine: Boolean = false,
-    skipMissMatchedRow: Boolean = false
-): Sheet = readCsv(
-    File(csv).inputStream(),
-    CsvParameters(
-        names = names,
-        sample = sample,
-        keep = keep.toSet()
-    ),
-    csvReaderContext(
-        charset,
-        quoteChar,
-        delimiter,
-        escapeChar,
-        skipEmptyLine,
-        skipMissMatchedRow
-    )
-)
 
 /**
  * Read CSV from a file.
@@ -196,7 +164,7 @@ private fun readCsvWithoutHeader(
     return sb.build()
 }
 
-private fun readCsv(
+internal fun readCsv(
     csv: InputStream,
     params: CsvParameters,
     context: CsvReaderContext
@@ -207,13 +175,13 @@ private fun readCsv(
     return sheet.limitOutputLines(10)
 }
 
-private data class CsvParameters(
+internal data class CsvParameters(
     val names: List<String>,
     val keep: Set<String>,
     val sample: Double
 )
 
-private fun csvReaderContext(
+internal fun csvReaderContext(
     charset: String,
     quoteChar: Char,
     delimiter: Char,
@@ -231,77 +199,3 @@ private fun csvReaderContext(
     return context
 }
 
-/**
- * Write Sheet to a file named [csv]
- */
-fun Sheet.writeCsv(csv: String) {
-    writeCsv(File(csv))
-}
-
-/**
- * Write Sheet to a file named [csv]
- */
-fun Sheet.writeCsv(csv: File) {
-    csv.writeText("")
-
-    fun colName(column: Int) = columnDescriptors[column]?.name ?: indexToColumnName(column)
-
-    // Column headers
-    (0..columns).forEach { column ->
-        val columnName = colName(column)
-        csv.appendText(Identifier.string(columnName))
-        if (column != columns - 1) csv.appendText(",")
-
-    }
-    csv.appendText("\n")
-
-    // Data
-    val sb = StringBuilder()
-    for (row in 0 until rows) {
-        for (column in 0 until columns) {
-            val cell = coordinate(column, row)
-            val value = cells[cell]?.toString() ?: ""
-            if (value.contains(" ")) {
-                sb.append("\"$value\"")
-            } else {
-                sb.append(value)
-            }
-            if (column != columns - 1) sb.append(",")
-        }
-        sb.append("\n")
-        if (row % 100 == 0) {
-            // Write in batches
-            csv.appendText(sb.toString())
-            sb.clear()
-        }
-    }
-    csv.appendText(sb.toString())
-}
-
-/**
- * Construct a sheet by parsing provided text.
- */
-fun sheetOfCsv(
-    names: List<String> = listOf(),
-    sample: Double = 1.0,
-    keep: List<String> = listOf(), // List of columns to keep
-    quoteChar: Char = '"',
-    delimiter: Char = ',',
-    escapeChar: Char = '"',
-    skipEmptyLine: Boolean = false,
-    skipMissMatchedRow: Boolean = false,
-    init: () -> String
-): Sheet {
-    val text = init()
-    return parseCsv(
-        data = text.trimIndent().trim('\r', '\n'),
-        names = names,
-        sample = sample,
-        keep = keep,
-        quoteChar = quoteChar,
-        delimiter = delimiter,
-        escapeChar = escapeChar,
-        skipEmptyLine = skipEmptyLine,
-        skipMissMatchedRow = skipMissMatchedRow
-    )
-}

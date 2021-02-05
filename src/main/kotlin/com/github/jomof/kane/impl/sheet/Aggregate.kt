@@ -1,7 +1,10 @@
 package com.github.jomof.kane.impl.sheet
 
-import com.github.jomof.kane.functions.AlgebraicUnaryScalarStatisticFunction
+import com.github.jomof.kane.eval
+import com.github.jomof.kane.get
 import com.github.jomof.kane.impl.*
+import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalarStatisticFunction
+import com.github.jomof.kane.sheetOf
 
 private class SheetRangeExprProvider(val sheet: Sheet) : RangeExprProvider {
     override fun range(range: SheetRangeExpr): Expr = sheet["$range"]

@@ -1,10 +1,10 @@
 package com.github.jomof.kane.impl.sheet
 
-import com.github.jomof.kane.functions.*
+import com.github.jomof.kane.functions.STACK
 import com.github.jomof.kane.impl.*
 import com.github.jomof.kane.impl.ComputableIndex.*
+import com.github.jomof.kane.impl.functions.*
 import com.github.jomof.kane.impl.visitor.RewritingVisitor
-
 
 fun extractScalarizedMatrixElement(
     matrix: MatrixExpr,

@@ -1,9 +1,10 @@
 package com.github.jomof.kane
 
 import com.github.jomof.kane.functions.*
-import com.github.jomof.kane.impl.*
-import com.github.jomof.kane.impl.sheet.get
-import com.github.jomof.kane.impl.sheet.sheetOf
+import com.github.jomof.kane.impl.StreamingSamples
+import com.github.jomof.kane.impl.constant
+import com.github.jomof.kane.impl.findRandomVariables
+import com.github.jomof.kane.impl.randomOf
 import org.junit.Test
 
 class RandomVariablesTest {

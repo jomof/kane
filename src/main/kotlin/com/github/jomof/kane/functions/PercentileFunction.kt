@@ -1,6 +1,8 @@
 package com.github.jomof.kane.functions
 
 import com.github.jomof.kane.impl.*
+import com.github.jomof.kane.impl.functions.AlgebraicBinaryScalarStatisticFunction
+import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalarStatisticFunction
 
 private val PERCENTILE by BinaryOp(precedence = 7)
 private val PERCENTILE25 by UnaryOp("25%")

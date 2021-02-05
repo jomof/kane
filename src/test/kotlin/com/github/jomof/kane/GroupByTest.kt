@@ -1,8 +1,9 @@
 package com.github.jomof.kane
 
-import com.github.jomof.kane.functions.*
-import com.github.jomof.kane.impl.eval
-import com.github.jomof.kane.impl.sheet.*
+import com.github.jomof.kane.functions.cv
+import com.github.jomof.kane.impl.sheet.aggregate
+import com.github.jomof.kane.impl.sheet.groupBy
+import com.github.jomof.kane.impl.sheet.groupOf
 import org.junit.Test
 
 class GroupByTest {

@@ -1,8 +1,7 @@
 package com.github.jomof.kane.impl.sheet
 
-import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.impl.*
-
+import com.github.jomof.kane.impl.functions.*
 
 private class ReplaceNamesWithCellReferences(val excluding: Id) {
     private fun MatrixExpr.replace() = (this as Expr).replace() as MatrixExpr

@@ -1,12 +1,8 @@
 package com.github.jomof.kane.impl.types
 
 import com.github.jomof.kane.impl.AlgebraicExpr
-import com.github.jomof.kane.impl.Expr
 import com.github.jomof.kane.impl.RetypeMatrix
 import com.github.jomof.kane.impl.RetypeScalar
-import com.github.jomof.kane.impl.sheet.Sheet
-import com.github.jomof.kane.impl.sheet.SheetRangeExpr
-import com.github.jomof.kane.impl.sheet.columnType
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -80,15 +76,4 @@ val AlgebraicExpr.algebraicType: AlgebraicType
         is RetypeScalar -> type
         is RetypeMatrix -> type
         else -> kaneDouble
-    }
-
-/**
- * Get the type of an expression.
- */
-val Expr.type: KaneType<*>
-    get() = when (this) {
-        is Sheet -> if (columns == 1) columnType(0).type else String::class.java.kaneType
-        is SheetRangeExpr -> String::class.java.kaneType
-        is AlgebraicExpr -> algebraicType
-        else -> error("$javaClass")
     }

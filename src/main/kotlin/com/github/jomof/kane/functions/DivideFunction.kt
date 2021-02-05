@@ -1,7 +1,13 @@
 package com.github.jomof.kane.functions
 
+import com.github.jomof.kane.div
 import com.github.jomof.kane.impl.*
-import com.github.jomof.kane.impl.sheet.SheetRange
+import com.github.jomof.kane.impl.functions.AlgebraicBinaryScalar
+import com.github.jomof.kane.impl.functions.AlgebraicBinaryScalarFunction
+import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalar
+import com.github.jomof.kane.minus
+import com.github.jomof.kane.pow
+import com.github.jomof.kane.times
 
 val DIV by BinaryOp(op = "/", precedence = 2, infix = true)
 
@@ -39,20 +45,3 @@ private class DivideFunction : AlgebraicBinaryScalarFunction {
 }
 
 val divide : AlgebraicBinaryScalarFunction = DivideFunction()
-
-
-// Div
-operator fun <E : Number> ScalarExpr.div(right: E) = divide(this, right.toDouble())
-operator fun <E : Number> E.div(right: ScalarExpr) = divide(this.toDouble(), right)
-operator fun ScalarExpr.div(right: ScalarExpr) = divide(this, right)
-operator fun <E : Number> MatrixExpr.div(right: E) = divide(this, right.toDouble())
-operator fun MatrixExpr.div(right: ScalarExpr) = divide(this, right)
-operator fun <E : Number> E.div(right: MatrixExpr) = divide(this.toDouble(), right)
-operator fun ScalarExpr.div(right: MatrixExpr) = divide(this, right)
-operator fun MatrixExpr.div(right: MatrixExpr) = divide(this, right)
-operator fun ScalarExpr.div(right: SheetRange) = divide(this, right)
-operator fun SheetRange.div(right: ScalarExpr) = divide(this, right)
-operator fun <E : Number> SheetRange.div(right: E) = divide(this, right.toDouble())
-operator fun <E : Number> E.div(right: SheetRange) = divide(this.toDouble(), right)
-operator fun SheetRange.div(right: SheetRange) = divide(this, right)
-operator fun MatrixExpr.div(right: SheetRange) = divide(this, right)

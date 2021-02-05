@@ -2,12 +2,8 @@ package com.github.jomof.kane
 
 import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.impl.constant
-import com.github.jomof.kane.impl.eval
 import com.github.jomof.kane.impl.randomOf
 import com.github.jomof.kane.impl.rowOf
-import com.github.jomof.kane.impl.sheet.filterRows
-import com.github.jomof.kane.impl.sheet.sheetOf
-import com.github.jomof.kane.impl.sheet.sheetOfCsv
 import org.junit.Test
 
 class GradualEvaluatorTest {

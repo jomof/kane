@@ -3,6 +3,9 @@ package com.github.jomof.kane.functions
 import com.github.jomof.kane.impl.ScalarExpr
 import com.github.jomof.kane.impl.UnaryOp
 import com.github.jomof.kane.impl.constant
+import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalarFunction
+import com.github.jomof.kane.minus
+import com.github.jomof.kane.times
 import kotlin.math.exp
 
 val LOGIT by UnaryOp()

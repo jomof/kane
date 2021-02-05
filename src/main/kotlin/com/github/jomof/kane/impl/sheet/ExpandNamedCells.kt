@@ -1,10 +1,11 @@
 package com.github.jomof.kane.impl.sheet
 
-import com.github.jomof.kane.functions.AlgebraicBinaryScalar
-import com.github.jomof.kane.functions.AlgebraicBinaryScalarStatistic
-import com.github.jomof.kane.functions.AlgebraicUnaryScalar
-import com.github.jomof.kane.functions.AlgebraicUnaryScalarStatistic
+import com.github.jomof.kane.eval
 import com.github.jomof.kane.impl.*
+import com.github.jomof.kane.impl.functions.AlgebraicBinaryScalar
+import com.github.jomof.kane.impl.functions.AlgebraicBinaryScalarStatistic
+import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalar
+import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalarStatistic
 
 private fun AlgebraicExpr.expandNamedCells(lookup: Cells): AlgebraicExpr {
     fun ScalarExpr.self() = expandNamedCells(lookup) as ScalarExpr

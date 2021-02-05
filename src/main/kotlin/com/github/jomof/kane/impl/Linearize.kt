@@ -1,7 +1,8 @@
 package com.github.jomof.kane.impl
 
-import com.github.jomof.kane.functions.*
+import com.github.jomof.kane.eval
 import com.github.jomof.kane.impl.ComputableIndex.MoveableIndex
+import com.github.jomof.kane.impl.functions.*
 import com.github.jomof.kane.impl.sheet.CoerceScalar
 import com.github.jomof.kane.impl.sheet.Sheet
 import com.github.jomof.kane.impl.sheet.SheetRangeExpr

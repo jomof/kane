@@ -46,7 +46,6 @@ val dokkaHtmlJar by tasks.register<Jar>("dokkaHtmlJar") {
     archiveClassifier.set("html-doc")
 }
 
-
 publishing {
     publications {
         create<MavenPublication>("maven") {

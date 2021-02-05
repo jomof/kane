@@ -3,6 +3,7 @@ package com.github.jomof.kane.functions
 import com.github.jomof.kane.impl.ScalarExpr
 import com.github.jomof.kane.impl.UnaryOp
 import com.github.jomof.kane.impl.canGetConstant
+import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalarFunction
 import com.github.jomof.kane.impl.getConstant
 import com.github.jomof.kane.impl.types.PercentAlgebraicType
 import com.github.jomof.kane.impl.types.percent

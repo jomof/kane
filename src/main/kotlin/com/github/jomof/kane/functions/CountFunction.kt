@@ -1,6 +1,8 @@
 package com.github.jomof.kane.functions
 
 import com.github.jomof.kane.impl.*
+import com.github.jomof.kane.impl.functions.AlgebraicUnaryMatrixScalarFunction
+import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalarStatisticFunction
 
 private val COUNT by UnaryOp()
 
@@ -11,4 +13,3 @@ class CountFunction : AlgebraicUnaryMatrixScalarFunction, AlgebraicUnaryScalarSt
     override fun reduceArithmetic(value: MatrixExpr) = constant(value.rows.toDouble() * value.columns.toDouble())
 }
 
-val count = CountFunction()

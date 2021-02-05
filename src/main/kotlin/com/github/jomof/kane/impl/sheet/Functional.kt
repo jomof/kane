@@ -1,34 +1,14 @@
 package com.github.jomof.kane.impl.sheet
 
 import com.github.jomof.kane.impl.*
-import kotlin.math.min
-import kotlin.random.Random
+import com.github.jomof.kane.mapDoubles
 
 /**
  * Methods for dealing with Sheet in a functional manner
  */
 
-/**
- * Retrieve the first [count] elements of a sheet.
- */
-fun Sheet.head(count : Int = 5) = ordinalRows(1 .. count)
 
-/**
- * Retrieve the last [count] elements of a sheet.
- */
-fun Sheet.tail(count : Int = 5) = ordinalRows(rows - count + 1 .. rows)
 
-/**
- * Retrieve the last [count] elements of a sheet.
- */
-fun Sheet.sample(count : Int = 5, random : Random = Random(7)) : Sheet {
-    val countMin = min(count, rows)
-    val samples = mutableSetOf<Int>()
-    while (samples.size < countMin) {
-        samples.add(random.nextInt(rows))
-    }
-    return ordinalRows(samples.toList().sorted())
-}
 
 /**
  * Return the requested rows. Elements are ordinal row number not row name.
@@ -91,34 +71,6 @@ fun Sheet.ordinalColumns(elements : List<Int>) : Sheet {
 /**
  * Map cells of a sheet that are coercible to double.
  */
-fun Sheet.mapDoubles(translate: (Double) -> Double): Sheet {
-    val evaled = eval()
-    val new = cells.toMutableMap()
-    evaled.cells.forEach { (name, expr) ->
-        when (expr) {
-            is ConstantScalar -> {
-                val result = translate(expr.value)
-                new[name] = expr.copy(value = result)
-            }
-            is ValueExpr<*> -> {
-            }
-            else -> error("${expr.javaClass}")
-        }
-    }
-    return copy(cells = new.toCells())
-}
-
-fun Expr.mapDoubles(translate: (Double) -> Double): Expr {
-    return when (this) {
-        is Sheet -> mapDoubles(translate)
-        else -> error("$javaClass")
-    }
-}
-
-
-/**
- * Map cells of a sheet that are coercible to double.
- */
 fun Sheet.fillna(value: Double) = mapDoubles {
     if (it.isNaN()) value
     else it
@@ -129,16 +81,6 @@ fun Expr.fillna(value: Double): Expr {
         is Sheet -> fillna(value)
         else -> error("$javaClass")
     }
-}
-
-/**
- * Filter rows of a Sheet with a predicate function.
- */
-fun Sheet.filterRows(predicate: (RowView) -> Boolean): Sheet {
-    val rows = (1..rows).filter {
-        predicate(RowView(this, it - 1))
-    }
-    return ordinalRows(rows)
 }
 
 fun Sheet.columnType(column: Int): AdmissibleDataType<*> {
@@ -159,36 +101,6 @@ internal fun Sheet.fullColumnDescriptor(column: Int): ColumnDescriptor {
     return ColumnDescriptor(name, type)
 }
 
-/**
- * Return the column types of this sheet.
- */
-val Sheet.types : Sheet get() {
-    return sheetOf {
-        nameColumn(0, "name")
-        nameColumn(1, "type")
-        nameColumn(2, "format")
-        val descriptors = (0 until columns).map { fullColumnDescriptor(it) }
-        val a1 by columnOf(descriptors.map { Identifier.string(it.name) })
-        val b1 by columnOf(descriptors.map { it.type!!.type.simpleName })
-        val c1 by columnOf(descriptors.map { it.type.toString() })
-        listOf(a1, b1, c1)
-    }.showExcelColumnTags(false)
-}
-
-/**
- * Return a subsection of a sheet
- */
-operator fun Sheet.get(vararg ranges: String): Expr {
-    if (ranges.size == 1 && looksLikeCellName(ranges[0]))
-        return cells.getValue(cellNameToCoordinate(ranges[0]))
-    val asColumnIndices = tryConvertToColumnIndex(ranges.toList())
-    if (asColumnIndices != null) return ordinalColumns(asColumnIndices)
-    error("Couldn't get sheet subset for ${ranges.joinToString(",")}")
-}
-
-operator fun Sheet.get(column: Int, row: Int): Expr {
-    return cells.getValue(coordinate(column, row))
-}
 
 internal fun Sheet.tryConvertToColumnIndex(range: String): Int? {
     val columnByName = columnDescriptors
@@ -203,6 +115,6 @@ internal fun Sheet.tryConvertToColumnIndex(range: String): Int? {
     return null
 }
 
-private fun Sheet.tryConvertToColumnIndex(ranges : List<String>) : List<Int>? =
+internal fun Sheet.tryConvertToColumnIndex(ranges : List<String>) : List<Int>? =
     ranges.map { tryConvertToColumnIndex(it) ?: return null }
 

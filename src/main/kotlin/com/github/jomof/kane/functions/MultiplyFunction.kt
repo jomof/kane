@@ -1,7 +1,12 @@
 package com.github.jomof.kane.functions
 
 import com.github.jomof.kane.impl.*
-import com.github.jomof.kane.impl.sheet.SheetRange
+import com.github.jomof.kane.impl.functions.AlgebraicBinaryScalar
+import com.github.jomof.kane.impl.functions.AlgebraicBinaryScalarFunction
+import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalar
+import com.github.jomof.kane.plus
+import com.github.jomof.kane.pow
+import com.github.jomof.kane.times
 
 val TIMES by BinaryOp(op = "*", precedence = 1, associative = true, infix = true)
 
@@ -70,18 +75,3 @@ private class MultiplyFunction : AlgebraicBinaryScalarFunction {
 
 val multiply : AlgebraicBinaryScalarFunction = MultiplyFunction()
 
-// Times
-operator fun <E : Number> ScalarExpr.times(right: E) = multiply(this, right.toDouble())
-operator fun <E : Number> E.times(right: ScalarExpr) = multiply(this.toDouble(), right)
-operator fun ScalarExpr.times(right: ScalarExpr) = multiply(this, right)
-operator fun <E : Number> MatrixExpr.times(right: E) = multiply(this, right.toDouble())
-operator fun MatrixExpr.times(right: ScalarExpr) = multiply(this, right)
-operator fun <E : Number> E.times(right: MatrixExpr) = multiply(this.toDouble(), right)
-operator fun ScalarExpr.times(right: MatrixExpr) = multiply(this, right)
-operator fun MatrixExpr.times(right: MatrixExpr) = multiply(this, right)
-operator fun ScalarExpr.times(right: SheetRange) = multiply(this, right)
-operator fun SheetRange.times(right: ScalarExpr) = multiply(this, right)
-operator fun <E : Number> SheetRange.times(right: E) = multiply(this, right.toDouble())
-operator fun <E : Number> E.times(right: SheetRange) = multiply(this.toDouble(), right)
-operator fun SheetRange.times(right: SheetRange) = multiply(this, right)
-operator fun MatrixExpr.times(right: SheetRange) = multiply(this, right)
