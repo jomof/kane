@@ -5,7 +5,7 @@
 # percentile75  
 [jvm]  
 Content  
-val [percentile75](percentile75.md): [AlgebraicUnaryScalarStatisticFunction](-algebraic-unary-scalar-statistic-function/index.md)  
+val [percentile75](percentile75.md): [AlgebraicUnaryScalarStatisticFunction](../com.github.jomof.kane.impl.functions/-algebraic-unary-scalar-statistic-function/index.md)  
 
 
 

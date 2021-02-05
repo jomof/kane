@@ -5,7 +5,7 @@
 # add  
 [jvm]  
 Content  
-val [add](add.md): [AlgebraicBinaryScalarFunction](-algebraic-binary-scalar-function/index.md)  
+val [add](add.md): [AlgebraicBinaryScalarFunction](../com.github.jomof.kane.impl.functions/-algebraic-binary-scalar-function/index.md)  
 
 
 

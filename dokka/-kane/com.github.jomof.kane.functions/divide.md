@@ -5,7 +5,7 @@
 # divide  
 [jvm]  
 Content  
-val [divide](divide.md): [AlgebraicBinaryScalarFunction](-algebraic-binary-scalar-function/index.md)  
+val [divide](divide.md): [AlgebraicBinaryScalarFunction](../com.github.jomof.kane.impl.functions/-algebraic-binary-scalar-function/index.md)  
 
 
 

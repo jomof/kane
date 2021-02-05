@@ -5,7 +5,7 @@
 # negate  
 [jvm]  
 Content  
-val [negate](negate.md): [AlgebraicUnaryScalarFunction](-algebraic-unary-scalar-function/index.md)  
+val [negate](negate.md): [AlgebraicUnaryScalarFunction](../com.github.jomof.kane.impl.functions/-algebraic-unary-scalar-function/index.md)  
 
 
 

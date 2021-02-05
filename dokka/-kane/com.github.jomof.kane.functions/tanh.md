@@ -5,7 +5,7 @@
 # tanh  
 [jvm]  
 Content  
-val [tanh](tanh.md): [AlgebraicUnaryScalarFunction](-algebraic-unary-scalar-function/index.md)  
+val [tanh](tanh.md): [AlgebraicUnaryScalarFunction](../com.github.jomof.kane.impl.functions/-algebraic-unary-scalar-function/index.md)  
 
 
 

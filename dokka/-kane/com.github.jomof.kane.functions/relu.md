@@ -5,7 +5,7 @@
 # relu  
 [jvm]  
 Content  
-val [relu](relu.md): [AlgebraicUnaryScalarFunction](-algebraic-unary-scalar-function/index.md)  
+val [relu](relu.md): [AlgebraicUnaryScalarFunction](../com.github.jomof.kane.impl.functions/-algebraic-unary-scalar-function/index.md)  
 
 
 

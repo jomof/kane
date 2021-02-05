@@ -5,7 +5,7 @@
 # plus  
 [jvm]  
 Content  
-infix operator fun <[E](plus.md) : [Expr](../../com.github.jomof.kane.impl/-expr/index.md)> [plus](plus.md)(right: [Map](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html)<[Id](../../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-245655576), [E](plus.md)>): [Cells](index.md)  
+infix operator fun <[E](plus.md) : [Expr](../../com.github.jomof.kane.impl/-expr/index.md)> [plus](plus.md)(right: [Map](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html)<[Id](../../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1754281934), [E](plus.md)>): [Cells](index.md)  
 
 
 

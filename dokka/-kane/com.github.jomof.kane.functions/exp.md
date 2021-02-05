@@ -5,7 +5,7 @@
 # exp  
 [jvm]  
 Content  
-val [exp](exp.md): [AlgebraicUnaryScalarFunction](-algebraic-unary-scalar-function/index.md)  
+val [exp](exp.md): [AlgebraicUnaryScalarFunction](../com.github.jomof.kane.impl.functions/-algebraic-unary-scalar-function/index.md)  
 
 
 

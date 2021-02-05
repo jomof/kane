@@ -5,7 +5,7 @@
 # multiply  
 [jvm]  
 Content  
-val [multiply](multiply.md): [AlgebraicBinaryScalarFunction](-algebraic-binary-scalar-function/index.md)  
+val [multiply](multiply.md): [AlgebraicBinaryScalarFunction](../com.github.jomof.kane.impl.functions/-algebraic-binary-scalar-function/index.md)  
 
 
 

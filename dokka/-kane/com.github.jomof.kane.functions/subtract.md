@@ -5,7 +5,7 @@
 # subtract  
 [jvm]  
 Content  
-val [subtract](subtract.md): [AlgebraicBinaryScalarFunction](-algebraic-binary-scalar-function/index.md)  
+val [subtract](subtract.md): [AlgebraicBinaryScalarFunction](../com.github.jomof.kane.impl.functions/-algebraic-binary-scalar-function/index.md)  
 
 
 
