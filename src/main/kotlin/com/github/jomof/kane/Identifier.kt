@@ -51,7 +51,7 @@ class Identifier {
         fun validate(value: Coordinate): Unit = error("Already static coordinate")
         fun validate(value: Id) {
             if (value is Coordinate) return
-            if (value !is String) error("Expected string")
+            if (value !is String) error("Expected string but was ${value.javaClass}")
             if (looksLikeCellName(value))
                 error("Should be coordinate not string")
             if (value.startsWith("[") && value.endsWith("]"))

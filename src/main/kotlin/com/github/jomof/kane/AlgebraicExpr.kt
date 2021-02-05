@@ -103,8 +103,7 @@ data class NamedValueExpr<E : Any>(
 }
 
 data class ScalarVariable(
-    val initial: Double,
-    override val type: AlgebraicType
+    val initial: Double
 ) : AlgebraicExpr {
     init {
         track()
@@ -116,8 +115,7 @@ data class ScalarVariable(
 
 data class NamedScalarVariable(
     override val name: Id,
-    val initial: Double,
-    override val type: AlgebraicType
+    val initial: Double
 ) : ScalarVariableExpr, NamedScalarExpr {
     init {
         track()
@@ -129,7 +127,6 @@ data class NamedScalarVariable(
 data class MatrixVariable(
     val columns: Int,
     val rows: Int,
-    override val type: AlgebraicType,
     val initial: List<Double>
 ) : AlgebraicExpr {
     init {
@@ -145,7 +142,6 @@ data class MatrixVariable(
 data class NamedMatrixVariable(
     override val name: Id,
     override val columns: Int,
-    override val type: AlgebraicType,
     val initial: List<Double>
 ) : MatrixVariableExpr, NamedMatrixExpr {
     init { track() }
@@ -200,13 +196,11 @@ data class MatrixVariableElement(
     val matrix : NamedMatrixVariable,
     val initial : Double) : ScalarExpr {
     init { track() }
-    override val type get() = matrix.type
     override fun toString() = render()
     override fun hashCode() = ((matrix.name.hashCode() * 3) + column) * 5 + row
     override fun equals(other: Any?): Boolean {
         if (other == null) return false
         if (other !is AlgebraicExpr) return false
-        if (other.type != type) return false
         if (other !is MatrixVariableElement) return false
         if (matrix.name != other.matrix.name) return false
         if (column != other.column) return false
@@ -277,8 +271,7 @@ data class DataMatrix(
 }
 
 data class Tableau(
-    val children: List<NamedAlgebraicExpr>,
-    override val type: AlgebraicType
+    val children: List<NamedAlgebraicExpr>
 ) : AlgebraicExpr {
     init {
         track()
@@ -292,7 +285,6 @@ data class Slot(
     val replaces : ScalarExpr
 ) : ScalarExpr {
     init { track() }
-    override val type get() = replaces.type
     override fun toString() = render()
 }
 
@@ -331,12 +323,6 @@ data class NamedScalarAssign(
     val left: NamedScalarVariable,
     val right: ScalarExpr
 ) : NamedAlgebraicExpr {
-    override val type get() = left.type
-
-    init {
-        track()
-    }
-
     override fun toString() = render()
 }
 
@@ -345,8 +331,6 @@ data class NamedMatrixAssign(
     val left: NamedMatrixVariable,
     val right: MatrixExpr
 ) : NamedAlgebraicExpr {
-    override val type get() = left.type
-
     init {
         track()
         fun lm() = "matrix '${left.name}'"
@@ -370,8 +354,7 @@ data class NamedUntypedScalar(
 }
 
 data class ScalarListExpr(
-    val values: List<ScalarExpr>,
-    override val type: AlgebraicType
+    val values: List<ScalarExpr>
 ) : ScalarExpr {
     init {
         values.forEach {
@@ -389,18 +372,17 @@ fun assign(assignment: Pair<ScalarExpr, NamedScalarVariable>) = ScalarAssign(ass
 fun assign(assignment: Pair<MatrixExpr, NamedMatrixVariable>) = MatrixAssign(assignment.second, assignment.first)
 
 // Variables
-fun matrixVariable(columns: Int, rows: Int) = matrixVariable(DoubleAlgebraicType.kaneType, columns, rows)
-fun matrixVariable(type: AlgebraicType, columns: Int, rows: Int) =
-    MatrixVariable(columns, rows, type, (0 until rows * columns).map { 0.0 })
+fun matrixVariable(columns: Int, rows: Int) =
+    MatrixVariable(columns, rows, (0 until rows * columns).map { 0.0 })
 
 fun matrixVariable(columns: Int, rows: Int, vararg elements: Double) =
-    MatrixVariable(columns, rows, DoubleAlgebraicType.kaneType, elements.toList().map { it })
+    MatrixVariable(columns, rows, elements.toList().map { it })
 fun matrixVariable(columns : Int, rows : Int, init : (Coordinate) -> Double) =
-    MatrixVariable(columns, rows, DoubleAlgebraicType.kaneType, coordinatesOf(columns, rows).toList().map { init(it) })
+    MatrixVariable(columns, rows, coordinatesOf(columns, rows).toList().map { init(it) })
 fun matrixVariable(columns : Int, rows : Int, type : AlgebraicType, init : (Coordinate) -> Double) =
-    MatrixVariable(columns, rows, type, coordinatesOf(columns, rows).toList().map { type.coerceFrom(init(it)) })
+    MatrixVariable(columns, rows, coordinatesOf(columns, rows).toList().map { type.coerceFrom(init(it)) })
 
-fun variable(initial: Double = 0.0, type: AlgebraicType = DoubleAlgebraicType.kaneType) = ScalarVariable(initial, type)
+fun variable(initial: Double = 0.0) = ScalarVariable(initial)
 
 // Constant
 fun constant(value: Double): ScalarExpr = ConstantScalar(value)
@@ -409,7 +391,7 @@ fun constant(value : String) = ValueExpr(value, StringKaneType.kaneType)
 //inline fun <reified E:Any> constant(value : E) = ValueExpr(value, object : KaneType<E>(E::class.java) { })
 
 // Tableau
-fun tableauOf(type: AlgebraicType, vararg elements: NamedAlgebraicExpr): Tableau = Tableau(elements.toList(), type)
+fun tableauOf(type: AlgebraicType, vararg elements: NamedAlgebraicExpr): Tableau = Tableau(elements.toList())
 
 // Misc
 fun repeated(columns: Int, rows: Int, value: Double): MatrixExpr =
@@ -423,7 +405,7 @@ fun Expr.canGetConstant(): Boolean = when (this) {
     is ConstantScalar -> true
     is NamedScalar -> scalar.canGetConstant()
     is CoerceScalar ->
-        if (value is ScalarExpr && type.java == value.type.java) value.canGetConstant()
+        if (value is ScalarExpr) value.canGetConstant()
         else false
     is ValueExpr<*> -> value is Number
     else -> false
@@ -434,7 +416,7 @@ fun Expr.getConstant(): Double = when (this) {
     is ConstantScalar -> value
     is NamedScalar -> scalar.getConstant()
     is CoerceScalar ->
-        if (value is ScalarExpr && type.java == value.type.java) value.getConstant()
+        if (value is ScalarExpr) value.getConstant()
         else error("Should call canGetConstant first")
     is ValueExpr<*> -> (value as Number).toDouble()
     else ->

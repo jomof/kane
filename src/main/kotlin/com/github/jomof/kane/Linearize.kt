@@ -6,7 +6,6 @@ import com.github.jomof.kane.sheet.CoerceScalar
 import com.github.jomof.kane.sheet.Sheet
 import com.github.jomof.kane.sheet.SheetRangeExpr
 import com.github.jomof.kane.types.AlgebraicType
-import com.github.jomof.kane.types.DoubleAlgebraicType
 import com.github.jomof.kane.visitor.RewritingVisitor
 import com.github.jomof.kane.visitor.visit
 
@@ -432,8 +431,7 @@ fun Expr.replaceSheetRanges(): Expr {
                 ) {
                     return NamedScalarVariable(
                         expr.value.range.toCoordinate(),
-                        0.0,
-                        expr.type
+                        0.0
                     )
                 }
                 error("${expr.value.range.javaClass}")
@@ -446,7 +444,7 @@ fun Expr.replaceSheetRanges(): Expr {
 
 fun Expr.linearize(): LinearModel {
     val names = replaceSheetRanges().gatherNamedExprs().toList().map { it.eval() }
-    with(Tableau(names, DoubleAlgebraicType.kaneType)) {
+    with(Tableau(names)) {
         val model = LinearModel(type)
         claimMatrixVariables(model)
         claimScalarVariables(model)

@@ -420,15 +420,15 @@ class SheetBuilderImpl(
 }
 
 
-private fun Sheet.variable(cell: Id): NamedScalarVariable {
+private fun Sheet.namedVariableOf(cell: Id): NamedScalarVariable {
     val reduced = when (val value = cells.getValue(cell)) {
         is AlgebraicExpr -> value.eval()
         else ->
             error("${value.javaClass}")
     }
     return when (reduced) {
-        is ConstantScalar -> NamedScalarVariable(cell, reduced.value, reduced.type)
-        is ScalarVariable -> NamedScalarVariable(cell, reduced.initial, reduced.type)
+        is ConstantScalar -> NamedScalarVariable(cell, reduced.value)
+        is ScalarVariable -> NamedScalarVariable(cell, reduced.initial)
         else -> error("$cell (${cells.getValue(cell)}) is not a constant")
     }
 }
@@ -451,7 +451,7 @@ fun Sheet.minimize(
 
     // Turn each 'variable' into a NamedScalarVariable
     variableIds.forEach { cell ->
-        resolvedVariables[cell] = variable(cell)
+        resolvedVariables[cell] = namedVariableOf(cell)
     }
 
     // Replace names with variables
@@ -491,7 +491,7 @@ fun Sheet.minimize(
     }
 
     // Create the model, allocate space for it, and iterate. Break when the target didn't move much
-    val model = Tableau(resolvedVariables.values + diffs + namedTarget + assignBacks, diffs[0].type).linearize()
+    val model = Tableau(resolvedVariables.values + diffs + namedTarget + assignBacks).linearize()
     val space = model.allocateSpace()
     println("Plan has ${model.slotCount()} common sub-expressions and uses ${space.size * 8} bytes")
     model.eval(space)
@@ -525,7 +525,7 @@ fun Sheet.minimize(
     resolvedVariables.values.forEach {
         val value = model.shape(it).ref(space)
         assert(new.containsKey(it.name))
-        new[it.name] = variable(value.value, (cells[it.name] as AlgebraicExpr).type)
+        new[it.name] = variable(value.value)
     }
     return copy(cells = new.toCells())
 }

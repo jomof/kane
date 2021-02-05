@@ -20,7 +20,7 @@ private class ReduceAlgebraicBinaryScalar : RewritingVisitor() {
                             left = l,
                             right = r
                         )
-                    }, sub.type)
+                    })
                 sub.left is ScalarListExpr -> sub.left.copy(sub.left.values.map { sub.copy(left = it) })
                 sub.right is ScalarListExpr -> sub.right.copy(sub.right.values.map { sub.copy(right = it) })
                 else -> {
@@ -196,7 +196,7 @@ private val reduceCoerceScalar = object : RewritingVisitor() {
     override fun rewrite(expr: CoerceScalar): Expr {
         return when (expr.value) {
             is Sheet ->
-                ScalarListExpr(expr.value.cells.map { it.value as ScalarExpr }, expr.type)
+                ScalarListExpr(expr.value.cells.map { it.value as ScalarExpr })
             is SheetRangeExpr -> expr
             else -> error("${expr.value.javaClass}")
         }
@@ -273,7 +273,7 @@ private fun Expr.expandSheetCells(sheet: Sheet, excludeVariables: Set<Id>): Expr
             }
             if (list.isEmpty()) return this
             if (list.size == 1) return list.first()
-            return ScalarListExpr(list, list.first().type)
+            return ScalarListExpr(list)
 
         }
     }.rewrite(this)

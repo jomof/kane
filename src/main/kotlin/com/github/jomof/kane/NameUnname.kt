@@ -4,8 +4,8 @@ import com.github.jomof.kane.sheet.NamedSheetRangeExpr
 import com.github.jomof.kane.sheet.SheetRangeExpr
 
 
-fun ScalarVariable.toNamed(name: Id) = NamedScalarVariable(name, initial, type)
-fun MatrixVariable.toNamed(name: Id) = NamedMatrixVariable(name, columns, type, initial)
+fun ScalarVariable.toNamed(name: Id) = NamedScalarVariable(name, initial)
+fun MatrixVariable.toNamed(name: Id) = NamedMatrixVariable(name, columns, initial)
 fun ScalarAssign.toNamed(name: Id) = NamedScalarAssign(name, left, right)
 fun MatrixAssign.toNamed(name: Id) = NamedMatrixAssign(name, left, right)
 fun ScalarExpr.toNamed(name: Id) = NamedScalar(name, this)
@@ -41,8 +41,8 @@ fun Expr.toUnnamed(): Expr {
         is NamedScalarAssign -> ScalarAssign(left, right)
         is NamedMatrixAssign -> MatrixAssign(left, right)
         is NamedValueExpr<*> -> toUnnamedValueExpr()
-        is NamedScalarVariable -> ScalarVariable(initial, type)
-        is NamedMatrixVariable -> MatrixVariable(columns, rows, type, initial)
+        is NamedScalarVariable -> ScalarVariable(initial)
+        is NamedMatrixVariable -> MatrixVariable(columns, rows, initial)
         else -> TODO()
     }
 }
