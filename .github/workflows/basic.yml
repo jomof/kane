@@ -21,13 +21,19 @@ jobs:
       with:
         java-version: '11'
     - name: Build and Test
-      run: ./gradlew -Pversion=0.1.${{ github.run_number }} assemble dokkaHtml :test
-    - name: Publish Documentation
+      run: ./gradlew -Pversion=0.1.${{ github.run_number }} assemble :test dokkaHtml dokkaGfm 
+    - name: Publish Documentation (HTML)
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./build/dokka/html/-kane
-        destination_dir: doc
+        destination_dir: html
+    - name: Publish Documentation (GFM)
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./build/dokka/gfm/-kane
+        destination_dir: gfm
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
