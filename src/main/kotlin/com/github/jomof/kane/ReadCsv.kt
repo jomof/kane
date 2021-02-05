@@ -36,3 +36,35 @@ fun readCsv(
         skipMissMatchedRow
     )
 )
+
+
+/**
+ * Read CSV from a file.
+ */
+fun readCsv(
+    csv: File,
+    names: List<String> = listOf(),
+    sample: Double = 1.0,
+    keep: List<String> = listOf(), // List of columns to keep
+    charset: String = "UTF-8",
+    quoteChar: Char = '"',
+    delimiter: Char = ',',
+    escapeChar: Char = '"',
+    skipEmptyLine: Boolean = false,
+    skipMissMatchedRow: Boolean = false
+) = readCsv(
+    csv.inputStream(),
+    CsvParameters(
+        names = names,
+        sample = sample,
+        keep = keep.toSet()
+    ),
+    csvReaderContext(
+        charset,
+        quoteChar,
+        delimiter,
+        escapeChar,
+        skipEmptyLine,
+        skipMissMatchedRow
+    )
+)
