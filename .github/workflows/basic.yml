@@ -20,15 +20,13 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: '11'
-    - name: Build with Gradle
-      run: ./gradlew -Pversion=0.1.${{ github.run_number }} assemble dokkaGfm
-    - name: Run Tests
-      run: ./gradlew :test
+    - name: Build and Test
+      run: ./gradlew -Pversion=0.1.${{ github.run_number }} assemble dokkaGfm :test
     - name: Publish Documentation
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./build/doc
+        publish_dir: ./build
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
