@@ -60,9 +60,9 @@ class RangesTest {
 
     @Test
     fun `relative coordinate`() {
-        CellRange.relative(-1, -1).assertString("(col-1 row-1)")
-        CellRange.relative(0, 0).assertString("(col row)")
-        CellRange.relative(1, 1).assertString("(col+1 row+1)")
+        CellRangeRef.relative(-1, -1).assertString("(col-1 row-1)")
+        CellRangeRef.relative(0, 0).assertString("(col row)")
+        CellRangeRef.relative(1, 1).assertString("(col+1 row+1)")
 
     }
 

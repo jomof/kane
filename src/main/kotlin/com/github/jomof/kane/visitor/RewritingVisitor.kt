@@ -54,12 +54,6 @@ open class RewritingVisitor {
         else copy(scalar = rewritten)
     }
 
-    open fun rewrite(expr: NamedUntypedScalar): Expr = with(expr) {
-        val rewritten = untypedScalar(expr)
-        return if (rewritten === expr) this
-        else copy(expr = rewritten)
-    }
-
     open fun rewrite(expr: NamedSheetRangeExpr): Expr = with(expr) {
         val rewritten = range(range)
         return if (rewritten === range) this
@@ -174,9 +168,9 @@ open class RewritingVisitor {
         var changed = false
         val rewrittenElements = mutableMapOf<Id, Expr>()
         for (cell in cells) {
-            val (name, expr) = cell
-            val rewritten = rewrite(expr)
-            changed = changed || (rewritten !== expr)
+            val (name, cellExpr) = cell
+            val rewritten = rewrite(cellExpr)
+            changed = changed || (rewritten !== cellExpr)
             rewrittenElements[name] = rewritten
         }
         return if (changed) copy(cells = rewrittenElements.toCells())
@@ -204,9 +198,8 @@ open class RewritingVisitor {
         return result as ScalarExpr
     }
 
-    open fun untypedScalar(expr: UntypedScalar) = rewrite(expr) as UntypedScalar
     open fun matrix(expr: MatrixExpr) = rewrite(expr) as MatrixExpr
-    open fun range(expr: SheetRangeExpr): SheetRangeExpr {
+    open fun range(expr: SheetRange): SheetRange {
         val result = rewrite(expr)
         assert(result is SheetRangeExpr) {
             rewrite(expr)
@@ -248,7 +241,6 @@ open class RewritingVisitor {
                 is NamedMatrixVariable -> rewrite(expr)
                 is NamedSheetRangeExpr -> rewrite(expr)
                 is NamedMatrix -> rewrite(expr)
-                is NamedUntypedScalar -> rewrite(expr)
                 is SheetRangeExpr -> rewrite(expr)
                 is Tiling<*> -> rewrite(expr)
                 is ValueExpr<*> -> rewrite(expr)

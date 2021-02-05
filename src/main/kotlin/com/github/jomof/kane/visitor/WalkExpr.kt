@@ -58,7 +58,6 @@ fun Expr.visit(f: (expr : Expr) -> Unit) {
         is NamedScalarAssign -> right.visit(f)
         is NamedMatrixAssign -> right.visit(f)
         is NamedMatrix -> matrix.visit(f)
-        is NamedUntypedScalar -> expr.visit(f)
         is DataMatrix -> elements.forEach { it.visit(f) }
         is AlgebraicDeferredDataMatrix -> {
             left.visit(f)

@@ -21,10 +21,10 @@ interface SheetBuilder {
     fun nameRow(row: Int, name: Id)
     fun nameRow(row: Int, name: List<Expr>)
 
-    fun up(offset: Int) = SheetBuilderRange(this, CellRange.relative(column = 0, row = -offset))
-    fun down(offset: Int) = SheetBuilderRange(this, CellRange.relative(column = 0, row = offset))
-    fun left(offset: Int) = SheetBuilderRange(this, CellRange.relative(column = -offset, row = 0))
-    fun right(offset: Int) = SheetBuilderRange(this, CellRange.relative(column = offset, row = 0))
+    fun up(offset: Int) = SheetBuilderRange(this, CellRangeRef.relative(column = 0, row = -offset))
+    fun down(offset: Int) = SheetBuilderRange(this, CellRangeRef.relative(column = 0, row = offset))
+    fun left(offset: Int) = SheetBuilderRange(this, CellRangeRef.relative(column = -offset, row = 0))
+    fun right(offset: Int) = SheetBuilderRange(this, CellRangeRef.relative(column = offset, row = 0))
     val up get() = up(1)
     val down get() = down(1)
     val left get() = left(1)
@@ -42,25 +42,21 @@ private fun parseAndNameValue(name: String, value: String): NamedExpr {
 
 data class SheetBuilderRange(
     private val builder: SheetBuilder,
-    val range: SheetRange
-) : UntypedScalar {
+    val rangeRef: SheetRangeRef
+) : SheetRange {
     operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     fun toNamed(name: String): NamedSheetRangeExpr {
-        if (range is ColumnRange && range.first == range.second) {
-            builder.nameColumn(range.first.index, name)
+        if (rangeRef is ColumnRangeRef && rangeRef.first == rangeRef.second) {
+            builder.nameColumn(rangeRef.first.index, name)
         }
-        return NamedSheetRangeExpr(name, SheetRangeExpr(range))
+        return NamedSheetRangeExpr(name, SheetRangeExpr(rangeRef))
     }
 
-    override fun toString() = "BUILDER[$range]"
+    override fun toString() = "BUILDER[$rangeRef]"
 
-    fun up(move: Int) = copy(range = range.up(move))
-    fun down(move: Int) = copy(range = range.down(move))
-    fun left(move: Int) = copy(range = range.left(move))
-    fun right(move: Int) = copy(range = range.right(move))
-    val up get() = up(1)
-    val down get() = down(1)
-    val left get() = left(1)
-    val right get() = right(1)
+    override fun up(move: Int) = copy(rangeRef = rangeRef.up(move))
+    override fun down(move: Int) = copy(rangeRef = rangeRef.down(move))
+    override fun left(move: Int) = copy(rangeRef = rangeRef.left(move))
+    override fun right(move: Int) = copy(rangeRef = rangeRef.right(move))
 }
 

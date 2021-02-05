@@ -12,41 +12,39 @@ import kotlin.math.abs
 import kotlin.math.min
 import kotlin.reflect.KProperty
 
-data class SheetRangeExpr(val range: SheetRange) : UntypedScalar {
-    private val name by lazy { range.toString() }
-    fun up(move: Int) = copy(range = range.up(move))
-    fun down(move: Int) = copy(range = range.down(move))
-    fun left(move: Int) = copy(range = range.left(move))
-    fun right(move: Int) = copy(range = range.right(move))
+interface SheetRange : Expr {
+    fun up(move: Int): SheetRange
+    fun down(move: Int): SheetRange
+    fun left(move: Int): SheetRange
+    fun right(move: Int): SheetRange
     val up get() = up(1)
     val down get() = down(1)
     val left get() = left(1)
     val right get() = right(1)
+}
+
+data class SheetRangeExpr(val rangeRef: SheetRangeRef) :
+    SheetRange {
+    private val name by lazy { rangeRef.toString() }
+    override fun up(move: Int) = copy(rangeRef = rangeRef.up(move))
+    override fun down(move: Int) = copy(rangeRef = rangeRef.down(move))
+    override fun left(move: Int) = copy(rangeRef = rangeRef.left(move))
+    override fun right(move: Int) = copy(rangeRef = rangeRef.right(move))
     operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = name
 }
 
 data class NamedSheetRangeExpr(
     override val name: Id,
-    val range: SheetRangeExpr
-) : UntypedScalar, NamedExpr {
-    init {
-        track()
-        assert(name != "increasing" || range.toString() != "Brow-1") {
-            "Should have stripped name?"
-        }
-    }
+    val range: SheetRange
+) : SheetRange, NamedExpr {
 
     override fun toString() = render()
 
-    fun up(move: Int) = range.up(move)
-    fun down(move: Int) = range.down(move)
-    fun left(move: Int) = range.left(move)
-    fun right(move: Int) = range.right(move)
-    val up get() = up(1)
-    val down get() = down(1)
-    val left get() = left(1)
-    val right get() = right(1)
+    override fun up(move: Int) = range.up(move)
+    override fun down(move: Int) = range.down(move)
+    override fun left(move: Int) = range.left(move)
+    override fun right(move: Int) = range.right(move)
 }
 
 /**
@@ -226,7 +224,7 @@ class SheetBuilderImpl(
 
     override fun column(range: String): SheetBuilderRange {
         val parsed = parseRange(range)
-        assert(parsed is ColumnRange || parsed is NamedColumnRange)
+        assert(parsed is ColumnRangeRef || parsed is NamedColumnRangeRef)
         return SheetBuilderRange(this, parsed)
     }
 

@@ -88,50 +88,50 @@ fun Expr.slideScalarizedCellsRewritingVisitor(upperLeft: Coordinate, offset: Coo
     return object : RewritingVisitor() {
         override fun rewrite(expr: SheetRangeExpr): Expr {
             val result: SheetRangeExpr = with(expr) {
-                when (range) {
-                    is CellRange ->
+                when (rangeRef) {
+                    is CellRangeRef ->
                         when {
-                            range.column is MoveableIndex && range.row is FixedIndex -> {
+                            rangeRef.column is MoveableIndex && rangeRef.row is FixedIndex -> {
                                 copy(
-                                    range = range.copy(
-                                        column = MoveableIndex(range.column.index + offset.column),
-                                        row = MoveableIndex(range.row.index)
+                                    rangeRef = rangeRef.copy(
+                                        column = MoveableIndex(rangeRef.column.index + offset.column),
+                                        row = MoveableIndex(rangeRef.row.index)
                                     )
                                 )
                             }
-                            range.column is FixedIndex && range.row is MoveableIndex -> {
+                            rangeRef.column is FixedIndex && rangeRef.row is MoveableIndex -> {
                                 copy(
-                                    range = range.copy(
-                                        column = MoveableIndex(range.column.index),
-                                        row = MoveableIndex(range.row.index + offset.row - upperLeft.row + 1)
+                                    rangeRef = rangeRef.copy(
+                                        column = MoveableIndex(rangeRef.column.index),
+                                        row = MoveableIndex(rangeRef.row.index + offset.row - upperLeft.row + 1)
                                     )
                                 )
                             }
-                            range.column is RelativeIndex && range.row is RelativeIndex -> {
+                            rangeRef.column is RelativeIndex && rangeRef.row is RelativeIndex -> {
                                 copy(
-                                    range = range.copy(
-                                        column = MoveableIndex(currentCell.column + range.column.index),
-                                        row = MoveableIndex(currentCell.row + range.row.index)
+                                    rangeRef = rangeRef.copy(
+                                        column = MoveableIndex(currentCell.column + rangeRef.column.index),
+                                        row = MoveableIndex(currentCell.row + rangeRef.row.index)
                                     )
                                 )
                             }
-                            range.column is MoveableIndex && range.row is RelativeIndex -> {
+                            rangeRef.column is MoveableIndex && rangeRef.row is RelativeIndex -> {
                                 copy(
-                                    range = range.copy(
-                                        column = MoveableIndex(range.column.index + offset.column),
-                                        row = MoveableIndex(currentCell.row + range.row.index)
+                                    rangeRef = rangeRef.copy(
+                                        column = MoveableIndex(rangeRef.column.index + offset.column),
+                                        row = MoveableIndex(currentCell.row + rangeRef.row.index)
                                     )
                                 )
                             }
                             else ->
-                                TODO("$range")
+                                TODO("$rangeRef")
                         }
-                    is ColumnRange ->
+                    is ColumnRangeRef ->
                         when {
-                            range.first is MoveableIndex && range.second is MoveableIndex -> {
+                            rangeRef.first is MoveableIndex && rangeRef.second is MoveableIndex -> {
                                 copy(
-                                    range = CellRange(
-                                        column = MoveableIndex(range.first.index + offset.column),
+                                    rangeRef = CellRangeRef(
+                                        column = MoveableIndex(rangeRef.first.index + offset.column),
                                         row = MoveableIndex(currentCell.row)
                                     )
                                 )
@@ -140,7 +140,7 @@ fun Expr.slideScalarizedCellsRewritingVisitor(upperLeft: Coordinate, offset: Coo
                                 TODO("$left $right")
                         }
                     else ->
-                        TODO(range.javaClass.toString())
+                        TODO(rangeRef.javaClass.toString())
                 }
             }
             return result

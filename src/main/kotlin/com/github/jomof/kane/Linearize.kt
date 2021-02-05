@@ -409,13 +409,13 @@ fun AlgebraicExpr.rollUpCommonSubexpressions(model : LinearModel) : AlgebraicExp
         }
 
         override fun rewrite(expr: SheetRangeExpr): Expr {
-            return when (expr.range) {
-                is CellRange -> {
+            return when (expr.rangeRef) {
+                is CellRangeRef -> {
                     // done = false
                     expr
                 }
                 else ->
-                    error("${expr.range.javaClass}")
+                    error("${expr.rangeRef.javaClass}")
             }
         }
     }.algebraic(this)
@@ -426,16 +426,16 @@ fun Expr.replaceSheetRanges(): Expr {
         override fun rewrite(expr: CoerceScalar): Expr {
             if (expr.value is SheetRangeExpr) {
                 if (
-                    expr.value.range is CellRange &&
-                    expr.value.range.column is MoveableIndex &&
-                    expr.value.range.row is MoveableIndex
+                    expr.value.rangeRef is CellRangeRef &&
+                    expr.value.rangeRef.column is MoveableIndex &&
+                    expr.value.rangeRef.row is MoveableIndex
                 ) {
                     return NamedScalarVariable(
-                        expr.value.range.toCoordinate(),
+                        expr.value.rangeRef.toCoordinate(),
                         0.0
                     )
                 }
-                error("${expr.value.range.javaClass}")
+                error("${expr.value.rangeRef.javaClass}")
             }
 
             return super.rewrite(expr)

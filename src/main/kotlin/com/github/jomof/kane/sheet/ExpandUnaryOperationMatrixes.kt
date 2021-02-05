@@ -1,47 +1,19 @@
 package com.github.jomof.kane.sheet
 
-import com.github.jomof.kane.*
-import com.github.jomof.kane.functions.*
-
-private fun AlgebraicExpr.expandUnaryOperations(): AlgebraicExpr {
-    fun MatrixExpr.self() = expandUnaryOperations() as MatrixExpr
-    fun ScalarExpr.self() = expandUnaryOperations() as ScalarExpr
-    return when (this) {
-        is NamedMatrix -> copy(matrix = matrix.self())
-        is NamedScalar -> copy(scalar = scalar.self())
-        is AlgebraicUnaryMatrixScalar -> {
-            val data = DataMatrix(value.columns, value.rows, value.coordinates.map { offset ->
-                extractScalarizedMatrixElement(value, offset, mapOf())
-            })
-            val result = op.reduceArithmetic(data)
-            result?.self() ?: this
-        }
-        is DataMatrix -> map { it.self() }
-        is AlgebraicUnaryScalar -> copy(value = value.self())
-        is AlgebraicUnaryScalarStatistic ->
-            when (value) {
-                is AlgebraicExpr -> copy(value = value.expandUnaryOperations())
-                else -> error("${value.javaClass}")
-            }
-        is AlgebraicUnaryMatrix -> copy(value = value.self())
-        is AlgebraicBinaryScalar -> copy(left = left.self(), right = right.self())
-        is AlgebraicBinaryMatrix -> copy(left = left.self(), right = right.self())
-        is AlgebraicBinaryMatrixScalar -> copy(left = left.self(), right = right.self())
-        is AlgebraicBinaryScalarMatrix -> copy(left = left.self(), right = right.self())
-        is AlgebraicBinaryScalarStatistic -> copy(left = left.self(), right = right.self())
-        is ConstantScalar -> this
-        is DiscreteUniformRandomVariable -> this
-        is NamedScalarVariable -> this
-        is CoerceScalar -> copy(value = value.expandUnaryOperations())
-        is RetypeScalar -> copy(scalar = scalar.self())
-        is RetypeMatrix -> copy(matrix = matrix.self())
-        else -> error("$javaClass")
-    }
-}
+import com.github.jomof.kane.DataMatrix
+import com.github.jomof.kane.Expr
+import com.github.jomof.kane.coordinates
+import com.github.jomof.kane.functions.AlgebraicUnaryMatrixScalar
+import com.github.jomof.kane.visitor.RewritingVisitor
 
 fun Expr.expandUnaryOperations(): Expr {
-    return when (this) {
-        is AlgebraicExpr -> expandUnaryOperations()
-        else -> this
-    }
+    return object : RewritingVisitor() {
+        override fun rewrite(expr: AlgebraicUnaryMatrixScalar): Expr {
+            val data = DataMatrix(expr.value.columns, expr.value.rows, expr.value.coordinates.map { offset ->
+                extractScalarizedMatrixElement(expr.value, offset, mapOf())
+            })
+            val result = expr.op.reduceArithmetic(data) ?: return super.rewrite(expr)
+            return rewrite(result)
+        }
+    }.rewrite(this)
 }

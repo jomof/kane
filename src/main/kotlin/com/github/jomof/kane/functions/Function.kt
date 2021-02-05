@@ -14,19 +14,25 @@ interface AlgebraicBinaryScalarFunction {
     val meta : BinaryOp
     operator fun invoke(p1 : Double, p2 : Double) = doubleOp(p1, p2)
     fun doubleOp(p1 : Double, p2 : Double) : Double
-    operator fun  invoke(p1 : ScalarExpr, p2 : ScalarExpr) : ScalarExpr =
+    operator fun invoke(p1: ScalarExpr, p2: ScalarExpr): ScalarExpr =
         binaryOf(this, p1, p2)
-    operator fun  invoke(p1 : UntypedScalar, p2 : ScalarExpr) : ScalarExpr =
+
+    operator fun invoke(p1: SheetRange, p2: ScalarExpr): ScalarExpr =
         binaryOf(this, CoerceScalar(p1), p2)
-    operator fun  invoke(p1 : UntypedScalar, p2 : UntypedScalar) : ScalarExpr =
+
+    operator fun invoke(p1: SheetRange, p2: SheetRange): ScalarExpr =
         binaryOf(this, CoerceScalar(p1), CoerceScalar(p2))
-    operator fun  invoke(p1 : ScalarExpr, p2 : UntypedScalar) : ScalarExpr =
+
+    operator fun invoke(p1: ScalarExpr, p2: SheetRange): ScalarExpr =
         binaryOf(this, p1, CoerceScalar(p2))
-    operator fun  invoke(p1 : UntypedScalar, p2 : Double) : ScalarExpr =
+
+    operator fun invoke(p1: SheetRange, p2: Double): ScalarExpr =
         binaryOf(this, CoerceScalar(p1), constant(p2))
-    operator fun  invoke(p1 : Double, p2 : UntypedScalar) : ScalarExpr =
+
+    operator fun invoke(p1: Double, p2: SheetRange): ScalarExpr =
         binaryOf(this, constant(p1), CoerceScalar(p2))
-    operator fun  invoke(p1 : MatrixExpr, p2 : ScalarExpr) : MatrixExpr =
+
+    operator fun invoke(p1: MatrixExpr, p2: ScalarExpr): MatrixExpr =
         AlgebraicBinaryMatrixScalar(this, p1.columns, p1.rows, p1, p2)
     operator fun  invoke(p1 : Double, p2 : MatrixExpr) : MatrixExpr =
         AlgebraicBinaryScalarMatrix(this, p2.columns, p2.rows, constant(p1), p2)
@@ -37,10 +43,11 @@ interface AlgebraicBinaryScalarFunction {
     operator fun  invoke(p1 : MatrixExpr, p2 : Double) : MatrixExpr =
         AlgebraicBinaryMatrixScalar(this, p1.columns, p1.rows, p1, constant(p2))
     operator fun  invoke(p1 : Double, p2 : ScalarExpr) : ScalarExpr = invoke(constant(p1), p2)
-    operator fun  invoke(p1 : ScalarExpr, p2 : Double) : ScalarExpr = invoke(p1, constant(p2))
-    operator fun  invoke(p1 : MatrixExpr, p2 : UntypedScalar) : MatrixExpr =
+    operator fun invoke(p1: ScalarExpr, p2: Double): ScalarExpr = invoke(p1, constant(p2))
+    operator fun invoke(p1: MatrixExpr, p2: SheetRange): MatrixExpr =
         AlgebraicBinaryMatrixScalar(this, p1.columns, p1.rows, p1, CoerceScalar(p2))
-    fun type(left : AlgebraicType, right : AlgebraicType) : AlgebraicType {
+
+    fun type(left: AlgebraicType, right: AlgebraicType): AlgebraicType {
         return when {
             left == DollarAlgebraicType.kaneType -> DollarAlgebraicType.kaneType
             right == DollarAlgebraicType.kaneType -> DollarAlgebraicType.kaneType
@@ -213,7 +220,7 @@ interface AlgebraicUnaryScalarStatisticFunction {
         return filtered
     }
 
-    operator fun invoke(expr: UntypedScalar): ScalarExpr =
+    operator fun invoke(expr: SheetRange): ScalarExpr =
         AlgebraicUnaryScalarStatistic(
             this,
             CoerceScalar(expr)
@@ -224,7 +231,7 @@ interface AlgebraicUnaryScalarStatisticFunction {
 
     operator fun invoke(expr: Expr): Expr = when (expr) {
         is AlgebraicExpr -> invoke(expr)
-        is UntypedScalar -> invoke(expr)
+        is SheetRange -> invoke(expr)
         is Sheet -> invoke(expr)
         else -> error("${expr.javaClass}")
     }
@@ -302,9 +309,9 @@ data class AlgebraicBinaryScalarStatistic(
 
 data class AlgebraicBinaryRangeStatistic(
     val op: AlgebraicBinaryScalarStatisticFunction,
-    val left: SheetRangeExpr,
+    val left: SheetRange,
     val right: ScalarExpr
-) : UntypedScalar {
+) : ScalarExpr {
     init {
         track()
     }

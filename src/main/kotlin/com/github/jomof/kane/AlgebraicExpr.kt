@@ -12,17 +12,14 @@ import com.github.jomof.kane.types.kaneDouble
 import kotlin.reflect.KProperty
 
 interface Expr
-interface UntypedScalar : Expr
+
 interface TypedExpr<E : Any> : Expr {
     val type: KaneType<E>
 }
 
-interface AlgebraicExpr : Expr {
-    //val type: AlgebraicType get() = DoubleAlgebraicType.kaneType
-}
+interface AlgebraicExpr : Expr
 
 interface ScalarExpr : AlgebraicExpr
-
 interface MatrixExpr : AlgebraicExpr {
     val columns: Int
     val rows: Int
@@ -343,13 +340,6 @@ data class NamedMatrixAssign(
         }
     }
 
-    override fun toString() = render()
-}
-
-data class NamedUntypedScalar(
-    override val name: Id,
-    val expr: UntypedScalar
-) : NamedExpr, UntypedScalar {
     override fun toString() = render()
 }
 
@@ -780,9 +770,6 @@ fun Expr.render(entryPoint: Boolean = true, outerType: AlgebraicType? = null): S
         is AlgebraicBinaryScalarMatrix -> binary(op.meta, left, right)
         is NamedScalar ->
             if (entryPoint) "$name=${scalar.self()}"
-            else Identifier.string(name)
-        is NamedUntypedScalar ->
-            if (entryPoint) "$name=${expr.self()}"
             else Identifier.string(name)
         is NamedMatrix -> {
             when {

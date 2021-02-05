@@ -246,14 +246,14 @@ private fun Expr.expandSheetCells(sheet: Sheet, excludeVariables: Set<Id>): Expr
         }
 
         override fun rewrite(expr: SheetRangeExpr): Expr = with(expr) {
-            if (expr.range is CellRange && excludeVariables.contains(expr.range.toCoordinate()))
+            if (expr.rangeRef is CellRangeRef && excludeVariables.contains(expr.rangeRef.toCoordinate()))
                 return this
-            if (checkIdentity && excludeVariables.contains(expr.range.toString())) {
-                excludeVariables.contains(expr.range.toString())
+            if (checkIdentity && excludeVariables.contains(expr.rangeRef.toString())) {
+                excludeVariables.contains(expr.rangeRef.toString())
                 error("Invalid range lookup")
             }
-            if (expr.range is CellRange && expr.range.column is MoveableIndex && expr.range.row is MoveableIndex) {
-                val coordinate = expr.range.toCoordinate()
+            if (expr.rangeRef is CellRangeRef && expr.rangeRef.column is MoveableIndex && expr.rangeRef.row is MoveableIndex) {
+                val coordinate = expr.rangeRef.toCoordinate()
                 return when (val result = sheet.cells[coordinate]) {
                     null -> expr
                     // is ScalarExpr -> return result
@@ -263,7 +263,7 @@ private fun Expr.expandSheetCells(sheet: Sheet, excludeVariables: Set<Id>): Expr
                     else -> this
                 }
             }
-            val list = sheet.cells.toMap().filter { range.contains(it.key) }.map {
+            val list = sheet.cells.toMap().filter { rangeRef.contains(it.key) }.map {
                 val result = when (val value = it.value) {
                     is ConstantScalar -> value
                     is ScalarVariable -> constant(value.initial)

@@ -1,6 +1,7 @@
 package com.github.jomof.kane.functions
 
 import com.github.jomof.kane.*
+import com.github.jomof.kane.sheet.SheetRange
 
 val DIV by BinaryOp(op = "/", precedence = 2, infix = true)
 
@@ -41,17 +42,17 @@ val divide : AlgebraicBinaryScalarFunction = DivideFunction()
 
 
 // Div
-operator fun <E:Number> ScalarExpr.div(right : E) = divide(this, right.toDouble())
-operator fun <E:Number> E.div(right : ScalarExpr) = divide(this.toDouble(), right)
-operator fun ScalarExpr.div(right : ScalarExpr) = divide(this, right)
-operator fun <E:Number> MatrixExpr.div(right : E) = divide(this, right.toDouble())
-operator fun MatrixExpr.div(right : ScalarExpr) = divide(this, right)
-operator fun <E:Number> E.div(right : MatrixExpr) = divide(this.toDouble(), right)
-operator fun ScalarExpr.div(right : MatrixExpr) = divide(this, right)
-operator fun MatrixExpr.div(right : MatrixExpr) = divide(this, right)
-operator fun ScalarExpr.div(right : UntypedScalar) = divide(this, right)
-operator fun UntypedScalar.div(right : ScalarExpr) = divide(this, right)
-operator fun <E:Number> UntypedScalar.div(right : E) = divide(this, right.toDouble())
-operator fun <E:Number> E.div(right : UntypedScalar) = divide(this.toDouble(), right)
-operator fun UntypedScalar.div(right : UntypedScalar) = divide(this, right)
-operator fun MatrixExpr.div(right : UntypedScalar) = divide(this, right)
+operator fun <E : Number> ScalarExpr.div(right: E) = divide(this, right.toDouble())
+operator fun <E : Number> E.div(right: ScalarExpr) = divide(this.toDouble(), right)
+operator fun ScalarExpr.div(right: ScalarExpr) = divide(this, right)
+operator fun <E : Number> MatrixExpr.div(right: E) = divide(this, right.toDouble())
+operator fun MatrixExpr.div(right: ScalarExpr) = divide(this, right)
+operator fun <E : Number> E.div(right: MatrixExpr) = divide(this.toDouble(), right)
+operator fun ScalarExpr.div(right: MatrixExpr) = divide(this, right)
+operator fun MatrixExpr.div(right: MatrixExpr) = divide(this, right)
+operator fun ScalarExpr.div(right: SheetRange) = divide(this, right)
+operator fun SheetRange.div(right: ScalarExpr) = divide(this, right)
+operator fun <E : Number> SheetRange.div(right: E) = divide(this, right.toDouble())
+operator fun <E : Number> E.div(right: SheetRange) = divide(this.toDouble(), right)
+operator fun SheetRange.div(right: SheetRange) = divide(this, right)
+operator fun MatrixExpr.div(right: SheetRange) = divide(this, right)

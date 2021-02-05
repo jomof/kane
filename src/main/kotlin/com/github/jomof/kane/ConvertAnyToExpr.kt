@@ -1,6 +1,7 @@
 package com.github.jomof.kane
 
 import com.github.jomof.kane.sheet.CoerceScalar
+import com.github.jomof.kane.sheet.SheetRange
 import com.github.jomof.kane.sheet.analyzeDataType
 import com.github.jomof.kane.sheet.parseToExpr
 
@@ -17,7 +18,7 @@ fun convertAnyToExpr(any: Any): Expr {
 fun convertAnyToScalarExpr(any: Any): ScalarExpr =
     when (val expr = convertAnyToExpr(any)) {
         is ScalarExpr -> expr
-        is UntypedScalar -> CoerceScalar(expr)
+        is SheetRange -> CoerceScalar(expr)
         else ->
             error("${expr.javaClass}")
     }

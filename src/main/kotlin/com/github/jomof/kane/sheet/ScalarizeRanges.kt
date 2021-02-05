@@ -5,17 +5,16 @@ import com.github.jomof.kane.ComputableIndex.MoveableIndex
 import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.visitor.RewritingVisitor
 
-private fun Expr.ranges(): Set<SheetRange> {
+private fun Expr.ranges(): Set<SheetRangeRef> {
     return when (this) {
         is DataMatrix -> {
-            val set = mutableSetOf<SheetRange>()
+            val set = mutableSetOf<SheetRangeRef>()
             elements.forEach { expr ->
                 set += expr.ranges()
             }
             set
         }
         is NamedMatrix -> matrix.ranges()
-        is NamedUntypedScalar -> expr.ranges()
         is AlgebraicUnaryMatrix -> value.ranges()
         is AlgebraicDeferredDataMatrix -> {
             left.ranges()
@@ -33,11 +32,11 @@ private fun Expr.ranges(): Set<SheetRange> {
         is RetypeScalar -> scalar.ranges()
         is RetypeMatrix -> matrix.ranges()
         is NamedSheetRangeExpr -> range.ranges()
-        is SheetRangeExpr -> when (range) {
-            is ColumnRange -> setOf(range)
-            is RectangleRange -> setOf(range)
-            is CellRange -> setOf()
-            else -> error("${range.javaClass}")
+        is SheetRangeExpr -> when (rangeRef) {
+            is ColumnRangeRef -> setOf(rangeRef)
+            is RectangleRangeRef -> setOf(rangeRef)
+            is CellRangeRef -> setOf()
+            else -> error("${rangeRef.javaClass}")
         }
         is AlgebraicBinaryScalarStatistic,
         is AlgebraicUnaryScalarStatistic,
@@ -58,11 +57,11 @@ private fun Expr.replaceColumnWithCell(row: Int): Expr {
         override fun rewrite(expr: AlgebraicUnaryScalarStatistic) = expr
         override fun rewrite(expr: AlgebraicBinaryRangeStatistic) = expr.copy(right = scalar(expr.right))
         override fun rewrite(expr: SheetRangeExpr) = with(expr) {
-            when (range) {
-                is ColumnRange -> copy(range = CellRange(column = range.first, MoveableIndex(row)))
-                is CellRange -> this
-                is RectangleRange -> this
-                else -> error("${range.javaClass}")
+            when (rangeRef) {
+                is ColumnRangeRef -> copy(rangeRef = CellRangeRef(column = rangeRef.first, MoveableIndex(row)))
+                is CellRangeRef -> this
+                is RectangleRangeRef -> this
+                else -> error("${rangeRef.javaClass}")
             }
         }
     }.rewrite(this)
@@ -128,16 +127,16 @@ fun SheetBuilderImpl.scalarizeRanges(cells: Cells): Cells {
 fun SheetBuilderImpl.convertNamedColumnsToColumnRanges(cells: Cells): Cells {
     val converter = object : RewritingVisitor() {
         override fun rewrite(expr: SheetRangeExpr): Expr = with(expr) {
-            return when (range) {
-                is NamedColumnRange -> {
-                    val columns = columnDescriptors.filter { it.value.name == range.name }.map { it.key }
+            return when (rangeRef) {
+                is NamedColumnRangeRef -> {
+                    val columns = columnDescriptors.filter { it.value.name == rangeRef.name }.map { it.key }
                     val columnRange = when {
                         columns.isEmpty() ->
-                            error("No column named ${range.name}")
-                        columns.size > 1 -> error("Multiple columns named ${range.name}")
-                        else -> ColumnRange(first = MoveableIndex(columns[0]), second = MoveableIndex(columns[0]))
+                            error("No column named ${rangeRef.name}")
+                        columns.size > 1 -> error("Multiple columns named ${rangeRef.name}")
+                        else -> ColumnRangeRef(first = MoveableIndex(columns[0]), second = MoveableIndex(columns[0]))
                     }
-                    copy(range = columnRange)
+                    copy(rangeRef = columnRange)
                 }
                 else -> this
             }

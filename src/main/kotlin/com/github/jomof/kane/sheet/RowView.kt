@@ -1,7 +1,7 @@
 package com.github.jomof.kane.sheet
 
 import com.github.jomof.kane.Expr
-import com.github.jomof.kane.NamedColumnRange
+import com.github.jomof.kane.NamedColumnRangeRef
 import com.github.jomof.kane.constant
 import com.github.jomof.kane.coordinateToCellName
 
@@ -19,14 +19,14 @@ class RowView(private val sheet: Sheet, private val row: Int) : RangeExprProvide
     }
 
     override fun range(range: SheetRangeExpr): Expr {
-        return when (range.range) {
-            is NamedColumnRange -> {
+        return when (range.rangeRef) {
+            is NamedColumnRangeRef -> {
                 val column = sheet.columnDescriptors
-                    .filter { it.value.name == range.range.name }
+                    .filter { it.value.name == range.rangeRef.name }
                     .map { it.key }.single()
                 sheet[column, row]
             }
-            else -> error("${range.range.javaClass}")
+            else -> error("${range.rangeRef.javaClass}")
         }
     }
 

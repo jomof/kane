@@ -6,7 +6,7 @@ import com.github.jomof.kane.visitor.RewritingVisitor
 private fun Expr.removeBuilderPrivateExpressions(): Expr {
     return object : RewritingVisitor() {
         override fun rewrite(expr: Expr): Expr {
-            if (expr is SheetBuilderRange) return SheetRangeExpr(expr.range)
+            if (expr is SheetBuilderRange) return SheetRangeExpr(expr.rangeRef)
             return super.rewrite(expr)
         }
     }.rewrite(this)

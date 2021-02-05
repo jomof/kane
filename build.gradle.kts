@@ -46,6 +46,10 @@ val dokkaHtmlJar by tasks.register<Jar>("dokkaHtmlJar") {
     archiveClassifier.set("html-doc")
 }
 
+tasks.dokkaGfm.configure {
+    outputDirectory.set(buildDir.resolve("doc"))
+}
+
 publishing {
     publications {
         create<MavenPublication>("maven") {

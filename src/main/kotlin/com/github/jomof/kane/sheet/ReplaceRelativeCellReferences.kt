@@ -7,9 +7,9 @@ fun Expr.replaceRelativeCellReferences(coordinate: Coordinate): Expr {
     fun MatrixExpr.self(coordinate: Coordinate) = replaceRelativeCellReferences(coordinate) as MatrixExpr
     return object : RewritingVisitor() {
         override fun rewrite(expr: SheetRangeExpr) = run {
-            val rebased = expr.range.rebase(coordinate)
-            if (rebased == expr.range) expr
-            else expr.copy(range = rebased)
+            val rebased = expr.rangeRef.rebase(coordinate)
+            if (rebased == expr.rangeRef) expr
+            else expr.copy(rangeRef = rebased)
         }
 
         override fun rewrite(expr: NamedMatrix) = run {

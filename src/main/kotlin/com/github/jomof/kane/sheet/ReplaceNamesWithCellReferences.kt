@@ -7,12 +7,12 @@ import com.github.jomof.kane.functions.*
 private class ReplaceNamesWithCellReferences(val excluding: Id) {
     private fun MatrixExpr.replace() = (this as Expr).replace() as MatrixExpr
     private fun ScalarExpr.replace() = (this as Expr).replace() as ScalarExpr
-    private fun UntypedScalar.replace() = (this as Expr).replace() as UntypedScalar
+    private fun SheetRange.replace() = (this as Expr).replace() as SheetRange
     private fun Expr.replace(): Expr {
         return when (this) {
-            is NamedUntypedScalar ->
+            is NamedSheetRangeExpr ->
                 when {
-                    name == excluding -> copy(expr = expr.replace())
+                    name == excluding -> copy(range = range.replace())
                     name is Coordinate -> {
                         CoerceScalar(
                             SheetRangeExpr(
@@ -22,7 +22,7 @@ private class ReplaceNamesWithCellReferences(val excluding: Id) {
                     }
 
                     else ->
-                        expr.replace()
+                        range.replace()
                 }
             is NamedScalar ->
                 when {
@@ -66,7 +66,6 @@ private class ReplaceNamesWithCellReferences(val excluding: Id) {
                 left = left.replace(),
                 right = right.replace()
             )
-            is NamedSheetRangeExpr -> toUnnamed()
             is CoerceScalar -> copy(value = value.replace())
             //is AlgebraicUnaryRangeStatistic -> this
             is AlgebraicBinaryRangeStatistic -> copy(right = right.replace())

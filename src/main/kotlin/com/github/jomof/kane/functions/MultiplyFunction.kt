@@ -1,6 +1,7 @@
 package com.github.jomof.kane.functions
 
 import com.github.jomof.kane.*
+import com.github.jomof.kane.sheet.SheetRange
 
 val TIMES by BinaryOp(op = "*", precedence = 1, associative = true, infix = true)
 
@@ -70,17 +71,17 @@ private class MultiplyFunction : AlgebraicBinaryScalarFunction {
 val multiply : AlgebraicBinaryScalarFunction = MultiplyFunction()
 
 // Times
-operator fun <E:Number> ScalarExpr.times(right : E) = multiply(this, right.toDouble())
-operator fun <E:Number> E.times(right : ScalarExpr) = multiply(this.toDouble(), right)
-operator fun ScalarExpr.times(right : ScalarExpr) = multiply(this, right)
-operator fun <E:Number> MatrixExpr.times(right : E) = multiply(this, right.toDouble())
-operator fun MatrixExpr.times(right : ScalarExpr) = multiply(this, right)
-operator fun <E:Number> E.times(right : MatrixExpr) = multiply(this.toDouble(), right)
-operator fun ScalarExpr.times(right : MatrixExpr) = multiply(this, right)
-operator fun MatrixExpr.times(right : MatrixExpr) = multiply(this, right)
-operator fun ScalarExpr.times(right : UntypedScalar) = multiply(this, right)
-operator fun UntypedScalar.times(right : ScalarExpr) = multiply(this, right)
-operator fun <E:Number> UntypedScalar.times(right : E) = multiply(this, right.toDouble())
-operator fun <E:Number> E.times(right : UntypedScalar) = multiply(this.toDouble(), right)
-operator fun UntypedScalar.times(right : UntypedScalar) = multiply(this, right)
-operator fun MatrixExpr.times(right : UntypedScalar) = multiply(this, right)
+operator fun <E : Number> ScalarExpr.times(right: E) = multiply(this, right.toDouble())
+operator fun <E : Number> E.times(right: ScalarExpr) = multiply(this.toDouble(), right)
+operator fun ScalarExpr.times(right: ScalarExpr) = multiply(this, right)
+operator fun <E : Number> MatrixExpr.times(right: E) = multiply(this, right.toDouble())
+operator fun MatrixExpr.times(right: ScalarExpr) = multiply(this, right)
+operator fun <E : Number> E.times(right: MatrixExpr) = multiply(this.toDouble(), right)
+operator fun ScalarExpr.times(right: MatrixExpr) = multiply(this, right)
+operator fun MatrixExpr.times(right: MatrixExpr) = multiply(this, right)
+operator fun ScalarExpr.times(right: SheetRange) = multiply(this, right)
+operator fun SheetRange.times(right: ScalarExpr) = multiply(this, right)
+operator fun <E : Number> SheetRange.times(right: E) = multiply(this, right.toDouble())
+operator fun <E : Number> E.times(right: SheetRange) = multiply(this.toDouble(), right)
+operator fun SheetRange.times(right: SheetRange) = multiply(this, right)
+operator fun MatrixExpr.times(right: SheetRange) = multiply(this, right)

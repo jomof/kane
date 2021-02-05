@@ -2,11 +2,11 @@ package com.github.jomof.kane
 
 import com.github.jomof.kane.ComputableIndex.*
 
-interface SheetRange {
-    fun up(move: Int): SheetRange
-    fun down(move: Int): SheetRange
-    fun left(move: Int): SheetRange
-    fun right(move: Int): SheetRange
+interface SheetRangeRef {
+    fun up(move: Int): SheetRangeRef
+    fun down(move: Int): SheetRangeRef
+    fun left(move: Int): SheetRangeRef
+    fun right(move: Int): SheetRangeRef
     val up get() = up(1)
     val down get() = down(1)
     val left get() = left(1)
@@ -27,7 +27,7 @@ class Coordinate private constructor(val column: Int, val row: Int) {
     operator fun component1(): Int = column
     operator fun component2(): Int = row
     override fun toString() = "[$column,$row]"
-    fun toComputableCoordinate() = CellRange(MoveableIndex(column), MoveableIndex(row))
+    fun toComputableCoordinate() = CellRangeRef(MoveableIndex(column), MoveableIndex(row))
     fun copy(column: Int = this.column, row: Int = this.row): Coordinate = coordinate(column, row)
     override fun hashCode() = row * 7 + column * 119
     override fun equals(other: Any?): Boolean {
@@ -133,10 +133,10 @@ sealed class ComputableIndex {
     }
 }
 
-data class CellRange(
+data class CellRangeRef(
     val column: ComputableIndex,
     val row: ComputableIndex
-) : SheetRange {
+) : SheetRangeRef {
     init {
 //        assert(column !is MoveableIndex || row !is MoveableIndex) {
 //            "Should be NamedScalarVariable"
@@ -172,32 +172,32 @@ data class CellRange(
     }
 
     companion object {
-        fun relative(column: Int, row: Int) = CellRange(RelativeIndex(column), RelativeIndex(row))
-        fun moveable(column: Int, row: Int) = CellRange(MoveableIndex(column), MoveableIndex(row))
+        fun relative(column: Int, row: Int) = CellRangeRef(RelativeIndex(column), RelativeIndex(row))
+        fun moveable(column: Int, row: Int) = CellRangeRef(MoveableIndex(column), MoveableIndex(row))
         fun moveable(coordinate: Coordinate) = moveable(coordinate.column, coordinate.row)
     }
 }
 
-private fun CellRange.rebase(base: Coordinate): CellRange {
+private fun CellRangeRef.rebase(base: Coordinate): CellRangeRef {
     return when {
         column is MoveableIndex && row is MoveableIndex -> this
         column is RelativeIndex && row is RelativeIndex ->
-            CellRange(
+            CellRangeRef(
                 MoveableIndex(column.index + base.column),
                 MoveableIndex(row.index + base.row)
             )
         column is MoveableIndex && row is RelativeIndex ->
-            CellRange(
+            CellRangeRef(
                 column,
                 MoveableIndex(row.index + base.row)
             )
         column is MoveableIndex && row is FixedIndex ->
-            CellRange(
+            CellRangeRef(
                 MoveableIndex(base.column),
                 MoveableIndex(row.index)
             )
         column is FixedIndex && row is MoveableIndex ->
-            CellRange(
+            CellRangeRef(
                 MoveableIndex(column.index),
                 MoveableIndex(base.row)
             )
@@ -206,7 +206,7 @@ private fun CellRange.rebase(base: Coordinate): CellRange {
     }
 }
 
-private fun ColumnRange.rebase(base: Coordinate): SheetRange {
+private fun ColumnRangeRef.rebase(base: Coordinate): SheetRangeRef {
     return when {
         first is MoveableIndex && second is MoveableIndex -> this
         else ->
@@ -214,22 +214,22 @@ private fun ColumnRange.rebase(base: Coordinate): SheetRange {
     }
 }
 
-private fun RectangleRange.rebase(base: Coordinate): SheetRange {
-    return RectangleRange(first = first.rebase(base), second = second.rebase(base))
+private fun RectangleRangeRef.rebase(base: Coordinate): SheetRangeRef {
+    return RectangleRangeRef(first = first.rebase(base), second = second.rebase(base))
 }
 
-fun SheetRange.rebase(base: Coordinate): SheetRange {
+fun SheetRangeRef.rebase(base: Coordinate): SheetRangeRef {
     return when (this) {
-        is CellRange -> rebase(base)
-        is ColumnRange -> rebase(base)
-        is RectangleRange -> rebase(base)
+        is CellRangeRef -> rebase(base)
+        is ColumnRangeRef -> rebase(base)
+        is RectangleRangeRef -> rebase(base)
         else -> error("$javaClass")
     }
 }
 
 // Cell naming
 fun coordinateToCellName(column: ComputableIndex, row: ComputableIndex) =
-    CellRange(column, row).toString()
+    CellRangeRef(column, row).toString()
 
 fun coordinateToCellName(column: Int, row: Int): String {
     return coordinateToCellName(MoveableIndex(column), MoveableIndex(row))
@@ -299,23 +299,23 @@ fun cellNameToCoordinate(tag: String): Coordinate {
     )
 }
 
-fun cellNameToComputableCoordinate(name: String): CellRange {
+fun cellNameToComputableCoordinate(name: String): CellRangeRef {
     val columnIsFixed = name[0] == '$'
     val lastIndexOfDollar = name.lastIndexOf('$')
     val rowIsFixed = lastIndexOfDollar > 0
     val coordinate = cellNameToCoordinate(name.replace("$", ""))
     val column = if (columnIsFixed) FixedIndex(coordinate.column) else MoveableIndex(coordinate.column)
     val row = if (rowIsFixed) FixedIndex(coordinate.row) else MoveableIndex(coordinate.row)
-    return CellRange(
+    return CellRangeRef(
         column = column,
         row = row
     )
 }
 
-data class RectangleRange(
-    val first: CellRange,
-    val second: CellRange
-) : SheetRange {
+data class RectangleRangeRef(
+    val first: CellRangeRef,
+    val second: CellRangeRef
+) : SheetRangeRef {
     override fun up(move: Int) = copy(first = first.up(move), second = second.up(move))
     override fun down(move: Int) = copy(first = first.down(move), second = second.down(move))
     override fun left(move: Int) = copy(first = first.down(move), second = second.down(move))
@@ -330,12 +330,12 @@ data class RectangleRange(
     }
 }
 
-data class ColumnRange(
+data class ColumnRangeRef(
     val first: ComputableIndex,
     val second: ComputableIndex
-) : SheetRange {
-    override fun up(move: Int) = CellRange(first, RelativeIndex(-1))
-    override fun down(move: Int) = CellRange(first, RelativeIndex(1))
+) : SheetRangeRef {
+    override fun up(move: Int) = CellRangeRef(first, RelativeIndex(-1))
+    override fun down(move: Int) = CellRangeRef(first, RelativeIndex(1))
     override fun left(move: Int) = copy(first = first - move, second = second - move)
     override fun right(move: Int) = copy(first = first + move, second = second + move)
     override fun toString(): String {
@@ -349,11 +349,11 @@ data class ColumnRange(
     }
 }
 
-data class NamedColumnRange(
+data class NamedColumnRangeRef(
     val name: String,
     val columnOffset: Int = 0,
     val rowOffset: Int = 0
-) : SheetRange {
+) : SheetRangeRef {
     override fun up(move: Int) = copy(rowOffset = rowOffset - move)
     override fun down(move: Int) = copy(rowOffset = rowOffset + move)
     override fun left(move: Int) = copy(columnOffset = columnOffset - move)
@@ -367,7 +367,7 @@ data class NamedColumnRange(
 }
 
 
-fun parseRange(range: String): SheetRange {
+fun parseRange(range: String): SheetRangeRef {
     if (looksLikeCellName(range)) {
         return cellNameToComputableCoordinate(range)
     }
@@ -376,20 +376,20 @@ fun parseRange(range: String): SheetRange {
         val value = split[0]
         if (looksLikeColumnName(value)) {
             val column = cellNameToComputableCoordinate(value + "1").column
-            return ColumnRange(column, column)
+            return ColumnRangeRef(column, column)
         } else {
-            return NamedColumnRange(range)
+            return NamedColumnRangeRef(range)
         }
     }
 
     val (left, right) = range.split(':')
     if (looksLikeColumnName(left) && looksLikeColumnName(right)) {
-        return ColumnRange(
+        return ColumnRangeRef(
             cellNameToComputableCoordinate(left + "1").column,
             cellNameToComputableCoordinate(right + "1").column,
         )
     }
-    return RectangleRange(
+    return RectangleRangeRef(
         cellNameToComputableCoordinate(left),
         cellNameToComputableCoordinate(right)
     )

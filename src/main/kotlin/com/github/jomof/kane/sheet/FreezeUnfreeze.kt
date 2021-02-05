@@ -1,6 +1,6 @@
 package com.github.jomof.kane.sheet
 
-import com.github.jomof.kane.CellRange
+import com.github.jomof.kane.CellRangeRef
 import com.github.jomof.kane.ComputableIndex.MoveableIndex
 import com.github.jomof.kane.ComputableIndex.RelativeIndex
 import com.github.jomof.kane.Coordinate
@@ -15,20 +15,20 @@ import com.github.jomof.kane.visitor.RewritingVisitor
 fun Expr.unfreeze(current: Coordinate): Expr {
     return object : RewritingVisitor() {
         override fun rewrite(expr: SheetRangeExpr): Expr = with(expr) {
-            return when (range) {
-                is CellRange -> when {
-                    range.column is MoveableIndex && range.row is MoveableIndex -> {
+            return when (rangeRef) {
+                is CellRangeRef -> when {
+                    rangeRef.column is MoveableIndex && rangeRef.row is MoveableIndex -> {
                         copy(
-                            range = CellRange(
-                                column = RelativeIndex(range.column.index - current.column),
-                                row = RelativeIndex(range.row.index - current.row)
+                            rangeRef = CellRangeRef(
+                                column = RelativeIndex(rangeRef.column.index - current.column),
+                                row = RelativeIndex(rangeRef.row.index - current.row)
                             )
                         )
                     }
                     else ->
-                        TODO("${range.column.javaClass} ${range.row.javaClass}")
+                        TODO("${rangeRef.column.javaClass} ${rangeRef.row.javaClass}")
                 }
-                else -> TODO("$range : ${range.javaClass}")
+                else -> TODO("$rangeRef : ${rangeRef.javaClass}")
             }
         }
     }.rewrite(this)
@@ -41,20 +41,20 @@ fun Expr.unfreeze(current: Coordinate): Expr {
 fun Expr.freeze(current: Coordinate): Expr {
     return object : RewritingVisitor() {
         override fun rewrite(expr: SheetRangeExpr): Expr = with(expr) {
-            return when (range) {
-                is CellRange -> when {
-                    range.column is RelativeIndex && range.row is RelativeIndex -> {
+            return when (rangeRef) {
+                is CellRangeRef -> when {
+                    rangeRef.column is RelativeIndex && rangeRef.row is RelativeIndex -> {
                         copy(
-                            range = CellRange(
-                                column = MoveableIndex(range.column.index + current.column),
-                                row = MoveableIndex(range.row.index + current.row)
+                            rangeRef = CellRangeRef(
+                                column = MoveableIndex(rangeRef.column.index + current.column),
+                                row = MoveableIndex(rangeRef.row.index + current.row)
                             )
                         )
                     }
                     else ->
-                        TODO("${range.column.javaClass} ${range.row.javaClass}")
+                        TODO("${rangeRef.column.javaClass} ${rangeRef.row.javaClass}")
                 }
-                else -> TODO("$range : ${range.javaClass}")
+                else -> TODO("$rangeRef : ${rangeRef.javaClass}")
             }
         }
     }.rewrite(this)
