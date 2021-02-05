@@ -410,7 +410,7 @@ fun constant(value : String) = ValueExpr(value, StringKaneType.kaneType)
 fun tableauOf(type: AlgebraicType, vararg elements: NamedAlgebraicExpr): Tableau = Tableau(elements.toList(), type)
 
 // Misc
-fun repeated(columns: Int, rows: Int, type: AlgebraicType, value: Double): MatrixExpr =
+fun repeated(columns: Int, rows: Int, value: Double): MatrixExpr =
     repeated(columns, rows, ConstantScalar(value))
 
 fun repeated(columns: Int, rows: Int, value: ScalarExpr): MatrixExpr =

@@ -24,10 +24,10 @@ private fun stackMatrix(
 }
 
 infix fun MatrixExpr.stack(right: Double): MatrixExpr =
-    stackMatrix(this, constant(right), this, repeated(columns, 1, type, right))
+    stackMatrix(this, constant(right), this, repeated(columns, 1, right))
 
 infix fun Double.stack(right: MatrixExpr): MatrixExpr =
-    stackMatrix(constant(this), right, repeated(right.columns, 1, right.type, this), right)
+    stackMatrix(constant(this), right, repeated(right.columns, 1, this), right)
 
 infix fun MatrixExpr.stack(right: ScalarExpr) = stackMatrix(this, right, this, repeated(columns, 1, right))
 infix fun ScalarExpr.stack(right: MatrixExpr) = stackMatrix(this, right, repeated(right.columns, 1, this), right)
