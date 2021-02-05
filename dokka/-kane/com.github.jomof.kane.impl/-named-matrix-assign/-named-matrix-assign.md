@@ -5,7 +5,7 @@
 # NamedMatrixAssign  
 [jvm]  
 Content  
-fun [NamedMatrixAssign](-named-matrix-assign.md)(name: [Id](../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1754281934), left: [NamedMatrixVariable](../-named-matrix-variable/index.md), right: [MatrixExpr](../-matrix-expr/index.md))  
+fun [NamedMatrixAssign](-named-matrix-assign.md)(name: [Id](../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1471554428), left: [NamedMatrixVariable](../-named-matrix-variable/index.md), right: [MatrixExpr](../-matrix-expr/index.md))  
 
 
 
