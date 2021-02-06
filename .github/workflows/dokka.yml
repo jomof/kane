@@ -21,7 +21,7 @@ jobs:
       with:
         java-version: '11'
     - name: Build Documentation
-      run: ./gradlew -Pversion=0.1.${{ github.run_number }} assemble dokkaGfm 
+      run: ./gradlew dokkaGfm 
     - name: Publish Documentation
       uses: peaceiris/actions-gh-pages@v3
       with:
