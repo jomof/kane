@@ -10,12 +10,8 @@ Once you have a notebook running a Kotlin kernal add a dependency on the Kane li
 
 
 ```kotlin
-@file:DependsOn("com.github.jomof:kane:0.1.90")
+@file:DependsOn("com.github.jomof:kane:0.2.13")
 import com.github.jomof.kane.*
-import com.github.jomof.kane.impl.types.*
-import com.github.jomof.kane.functions.*
-import com.github.jomof.kane.impl.sheet.*
-import java.io.File
 ```
 
 Kane sheets are constructed with the **sheetOf** function:
@@ -119,6 +115,8 @@ HTML(sheet.copy("A1" to "$5.20").eval().html)
 
 
 
+Here's a list of the currently supported data types.
+
 
 ```kotlin
 HTML(Kane.dataFormats.html)
@@ -130,11 +128,11 @@ HTML(Kane.dataFormats.html)
 
 <table id="table_id" class="display">
 <thead><tr>
-  <th/><th>Supported Data Formats</th><th>Type</th></thead></tr>
+  <th/><th>format</th><th>type</th></thead></tr>
   <tbody>
     <tr><td>1</td><td>double</td><td>double</td></tr>
-    <tr><td>2</td><td>currency ($1,000)</td><td>double</td></tr>
-    <tr><td>3</td><td>currency ($1,000.12)</td><td>double</td></tr>
+    <tr><td>2</td><td>currency ($1,000)</td><td>dollar</td></tr>
+    <tr><td>3</td><td>currency ($1,000.12)</td><td>dollars and cents</td></tr>
     <tr><td>4</td><td>yyyy-MM-dd HH:mm:ss</td><td>date</td></tr>
     <tr><td>5</td><td>yyyy-MM-dd</td><td>date</td></tr>
     <tr><td>6</td><td>string</td><td>String</td></tr>
@@ -144,11 +142,7 @@ HTML(Kane.dataFormats.html)
 
 
 
-
-```kotlin
-
-```
-
 # Other topics
 - [Dealing with large .csv files](https://github.com/jomof/kane/blob/main/LargeCsvSupport.md)
 - [Goal Seeking](https://github.com/jomof/kane/blob/main/GoalSeeking.md)
+- Lastly, you can see the autodocs [here](https://github.com/jomof/kane/blob/gh-pages/dokka/-kane/com.github.jomof.kane/index.md)

@@ -3,13 +3,8 @@ When a CSV file is very large it can be useful to reduce it to a useful subset. 
 
 
 ```kotlin
-@file:DependsOn("com.github.jomof:kane:0.1.79")
+@file:DependsOn("com.github.jomof:kane:0.2.13")
 import com.github.jomof.kane.*
-import com.github.jomof.kane.impl.types.*
-import com.github.jomof.kane.functions.*
-import com.github.jomof.kane.impl.sheet.*
-import java.io.File
-
 ```
 
 
@@ -30,7 +25,10 @@ HTML(peek.types.head(15).html)
 ```
 
 
-<table id="table_id" class="display" style="width:100%">
+
+
+
+<table id="table_id" class="display">
 <thead><tr>
   <th/><th>name</th><th>type</th><th>format</th></thead></tr>
   <tbody>
@@ -68,9 +66,14 @@ HTML(filtered.head(10).html)
 
     Read 87369 rows with 3 columns
 
-<table id="table_id" class="display" style="width:100%">
+
+
+
+
+
+<table id="table_id" class="display">
 <thead><tr>
-  <th/><th>collection_week</th><th>hospital_name</th><th>all_adult_hospital_inpatient_bed_occupied_7_day_avg</th></thead></tr>
+  <th/><th>collection_week [A]</th><th>hospital_name [B]</th><th>all_adult_hospital_inpatient_bed_occupied_7_day_avg [C]</th></thead></tr>
   <tbody>
     <tr><td>1</td><td>2020-11-27</td><td>Crescent City Surgical Centre</td><td>-999999</td></tr>
     <tr><td>2</td><td>2020-11-27</td><td>CDT Susana Centeno</td><td>-999999</td></tr>
@@ -94,26 +97,31 @@ Let's look at some summary statistics to see what this data looks like.
 
 
 ```kotlin
-HTML(filtered.statistics.html)
+HTML(filtered.describe().html)
 ```
 
 
-<table id="table_id" class="display" style="width:100%">
+
+
+
+<table id="table_id" class="display">
 <thead><tr>
-  <th/><th>collection_week</th><th>hospital_name</th><th>all_adult_hospital_inpatient_bed_occupied_7_day_avg</th></thead></tr>
+  <th/><th>all_adult_hospital_inpatient_bed_occupied_7_day_avg</th></thead></tr>
   <tbody>
-    <tr><td>count</td><td></td><td></td><td>84097</td></tr>
-    <tr><td>NaN</td><td></td><td></td><td>3272</td></tr>
-    <tr><td>mean</td><td></td><td></td><td>-112609.63413</td></tr>
-    <tr><td>min</td><td></td><td></td><td>-999999</td></tr>
-    <tr><td>median</td><td></td><td></td><td>35.7</td></tr>
-    <tr><td>max</td><td></td><td></td><td>3825.9</td></tr>
-    <tr><td>variance</td><td></td><td></td><td>100023254319.02496</td></tr>
-    <tr><td>stddev</td><td></td><td></td><td>316264.53219</td></tr>
-    <tr><td>skewness</td><td></td><td></td><td>-2.44946</td></tr>
-    <tr><td>kurtosis</td><td></td><td></td><td>-0.02809</td></tr>
-    <tr><td>cv</td><td></td><td></td><td>-2.8085</td></tr>
-    <tr><td>∑</td><td></td><td></td><td>-9470132401.1999</td></tr>
+    <tr><td>count</td><td>84097</td></tr>
+    <tr><td>NaN</td><td>3272</td></tr>
+    <tr><td>mean</td><td>-112609.63413</td></tr>
+    <tr><td>min</td><td>-999999</td></tr>
+    <tr><td>25%</td><td>10.3</td></tr>
+    <tr><td>median</td><td>35.7</td></tr>
+    <tr><td>75%</td><td>119.1</td></tr>
+    <tr><td>max</td><td>3825.9</td></tr>
+    <tr><td>variance</td><td>100023254319.02496</td></tr>
+    <tr><td>stddev</td><td>316264.53219</td></tr>
+    <tr><td>skewness</td><td>-2.44946</td></tr>
+    <tr><td>kurtosis</td><td>-0.02809</td></tr>
+    <tr><td>cv</td><td>-2.8085</td></tr>
+    <tr><td>sum</td><td>-9470132401.1999</td></tr>
   </tbody>
 </table>
 
@@ -127,26 +135,31 @@ When Kane sees a value of Double.NaN it ignores that value in statistics. So let
 
 ```kotlin
 val covid = filtered.mapDoubles { if (it.toInt() == -999999) Double.NaN else it }
-HTML(covid.statistics.html)
+HTML(covid.describe().html)
 ```
 
 
-<table id="table_id" class="display" style="width:100%">
+
+
+
+<table id="table_id" class="display">
 <thead><tr>
-  <th/><th>collection_week</th><th>hospital_name</th><th>all_adult_hospital_inpatient_bed_occupied_7_day_avg</th></thead></tr>
+  <th/><th>all_adult_hospital_inpatient_bed_occupied_7_day_avg</th></thead></tr>
   <tbody>
-    <tr><td>count</td><td></td><td></td><td>74619</td></tr>
-    <tr><td>NaN</td><td></td><td></td><td>12750</td></tr>
-    <tr><td>mean</td><td></td><td></td><td>105.30992</td></tr>
-    <tr><td>min</td><td></td><td></td><td>4</td></tr>
-    <tr><td>median</td><td></td><td></td><td>47.6</td></tr>
-    <tr><td>max</td><td></td><td></td><td>3825.9</td></tr>
-    <tr><td>variance</td><td></td><td></td><td>25040.88875</td></tr>
-    <tr><td>stddev</td><td></td><td></td><td>158.24313</td></tr>
-    <tr><td>skewness</td><td></td><td></td><td>4.84938</td></tr>
-    <tr><td>kurtosis</td><td></td><td></td><td>42.17925</td></tr>
-    <tr><td>cv</td><td></td><td></td><td>1.50264</td></tr>
-    <tr><td>∑</td><td></td><td></td><td>7858120.8</td></tr>
+    <tr><td>count</td><td>74619</td></tr>
+    <tr><td>NaN</td><td>12750</td></tr>
+    <tr><td>mean</td><td>105.30992</td></tr>
+    <tr><td>min</td><td>4</td></tr>
+    <tr><td>25%</td><td>14.6</td></tr>
+    <tr><td>median</td><td>47.6</td></tr>
+    <tr><td>75%</td><td>152.7</td></tr>
+    <tr><td>max</td><td>3825.9</td></tr>
+    <tr><td>variance</td><td>25040.88875</td></tr>
+    <tr><td>stddev</td><td>158.24313</td></tr>
+    <tr><td>skewness</td><td>4.84938</td></tr>
+    <tr><td>kurtosis</td><td>42.17925</td></tr>
+    <tr><td>cv</td><td>1.50264</td></tr>
+    <tr><td>sum</td><td>7858120.8</td></tr>
   </tbody>
 </table>
 
@@ -161,4 +174,9 @@ Finally, let's save this to a new .csv file so that we can use it for other demo
 
 ```kotlin
 covid.writeCsv("data/covid-slim.csv")
+```
+
+
+```kotlin
+
 ```
