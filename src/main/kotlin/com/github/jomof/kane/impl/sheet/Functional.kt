@@ -1,5 +1,6 @@
 package com.github.jomof.kane.impl.sheet
 
+import com.github.jomof.kane.ScalarExpr
 import com.github.jomof.kane.impl.*
 
 /**
@@ -65,12 +66,15 @@ fun Sheet.ordinalColumns(elements : List<Int>) : Sheet {
     return copy(cells = cells, columnDescriptors = columnDescriptors)
 }
 
-fun Sheet.columnType(column: Int): AdmissibleDataType<*> {
+internal fun Sheet.columnType(column: Int): AdmissibleDataType<*> {
     var acceptedDataTypes = possibleDataFormats
     for ((name, expr) in cells) {
         if (name is Coordinate && column == name.column) {
             acceptedDataTypes = acceptedDataTypes
-                .filter { tryType -> tryType.tryParse(expr.toString()) != null }
+                .filter { tryType ->
+                    tryType.tryParse(expr.toString()) != null ||
+                            (tryType == doubleAdmissibleDataType && expr is ScalarExpr)
+                }
             if (acceptedDataTypes.size == 1) return acceptedDataTypes.first()
         }
     }

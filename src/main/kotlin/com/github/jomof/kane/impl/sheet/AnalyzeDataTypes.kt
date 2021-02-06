@@ -88,17 +88,18 @@ private class DateTimeAdmissibleDataType(val formatting : String) : AdmissibleDa
     }
 
     override fun toString() = formatting
-    override fun tryParse(string: String) : Date? {
+    override fun tryParse(string: String): Date? {
         return try {
             format.parse(string)
-        } catch (e : ParseException) {
+        } catch (e: ParseException) {
             null
         }
     }
 }
 
-val possibleDataFormats = listOf<AdmissibleDataType<*>>(
-    DoubleAdmissibleDataType(),
+internal val doubleAdmissibleDataType = DoubleAdmissibleDataType()
+internal val possibleDataFormats = listOf<AdmissibleDataType<*>>(
+    doubleAdmissibleDataType,
     DollarsAdmissibleDataType(),
     DollarsAndCentsAdmissibleDataType(),
     DateTimeAdmissibleDataType("yyyy-MM-dd HH:mm:ss"),
@@ -106,7 +107,7 @@ val possibleDataFormats = listOf<AdmissibleDataType<*>>(
     StringAdmissibleDataType()
 )
 
-fun analyzeDataType(value : String) : AdmissibleDataType<*> {
+fun analyzeDataType(value: String): AdmissibleDataType<*> {
     return possibleDataFormats.first { it.tryParse(value) != null }
 }
 

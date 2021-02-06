@@ -44,14 +44,16 @@ fun GroupBy.aggregate(selector: SheetBuilder.() -> List<NamedExpr>): Sheet {
     return buildAggregation(builder)
 }
 
-fun GroupBy.aggregate(vararg functions: AlgebraicUnaryScalarStatisticFunction): Sheet {
-    return aggregate {
+internal fun GroupBy.aggregate(vararg functions: AlgebraicUnaryScalarStatisticFunction): Sheet {
+    val evaled = eval()
+    return evaled.aggregate {
         val result = mutableListOf<NamedExpr>()
-        for (column in 0 until sheet.columns) {
-            val columnInfo = sheet.fullColumnDescriptor(column)
+        for (column in 0 until evaled.sheet.columns) {
+            val columnInfo = evaled.sheet.fullColumnDescriptor(column)
             if (columnInfo.type!!.type.java != Double::class.java) continue
             for (function in functions) {
-                result += function(range(Identifier.string(columnInfo.name))).toNamed(function.meta.op + " " + columnInfo.name)
+                result += function(range(Identifier.string(columnInfo.name)))
+                    .toNamed(function.meta.op + " " + columnInfo.name)
             }
         }
         result

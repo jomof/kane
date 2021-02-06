@@ -8,7 +8,7 @@ import com.github.jomof.kane.impl.*
  * It initially consists of [sheet] which is the data source and [selector] which is used
  * to build a key from a row.
  */
-class GroupBy(
+data class GroupBy(
     val sheet: Sheet,
     private val keySelector: List<NamedExpr>
 ) : Expr {
@@ -59,6 +59,4 @@ fun Sheet.groupOf(selector: SheetBuilder.() -> List<NamedExpr>): GroupBy {
     selector(builder as SheetBuilder).forEach { builder.add(it) }
     return buildGrouping(builder)
 }
-
-fun Sheet.groupBy(vararg columns: String) = groupOf { columns.map { column(it).toNamed(it) } }
 

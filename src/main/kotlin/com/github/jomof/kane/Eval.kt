@@ -1,6 +1,7 @@
 package com.github.jomof.kane
 
 import com.github.jomof.kane.impl.*
+import com.github.jomof.kane.impl.sheet.GroupBy
 import com.github.jomof.kane.impl.sheet.RangeExprProvider
 import com.github.jomof.kane.impl.sheet.Sheet
 
@@ -46,3 +47,9 @@ fun MatrixExpr.eval(
     reduceVariables: Boolean = false,
     excludeVariables: Set<Id> = setOf(),
 ) = (this as Expr).evalImpl(rangeExprProvider, reduceVariables, excludeVariables) as MatrixExpr
+
+fun GroupBy.eval(
+    rangeExprProvider: RangeExprProvider? = null,
+    reduceVariables: Boolean = false,
+    excludeVariables: Set<Id> = setOf(),
+) = (this as Expr).evalImpl(rangeExprProvider, reduceVariables, excludeVariables) as GroupBy

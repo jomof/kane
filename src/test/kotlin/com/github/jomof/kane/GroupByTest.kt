@@ -2,7 +2,6 @@ package com.github.jomof.kane
 
 import com.github.jomof.kane.functions.cv
 import com.github.jomof.kane.impl.sheet.aggregate
-import com.github.jomof.kane.impl.sheet.groupBy
 import com.github.jomof.kane.impl.sheet.groupOf
 import org.junit.Test
 
@@ -282,11 +281,45 @@ class GroupByTest {
             )
     }
 
-//    @Test
+    //    @Test
     fun `covid-slim`() {
         val gp = readCsv("data/covid-slim.csv")
             .groupBy("hospital_name")
             .describe()
         println(gp)
+    }
+
+    @Test
+    fun `repro aggregate formulas`() {
+        val measurements = sheetOfCsv(
+            """
+            height,gender
+            183,male
+            162,female
+            """
+        )
+
+        val bmi = measurements.copy {
+            val meters by column("height") / 100.0
+            listOf(meters)
+        }
+
+        val formulaGroup = bmi.groupBy("gender")
+        formulaGroup["male"].assertString(
+            """
+              height [A] gender [B] meters [C] 
+              ---------- ---------- ---------- 
+            1        183       male     A1/100 
+            """.trimIndent()
+        )
+
+        median(formulaGroup).assertString(
+            """
+                   median height median meters 
+                   ------------- ------------- 
+              male           183          1.83 
+            female           162          1.62 
+            """.trimIndent()
+        )
     }
 }

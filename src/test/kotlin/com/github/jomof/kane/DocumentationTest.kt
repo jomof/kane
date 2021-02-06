@@ -1,5 +1,6 @@
 package com.github.jomof.kane
 
+import com.github.jomof.kane.impl.sheet.aggregate
 import org.junit.Test
 
 /**
@@ -412,18 +413,149 @@ class DocumentationTest {
         val measurements = sheetOfCsv(
             """
             date,height,weight,gender
-            2000-01-01,42.849980,157.500553,male
-            2000-01-02,49.607315,177.340407,male
-            2000-01-03,56.293531,171.524640,male
-            2000-01-04,48.421077,144.251986,female
-            2000-01-05,46.556882,152.526206,male
-            2000-01-06,68.448851,168.272968,female
-            2000-01-07,70.757698,136.431469,male
-            2000-01-08,58.909500,176.499753,female
-            2000-01-09,76.435631,174.094104,female
-            2000-01-10,45.306120,177.540920,male
+            2000-01-01,183,77,male
+            2000-01-02,180,80,male
+            2000-01-03,177,76,male
+            2000-01-04,162,63,female
+            2000-01-05,163,72,male
+            2000-01-06,165,64,female
+            2000-01-07,185,81,male
+            2000-01-08,158,55,female
+            2000-01-09,150,59,female
+            2000-01-10,181,78,male
             """
         )
+
+        val group = measurements.groupBy("gender")
+
+        // The result is a GroupBy object
+        group.assertString(
+            """
+                   key selector 
+                   ------------ 
+            gender       gender 
+        """.trimIndent()
+        )
+
+        // Access a single group
+        group["male"].assertString(
+            """
+            date [A]  height [B] weight [C] gender [D] 
+           ---------- ---------- ---------- ---------- 
+         1 2000-01-01        183         77       male 
+         2 2000-01-02        180         80       male 
+         3 2000-01-03        177         76       male 
+         5 2000-01-05        163         72       male 
+         7 2000-01-07        185         81       male 
+        10 2000-01-10        181         78       male 
+        """.trimIndent()
+        )
+
+        // Describe a groupBy
+        group.describe().assertString(
+            """
+               count height NaN height mean height min height 25% height median height 75% height max height variance height stddev height skewness height kurtosis height cv height sum height count weight NaN weight mean weight min weight 25% weight median weight 75% weight max weight variance weight stddev weight skewness weight kurtosis weight cv weight sum weight 
+               ------------ ---------- ----------- ---------- ---------- ------------- ---------- ---------- --------------- ------------- --------------- --------------- --------- ---------- ------------ ---------- ----------- ---------- ---------- ------------- ---------- ---------- --------------- ------------- --------------- --------------- --------- ---------- 
+          male            6          0   178.16667        163        177           181        183        185        62.56667       7.90991        -1.34112         0.41593    0.0444       1069            6          0    77.33333         72         76            78         80         81        10.26667       3.20416         -0.5698        -0.62338   0.04143        464 
+        female            4          0      158.75        150        158           162        165        165           42.25           6.5        -0.54923        -1.13276   0.04094        635            4          0       60.25         55         59            63         64         64        16.91667       4.11299        -0.40452        -1.42042   0.06827        241 
+        """.trimIndent()
+        )
+
+        // Statistic of groupBy
+        median(group).assertString(
+            """
+               median height median weight 
+               ------------- ------------- 
+          male           181            78 
+        female           162            63 
+        """.trimIndent()
+        )
+
+        // Multiple statistics of groupBy
+        group.aggregate(mean, median).assertString(
+            """
+               mean height median height mean weight median weight 
+               ----------- ------------- ----------- ------------- 
+          male   178.16667           181    77.33333            78 
+        female      158.75           162       60.25            63 
+        """.trimIndent()
+        )
+
+        // Add formula
+        val bmi = measurements.copy {
+            val bmi by (column("weight")) /
+                    pow(column("height") / 100.0, 2.0)
+            listOf(bmi)
+        }
+        bmi.assertString(
+            """
+                date [A]  height [B] weight [C] gender [D]     bmi [E]    
+               ---------- ---------- ---------- ---------- -------------- 
+             1 2000-01-01        183         77       male   C1/(B1/100)² 
+             2 2000-01-02        180         80       male   C2/(B2/100)² 
+             3 2000-01-03        177         76       male   C3/(B3/100)² 
+             4 2000-01-04        162         63     female   C4/(B4/100)² 
+             5 2000-01-05        163         72       male   C5/(B5/100)² 
+             6 2000-01-06        165         64     female   C6/(B6/100)² 
+             7 2000-01-07        185         81       male   C7/(B7/100)² 
+             8 2000-01-08        158         55     female   C8/(B8/100)² 
+             9 2000-01-09        150         59     female   C9/(B9/100)² 
+            10 2000-01-10        181         78       male C10/(B10/100)²  
+            """.trimIndent()
+        )
+        bmi.eval().assertString(
+            """
+              date    height weight gender    bmi   
+           ---------- ------ ------ ------ -------- 
+         1 2000-01-01    183     77   male 22.99262 
+         2 2000-01-02    180     80   male 24.69136 
+         3 2000-01-03    177     76   male 24.25867 
+         4 2000-01-04    162     63 female 24.00549 
+         5 2000-01-05    163     72   male 27.09925 
+         6 2000-01-06    165     64 female 23.50781 
+         7 2000-01-07    185     81   male 23.66691 
+         8 2000-01-08    158     55 female 22.03173 
+         9 2000-01-09    150     59 female 26.22222 
+        10 2000-01-10    181     78   male  23.8088 
+        """.trimIndent()
+        )
+
+        // Group by a sheet with formulas
+        val formulaGroup = bmi.groupBy("gender")
+        formulaGroup["male"].assertString(
+            """
+                date [A]  height [B] weight [C] gender [D]    bmi [E]   
+               ---------- ---------- ---------- ---------- ------------ 
+             1 2000-01-01        183         77       male C1/(B1/100)² 
+             2 2000-01-02        180         80       male C2/(B2/100)² 
+             3 2000-01-03        177         76       male C3/(B3/100)² 
+             5 2000-01-05        163         72       male C4/(B4/100)² 
+             7 2000-01-07        185         81       male C5/(B5/100)² 
+            10 2000-01-10        181         78       male C6/(B6/100)² 
+        """.trimIndent()
+        )
+        formulaGroup["male"].eval().assertString(
+            """
+                  date    height weight gender    bmi   
+               ---------- ------ ------ ------ -------- 
+             1 2000-01-01    183     77   male 22.99262 
+             2 2000-01-02    180     80   male 24.69136 
+             3 2000-01-03    177     76   male 24.25867 
+             5 2000-01-05    163     72   male 27.09925 
+             7 2000-01-07    185     81   male 23.66691 
+            10 2000-01-10    181     78   male  23.8088 
+        """.trimIndent()
+        )
+
+        median(formulaGroup).assertString(
+            """
+                   median height median weight median bmi 
+                   ------------- ------------- ---------- 
+              male           181            78   24.25867 
+            female           162            63   24.00549 
+        """.trimIndent()
+        )
+
 
     }
 }

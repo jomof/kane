@@ -9,9 +9,6 @@ import com.github.jomof.kane.impl.functions.*
 import com.github.jomof.kane.impl.sheet.*
 import kotlin.collections.component1
 import kotlin.collections.component2
-import kotlin.collections.mutableListOf
-import kotlin.collections.mutableMapOf
-import kotlin.collections.plusAssign
 import kotlin.collections.set
 
 internal open class RewritingVisitor {
@@ -33,6 +30,12 @@ internal open class RewritingVisitor {
         val rewritten = matrix(matrix)
         return if (rewritten === matrix) this
         else copy(matrix = rewritten)
+    }
+
+    open fun rewrite(expr: GroupBy): Expr = with(expr) {
+        val rewritten = sheet(sheet)
+        return if (rewritten === sheet) this
+        else copy(sheet = rewritten)
     }
 
     open fun rewrite(expr: ScalarStatistic): Expr = expr
@@ -208,6 +211,7 @@ internal open class RewritingVisitor {
         return result as ScalarExpr
     }
 
+    open fun sheet(expr: Sheet) = rewrite(expr) as Sheet
     open fun matrix(expr: MatrixExpr) = rewrite(expr) as MatrixExpr
     open fun range(expr: SheetRange): SheetRange {
         val result = rewrite(expr)
@@ -217,7 +221,6 @@ internal open class RewritingVisitor {
         }
         return result as SheetRangeExpr
     }
-
     open fun algebraic(expr: AlgebraicExpr) = rewrite(expr) as AlgebraicExpr
     open fun named(expr: NamedAlgebraicExpr) = rewrite(expr) as NamedAlgebraicExpr
 
@@ -264,6 +267,7 @@ internal open class RewritingVisitor {
                 is SheetBuilderRange -> rewrite(expr)
                 is RetypeScalar -> rewrite(expr)
                 is RetypeMatrix -> rewrite(expr)
+                is GroupBy -> rewrite(expr)
                 else -> error("${expr.javaClass}")
             }
             if (checkIdentity && result !== expr) {

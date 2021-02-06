@@ -223,6 +223,8 @@ interface AlgebraicUnaryScalarStatisticFunction {
         return filtered
     }
 
+    operator fun invoke(expr: GroupBy) = expr.aggregate(this)
+
     operator fun invoke(expr: SheetRange): ScalarExpr =
         AlgebraicUnaryScalarStatistic(
             this,
