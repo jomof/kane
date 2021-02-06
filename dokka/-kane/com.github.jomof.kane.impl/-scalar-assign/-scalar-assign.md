@@ -5,7 +5,7 @@
 # ScalarAssign  
 [jvm]  
 Content  
-fun [ScalarAssign](-scalar-assign.md)(left: [NamedScalarVariable](../-named-scalar-variable/index.md), right: [ScalarExpr](../-scalar-expr/index.md))  
+fun [ScalarAssign](-scalar-assign.md)(left: [NamedScalarVariable](../-named-scalar-variable/index.md), right: [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md))  
 
 
 

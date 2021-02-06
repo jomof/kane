@@ -5,7 +5,7 @@
 # replaces  
 [jvm]  
 Content  
-val [replaces](replaces.md): [ScalarExpr](../-scalar-expr/index.md)  
+val [replaces](replaces.md): [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md)  
 
 
 

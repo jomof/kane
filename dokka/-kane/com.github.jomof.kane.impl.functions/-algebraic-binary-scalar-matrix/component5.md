@@ -5,7 +5,7 @@
 # component5  
 [jvm]  
 Content  
-operator fun [component5](component5.md)(): [MatrixExpr](../../com.github.jomof.kane.impl/-matrix-expr/index.md)  
+operator fun [component5](component5.md)(): [MatrixExpr](../../com.github.jomof.kane/-matrix-expr/index.md)  
 
 
 

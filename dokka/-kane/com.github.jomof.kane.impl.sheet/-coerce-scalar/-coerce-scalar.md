@@ -5,7 +5,7 @@
 # CoerceScalar  
 [jvm]  
 Content  
-fun [CoerceScalar](-coerce-scalar.md)(value: [Expr](../../com.github.jomof.kane.impl/-expr/index.md))  
+fun [CoerceScalar](-coerce-scalar.md)(value: [Expr](../../com.github.jomof.kane/-expr/index.md))  
 
 
 

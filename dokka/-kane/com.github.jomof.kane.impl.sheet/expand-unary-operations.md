@@ -5,7 +5,7 @@
 # expandUnaryOperations  
 [jvm]  
 Content  
-fun [Expr](../com.github.jomof.kane.impl/-expr/index.md).[expandUnaryOperations](expand-unary-operations.md)(): [Expr](../com.github.jomof.kane.impl/-expr/index.md)  
+fun [Expr](../com.github.jomof.kane/-expr/index.md).[expandUnaryOperations](expand-unary-operations.md)(): [Expr](../com.github.jomof.kane/-expr/index.md)  
 
 
 

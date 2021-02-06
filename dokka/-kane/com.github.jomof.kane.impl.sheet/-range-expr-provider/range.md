@@ -5,7 +5,7 @@
 # range  
 [jvm]  
 Content  
-open fun [range](range.md)(range: [SheetRangeExpr](../-sheet-range-expr/index.md)): [Expr](../../com.github.jomof.kane.impl/-expr/index.md)  
+open fun [range](range.md)(range: [SheetRangeExpr](../-sheet-range-expr/index.md)): [Expr](../../com.github.jomof.kane/-expr/index.md)  
 
 
 

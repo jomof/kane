@@ -5,7 +5,7 @@
 # AlgebraicUnaryScalar  
 [jvm]  
 Content  
-fun [AlgebraicUnaryScalar](-algebraic-unary-scalar.md)(op: [AlgebraicUnaryScalarFunction](../-algebraic-unary-scalar-function/index.md), value: [ScalarExpr](../../com.github.jomof.kane.impl/-scalar-expr/index.md))  
+fun [AlgebraicUnaryScalar](-algebraic-unary-scalar.md)(op: [AlgebraicUnaryScalarFunction](../-algebraic-unary-scalar-function/index.md), value: [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md))  
 
 
 

@@ -5,7 +5,7 @@
 # map  
 [jvm]  
 Content  
-fun [MatrixExpr](-matrix-expr/index.md).[map](map.md)(action: ([ScalarExpr](-scalar-expr/index.md)) -> [ScalarExpr](-scalar-expr/index.md)): [DataMatrix](-data-matrix/index.md)  
+fun [MatrixExpr](../com.github.jomof.kane/-matrix-expr/index.md).[map](map.md)(action: ([ScalarExpr](../com.github.jomof.kane/-scalar-expr/index.md)) -> [ScalarExpr](../com.github.jomof.kane/-scalar-expr/index.md)): [DataMatrix](-data-matrix/index.md)  
 
 
 

@@ -5,7 +5,7 @@
 # left  
 [jvm]  
 Content  
-val [left](left.md): [ScalarExpr](../../com.github.jomof.kane.impl/-scalar-expr/index.md)  
+val [left](left.md): [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md)  
 
 
 

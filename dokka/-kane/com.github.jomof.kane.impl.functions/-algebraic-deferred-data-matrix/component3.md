@@ -5,7 +5,7 @@
 # component3  
 [jvm]  
 Content  
-operator fun [component3](component3.md)(): [AlgebraicExpr](../../com.github.jomof.kane.impl/-algebraic-expr/index.md)  
+operator fun [component3](component3.md)(): [AlgebraicExpr](../../com.github.jomof.kane/-algebraic-expr/index.md)  
 
 
 

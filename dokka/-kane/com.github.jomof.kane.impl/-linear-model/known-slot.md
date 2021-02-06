@@ -5,7 +5,7 @@
 # knownSlot  
 [jvm]  
 Content  
-fun [knownSlot](known-slot.md)(expr: [ScalarExpr](../-scalar-expr/index.md)): [Slot](../-slot/index.md)  
+fun [knownSlot](known-slot.md)(expr: [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md)): [Slot](../-slot/index.md)  
 
 
 

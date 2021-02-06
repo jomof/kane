@@ -5,7 +5,7 @@
 # freeze  
 [jvm]  
 Content  
-fun [Expr](../com.github.jomof.kane.impl/-expr/index.md).[freeze](freeze.md)(current: [Coordinate](../com.github.jomof.kane.impl/-coordinate/index.md)): [Expr](../com.github.jomof.kane.impl/-expr/index.md)  
+fun [Expr](../com.github.jomof.kane/-expr/index.md).[freeze](freeze.md)(current: [Coordinate](../com.github.jomof.kane.impl/-coordinate/index.md)): [Expr](../com.github.jomof.kane/-expr/index.md)  
 More info  
 
 

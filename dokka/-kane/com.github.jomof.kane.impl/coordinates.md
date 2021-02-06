@@ -5,7 +5,7 @@
 # coordinates  
 [jvm]  
 Content  
-val [MatrixExpr](-matrix-expr/index.md).[coordinates](coordinates.md): [List](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)<[Coordinate](-coordinate/index.md)>  
+val [MatrixExpr](../com.github.jomof.kane/-matrix-expr/index.md).[coordinates](coordinates.md): [List](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)<[Coordinate](-coordinate/index.md)>  
 
 
 

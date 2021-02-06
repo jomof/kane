@@ -5,7 +5,7 @@
 # RetypeMatrix  
 [jvm]  
 Content  
-fun [RetypeMatrix](-retype-matrix.md)(matrix: [MatrixExpr](../-matrix-expr/index.md), type: [AlgebraicType](../../com.github.jomof.kane.impl.types/-algebraic-type/index.md))  
+fun [RetypeMatrix](-retype-matrix.md)(matrix: [MatrixExpr](../../com.github.jomof.kane/-matrix-expr/index.md), type: [AlgebraicType](../../com.github.jomof.kane.impl.types/-algebraic-type/index.md))  
 
 
 

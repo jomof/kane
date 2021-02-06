@@ -5,7 +5,7 @@
 # component5  
 [jvm]  
 Content  
-operator fun [component5](component5.md)(): [ScalarExpr](../../com.github.jomof.kane.impl/-scalar-expr/index.md)  
+operator fun [component5](component5.md)(): [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md)  
 
 
 

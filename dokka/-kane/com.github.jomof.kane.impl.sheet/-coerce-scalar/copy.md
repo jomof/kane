@@ -5,7 +5,7 @@
 # copy  
 [jvm]  
 Content  
-fun [copy](copy.md)(value: [Expr](../../com.github.jomof.kane.impl/-expr/index.md)): [CoerceScalar](index.md)  
+fun [copy](copy.md)(value: [Expr](../../com.github.jomof.kane/-expr/index.md)): [CoerceScalar](index.md)  
 
 
 

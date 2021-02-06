@@ -5,7 +5,7 @@
 # matrix  
 [jvm]  
 Content  
-val [matrix](matrix.md): [MatrixExpr](../-matrix-expr/index.md)  
+val [matrix](matrix.md): [MatrixExpr](../../com.github.jomof.kane/-matrix-expr/index.md)  
 
 
 

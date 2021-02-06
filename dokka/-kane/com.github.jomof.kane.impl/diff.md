@@ -5,7 +5,7 @@
 # diff  
 [jvm]  
 Content  
-fun [diff](diff.md)(expr: [ScalarExpr](-scalar-expr/index.md), variable: [ScalarExpr](-scalar-expr/index.md)): [ScalarExpr](-scalar-expr/index.md)  
+fun [diff](diff.md)(expr: [ScalarExpr](../com.github.jomof.kane/-scalar-expr/index.md), variable: [ScalarExpr](../com.github.jomof.kane/-scalar-expr/index.md)): [ScalarExpr](../com.github.jomof.kane/-scalar-expr/index.md)  
 
 
 

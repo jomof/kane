@@ -5,7 +5,7 @@
 # type  
 [jvm]  
 Content  
-val [Expr](../com.github.jomof.kane.impl/-expr/index.md).[type](type.md): [KaneType](../com.github.jomof.kane.impl.types/-kane-type/index.md)<*>  
+val [Expr](-expr/index.md).[type](type.md): [KaneType](../com.github.jomof.kane.impl.types/-kane-type/index.md)<*>  
 More info  
 
 

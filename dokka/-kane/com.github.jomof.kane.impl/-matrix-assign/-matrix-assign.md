@@ -5,7 +5,7 @@
 # MatrixAssign  
 [jvm]  
 Content  
-fun [MatrixAssign](-matrix-assign.md)(left: [NamedMatrixVariable](../-named-matrix-variable/index.md), right: [MatrixExpr](../-matrix-expr/index.md))  
+fun [MatrixAssign](-matrix-assign.md)(left: [NamedMatrixVariable](../-named-matrix-variable/index.md), right: [MatrixExpr](../../com.github.jomof.kane/-matrix-expr/index.md))  
 
 
 

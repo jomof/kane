@@ -5,7 +5,7 @@
 # AlgebraicBinaryScalar  
 [jvm]  
 Content  
-fun [AlgebraicBinaryScalar](-algebraic-binary-scalar.md)(op: [AlgebraicBinaryScalarFunction](../-algebraic-binary-scalar-function/index.md), left: [ScalarExpr](../../com.github.jomof.kane.impl/-scalar-expr/index.md), right: [ScalarExpr](../../com.github.jomof.kane.impl/-scalar-expr/index.md))  
+fun [AlgebraicBinaryScalar](-algebraic-binary-scalar.md)(op: [AlgebraicBinaryScalarFunction](../-algebraic-binary-scalar-function/index.md), left: [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md), right: [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md))  
 
 
 

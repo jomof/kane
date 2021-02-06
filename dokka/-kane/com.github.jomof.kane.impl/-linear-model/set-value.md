@@ -5,7 +5,7 @@
 # setValue  
 [jvm]  
 Content  
-fun [setValue](set-value.md)(expr: [ScalarExpr](../-scalar-expr/index.md), slot: [Slot](../-slot/index.md))  
+fun [setValue](set-value.md)(expr: [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md), slot: [Slot](../-slot/index.md))  
 
 
 

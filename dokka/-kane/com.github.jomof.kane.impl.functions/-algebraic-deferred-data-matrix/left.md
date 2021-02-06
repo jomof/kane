@@ -5,7 +5,7 @@
 # left  
 [jvm]  
 Content  
-val [left](left.md): [AlgebraicExpr](../../com.github.jomof.kane.impl/-algebraic-expr/index.md)  
+val [left](left.md): [AlgebraicExpr](../../com.github.jomof.kane/-algebraic-expr/index.md)  
 
 
 

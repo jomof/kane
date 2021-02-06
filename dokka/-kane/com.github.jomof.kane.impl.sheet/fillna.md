@@ -16,7 +16,7 @@ Map cells of a sheet that are coercible to double.
 
 [jvm]  
 Content  
-fun [Expr](../com.github.jomof.kane.impl/-expr/index.md).[fillna](fillna.md)(value: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [Expr](../com.github.jomof.kane.impl/-expr/index.md)  
+fun [Expr](../com.github.jomof.kane/-expr/index.md).[fillna](fillna.md)(value: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [Expr](../com.github.jomof.kane/-expr/index.md)  
 
 
 

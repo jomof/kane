@@ -5,7 +5,7 @@
 # copy  
 [jvm]  
 Content  
-fun [copy](copy.md)(left: [NamedScalarVariable](../-named-scalar-variable/index.md), right: [ScalarExpr](../-scalar-expr/index.md)): [ScalarAssign](index.md)  
+fun [copy](copy.md)(left: [NamedScalarVariable](../-named-scalar-variable/index.md), right: [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md)): [ScalarAssign](index.md)  
 
 
 

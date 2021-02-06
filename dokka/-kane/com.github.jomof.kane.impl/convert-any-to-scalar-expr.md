@@ -5,7 +5,7 @@
 # convertAnyToScalarExpr  
 [jvm]  
 Content  
-fun [convertAnyToScalarExpr](convert-any-to-scalar-expr.md)(any: [Any](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)): [ScalarExpr](-scalar-expr/index.md)  
+fun [convertAnyToScalarExpr](convert-any-to-scalar-expr.md)(any: [Any](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)): [ScalarExpr](../com.github.jomof.kane/-scalar-expr/index.md)  
 
 
 

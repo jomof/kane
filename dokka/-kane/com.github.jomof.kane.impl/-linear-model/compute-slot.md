@@ -5,7 +5,7 @@
 # computeSlot  
 [jvm]  
 Content  
-fun [computeSlot](compute-slot.md)(expr: [ScalarExpr](../-scalar-expr/index.md), compute: ([ScalarExpr](../-scalar-expr/index.md)) -> [ScalarExpr](../-scalar-expr/index.md)): [Slot](../-slot/index.md)  
+fun [computeSlot](compute-slot.md)(expr: [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md), compute: ([ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md)) -> [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md)): [Slot](../-slot/index.md)  
 
 
 

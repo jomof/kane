@@ -5,7 +5,7 @@
 # tryGetBinaryOp  
 [jvm]  
 Content  
-fun [Expr](-expr/index.md).[tryGetBinaryOp](try-get-binary-op.md)(): [BinaryOp](-binary-op/index.md)?  
+fun [Expr](../com.github.jomof.kane/-expr/index.md).[tryGetBinaryOp](try-get-binary-op.md)(): [BinaryOp](-binary-op/index.md)?  
 
 
 

@@ -5,7 +5,7 @@
 # convertAnyToExpr  
 [jvm]  
 Content  
-fun [convertAnyToExpr](convert-any-to-expr.md)(any: [Any](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)): [Expr](-expr/index.md)  
+fun [convertAnyToExpr](convert-any-to-expr.md)(any: [Any](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)): [Expr](../com.github.jomof.kane/-expr/index.md)  
 
 
 

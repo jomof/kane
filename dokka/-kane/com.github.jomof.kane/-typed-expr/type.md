@@ -1,4 +1,4 @@
-//[Kane](../../index.md)/[com.github.jomof.kane.impl](../index.md)/[TypedExpr](index.md)/[type](type.md)
+//[Kane](../../index.md)/[com.github.jomof.kane](../index.md)/[TypedExpr](index.md)/[type](type.md)
 
 
 

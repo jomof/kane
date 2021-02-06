@@ -5,7 +5,7 @@
 # toUnnamed  
 [jvm]  
 Content  
-fun [Expr](-expr/index.md).[toUnnamed](to-unnamed.md)(): [Expr](-expr/index.md)  
+fun [Expr](../com.github.jomof.kane/-expr/index.md).[toUnnamed](to-unnamed.md)(): [Expr](../com.github.jomof.kane/-expr/index.md)  
 
 
 

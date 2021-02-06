@@ -5,7 +5,7 @@
 # toDataMatrix  
 [jvm]  
 Content  
-fun [MatrixExpr](-matrix-expr/index.md).[toDataMatrix](to-data-matrix.md)(): [MatrixExpr](-matrix-expr/index.md)  
+fun [MatrixExpr](../com.github.jomof.kane/-matrix-expr/index.md).[toDataMatrix](to-data-matrix.md)(): [MatrixExpr](../com.github.jomof.kane/-matrix-expr/index.md)  
 
 
 

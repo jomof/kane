@@ -5,7 +5,7 @@
 # algebraicType  
 [jvm]  
 Content  
-val [AlgebraicExpr](../com.github.jomof.kane.impl/-algebraic-expr/index.md).[algebraicType](algebraic-type.md): [AlgebraicType](-algebraic-type/index.md)  
+val [AlgebraicExpr](../com.github.jomof.kane/-algebraic-expr/index.md).[algebraicType](algebraic-type.md): [AlgebraicType](-algebraic-type/index.md)  
 
 
 

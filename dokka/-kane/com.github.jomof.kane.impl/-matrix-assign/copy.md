@@ -5,7 +5,7 @@
 # copy  
 [jvm]  
 Content  
-fun [copy](copy.md)(left: [NamedMatrixVariable](../-named-matrix-variable/index.md), right: [MatrixExpr](../-matrix-expr/index.md)): [MatrixAssign](index.md)  
+fun [copy](copy.md)(left: [NamedMatrixVariable](../-named-matrix-variable/index.md), right: [MatrixExpr](../../com.github.jomof.kane/-matrix-expr/index.md)): [MatrixAssign](index.md)  
 
 
 

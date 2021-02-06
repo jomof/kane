@@ -5,7 +5,7 @@
 # left  
 [jvm]  
 Content  
-val [left](left.md): [MatrixExpr](../../com.github.jomof.kane.impl/-matrix-expr/index.md)  
+val [left](left.md): [MatrixExpr](../../com.github.jomof.kane/-matrix-expr/index.md)  
 
 
 

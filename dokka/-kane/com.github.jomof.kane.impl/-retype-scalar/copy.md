@@ -5,7 +5,7 @@
 # copy  
 [jvm]  
 Content  
-fun [copy](copy.md)(scalar: [ScalarExpr](../-scalar-expr/index.md), type: [AlgebraicType](../../com.github.jomof.kane.impl.types/-algebraic-type/index.md)): [RetypeScalar](index.md)  
+fun [copy](copy.md)(scalar: [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md), type: [AlgebraicType](../../com.github.jomof.kane.impl.types/-algebraic-type/index.md)): [RetypeScalar](index.md)  
 
 
 

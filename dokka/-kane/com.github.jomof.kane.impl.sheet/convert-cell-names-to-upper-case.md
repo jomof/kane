@@ -5,7 +5,7 @@
 # convertCellNamesToUpperCase  
 [jvm]  
 Content  
-fun [Expr](../com.github.jomof.kane.impl/-expr/index.md).[convertCellNamesToUpperCase](convert-cell-names-to-upper-case.md)(): [Expr](../com.github.jomof.kane.impl/-expr/index.md)  
+fun [Expr](../com.github.jomof.kane/-expr/index.md).[convertCellNamesToUpperCase](convert-cell-names-to-upper-case.md)(): [Expr](../com.github.jomof.kane/-expr/index.md)  
 
 
 

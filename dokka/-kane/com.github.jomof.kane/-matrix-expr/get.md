@@ -1,4 +1,4 @@
-//[Kane](../../index.md)/[com.github.jomof.kane.impl](../index.md)/[MatrixExpr](index.md)/[get](get.md)
+//[Kane](../../index.md)/[com.github.jomof.kane](../index.md)/[MatrixExpr](index.md)/[get](get.md)
 
 
 

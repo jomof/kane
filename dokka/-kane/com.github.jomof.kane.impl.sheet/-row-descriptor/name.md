@@ -5,7 +5,7 @@
 # name  
 [jvm]  
 Content  
-val [name](name.md): [List](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)<[Expr](../../com.github.jomof.kane.impl/-expr/index.md)>  
+val [name](name.md): [List](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)<[Expr](../../com.github.jomof.kane/-expr/index.md)>  
 
 
 

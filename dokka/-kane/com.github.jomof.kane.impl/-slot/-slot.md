@@ -5,7 +5,7 @@
 # Slot  
 [jvm]  
 Content  
-fun [Slot](-slot.md)(slot: [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html), replaces: [ScalarExpr](../-scalar-expr/index.md))  
+fun [Slot](-slot.md)(slot: [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html), replaces: [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md))  
 
 
 

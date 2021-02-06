@@ -5,7 +5,7 @@
 # reduceArithmetic  
 [jvm]  
 Content  
-open fun [reduceArithmetic](reduce-arithmetic.md)(value: [ScalarExpr](../../com.github.jomof.kane.impl/-scalar-expr/index.md)): [ScalarExpr](../../com.github.jomof.kane.impl/-scalar-expr/index.md)?  
+open fun [reduceArithmetic](reduce-arithmetic.md)(value: [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md)): [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md)?  
 
 
 

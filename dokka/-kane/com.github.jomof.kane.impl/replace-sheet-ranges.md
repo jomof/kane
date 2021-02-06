@@ -5,7 +5,7 @@
 # replaceSheetRanges  
 [jvm]  
 Content  
-fun [Expr](-expr/index.md).[replaceSheetRanges](replace-sheet-ranges.md)(): [Expr](-expr/index.md)  
+fun [Expr](../com.github.jomof.kane/-expr/index.md).[replaceSheetRanges](replace-sheet-ranges.md)(): [Expr](../com.github.jomof.kane/-expr/index.md)  
 
 
 

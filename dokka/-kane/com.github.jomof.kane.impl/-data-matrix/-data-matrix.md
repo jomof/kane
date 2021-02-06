@@ -5,7 +5,7 @@
 # DataMatrix  
 [jvm]  
 Content  
-fun [DataMatrix](-data-matrix.md)(columns: [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html), rows: [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html), elements: [List](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)<[ScalarExpr](../-scalar-expr/index.md)>)  
+fun [DataMatrix](-data-matrix.md)(columns: [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html), rows: [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html), elements: [List](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)<[ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md)>)  
 
 
 
