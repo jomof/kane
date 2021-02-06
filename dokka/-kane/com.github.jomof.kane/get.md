@@ -5,7 +5,7 @@
 # get  
 [jvm]  
 Content  
-operator fun [Sheet](../com.github.jomof.kane.impl.sheet/-sheet/index.md).[get](get.md)(vararg ranges: [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)): [Expr](-expr/index.md)  
+operator fun [Sheet](../com.github.jomof.kane.impl.sheet/-sheet/index.md).[get](get.md)(vararg ranges: [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)): [Sheet](../com.github.jomof.kane.impl.sheet/-sheet/index.md)  
 More info  
 
 
