@@ -1,9 +1,14 @@
 package com.github.jomof.kane.impl
 
+import com.github.jomof.kane.Expr
+import com.github.jomof.kane.MatrixExpr
+import com.github.jomof.kane.ScalarExpr
+import com.github.jomof.kane.TypedExpr
 import com.github.jomof.kane.impl.sheet.SheetBuilderImpl
 import com.github.jomof.kane.impl.types.KaneType
 import com.github.jomof.kane.impl.types.kaneType
 import kotlin.reflect.KProperty
+
 
 data class Tiling<E : Any>(
     val columns: Int,

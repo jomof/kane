@@ -1,6 +1,5 @@
 package com.github.jomof.kane
 
-import com.github.jomof.kane.impl.Expr
 import com.github.jomof.kane.impl.cellNameToCoordinate
 import com.github.jomof.kane.impl.coordinate
 import com.github.jomof.kane.impl.looksLikeCellName

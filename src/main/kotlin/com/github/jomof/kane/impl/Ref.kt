@@ -1,5 +1,6 @@
 package com.github.jomof.kane.impl
 
+import com.github.jomof.kane.ScalarExpr
 import com.github.jomof.kane.impl.types.AlgebraicType
 
 interface MatrixShape {

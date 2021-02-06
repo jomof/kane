@@ -2,6 +2,8 @@
 
 package com.github.jomof.kane.impl.sheet
 
+import com.github.jomof.kane.Expr
+import com.github.jomof.kane.ScalarExpr
 import com.github.jomof.kane.impl.*
 import com.github.jomof.kane.impl.types.KaneType
 import kotlin.reflect.KProperty

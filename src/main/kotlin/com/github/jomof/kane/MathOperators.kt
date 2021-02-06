@@ -4,8 +4,6 @@ import com.github.jomof.kane.functions.add
 import com.github.jomof.kane.functions.divide
 import com.github.jomof.kane.functions.multiply
 import com.github.jomof.kane.functions.subtract
-import com.github.jomof.kane.impl.MatrixExpr
-import com.github.jomof.kane.impl.ScalarExpr
 import com.github.jomof.kane.impl.sheet.SheetRange
 
 // Times

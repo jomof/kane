@@ -1,13 +1,12 @@
 package com.github.jomof.kane.impl.sheet
 
+import com.github.jomof.kane.Expr
 import com.github.jomof.kane.impl.*
 import com.github.jomof.kane.mapDoubles
 
 /**
  * Methods for dealing with Sheet in a functional manner
  */
-
-
 
 
 /**

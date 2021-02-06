@@ -1,6 +1,6 @@
 package com.github.jomof.kane.impl.sheet
 
-import com.github.jomof.kane.impl.Expr
+import com.github.jomof.kane.Expr
 import com.github.jomof.kane.impl.visitor.RewritingVisitor
 
 private fun Expr.removeBuilderPrivateExpressions(): Expr {

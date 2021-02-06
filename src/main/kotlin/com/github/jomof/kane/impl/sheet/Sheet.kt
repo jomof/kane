@@ -1,13 +1,43 @@
 @file:Suppress("UNCHECKED_CAST")
 package com.github.jomof.kane.impl.sheet
 
-import com.github.jomof.kane.eval
+import com.github.jomof.kane.*
 import com.github.jomof.kane.impl.*
 import com.github.jomof.kane.impl.functions.AlgebraicBinaryRangeStatistic
 import com.github.jomof.kane.impl.types.KaneType
 import com.github.jomof.kane.impl.visitor.RewritingVisitor
 import com.github.jomof.kane.impl.visitor.visit
 import java.lang.Integer.max
+import kotlin.collections.ArrayList
+import kotlin.collections.List
+import kotlin.collections.Map
+import kotlin.collections.MutableList
+import kotlin.collections.MutableMap
+import kotlin.collections.component1
+import kotlin.collections.component2
+import kotlin.collections.filter
+import kotlin.collections.filterIsInstance
+import kotlin.collections.forEach
+import kotlin.collections.indices
+import kotlin.collections.isNotEmpty
+import kotlin.collections.iterator
+import kotlin.collections.joinToString
+import kotlin.collections.listOf
+import kotlin.collections.map
+import kotlin.collections.mapNotNullTo
+import kotlin.collections.mapOf
+import kotlin.collections.maxOrNull
+import kotlin.collections.mutableMapOf
+import kotlin.collections.plus
+import kotlin.collections.plusAssign
+import kotlin.collections.set
+import kotlin.collections.sorted
+import kotlin.collections.sortedBy
+import kotlin.collections.toList
+import kotlin.collections.toMap
+import kotlin.collections.toMutableList
+import kotlin.collections.toMutableMap
+import kotlin.collections.toSet
 import kotlin.math.min
 import kotlin.reflect.KProperty
 

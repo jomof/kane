@@ -1,6 +1,6 @@
 package com.github.jomof.kane.impl.types
 
-import com.github.jomof.kane.impl.AlgebraicExpr
+import com.github.jomof.kane.AlgebraicExpr
 import com.github.jomof.kane.impl.RetypeMatrix
 import com.github.jomof.kane.impl.RetypeScalar
 import java.math.BigDecimal

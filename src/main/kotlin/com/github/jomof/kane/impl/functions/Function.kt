@@ -1,8 +1,6 @@
 package com.github.jomof.kane.impl.functions
 
-import com.github.jomof.kane.describe
-import com.github.jomof.kane.filterRows
-import com.github.jomof.kane.get
+import com.github.jomof.kane.*
 import com.github.jomof.kane.impl.*
 import com.github.jomof.kane.impl.sheet.*
 import com.github.jomof.kane.impl.types.AlgebraicType
@@ -121,7 +119,7 @@ data class AlgebraicBinaryMatrixScalar(
         track()
     }
     override fun get(column: Int, row: Int) = AlgebraicBinaryScalar(op, left[column, row], right)
-    operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = render()
 }
 
@@ -157,7 +155,7 @@ data class AlgebraicBinaryMatrix(
 
     override fun get(column: Int, row: Int) = AlgebraicBinaryScalar(op, left[column, row], right[column, row])
     override fun toString() = render()
-    operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
 }
 
 // f(scalar)->scalar
@@ -211,7 +209,7 @@ data class AlgebraicUnaryMatrix(
     override val columns get() = value.columns
     override val rows get() = value.rows
     override fun get(column: Int, row: Int) = AlgebraicUnaryScalar(op, value[column, row])
-    operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = render()
 }
 
@@ -321,7 +319,7 @@ data class AlgebraicBinaryRangeStatistic(
         track()
     }
 
-    operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = render()
 }
 

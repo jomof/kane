@@ -1,11 +1,10 @@
 package com.github.jomof.kane.impl.sheet
 
+import com.github.jomof.kane.Expr
 import com.github.jomof.kane.get
-import com.github.jomof.kane.impl.Expr
 import com.github.jomof.kane.impl.NamedColumnRangeRef
 import com.github.jomof.kane.impl.constant
 import com.github.jomof.kane.impl.coordinateToCellName
-
 
 interface RangeExprProvider {
     fun range(range: SheetRangeExpr): Expr = range

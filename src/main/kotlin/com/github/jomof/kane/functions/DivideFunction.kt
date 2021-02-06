@@ -1,13 +1,10 @@
 package com.github.jomof.kane.functions
 
-import com.github.jomof.kane.div
+import com.github.jomof.kane.*
 import com.github.jomof.kane.impl.*
 import com.github.jomof.kane.impl.functions.AlgebraicBinaryScalar
 import com.github.jomof.kane.impl.functions.AlgebraicBinaryScalarFunction
 import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalar
-import com.github.jomof.kane.minus
-import com.github.jomof.kane.pow
-import com.github.jomof.kane.times
 
 val DIV by BinaryOp(op = "/", precedence = 2, infix = true)
 

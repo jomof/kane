@@ -1,8 +1,8 @@
 @file:Suppress("UNCHECKED_CAST")
 package com.github.jomof.kane.impl.sheet
 
+import com.github.jomof.kane.Expr
 import com.github.jomof.kane.impl.ConstantScalar
-import com.github.jomof.kane.impl.Expr
 import com.github.jomof.kane.impl.RetypeScalar
 import com.github.jomof.kane.impl.ValueExpr
 import com.github.jomof.kane.impl.types.*

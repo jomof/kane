@@ -6,7 +6,6 @@ import com.github.jomof.kane.impl.StreamingSamples
 import com.github.jomof.kane.impl.canGetConstant
 import com.github.jomof.kane.impl.getConstant
 
-
 internal fun Sheet.columnStatistics(): List<StreamingSamples> {
     val evaled = eval()
     val samples = (0 until evaled.columns).map { StreamingSamples() }

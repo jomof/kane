@@ -1,8 +1,18 @@
 package com.github.jomof.kane.impl.visitor
 
+import com.github.jomof.kane.AlgebraicExpr
+import com.github.jomof.kane.Expr
+import com.github.jomof.kane.MatrixExpr
+import com.github.jomof.kane.ScalarExpr
 import com.github.jomof.kane.impl.*
 import com.github.jomof.kane.impl.functions.*
 import com.github.jomof.kane.impl.sheet.*
+import kotlin.collections.component1
+import kotlin.collections.component2
+import kotlin.collections.mutableListOf
+import kotlin.collections.mutableMapOf
+import kotlin.collections.plusAssign
+import kotlin.collections.set
 
 internal open class RewritingVisitor {
     private var depth = 0

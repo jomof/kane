@@ -1,8 +1,13 @@
 package com.github.jomof.kane.functions
 
-import com.github.jomof.kane.impl.*
+import com.github.jomof.kane.MatrixExpr
+import com.github.jomof.kane.ScalarExpr
+import com.github.jomof.kane.impl.ConstantScalar
+import com.github.jomof.kane.impl.ScalarListExpr
+import com.github.jomof.kane.impl.UnaryOp
 import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalar
 import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalarFunction
+
 
 val NEGATE by UnaryOp(op = "-")
 

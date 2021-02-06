@@ -2,7 +2,7 @@
 
 package com.github.jomof.kane.impl
 
-import com.github.jomof.kane.eval
+import com.github.jomof.kane.*
 import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.impl.functions.*
 import com.github.jomof.kane.impl.sheet.CoerceScalar
@@ -11,23 +11,8 @@ import com.github.jomof.kane.impl.types.AlgebraicType
 import com.github.jomof.kane.impl.types.KaneType
 import com.github.jomof.kane.impl.types.StringKaneType
 import com.github.jomof.kane.impl.types.kaneDouble
-import com.github.jomof.kane.pow
 import kotlin.reflect.KProperty
 
-interface Expr
-
-interface TypedExpr<E : Any> : Expr {
-    val type: KaneType<E>
-}
-
-interface AlgebraicExpr : Expr
-
-interface ScalarExpr : AlgebraicExpr
-interface MatrixExpr : AlgebraicExpr {
-    val columns: Int
-    val rows: Int
-    operator fun get(column: Int, row: Int): ScalarExpr
-}
 
 interface VariableExpr : AlgebraicExpr
 interface ScalarVariableExpr : ScalarExpr, VariableExpr
@@ -272,7 +257,7 @@ data class DataMatrix(
         elements[coordinateToIndex(column, row)]
     }
 
-    operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = render()
 }
 

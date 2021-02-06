@@ -1,9 +1,12 @@
 package com.github.jomof.kane.impl
 
+import com.github.jomof.kane.Expr
+import com.github.jomof.kane.ScalarExpr
 import com.github.jomof.kane.impl.types.algebraicType
 import com.github.jomof.kane.impl.visitor.visit
 import kotlin.random.Random
 import kotlin.reflect.KProperty
+
 
 interface RandomVariableExpr : ScalarExpr {
     fun sample(random : Random) : ConstantScalar
@@ -22,7 +25,7 @@ class DiscreteUniformRandomVariable(
         return ConstantScalar(sample)
     }
 
-    operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
 
     override fun toString(): String {
         val min = values.minByOrNull { it } ?: 0.0

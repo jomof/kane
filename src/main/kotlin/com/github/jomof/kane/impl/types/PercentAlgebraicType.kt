@@ -1,6 +1,10 @@
 package com.github.jomof.kane.impl.types
 
-import com.github.jomof.kane.impl.*
+import com.github.jomof.kane.MatrixExpr
+import com.github.jomof.kane.ScalarExpr
+import com.github.jomof.kane.impl.ConstantScalar
+import com.github.jomof.kane.impl.RetypeMatrix
+import com.github.jomof.kane.impl.RetypeScalar
 import java.text.NumberFormat
 
 class PercentAlgebraicType : AlgebraicType(Double::class.java) {

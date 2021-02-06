@@ -1,7 +1,7 @@
 package com.github.jomof.kane.impl.sheet
 
+import com.github.jomof.kane.Expr
 import com.github.jomof.kane.impl.DataMatrix
-import com.github.jomof.kane.impl.Expr
 import com.github.jomof.kane.impl.coordinates
 import com.github.jomof.kane.impl.functions.AlgebraicUnaryMatrixScalar
 import com.github.jomof.kane.impl.visitor.RewritingVisitor

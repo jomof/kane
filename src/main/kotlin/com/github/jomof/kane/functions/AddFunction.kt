@@ -1,9 +1,11 @@
 package com.github.jomof.kane.functions
 
+import com.github.jomof.kane.ScalarExpr
 import com.github.jomof.kane.impl.*
 import com.github.jomof.kane.impl.functions.AlgebraicBinaryScalar
 import com.github.jomof.kane.impl.functions.AlgebraicBinaryScalarFunction
 import com.github.jomof.kane.plus
+
 
 val PLUS by BinaryOp(op = "+", precedence = 3, associative = true, infix = true)
 private class AddFunction : AlgebraicBinaryScalarFunction {

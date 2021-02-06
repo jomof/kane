@@ -1,7 +1,11 @@
 package com.github.jomof.kane.functions
 
-import com.github.jomof.kane.impl.*
+import com.github.jomof.kane.ScalarExpr
+import com.github.jomof.kane.impl.UnaryOp
+import com.github.jomof.kane.impl.canGetConstant
+import com.github.jomof.kane.impl.constant
 import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalarFunction
+import com.github.jomof.kane.impl.getConstant
 
 // Source: https://www.multpl.com/shiller-pe/table/by-year
 // Year is on January 1st of that year.

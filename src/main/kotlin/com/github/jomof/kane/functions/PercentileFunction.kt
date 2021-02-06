@@ -1,5 +1,6 @@
 package com.github.jomof.kane.functions
 
+import com.github.jomof.kane.ScalarExpr
 import com.github.jomof.kane.impl.*
 import com.github.jomof.kane.impl.functions.AlgebraicBinaryScalarStatisticFunction
 import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalarStatisticFunction
