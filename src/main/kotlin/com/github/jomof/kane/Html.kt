@@ -14,6 +14,10 @@ import com.github.jomof.kane.impl.sheet.rowName
  */
 val Sheet.html: String
     get() {
+        if (cells.isEmpty()) return ""
+        if (cells.count() == 1 && !sheetDescriptor.showRowAndColumnForSingleCell)
+            return cells.firstValue().toString()
+
         val sb = StringBuilder()
 //        sb.append(
 //            """

@@ -86,11 +86,11 @@ class StreamingSamples(
     val mean : Double get() = if (n == 0) Double.NaN else s / n
     val median : Double get() = percentile(0.5)
     val sampleCount : Int get() = samples.size
-    val variance : Double get() = if (n < 2) Double.NaN else m2 / (n - 1)
-    val stddev : Double get() = variance.pow(0.5)
-    val skewness : Double get() = n.toDouble().pow(0.5) * m3 / m2.pow(1.5)
-    val kurtosis : Double get() = n*m4 / (m2*m2) - 3.0
-    val coefficientOfVariation : Double get() = stddev / mean
+    val variance: Double get() = if (n < 2) Double.NaN else m2 / (n - 1)
+    val stdev: Double get() = variance.pow(0.5)
+    val skewness: Double get() = n.toDouble().pow(0.5) * m3 / m2.pow(1.5)
+    val kurtosis: Double get() = n * m4 / (m2 * m2) - 3.0
+    val coefficientOfVariation: Double get() = stdev / mean
 
     fun insert(value : Double) {
         if (value.isNaN()) {

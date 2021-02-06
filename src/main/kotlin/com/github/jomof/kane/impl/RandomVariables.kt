@@ -42,8 +42,6 @@ class ScalarStatistic(
 ) : ScalarExpr {
     override fun toString(): String {
         return this.algebraicType.render(statistic.median)
-//        if (statistic.count == 1) return type.render(statistic.median)
-//        return type.render(statistic.mean) + "±" + type.render(statistic.stddev)
     }
 
     fun copy(statistic: StreamingSamples = this.statistic) =

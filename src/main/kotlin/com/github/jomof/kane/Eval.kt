@@ -4,6 +4,7 @@ import com.github.jomof.kane.impl.*
 import com.github.jomof.kane.impl.sheet.GroupBy
 import com.github.jomof.kane.impl.sheet.RangeExprProvider
 import com.github.jomof.kane.impl.sheet.Sheet
+import com.github.jomof.kane.impl.sheet.showExcelColumnTags
 
 
 fun Expr.eval(
@@ -52,4 +53,8 @@ fun GroupBy.eval(
     rangeExprProvider: RangeExprProvider? = null,
     reduceVariables: Boolean = false,
     excludeVariables: Set<Id> = setOf(),
-) = (this as Expr).evalImpl(rangeExprProvider, reduceVariables, excludeVariables) as GroupBy
+) = ((this as Expr).evalImpl(
+    rangeExprProvider,
+    reduceVariables,
+    excludeVariables
+) as GroupBy).showExcelColumnTags(false)

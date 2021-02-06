@@ -6,6 +6,7 @@ import com.github.jomof.kane.impl.StreamingSamples
 import com.github.jomof.kane.impl.UnaryOp
 import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalarStatisticFunction
 import com.github.jomof.kane.mean
+import com.github.jomof.kane.stdev
 
 private val CV by UnaryOp()
 
@@ -15,8 +16,8 @@ class CoefficientOfVariationFunction : AlgebraicUnaryScalarStatisticFunction {
     override fun reduceArithmetic(elements: List<ScalarExpr>): ScalarExpr? {
         val statistic = super.reduceArithmetic(elements)
         if (statistic != null) return statistic
-        val stddev = stddev.reduceArithmetic(elements) ?: return null
-        return stddev / mean.reduceArithmetic(elements)
+        val stdev = stdev.reduceArithmetic(elements) ?: return null
+        return stdev / mean.reduceArithmetic(elements)
     }
 }
 

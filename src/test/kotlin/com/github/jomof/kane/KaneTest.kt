@@ -55,7 +55,7 @@ class KaneTest {
                  75%        5 
                  max        6 
             variance      3.5 
-              stddev  1.87083 
+               stdev  1.87083 
             skewness        0 
             kurtosis -1.26857 
                   cv  0.53452 

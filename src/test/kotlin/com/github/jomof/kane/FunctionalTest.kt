@@ -1,6 +1,7 @@
 package com.github.jomof.kane
 
 import com.github.jomof.kane.impl.sheet.ordinalRows
+import com.github.jomof.kane.impl.sheet.showExcelColumnTags
 import org.junit.Test
 
 class FunctionalTest {
@@ -157,7 +158,7 @@ class FunctionalTest {
                  75%     1017         430 
                  max     1022         600 
             variance 42.16667 21770.77922 
-              stddev  6.49359   147.54924 
+               stdev  6.49359   147.54924 
             skewness        0     0.05906 
             kurtosis -1.20497    -0.76712 
                   cv  0.00642     0.42432 
@@ -182,7 +183,7 @@ class FunctionalTest {
                  75%         430 
                  max         600 
             variance 21770.77922 
-              stddev   147.54924 
+               stdev   147.54924 
             skewness     0.05906 
             kurtosis    -0.76712 
                   cv     0.42432 

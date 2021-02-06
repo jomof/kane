@@ -126,6 +126,7 @@ fun Expr.slideScalarizedCellsRewritingVisitor(upperLeft: Coordinate, offset: Coo
                                     )
                                 )
                             }
+                            rangeRef.column is MoveableIndex && rangeRef.row is MoveableIndex -> this
                             else ->
                                 TODO("$rangeRef")
                         }

@@ -6,12 +6,12 @@ import com.github.jomof.kane.impl.UnaryOp
 import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalarStatisticFunction
 import com.github.jomof.kane.pow
 
-private val STDDEV by UnaryOp()
+private val STDEV by UnaryOp()
 
-class StddevFunction : AlgebraicUnaryScalarStatisticFunction {
-    override val meta = STDDEV
+internal class StdevFunction : AlgebraicUnaryScalarStatisticFunction {
+    override val meta = STDEV
     override fun lookupStatistic(statistic: StreamingSamples) =
-        statistic.stddev
+        statistic.stdev
 
     override fun reduceArithmetic(elements: List<ScalarExpr>): ScalarExpr? {
         val statistic = super.reduceArithmetic(elements)
@@ -21,4 +21,3 @@ class StddevFunction : AlgebraicUnaryScalarStatisticFunction {
     }
 }
 
-val stddev = StddevFunction()

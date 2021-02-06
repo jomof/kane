@@ -3,6 +3,7 @@ package com.github.jomof.kane
 import com.github.jomof.kane.functions.cv
 import com.github.jomof.kane.impl.sheet.aggregate
 import com.github.jomof.kane.impl.sheet.groupOf
+import com.github.jomof.kane.impl.sheet.showExcelColumnTags
 import org.junit.Test
 
 class GroupByTest {
@@ -200,7 +201,7 @@ class GroupByTest {
              75%         389 
              max         389 
         variance 28579.22667 
-          stddev   169.05392 
+           stdev   169.05392 
         skewness     1.08967 
         kurtosis      -0.714 
               cv     1.22681 
@@ -224,7 +225,7 @@ class GroupByTest {
              75%  68.44885  176.49975 
              max  76.43563  177.54092 
         variance 141.37829  224.06903 
-          stddev  11.89026   14.96894 
+           stdev  11.89026   14.96894 
         skewness   0.50841   -0.68671 
         kurtosis  -1.20648   -0.98633 
               cv   0.21097     0.0915 
@@ -240,10 +241,10 @@ class GroupByTest {
             .describe()
             .assertString(
                 """
-                       count height NaN height mean height min height 25% height median height 75% height max height variance height stddev height skewness height kurtosis height cv height sum height count weight NaN weight mean weight min weight 25% weight median weight 75% weight max weight variance weight stddev weight skewness weight kurtosis weight cv weight sum weight 
-                       ------------ ---------- ----------- ---------- ---------- ------------- ---------- ---------- --------------- ------------- --------------- --------------- --------- ---------- ------------ ---------- ----------- ---------- ---------- ------------- ---------- ---------- --------------- ------------- --------------- --------------- --------- ---------- 
-                  male            6          0    51.89525   42.84998   45.30612      49.60731   56.29353    70.7577       106.82064      10.33541         1.11246        -0.13151   0.19916  311.37153            6          0   162.14403  136.43147  152.52621     171.52464  177.34041  177.54092       266.23803       16.3168        -0.50456        -1.09242   0.10063  972.86419 
-                female            4          0    63.05376   48.42108    58.9095      68.44885   76.43563   76.43563       146.49059      12.10333         -0.1413         -1.3627   0.19195  252.21506            4          0    165.7797  144.25199  168.27297      174.0941  176.49975  176.49975       217.90257      14.76152         -0.9758        -0.82088   0.08904  663.11881 
+                       count height NaN height mean height min height 25% height median height 75% height max height variance height stdev height skewness height kurtosis height cv height sum height count weight NaN weight mean weight min weight 25% weight median weight 75% weight max weight variance weight stdev weight skewness weight kurtosis weight cv weight sum weight 
+                       ------------ ---------- ----------- ---------- ---------- ------------- ---------- ---------- --------------- ------------ --------------- --------------- --------- ---------- ------------ ---------- ----------- ---------- ---------- ------------- ---------- ---------- --------------- ------------ --------------- --------------- --------- ---------- 
+                  male            6          0    51.89525   42.84998   45.30612      49.60731   56.29353    70.7577       106.82064     10.33541         1.11246        -0.13151   0.19916  311.37153            6          0   162.14403  136.43147  152.52621     171.52464  177.34041  177.54092       266.23803      16.3168        -0.50456        -1.09242   0.10063  972.86419 
+                female            4          0    63.05376   48.42108    58.9095      68.44885   76.43563   76.43563       146.49059     12.10333         -0.1413         -1.3627   0.19195  252.21506            4          0    165.7797  144.25199  168.27297      174.0941  176.49975  176.49975       217.90257     14.76152         -0.9758        -0.82088   0.08904  663.11881 
                 """.trimIndent()
             )
     }

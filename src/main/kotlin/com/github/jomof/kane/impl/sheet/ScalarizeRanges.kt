@@ -5,30 +5,22 @@ import com.github.jomof.kane.impl.*
 import com.github.jomof.kane.impl.ComputableIndex.MoveableIndex
 import com.github.jomof.kane.impl.functions.*
 import com.github.jomof.kane.impl.visitor.RewritingVisitor
-import kotlin.collections.Set
-import kotlin.collections.any
 import kotlin.collections.component1
 import kotlin.collections.component2
-import kotlin.collections.filter
-import kotlin.collections.filterIsInstance
-import kotlin.collections.forEach
-import kotlin.collections.getValue
-import kotlin.collections.isNotEmpty
-import kotlin.collections.map
-import kotlin.collections.mutableSetOf
-import kotlin.collections.plus
-import kotlin.collections.plusAssign
-import kotlin.collections.reversed
 import kotlin.collections.set
-import kotlin.collections.setOf
-import kotlin.collections.sorted
-import kotlin.collections.toSet
 
 private fun Expr.ranges(): Set<SheetRangeRef> {
     return when (this) {
         is DataMatrix -> {
             val set = mutableSetOf<SheetRangeRef>()
             elements.forEach { expr ->
+                set += expr.ranges()
+            }
+            set
+        }
+        is ScalarListExpr -> {
+            val set = mutableSetOf<SheetRangeRef>()
+            values.forEach { expr ->
                 set += expr.ranges()
             }
             set
@@ -63,6 +55,7 @@ private fun Expr.ranges(): Set<SheetRangeRef> {
         is AlgebraicBinaryRangeStatistic,
         is Tiling<*>,
         is ValueExpr<*>,
+        is ScalarVariable,
         is ConstantScalar,
         is NamedScalarVariable,
         is DiscreteUniformRandomVariable -> setOf()

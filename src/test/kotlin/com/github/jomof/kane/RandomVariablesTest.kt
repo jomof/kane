@@ -1,6 +1,9 @@
 package com.github.jomof.kane
 
-import com.github.jomof.kane.functions.*
+import com.github.jomof.kane.functions.cv
+import com.github.jomof.kane.functions.percentile
+import com.github.jomof.kane.functions.sp500
+import com.github.jomof.kane.functions.step
 import com.github.jomof.kane.impl.StreamingSamples
 import com.github.jomof.kane.impl.constant
 import com.github.jomof.kane.impl.findRandomVariables
@@ -25,7 +28,7 @@ class RandomVariablesTest {
         val health by roll + roll + roll + roll + roll
         health.eval().assertString("health=20")
         median(health).eval().assertString("20")
-        stddev(health).eval().assertString("9.35414")
+        stdev(health).eval().assertString("9.35414")
         count(health).eval().assertString("6") // Default loops in evalGradual()
         cv(health).eval().assertString("0.53452")
         percentile(health, 0.05).eval().assertString("5")
@@ -66,10 +69,10 @@ class RandomVariablesTest {
             val a3 by randomOf(1.0 to 6.0)
             val b1 by mean(a1 + a2 + a3)
             val b2 by median(a1 + a2 + a3)
-            val b3 by stddev(a1 + a2 + a3)
+            val b3 by stdev(a1 + a2 + a3)
             val c1 by mean(a1 + a1 + a1)
             val c2 by median(a1 + a1 + a1)
-            val c3 by stddev(a1 + a1 + a1)
+            val c3 by stdev(a1 + a1 + a1)
             val d1 by mean(pow(a1, 2.0))
             val d2 by count(a1)
             listOf(a1, a2, a3, b1, b2, b3, c1, c2, c3, d1, d2)

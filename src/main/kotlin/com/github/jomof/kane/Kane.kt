@@ -4,6 +4,8 @@ import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.impl.columnOf
 import com.github.jomof.kane.impl.sheet.Sheet
 import com.github.jomof.kane.impl.sheet.possibleDataFormats
+import com.github.jomof.kane.impl.sheet.showExcelColumnTags
+import com.github.jomof.kane.impl.sheet.showRowAndColumnForSingleCell
 
 /**
  * Global metadata about the Kane system.
@@ -19,7 +21,7 @@ class Kane {
             val a1 by columnOf(possibleDataFormats.map { it.toString() })
             val b1 by columnOf(possibleDataFormats.map { it.type.simpleName })
             listOf(a1, b1)
-        }.showExcelColumnTags(false)
+        }.showExcelColumnTags(false).showRowAndColumnForSingleCell(true)
 
         /**
          * List of statistics functions that take one parameter.
@@ -34,7 +36,7 @@ class Kane {
             percentile75,
             max,
             variance,
-            stddev,
+            stdev,
             skewness,
             kurtosis,
             cv,

@@ -530,9 +530,9 @@ class SheetTest {
         ).copy {
             val r by range("A1:B2")
             val mean by mean(r)
-            val stddev by stddev(r)
+            val stdev by stdev(r)
             val percentile by percentile(r, 0.25)
-            listOf(mean, stddev, percentile)
+            listOf(mean, stdev, percentile)
         }
         check.assertString(
             """
@@ -542,7 +542,7 @@ class SheetTest {
                 2 3 4 
                 mean=mean(A1:B2)
                 percentile=percentile(A1:B2,0.25)
-                stddev=stddev(A1:B2)
+                stdev=stdev(A1:B2)
             """.trimIndent()
         )
         check.eval().assertString(
@@ -553,7 +553,7 @@ class SheetTest {
                 2 3 4 
                 mean=2.5
                 percentile=2
-                stddev=1.29099
+                stdev=1.29099
             """.trimIndent()
         )
     }
@@ -784,7 +784,7 @@ class SheetTest {
             val d1 by "mean"
             val e1 by mean(a1)
             val d2 by "stdev"
-            val e2 by stddev(a1)
+            val e2 by stdev(a1)
             val d3 by "count"
             val e3 by count(a1)
 
@@ -816,10 +816,10 @@ class SheetTest {
             val sumSquared by sum(squared)
             val variance by sumSquared / (count(squared) - 1.0)
             val varianceExpr by variance(weight)
-            val stddev by pow(variance, 0.5)
-            val stddevExpr by stddev(weight)
+            val stdev by pow(variance, 0.5)
+            val stdevExpr by stdev(weight)
             difference.assertString("difference=mean-weight")
-            listOf(mean, difference, squared, sumSquared, variance, varianceExpr, stddev, stddevExpr)
+            listOf(mean, difference, squared, sumSquared, variance, varianceExpr, stdev, stdevExpr)
         }
         println(sheet)
         sheet.eval().assertString(
@@ -832,8 +832,8 @@ class SheetTest {
             4    430    1296        -36 
             5    300    8836         94 
             mean=394
-            stddev=164.71187
-            stddevExpr=164.71187
+            stdev=164.71187
+            stdevExpr=164.71187
             sumSquared=108520
             variance=27130
             varianceExpr=27130  
@@ -1176,10 +1176,10 @@ class SheetTest {
             val b4 by shillerPE(a4)
             val c3 by constant("S&P 500")
             val c4 by sp500(a4)
-            val c2 by stddev(c4)
+            val c2 by stdev(c4)
             val d3 by constant("BAA Corp Bonds")
             val d4 by baaCorporateBond(a4)
-            val d2 by stddev(d4)
+            val d2 by stdev(d4)
 
             val g3 by constant("stock(%)")
             val g4 by columnOf((0 until totalYears - rollingWindow).map {

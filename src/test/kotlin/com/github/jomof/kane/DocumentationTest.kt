@@ -399,7 +399,7 @@ class DocumentationTest {
                  75%       27017       10       23       1997       17         47 
                  max       35549       12       31       2002       24        280 
             variance 105313912.5 11.53677 68.17294   56.15037 46.23192 1370.49528 
-              stddev  10262.2567  3.39658  8.25669    7.49336  6.79941    37.0202 
+               stdev  10262.2567  3.39658  8.25669    7.49336  6.79941    37.0202 
             skewness           0  0.05148  0.01806   -0.04414  0.12143    2.22898 
             kurtosis        -1.2 -1.20493 -1.06419   -1.28476 -1.14783    5.99371 
                   cv     0.57734  0.52465  0.51265    0.00376   0.5966    0.95531 
@@ -431,44 +431,42 @@ class DocumentationTest {
         // The result is a GroupBy object
         group.assertString(
             """
-                   key selector 
-                   ------------ 
-            gender       gender 
-        """.trimIndent()
+                       key selector 
+                       ------------ 
+                gender       gender 
+            """.trimIndent()
         )
 
         // Access a single group
-        group["male"].assertString(
+        group["female"].assertString(
             """
-            date [A]  height [B] weight [C] gender [D] 
-           ---------- ---------- ---------- ---------- 
-         1 2000-01-01        183         77       male 
-         2 2000-01-02        180         80       male 
-         3 2000-01-03        177         76       male 
-         5 2000-01-05        163         72       male 
-         7 2000-01-07        185         81       male 
-        10 2000-01-10        181         78       male 
-        """.trimIndent()
+               date [A]  height [B] weight [C] gender [D] 
+              ---------- ---------- ---------- ---------- 
+            4 2000-01-04        162         63     female 
+            6 2000-01-06        165         64     female 
+            8 2000-01-08        158         55     female 
+            9 2000-01-09        150         59     female 
+            """.trimIndent()
         )
 
         // Describe a groupBy
         group.describe().assertString(
             """
-               count height NaN height mean height min height 25% height median height 75% height max height variance height stddev height skewness height kurtosis height cv height sum height count weight NaN weight mean weight min weight 25% weight median weight 75% weight max weight variance weight stddev weight skewness weight kurtosis weight cv weight sum weight 
-               ------------ ---------- ----------- ---------- ---------- ------------- ---------- ---------- --------------- ------------- --------------- --------------- --------- ---------- ------------ ---------- ----------- ---------- ---------- ------------- ---------- ---------- --------------- ------------- --------------- --------------- --------- ---------- 
-          male            6          0   178.16667        163        177           181        183        185        62.56667       7.90991        -1.34112         0.41593    0.0444       1069            6          0    77.33333         72         76            78         80         81        10.26667       3.20416         -0.5698        -0.62338   0.04143        464 
-        female            4          0      158.75        150        158           162        165        165           42.25           6.5        -0.54923        -1.13276   0.04094        635            4          0       60.25         55         59            63         64         64        16.91667       4.11299        -0.40452        -1.42042   0.06827        241 
-        """.trimIndent()
+                  count height NaN height mean height min height 25% height median height 75% height max height variance height stdev height skewness height kurtosis height cv height sum height count weight NaN weight mean weight min weight 25% weight median weight 75% weight max weight variance weight stdev weight skewness weight kurtosis weight cv weight sum weight 
+                   ------------ ---------- ----------- ---------- ---------- ------------- ---------- ---------- --------------- ------------ --------------- --------------- --------- ---------- ------------ ---------- ----------- ---------- ---------- ------------- ---------- ---------- --------------- ------------ --------------- --------------- --------- ---------- 
+              male            6          0   178.16667        163        177           181        183        185        62.56667      7.90991        -1.34112         0.41593    0.0444       1069            6          0    77.33333         72         76            78         80         81        10.26667      3.20416         -0.5698        -0.62338   0.04143        464 
+            female            4          0      158.75        150        158           162        165        165           42.25          6.5        -0.54923        -1.13276   0.04094        635            4          0       60.25         55         59            63         64         64        16.91667      4.11299        -0.40452        -1.42042   0.06827        241 
+            """.trimIndent()
         )
 
         // Statistic of groupBy
         median(group).assertString(
             """
-               median height median weight 
-               ------------- ------------- 
-          male           181            78 
-        female           162            63 
-        """.trimIndent()
+                   median height median weight 
+                   ------------- ------------- 
+              male           181            78 
+            female           162            63 
+            """.trimIndent()
         )
 
         // Multiple statistics of groupBy
@@ -505,19 +503,19 @@ class DocumentationTest {
         )
         bmi.eval().assertString(
             """
-              date    height weight gender    bmi   
-           ---------- ------ ------ ------ -------- 
-         1 2000-01-01    183     77   male 22.99262 
-         2 2000-01-02    180     80   male 24.69136 
-         3 2000-01-03    177     76   male 24.25867 
-         4 2000-01-04    162     63 female 24.00549 
-         5 2000-01-05    163     72   male 27.09925 
-         6 2000-01-06    165     64 female 23.50781 
-         7 2000-01-07    185     81   male 23.66691 
-         8 2000-01-08    158     55 female 22.03173 
-         9 2000-01-09    150     59 female 26.22222 
-        10 2000-01-10    181     78   male  23.8088 
-        """.trimIndent()
+                  date    height weight gender    bmi   
+               ---------- ------ ------ ------ -------- 
+             1 2000-01-01    183     77   male 22.99262 
+             2 2000-01-02    180     80   male 24.69136 
+             3 2000-01-03    177     76   male 24.25867 
+             4 2000-01-04    162     63 female 24.00549 
+             5 2000-01-05    163     72   male 27.09925 
+             6 2000-01-06    165     64 female 23.50781 
+             7 2000-01-07    185     81   male 23.66691 
+             8 2000-01-08    158     55 female 22.03173 
+             9 2000-01-09    150     59 female 26.22222 
+            10 2000-01-10    181     78   male  23.8088 
+            """.trimIndent()
         )
 
         // Group by a sheet with formulas
@@ -534,28 +532,29 @@ class DocumentationTest {
             10 2000-01-10        181         78       male C6/(B6/100)² 
         """.trimIndent()
         )
-        formulaGroup["male"].eval().assertString(
+
+        // Evaluate a groupBy and filter by certain columns
+        val evaluatedBmi = formulaGroup.eval().columns("gender", "bmi")
+        evaluatedBmi["male"].assertString(
             """
-                  date    height weight gender    bmi   
-               ---------- ------ ------ ------ -------- 
-             1 2000-01-01    183     77   male 22.99262 
-             2 2000-01-02    180     80   male 24.69136 
-             3 2000-01-03    177     76   male 24.25867 
-             5 2000-01-05    163     72   male 27.09925 
-             7 2000-01-07    185     81   male 23.66691 
-            10 2000-01-10    181     78   male  23.8088 
-        """.trimIndent()
+               gender    bmi   
+               ------ -------- 
+             1   male 22.99262 
+             2   male 24.69136 
+             3   male 24.25867 
+             5   male 27.09925 
+             7   male 23.66691 
+            10   male  23.8088 
+            """.trimIndent()
         )
 
-        median(formulaGroup).assertString(
+        stdev(evaluatedBmi).assertString(
             """
-                   median height median weight median bmi 
-                   ------------- ------------- ---------- 
-              male           181            78   24.25867 
-            female           162            63   24.00549 
-        """.trimIndent()
+                   stdev bmi 
+                   --------- 
+              male   1.43221 
+            female     1.736 
+            """.trimIndent()
         )
-
-
     }
 }

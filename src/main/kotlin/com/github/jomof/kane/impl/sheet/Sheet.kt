@@ -8,36 +8,9 @@ import com.github.jomof.kane.impl.types.KaneType
 import com.github.jomof.kane.impl.visitor.RewritingVisitor
 import com.github.jomof.kane.impl.visitor.visit
 import java.lang.Integer.max
-import kotlin.collections.ArrayList
-import kotlin.collections.List
-import kotlin.collections.Map
-import kotlin.collections.MutableList
-import kotlin.collections.MutableMap
 import kotlin.collections.component1
 import kotlin.collections.component2
-import kotlin.collections.filter
-import kotlin.collections.filterIsInstance
-import kotlin.collections.forEach
-import kotlin.collections.indices
-import kotlin.collections.isNotEmpty
-import kotlin.collections.iterator
-import kotlin.collections.joinToString
-import kotlin.collections.listOf
-import kotlin.collections.map
-import kotlin.collections.mapNotNullTo
-import kotlin.collections.mapOf
-import kotlin.collections.maxOrNull
-import kotlin.collections.mutableMapOf
-import kotlin.collections.plus
-import kotlin.collections.plusAssign
 import kotlin.collections.set
-import kotlin.collections.sorted
-import kotlin.collections.sortedBy
-import kotlin.collections.toList
-import kotlin.collections.toMap
-import kotlin.collections.toMutableList
-import kotlin.collections.toMutableMap
-import kotlin.collections.toSet
 import kotlin.math.min
 import kotlin.reflect.KProperty
 
@@ -99,7 +72,8 @@ data class ColumnDescriptor(val name: Id, val type: AdmissibleDataType<*>?)
 data class RowDescriptor(val name: List<Expr>)
 data class SheetDescriptor(
     val limitOutputLines: Int = Int.MAX_VALUE,
-    val showColumnTags: Boolean = true
+    val showExcelColumnTags: Boolean = true,
+    val showRowAndColumnForSingleCell: Boolean = false
 )
 
 data class Cells(private val map: Map<Id, Expr>) {
@@ -133,6 +107,8 @@ data class Cells(private val map: Map<Id, Expr>) {
     operator fun iterator() = map.iterator()
     fun isEmpty() = map.isEmpty()
     fun isNotEmpty() = map.isNotEmpty()
+    fun count() = map.count()
+    fun firstValue() = map.entries.first().value
     fun getValue(key: Id) = get(key) ?: error("No cell named '$key' in cell map")
     operator fun get(key: Id): Expr? {
         Identifier.validate(key)
@@ -166,7 +142,7 @@ interface Sheet : Expr {
         }
 
         private val emptySheet = SheetImpl(mapOf(), mapOf(), Cells(mapOf()), SheetDescriptor(), 0, 0)
-        fun of(
+        internal fun of(
             columnDescriptors: Map<Int, ColumnDescriptor>,
             rowDescriptors: Map<Int, RowDescriptor>,
             sheetDescriptor: SheetDescriptor,
@@ -200,19 +176,9 @@ interface Sheet : Expr {
     ) = of(columnDescriptors, rowDescriptors, sheetDescriptor, cells)
 
     /**
-     * Limit the number of output lines when rendering the sheet
-     */
-    fun limitOutputLines(limit: Int) = copy(sheetDescriptor = sheetDescriptor.copy(limitOutputLines = limit))
-
-    /**
-     * Whether to show Excel-like column tags in the column headers
-     */
-    fun showExcelColumnTags(show: Boolean = true) = copy(sheetDescriptor = sheetDescriptor.copy(showColumnTags = show))
-
-    /**
      * Create a new sheet with cell values changed.
      */
-    fun copy(vararg assignments: Pair<String, Any>): Sheet {
+    fun copy(vararg assignments: Pair<Id, Any>): Sheet {
         val sb = toBuilder()
         assignments.forEach { (name, any) ->
             sb.add(convertAnyToNamedExpr(Identifier.normalizeUserInput(name), any))
@@ -230,15 +196,36 @@ interface Sheet : Expr {
     }
 
 
-    fun toBuilder(): SheetBuilderImpl {
-        val named = cells.map { (name, expr) -> expr.toNamed(name) }
-        return SheetBuilderImpl(
-            columnDescriptors = columnDescriptors,
-            rowDescriptors = rowDescriptors,
-            sheetDescriptor = sheetDescriptor,
-            added = named
-        )
-    }
+}
+
+/**
+ * Limit the number of output lines when rendering the sheet
+ */
+internal fun Sheet.limitOutputLines(limit: Int) = copy(sheetDescriptor = sheetDescriptor.copy(limitOutputLines = limit))
+
+/**
+ * Whether to show Excel-like column tags in the column headers
+ */
+internal fun Sheet.showExcelColumnTags(show: Boolean = true) =
+    copy(sheetDescriptor = sheetDescriptor.copy(showExcelColumnTags = show))
+
+internal fun GroupBy.showExcelColumnTags(show: Boolean = true) = copy(sheet = sheet.showExcelColumnTags(show))
+
+/**
+ * Whether to show Excel-like column tags in the column headers
+ */
+internal fun Sheet.showRowAndColumnForSingleCell(show: Boolean = true) =
+    copy(sheetDescriptor = sheetDescriptor.copy(showRowAndColumnForSingleCell = show))
+
+
+internal fun Sheet.toBuilder(): SheetBuilderImpl {
+    val named = cells.map { (name, expr) -> expr.toNamed(name) }
+    return SheetBuilderImpl(
+        columnDescriptors = columnDescriptors,
+        rowDescriptors = rowDescriptors,
+        sheetDescriptor = sheetDescriptor,
+        added = named
+    )
 }
 
 class SheetBuilderImpl(
@@ -277,7 +264,7 @@ class SheetBuilderImpl(
                 it.visit { child ->
                     when (child) {
                         is NamedExpr -> {
-                            if (!result.containsKey(child.name)) {
+                            if (child.name is String && !result.containsKey(child.name)) {
                                 done = false
                                 result[child.name] = child.toUnnamed()
                             }
@@ -342,6 +329,7 @@ class SheetBuilderImpl(
             if (name is Coordinate) {
                 when (expr) {
                     is ScalarExpr,
+                    is ScalarVariable,
                     is ValueExpr<*>,
                     is SheetRangeExpr,
                     is AlgebraicBinaryRangeStatistic -> {
@@ -367,7 +355,8 @@ class SheetBuilderImpl(
                             result[finalCoordinate] = expr.getUnnamedElement(offset)
                         }
                     }
-                    else -> error("${expr.javaClass}")
+                    else ->
+                        error("${expr.javaClass}")
                 }
             }
         }
@@ -408,14 +397,14 @@ class SheetBuilderImpl(
         added += add
     }
 
-    fun set(cell : Coordinate, value : Any, type : KaneType<*>) {
+    fun set(cell: Id, value: Any, type: KaneType<*>) {
         add(
             if (value is Double) NamedScalar(cell, constant(value))
             else NamedValueExpr(cell, value, type as KaneType<Any>)
         )
     }
 
-    fun column(index: Int, name: String, type: AdmissibleDataType<*>? = null) {
+    fun column(index: Int, name: Id, type: AdmissibleDataType<*>? = null) {
         columnDescriptors[index] = ColumnDescriptor(name, type)
     }
 
@@ -460,7 +449,7 @@ fun Sheet.columnName(column: Int): String {
     return when {
         namedColumnOrNull == null -> excelColumnName
         namedColumnOrNull is String && namedColumnOrNull.toUpperCase() == excelColumnName -> namedColumnOrNull
-        namedColumnOrNull is String && sheetDescriptor.showColumnTags -> "$namedColumnOrNull [$excelColumnName]"
+        namedColumnOrNull is String && sheetDescriptor.showExcelColumnTags -> "$namedColumnOrNull [$excelColumnName]"
         else -> Identifier.string(namedColumnOrNull)
     }
 }
@@ -469,6 +458,8 @@ fun Sheet.rowName(row: Int) = rowDescriptors[row]?.name?.joinToString(" ") ?: "$
 
 fun Sheet.render(): String {
     if (cells.isEmpty()) return ""
+    if (cells.count() == 1 && !sheetDescriptor.showRowAndColumnForSingleCell)
+        return cells.firstValue().toString()
     val sb = StringBuilder()
     val widths = Array(columns + 1) {
         if (it > 0) {

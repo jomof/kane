@@ -114,7 +114,7 @@ class StreamingStatisticsTest {
         s.count.assertString("8")
         s.sum.assertString("77.0")
         s.variance.assertString("45.982142857142854")
-        s.stddev.assertString("6.7810134093026875")
+        s.stdev.assertString("6.7810134093026875")
     }
 
     @Test
@@ -127,7 +127,7 @@ class StreamingStatisticsTest {
 
         s.mean.assertString("10.0")
         s.variance.assertString("30.0")
-        s.stddev.assertString("5.477225575051661")
+        s.stdev.assertString("5.477225575051661")
         s.skewness.assertString("0.0")
         s.kurtosis.assertString("-1.64")
 //        s.rank(13.0).assertString("0.6666666666666666")
