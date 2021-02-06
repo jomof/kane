@@ -12,12 +12,8 @@ Topics covered:
 
 
 ```kotlin
-@file:DependsOn("com.github.jomof:kane:0.1.90")
+@file:DependsOn("com.github.jomof:kane:0.2.13")
 import com.github.jomof.kane.*
-import com.github.jomof.kane.impl.types.*
-import com.github.jomof.kane.functions.*
-import com.github.jomof.kane.impl.sheet.*
-import java.io.File
 
 ```
 
@@ -81,7 +77,7 @@ val error = raw.copy {
     val totalError by sum(error)
     listOf(totalError)
 }
-HTML(sheet.html)
+HTML(error.html)
 ```
 
 
@@ -90,7 +86,7 @@ HTML(sheet.html)
 
 <table id="table_id" class="display">
 <thead><tr>
-  <th/><th>x</th><th>actual</th><th>prediction</th><th>error</th></thead></tr>
+  <th/><th>x [A]</th><th>actual [B]</th><th>prediction [C]</th><th>error [D]</th></thead></tr>
   <tbody>
     <tr><td>1</td><td>1</td><td>-0.5</td><td>m*A1+b</td><td>(m*A1+b-B1)²</td></tr>
     <tr><td>2</td><td>2</td><td>-1</td><td>m*A2+b</td><td>(m*A2+b-B2)²</td></tr>
@@ -145,7 +141,7 @@ val minimized = error.minimize("totalError", listOf("m", "b"))
 HTML(minimized.html)
 ```
 
-    Expanding target expression totalError
+    Expanding target expression 'totalError'
     Differentiating target expression totalError with respect to change variables: m b
     Plan has 37 common sub-expressions and uses 296 bytes
     Minimizing
@@ -158,7 +154,7 @@ HTML(minimized.html)
 
 <table id="table_id" class="display">
 <thead><tr>
-  <th/><th>x</th><th>actual</th><th>prediction</th><th>error</th></thead></tr>
+  <th/><th>x [A]</th><th>actual [B]</th><th>prediction [C]</th><th>error [D]</th></thead></tr>
   <tbody>
     <tr><td>1</td><td>1</td><td>-0.5</td><td>m*A1+b</td><td>(m*A1+b-B1)²</td></tr>
     <tr><td>2</td><td>2</td><td>-1</td><td>m*A2+b</td><td>(m*A2+b-B2)²</td></tr>
@@ -202,7 +198,4 @@ totalError=0<br/>
 
 
 
-
-```kotlin
-
-```
+In this case, the error was reduced to zero.
