@@ -25,3 +25,13 @@ fun Sheet.mapDoubles(translate: (Double) -> Double): Sheet {
     }
     return copy(cells = new.toCells())
 }
+
+/**
+ * Map elements that are coercible to double.
+ */
+fun Expr.mapDoubles(translate: (Double) -> Double): Expr {
+    return when (this) {
+        is Sheet -> mapDoubles(translate)
+        else -> error("Unsupported ${javaClass}")
+    }
+}

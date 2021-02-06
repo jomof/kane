@@ -1,8 +1,6 @@
 package com.github.jomof.kane.impl.sheet
 
-import com.github.jomof.kane.Expr
 import com.github.jomof.kane.impl.*
-import com.github.jomof.kane.mapDoubles
 
 /**
  * Methods for dealing with Sheet in a functional manner
@@ -65,21 +63,6 @@ fun Sheet.ordinalColumns(elements : List<Int>) : Sheet {
         }
     }.toCells()
     return copy(cells = cells, columnDescriptors = columnDescriptors)
-}
-
-/**
- * Map cells of a sheet that are coercible to double.
- */
-fun Sheet.fillna(value: Double) = mapDoubles {
-    if (it.isNaN()) value
-    else it
-}
-
-fun Expr.fillna(value: Double): Expr {
-    return when (this) {
-        is Sheet -> fillna(value)
-        else -> error("$javaClass")
-    }
 }
 
 fun Sheet.columnType(column: Int): AdmissibleDataType<*> {
