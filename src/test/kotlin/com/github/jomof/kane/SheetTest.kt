@@ -3,7 +3,7 @@ package com.github.jomof.kane
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
 import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.impl.*
-import com.github.jomof.kane.impl.sheet.*
+import com.github.jomof.kane.impl.sheet.analyzeDataTypes
 import com.github.jomof.kane.impl.types.dollars
 import com.github.jomof.kane.impl.types.percent
 import org.junit.Test
@@ -108,13 +108,13 @@ class SheetTest {
 
     @Test
     fun `add formula to csv`() {
-        val sheet = sheetOfCsv {
+        val sheet = sheetOfCsv(
             """
             A,B
             1.0,-0.4
             2.0,-1.0
             """
-        }.copy {
+        ).copy {
             val c1 by range("A") + range("B")
             listOf(c1)
         }
@@ -142,19 +142,20 @@ class SheetTest {
 
     @Test
     fun `range expanssion doesn't reduce arithmetic`() {
-        val sheet = sheetOfCsv {
+        val sheet = sheetOfCsv(
             """
             A
             1.0
             2.0
             """
-        }.copy {
-            val x by range("A")
-            val m by 0.0
-            val b by 0.0
-            val c1 by m * x + b
-            listOf(c1)
-        }
+        )
+            .copy {
+                val x by range("A")
+                val m by 0.0
+                val b by 0.0
+                val c1 by m * x + b
+                listOf(c1)
+            }
         sheet.assertString(
             """
           x [A] B    C   
@@ -169,13 +170,13 @@ class SheetTest {
 
     @Test
     fun `range expanssion doesn't reduce arithmetic with anonymous range`() {
-        val sheet = sheetOfCsv {
+        val sheet = sheetOfCsv(
             """
             A
             1.0
             2.0
             """
-        }.copy {
+        ).copy {
             val m by 0.0
             val b by 0.0
             val c1 by m * range("A") + b
@@ -195,13 +196,13 @@ class SheetTest {
 
     @Test
     fun `names of ranged expressions get expanded to columns`() {
-        val sheet = sheetOfCsv {
+        val sheet = sheetOfCsv(
             """
             A
             1.0
             2.0
             """
-        }.copy {
+        ).copy {
             val x by range("A")
             val m by 0.0
             val b by 0.0
@@ -222,13 +223,13 @@ class SheetTest {
 
     @Test
     fun `names of ranged expressions get expanded to columns in order`() {
-        val sheet = sheetOfCsv {
+        val sheet = sheetOfCsv(
             """
             A
             1.0
             2.0
             """
-        }.copy {
+        ).copy {
             val x by range("A")
             val m by 0.0
             val b by 0.0
@@ -250,13 +251,13 @@ class SheetTest {
 
     @Test
     fun `statistic summary function over range`() {
-        val sheet = sheetOfCsv {
+        val sheet = sheetOfCsv(
             """
             A
             1.0
             2.0
             """
-        }.copy {
+        ).copy {
             val x by range("A")
             val total by sum(x)
             listOf(total)
@@ -448,13 +449,13 @@ class SheetTest {
 
     @Test
     fun `access column by name`() {
-        val retire = sheetOfCsv {
+        val retire = sheetOfCsv(
             """
                 cats,dogs
                 1,2
                 3,4
             """.trimIndent()
-        }.copy {
+        ).copy {
             val cats by column("cats")
             val dogs by column("dogs")
             val sum by columnOf(2) { cats + dogs }
@@ -472,13 +473,13 @@ class SheetTest {
 
     @Test
     fun `column of two ranges added`() {
-        val retire = sheetOfCsv {
+        val retire = sheetOfCsv(
             """
                 A,B
                 1,2
                 3,4
             """.trimIndent()
-        }.copy {
+        ).copy {
             val a by range("A")
             val b by range("B")
             val c1 by columnOf(2) { a + b }
@@ -496,13 +497,13 @@ class SheetTest {
 
     @Test
     fun `column of two ranges added anonymous`() {
-        val retire = sheetOfCsv {
+        val retire = sheetOfCsv(
             """
                 A,B
                 1,2
                 3,4
             """.trimIndent()
-        }.copy {
+        ).copy {
             val a = range("A")
             val b = range("B")
             val c1 by columnOf(2) { a + b }
@@ -520,13 +521,13 @@ class SheetTest {
 
     @Test
     fun `statistic of block range`() {
-        val check = sheetOfCsv {
+        val check = sheetOfCsv(
             """
                 A,B
                 1,2
                 3,4
             """.trimIndent()
-        }.copy {
+        ).copy {
             val r by range("A1:B2")
             val mean by mean(r)
             val stddev by stddev(r)
@@ -798,7 +799,7 @@ class SheetTest {
 
     @Test
     fun `statistics of dog weights`() {
-        val sheet = sheetOfCsv {
+        val sheet = sheetOfCsv(
             """
                 weight
                 600
@@ -807,7 +808,7 @@ class SheetTest {
                 430
                 300
             """.trimIndent()
-        }.copy {
+        ).copy {
             val weight by column("weight")
             val mean by mean(weight)
             val difference by mean - weight

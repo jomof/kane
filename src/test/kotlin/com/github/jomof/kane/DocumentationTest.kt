@@ -233,7 +233,7 @@ class DocumentationTest {
          * - Adding rows, columns, and cells to an existing sheet.
          * - Using minimize(...) to seek a goal
          */
-        var sheet = sheetOfCsv {
+        var sheet = sheetOfCsv(
             """
             A,B
             1.0,-0.5
@@ -241,7 +241,7 @@ class DocumentationTest {
             3.0,-1.5
             4.0,-2.0
             """
-        }
+        )
         sheet.assertString(
             """
               A   B  
@@ -409,8 +409,21 @@ class DocumentationTest {
 
     @Test
     fun `grouping by columns and expressions`() {
-        val zoo = readCsv("data/zoo.csv", delimiter = ',')
-        println(zoo)
-        //listOf("a").groupBy()
+        val measurements = sheetOfCsv(
+            """
+            date,height,weight,gender
+            2000-01-01,42.849980,157.500553,male
+            2000-01-02,49.607315,177.340407,male
+            2000-01-03,56.293531,171.524640,male
+            2000-01-04,48.421077,144.251986,female
+            2000-01-05,46.556882,152.526206,male
+            2000-01-06,68.448851,168.272968,female
+            2000-01-07,70.757698,136.431469,male
+            2000-01-08,58.909500,176.499753,female
+            2000-01-09,76.435631,174.094104,female
+            2000-01-10,45.306120,177.540920,male
+            """
+        )
+
     }
 }

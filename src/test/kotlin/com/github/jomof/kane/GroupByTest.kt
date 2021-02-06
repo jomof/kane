@@ -7,7 +7,7 @@ import com.github.jomof.kane.impl.sheet.groupOf
 import org.junit.Test
 
 class GroupByTest {
-    private val measurements = sheetOfCsv {
+    private val measurements = sheetOfCsv(
         """
         date,height,weight,gender
         2000-01-01,42.849980,157.500553,male
@@ -21,8 +21,9 @@ class GroupByTest {
         2000-01-09,76.435631,174.094104,female
         2000-01-10,45.306120,177.540920,male
         """
-    }
-    private val animals = sheetOfCsv {
+    )
+
+    private val animals = sheetOfCsv(
         """
         type,class,order,max_speed
         falcon,bird,Falconiformes,389.0
@@ -31,17 +32,17 @@ class GroupByTest {
         monkey,mammal,Primates,NaN
         leopard,mammal,Carnivora,58.0
         """
-    }
+    )
 
     @Test
     fun basic() {
-        val check = sheetOfCsv {
+        val check = sheetOfCsv(
             """
-                cats, dogs, lions
-                1,2,5
-                3,4,6
+            cats, dogs, lions
+            1,2,5
+            3,4,6
             """
-        }.groupOf {
+        ).groupOf {
             val key1 by 2.0 * column("cats")
             val key2 by column("cats") * column("dogs")
             listOf(key1, key2)
@@ -60,13 +61,14 @@ class GroupByTest {
 
     @Test
     fun `group by column name`() {
-        val check = sheetOfCsv {
+        val check = sheetOfCsv(
             """
                 cats, dogs, lions
                 1,2,5
                 3,4,6
             """
-        }.groupBy("cats", "dogs")
+        )
+            .groupBy("cats", "dogs")
         println(check)
         check.assertString(
             """

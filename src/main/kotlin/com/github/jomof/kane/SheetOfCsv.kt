@@ -7,6 +7,7 @@ import com.github.jomof.kane.impl.sheet.parseCsv
  * Construct a sheet by parsing provided text.
  */
 fun sheetOfCsv(
+    text: String,
     names: List<String> = listOf(),
     sample: Double = 1.0,
     keep: List<String> = listOf(), // List of columns to keep
@@ -15,9 +16,7 @@ fun sheetOfCsv(
     escapeChar: Char = '"',
     skipEmptyLine: Boolean = false,
     skipMissMatchedRow: Boolean = false,
-    init: () -> String
 ): Sheet {
-    val text = init()
     return parseCsv(
         data = text.trimIndent().trim('\r', '\n'),
         names = names,

@@ -7,21 +7,22 @@ import com.github.jomof.kane.impl.rowOf
 import org.junit.Test
 
 class GradualEvaluatorTest {
-    private val measurements = sheetOfCsv {
+    private val measurements = sheetOfCsv(
         """
-                date,height,weight,gender
-                2000-01-01,42.849980,157.500553,male
-                2000-01-02,49.607315,177.340407,male
-                2000-01-03,56.293531,171.524640,male
-                2000-01-04,48.421077,144.251986,female
-                2000-01-05,46.556882,152.526206,male
-                2000-01-06,68.448851,168.272968,female
-                2000-01-07,70.757698,136.431469,male
-                2000-01-08,58.909500,176.499753,female
-                2000-01-09,76.435631,174.094104,female
-                2000-01-10,45.306120,177.540920,male
-            """
-    }
+        date,height,weight,gender
+        2000-01-01,42.849980,157.500553,male
+        2000-01-02,49.607315,177.340407,male
+        2000-01-03,56.293531,171.524640,male
+        2000-01-04,48.421077,144.251986,female
+        2000-01-05,46.556882,152.526206,male
+        2000-01-06,68.448851,168.272968,female
+        2000-01-07,70.757698,136.431469,male
+        2000-01-08,58.909500,176.499753,female
+        2000-01-09,76.435631,174.094104,female
+        2000-01-10,45.306120,177.540920,male
+        """
+    )
+
 
     @Test
     fun `basic scalar`() {
@@ -161,24 +162,25 @@ class GradualEvaluatorTest {
 
     @Test
     fun `binary of sheet ranges`() {
-        val sheet = sheetOfCsv {
+        val sheet = sheetOfCsv(
             """
             A,B
             1.0,-0.5
             2.0,-1.0
             3.0,-1.5
             4.0,-2.0
-            """.trimIndent()
-        }.copy {
-            val x by range("A")
-            val actual by range("B")
-            val m by 0.0
-            val b by 0.0
-            val prediction by m * x + b
-            val error by pow(prediction - actual, 2.0)
-            val totalError by sum(error)
-            listOf(totalError)
-        }
+            """
+        )
+            .copy {
+                val x by range("A")
+                val actual by range("B")
+                val m by 0.0
+                val b by 0.0
+                val prediction by m * x + b
+                val error by pow(prediction - actual, 2.0)
+                val totalError by sum(error)
+                listOf(totalError)
+            }
         val evaled = sheet.eval()
         evaled.assertString(
             """
