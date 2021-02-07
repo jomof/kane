@@ -10,5 +10,3 @@ class KurtosisFunction : AlgebraicUnaryScalarStatisticFunction {
     override val meta = KURTOSIS
     override fun lookupStatistic(statistic: StreamingSamples) = statistic.kurtosis
 }
-
-val kurtosis = KurtosisFunction()

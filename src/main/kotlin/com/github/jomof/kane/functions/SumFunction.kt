@@ -8,7 +8,7 @@ import com.github.jomof.kane.plus
 
 private val SUM by UnaryOp()
 
-class SummationFunction : AlgebraicUnaryScalarStatisticFunction {
+class SumFunction : AlgebraicUnaryScalarStatisticFunction {
     override val meta = SUM
     override fun lookupStatistic(statistic: StreamingSamples) = statistic.sum
     override fun reduceArithmetic(elements: List<ScalarExpr>): ScalarExpr {
@@ -17,4 +17,5 @@ class SummationFunction : AlgebraicUnaryScalarStatisticFunction {
         return elements.drop(1).fold(elements[0]) { prior, current -> prior + current }
     }
 }
+
 

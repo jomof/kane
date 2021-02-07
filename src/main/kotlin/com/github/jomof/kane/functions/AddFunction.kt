@@ -6,7 +6,6 @@ import com.github.jomof.kane.impl.functions.AlgebraicBinaryScalar
 import com.github.jomof.kane.impl.functions.AlgebraicBinaryScalarFunction
 import com.github.jomof.kane.plus
 
-
 val PLUS by BinaryOp(op = "+", precedence = 3, associative = true, infix = true)
 private class AddFunction : AlgebraicBinaryScalarFunction {
     override val meta = PLUS
@@ -22,10 +21,10 @@ private class AddFunction : AlgebraicBinaryScalarFunction {
             rightIsConst && p2.getConstant() == -0.0 -> p1
             leftIsConst && !rightIsConst -> p2 + p1
             leftIsConst && rightIsConst -> constant(invoke(p1.getConstant(), p2.getConstant()))
-            leftIsConst && p2 is AlgebraicBinaryScalar && p2.op == add && p2.left is ConstantScalar && p2.right !is ConstantScalar -> {
+            leftIsConst && p2 is AlgebraicBinaryScalar && p2.op == plus && p2.left is ConstantScalar && p2.right !is ConstantScalar -> {
                 p2.right + (p1.getConstant() + p2.left)
             }
-            leftIsConst && p2 is AlgebraicBinaryScalar && p2.op == add && p2.right is ConstantScalar && p2.left !is ConstantScalar -> {
+            leftIsConst && p2 is AlgebraicBinaryScalar && p2.op == plus && p2.right is ConstantScalar && p2.left !is ConstantScalar -> {
                 p2.left + (p1.getConstant() + p2.right)
             }
             else ->
@@ -41,6 +40,6 @@ private class AddFunction : AlgebraicBinaryScalarFunction {
     ) = p1d + p2d
 }
 
-val add : AlgebraicBinaryScalarFunction = AddFunction()
+val plus: AlgebraicBinaryScalarFunction = AddFunction()
 
 

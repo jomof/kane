@@ -10,5 +10,3 @@ class MaxFunction : AlgebraicUnaryScalarStatisticFunction {
     override val meta = MAX
     override fun lookupStatistic(statistic: StreamingSamples) = statistic.max
 }
-
-val max = MaxFunction()

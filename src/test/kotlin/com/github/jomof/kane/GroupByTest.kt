@@ -1,6 +1,5 @@
 package com.github.jomof.kane
 
-import com.github.jomof.kane.functions.cv
 import com.github.jomof.kane.impl.sheet.aggregate
 import com.github.jomof.kane.impl.sheet.groupOf
 import com.github.jomof.kane.impl.sheet.showExcelColumnTags

@@ -321,6 +321,7 @@ private fun AlgebraicExpr.evalSpace(space : DoubleArray) : Double {
         is AlgebraicBinaryScalar -> op.doubleOp(left.evalSpace(space), right.evalSpace(space))
         is AlgebraicUnaryScalar -> op.doubleOp(value.evalSpace(space))
         is RetypeScalar -> getConstant()
+        is AlgebraicUnaryMatrixScalar -> op.doubleOp(value.elements.map { it.evalSpace(space) })
         else ->
             error("$javaClass")
     }
@@ -391,6 +392,7 @@ private fun Expr.terminal(): Boolean =
         is MatrixVariableElement -> true
         is DiscreteUniformRandomVariable -> true
         is AlgebraicBinaryScalar -> false
+        is AlgebraicUnaryMatrixScalar -> false
         is AlgebraicUnaryScalar -> false
         is RetypeScalar -> false
         else ->

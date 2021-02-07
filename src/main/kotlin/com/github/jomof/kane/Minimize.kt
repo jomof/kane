@@ -1,7 +1,7 @@
 package com.github.jomof.kane
 
 import com.github.jomof.kane.functions.d
-import com.github.jomof.kane.functions.multiply
+import com.github.jomof.kane.functions.times
 import com.github.jomof.kane.impl.*
 import com.github.jomof.kane.impl.sheet.*
 import com.github.jomof.kane.impl.types.kaneDouble
@@ -53,7 +53,7 @@ fun Sheet.minimize(
         NamedScalarAssign(
             "update(${variable.name})",
             variable,
-            variable - multiply(learningRate, diff)
+            variable - times(learningRate, diff)
         ).eval()
     }
 

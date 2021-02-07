@@ -44,18 +44,18 @@ private class MultiplyFunction : AlgebraicBinaryScalarFunction {
                     p2 is AlgebraicBinaryScalar && p2.op == pow &&
                     p1.left == p2.left ->
                 pow(p1.left, p1.right + p2.right) // x^5 * x^4 => x^9
-            p1 is AlgebraicBinaryScalar && p1.op == multiply && p1.right == p2 -> p1.left * pow(p2, 2.0)
-            p1 is AlgebraicBinaryScalar && p1.op == multiply && p1.left == p2 -> p1.right * pow(p2, 2.0)
-            leftIsConst && p2 is AlgebraicBinaryScalar && p2.op == multiply && p2.left is ConstantScalar -> {
+            p1 is AlgebraicBinaryScalar && p1.op == times && p1.right == p2 -> p1.left * pow(p2, 2.0)
+            p1 is AlgebraicBinaryScalar && p1.op == times && p1.left == p2 -> p1.right * pow(p2, 2.0)
+            leftIsConst && p2 is AlgebraicBinaryScalar && p2.op == times && p2.left is ConstantScalar -> {
                 // 4*3*y -> 12*y
                 (p1 * p2.left) * p2.right
             }
-            p2 is AlgebraicBinaryScalar && p2.op == multiply && p2.left is ConstantScalar && p2.right !is ConstantScalar -> {
+            p2 is AlgebraicBinaryScalar && p2.op == times && p2.left is ConstantScalar && p2.right !is ConstantScalar -> {
                 // x*(3*y) -> 3*(x*y)
                 p2.left * p1 * p2.right
             }
 
-            p1 is AlgebraicBinaryScalar && p1.op == multiply && p1.left is ConstantScalar && p2 !is ConstantScalar -> {
+            p1 is AlgebraicBinaryScalar && p1.op == times && p1.left is ConstantScalar && p2 !is ConstantScalar -> {
                 // (24*x)*y -> 24*(x*y)
                 p1.left * (p1.right * p2)
             }
@@ -74,5 +74,5 @@ private class MultiplyFunction : AlgebraicBinaryScalarFunction {
     }
 }
 
-val multiply : AlgebraicBinaryScalarFunction = MultiplyFunction()
+val times: AlgebraicBinaryScalarFunction = MultiplyFunction()
 

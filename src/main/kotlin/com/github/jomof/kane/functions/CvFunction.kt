@@ -10,15 +10,14 @@ import com.github.jomof.kane.stdev
 
 private val CV by UnaryOp()
 
-class CoefficientOfVariationFunction : AlgebraicUnaryScalarStatisticFunction {
+class CvFunction : AlgebraicUnaryScalarStatisticFunction {
     override val meta = CV
     override fun lookupStatistic(statistic: StreamingSamples) = statistic.coefficientOfVariation
     override fun reduceArithmetic(elements: List<ScalarExpr>): ScalarExpr? {
         val statistic = super.reduceArithmetic(elements)
         if (statistic != null) return statistic
-        val stdev = stdev.reduceArithmetic(elements) ?: return null
-        return stdev / mean.reduceArithmetic(elements)
+        val stdev = (stdev as AlgebraicUnaryScalarStatisticFunction).reduceArithmetic(elements) ?: return null
+        val mean = (mean as AlgebraicUnaryScalarStatisticFunction).reduceArithmetic(elements) ?: return null
+        return stdev / mean
     }
 }
-
-val cv = CoefficientOfVariationFunction()

@@ -6,7 +6,7 @@ import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalarStatisticFunctio
 
 private val NANS by UnaryOp("NaN")
 
-class NaNsFunction : AlgebraicUnaryScalarStatisticFunction {
+class NansFunction : AlgebraicUnaryScalarStatisticFunction {
     override val meta = NANS
     override fun lookupStatistic(statistic: StreamingSamples) = statistic.nans.toDouble()
 }

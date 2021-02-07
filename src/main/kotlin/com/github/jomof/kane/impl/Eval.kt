@@ -8,20 +8,9 @@ import com.github.jomof.kane.impl.sheet.*
 import com.github.jomof.kane.impl.types.algebraicType
 import com.github.jomof.kane.impl.types.kaneDouble
 import com.github.jomof.kane.impl.visitor.RewritingVisitor
-import kotlin.collections.Map
-import kotlin.collections.Set
 import kotlin.collections.component1
 import kotlin.collections.component2
-import kotlin.collections.filter
-import kotlin.collections.first
-import kotlin.collections.forEach
-import kotlin.collections.isNotEmpty
-import kotlin.collections.map
-import kotlin.collections.mapOf
-import kotlin.collections.mutableMapOf
 import kotlin.collections.set
-import kotlin.collections.toMap
-import kotlin.collections.zip
 
 private val reduceNamedMatrix = object : RewritingVisitor() {
     override fun rewrite(expr: NamedMatrix) = expr.matrix
@@ -59,7 +48,9 @@ private class ReduceAlgebraicUnaryScalar : RewritingVisitor() {
     override fun rewrite(expr: AlgebraicUnaryScalar): Expr {
         return when (val sub = super.rewrite(expr)) {
             is AlgebraicUnaryScalar -> when (sub.value) {
-                is ScalarListExpr -> sub.value.copy(sub.value.values.map { sub.copy(it) })
+                is ScalarListExpr -> {
+                    sub.value.copy(sub.value.values.map { sub.copy(it) })
+                }
                 is RetypeScalar -> {
                     val reduced = sub.op.reduceArithmetic(sub.value)
                     if (reduced == null) sub

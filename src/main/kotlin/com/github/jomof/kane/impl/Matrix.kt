@@ -1,8 +1,8 @@
 package com.github.jomof.kane.impl
 
-import com.github.jomof.kane.functions.divide
-import com.github.jomof.kane.functions.multiply
-import com.github.jomof.kane.functions.subtract
+import com.github.jomof.kane.functions.div
+import com.github.jomof.kane.functions.minus
+import com.github.jomof.kane.functions.times
 import com.github.jomof.kane.impl.types.AlgebraicType
 import com.github.jomof.kane.impl.types.kaneDouble
 
@@ -35,28 +35,40 @@ fun MutableMatrix.mapAssign(init : (Double) -> Double) {
     }
 }
 
-fun MutableMatrix.zero() { set(0.0) }
-fun MutableMatrix.set(value : Double) { mapAssign { value } }
-fun MutableMatrix.set(value : Matrix) {
-    for(column in 0 until columns) {
-        for(row in 0 until rows) {
-            this[column,row] = value[column,row]
+fun MutableMatrix.zero() {
+    set(0.0)
+}
+
+fun MutableMatrix.set(value: Double) {
+    mapAssign { value }
+}
+
+fun MutableMatrix.set(value: Matrix) {
+    for (column in 0 until columns) {
+        for (row in 0 until rows) {
+            this[column, row] = value[column, row]
         }
     }
 }
 
-operator fun MutableMatrix.divAssign(value: Double) { mapAssign { divide(it, value) } }
-operator fun MutableMatrix.timesAssign(value: Double) { mapAssign { multiply(it, value) } }
+operator fun MutableMatrix.divAssign(value: Double) {
+    mapAssign { div(it, value) }
+}
+
+operator fun MutableMatrix.timesAssign(value: Double) {
+    mapAssign { times(it, value) }
+}
+
 operator fun MutableMatrix.minusAssign(value: Matrix) {
-    for(column in 0 until columns) {
-        for(row in 0 until rows) {
-            this[column,row] = subtract(this[column,row], value[column,row])
+    for (column in 0 until columns) {
+        for (row in 0 until rows) {
+            this[column, row] = minus(this[column, row], value[column, row])
         }
     }
 }
 
 fun Matrix.render(): String {
-    if (columns == 1 && rows == 1) return type.render(this[0,0])
+    if (columns == 1 && rows == 1) return type.render(this[0, 0])
     if (columns == 1) {
         return "[" + (0 until rows).joinToString("|") { type.render(this[0, it]) } + "]ᵀ"
     }

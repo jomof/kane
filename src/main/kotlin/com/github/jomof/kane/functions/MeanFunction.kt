@@ -13,11 +13,11 @@ private val MEAN by UnaryOp()
 class MeanFunction : AlgebraicUnaryScalarStatisticFunction {
     override val meta = MEAN
     override fun lookupStatistic(statistic: StreamingSamples) = statistic.mean
-    override fun reduceArithmetic(elements: List<ScalarExpr>): ScalarExpr {
+    override fun reduceArithmetic(elements: List<ScalarExpr>): ScalarExpr? {
         val statistic = super.reduceArithmetic(elements)
         if (statistic != null) return statistic
-        val sum = sum.reduceArithmetic(elements)
-        val count = count.reduceArithmetic(elements)
+        val sum = (sum as AlgebraicUnaryScalarStatisticFunction).reduceArithmetic(elements) ?: return null
+        val count = (count as AlgebraicUnaryScalarStatisticFunction).reduceArithmetic(elements) ?: return null
         return sum / count
     }
 }

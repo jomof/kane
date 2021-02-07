@@ -9,7 +9,7 @@ private val PERCENTILE by BinaryOp(precedence = 7)
 private val PERCENTILE25 by UnaryOp("25%")
 private val PERCENTILE75 by UnaryOp("75%")
 
-class PercentileFunction : AlgebraicBinaryScalarStatisticFunction {
+open class PercentileFunction : AlgebraicBinaryScalarStatisticFunction {
     override val meta = PERCENTILE
     override fun reduceArithmetic(left: List<ScalarExpr>, right: ScalarExpr): ScalarExpr? {
         if (!right.canGetConstant()) return null
@@ -32,11 +32,17 @@ class PercentileFunction : AlgebraicBinaryScalarStatisticFunction {
 }
 
 val percentile = PercentileFunction()
-val percentile25 = object : AlgebraicUnaryScalarStatisticFunction {
+
+class Percentile25Function : AlgebraicUnaryScalarStatisticFunction {
     override val meta = PERCENTILE25
     override fun lookupStatistic(statistic: StreamingSamples) = statistic.percentile(0.25)
 }
-val percentile75 = object : AlgebraicUnaryScalarStatisticFunction {
+
+class Percentile75Function : AlgebraicUnaryScalarStatisticFunction {
     override val meta = PERCENTILE75
     override fun lookupStatistic(statistic: StreamingSamples) = statistic.percentile(0.75)
 }
+
+
+
+

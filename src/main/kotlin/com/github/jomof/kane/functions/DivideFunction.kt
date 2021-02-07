@@ -41,4 +41,4 @@ private class DivideFunction : AlgebraicBinaryScalarFunction {
     }
 }
 
-val divide : AlgebraicBinaryScalarFunction = DivideFunction()
+val div: AlgebraicBinaryScalarFunction = DivideFunction()

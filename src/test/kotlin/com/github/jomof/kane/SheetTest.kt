@@ -340,7 +340,6 @@ class SheetTest {
             val a3 by a1 * a2
             val a4 by up(3) * a2
             val a5 by a1 * up(3)
-            val x = a2
             listOf(a3, a4, a5)
         }
         println(sheet)

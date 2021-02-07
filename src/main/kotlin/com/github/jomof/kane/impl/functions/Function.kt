@@ -214,16 +214,44 @@ data class AlgebraicUnaryMatrix(
 }
 
 // f(scalar statistic)->scalar
-interface AlgebraicUnaryScalarStatisticFunction {
+interface AggregatableFunction
+interface AlgebraicUnaryScalarStatisticFunction : AggregatableFunction {
     val meta: UnaryOp
 
-    operator fun invoke(value: Sheet): Expr {
+    operator fun invoke(values: DoubleArray): Double {
+        val statistic = StreamingSamples()
+        values.forEach {
+            statistic.insert(it)
+        }
+        return lookupStatistic(statistic)
+    }
+
+    operator fun invoke(values: List<Double>): Double {
+        val statistic = StreamingSamples()
+        values.forEach {
+            statistic.insert(it)
+        }
+        return lookupStatistic(statistic)
+    }
+
+    operator fun invoke(values: List<ScalarExpr>) = when (values.size) {
+        1 -> AlgebraicUnaryScalarStatistic(this, values[0])
+        else -> AlgebraicUnaryScalarStatistic(this, ScalarListExpr(values))
+    }
+
+    operator fun invoke(values: Array<out ScalarExpr>) = when (values.size) {
+        1 -> AlgebraicUnaryScalarStatistic(this, values[0])
+        else -> AlgebraicUnaryScalarStatistic(this, ScalarListExpr(values.toList()))
+    }
+
+    operator fun invoke(value: Sheet): Sheet {
         val filtered = value.describe().filterRows { row -> "$row" == meta.op }
-        if (filtered.columns == 1) return filtered[0, 0] as ScalarExpr
+        if (filtered.columns == 1)
+            return filtered["A1"]
         return filtered
     }
 
-    operator fun invoke(expr: GroupBy) = expr.aggregate(this)
+    operator fun invoke(expr: GroupBy): Sheet = expr.aggregate(this)
 
     operator fun invoke(expr: SheetRange): ScalarExpr =
         AlgebraicUnaryScalarStatistic(
@@ -328,6 +356,7 @@ data class AlgebraicBinaryRangeStatistic(
 // f(matrix)->scalar
 interface AlgebraicUnaryMatrixScalarFunction {
     val meta: UnaryOp
+    fun doubleOp(values: List<Double>): Double
     operator fun invoke(value: MatrixExpr): ScalarExpr = AlgebraicUnaryMatrixScalar(this, value)
     fun reduceArithmetic(value: MatrixExpr): ScalarExpr?
 }

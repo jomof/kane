@@ -10,3 +10,6 @@ class MedianFunction : AlgebraicUnaryScalarStatisticFunction {
     override val meta = MEDIAN
     override fun lookupStatistic(statistic: StreamingSamples) = statistic.median
 }
+
+
+

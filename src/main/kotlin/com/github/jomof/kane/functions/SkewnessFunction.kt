@@ -10,5 +10,3 @@ class SkewnessFunction : AlgebraicUnaryScalarStatisticFunction {
     override val meta = SKEWNESS
     override fun lookupStatistic(statistic: StreamingSamples) = statistic.skewness
 }
-
-val skewness = SkewnessFunction()

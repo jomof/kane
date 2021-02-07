@@ -1,6 +1,5 @@
 package com.github.jomof.kane
 
-import com.github.jomof.kane.functions.cv
 import com.github.jomof.kane.functions.percentile
 import com.github.jomof.kane.functions.sp500
 import com.github.jomof.kane.functions.step

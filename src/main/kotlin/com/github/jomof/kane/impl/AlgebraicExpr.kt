@@ -25,10 +25,10 @@ interface NamedExpr : Expr {
 interface NamedAlgebraicExpr : NamedExpr, AlgebraicExpr
 interface NamedScalarExpr : NamedAlgebraicExpr, ScalarExpr
 interface NamedMatrixExpr : NamedAlgebraicExpr, MatrixExpr
-data class UnaryOp(val op: String = "") {
+data class UnaryOp(val op: String = "", val simpleName: String = "") {
     operator fun getValue(nothing: Nothing?, property: KProperty<*>) =
-        if (op.isBlank()) copy(op = property.name.toLowerCase())
-        else this
+        (if (op.isBlank()) copy(op = property.name.toLowerCase())
+        else this).copy(simpleName = property.name.toLowerCase())
 }
 
 data class BinaryOp(
@@ -422,8 +422,13 @@ fun diff(expr: ScalarExpr, variable: ScalarExpr): ScalarExpr {
     if (variable is NamedScalar) return diff(expr, variable.scalar)
     val result: ScalarExpr = when (expr) {
         variable -> ConstantScalar(1.0)
-        is NamedScalar -> diff(expr.scalar, variable)
-        is AlgebraicUnaryMatrixScalar -> diff(expr.eval(), variable)
+        is NamedScalar -> {
+            diff(expr.scalar, variable)
+        }
+        is AlgebraicUnaryMatrixScalar -> {
+            val evaled = expr.eval()
+            diff(evaled, variable)
+        }
         is MatrixVariableElement -> ConstantScalar(0.0)
         is ScalarVariableExpr -> ConstantScalar(0.0)
         is ConstantScalar -> ConstantScalar(0.0)
@@ -464,7 +469,7 @@ fun differentiate(expr: AlgebraicExpr): AlgebraicExpr {
     fun ScalarExpr.diffOr(): ScalarExpr? {
         when (this) {
             is AlgebraicBinaryScalar -> {
-                if (op != divide) return null
+                if (op != div) return null
                 val dleft = left.tryD() ?: return null
                 val dright = right.tryD() ?: return null
                 return diff(dleft, dright)
@@ -475,7 +480,7 @@ fun differentiate(expr: AlgebraicExpr): AlgebraicExpr {
 
     fun MatrixExpr.diffOr(): MatrixExpr? {
         if (this !is AlgebraicBinaryScalarMatrix) return null
-        if (op != divide) return null
+        if (op != div) return null
         val dleft = left.tryD() ?: return null
         val dright = right.tryD() ?: return null
 
@@ -738,7 +743,7 @@ fun Expr.render(entryPoint: Boolean = true, outerType: AlgebraicType? = null): S
             op == d && value is NamedMatrixVariable -> "${op.meta.op}${value.self()}"
             op == negate &&
                     (value is NamedMatrixVariable ||
-                            value is AlgebraicBinaryMatrix && value.op == multiply) -> "${op.meta.op}${value.self()}"
+                            value is AlgebraicBinaryMatrix && value.op == times) -> "${op.meta.op}${value.self()}"
             else -> "${op.meta.op}(${value.self()})"
         }
         is AlgebraicBinaryScalarStatistic -> {
@@ -810,7 +815,7 @@ fun Expr.render(entryPoint: Boolean = true, outerType: AlgebraicType? = null): S
             op == d && value is NamedScalarVariable -> "${op.meta.op}${value.self()}"
             op == negate &&
                     (value is NamedScalarVariable ||
-                            value is AlgebraicBinaryScalar && value.op == multiply) -> "${op.meta.op}${value.self()}"
+                            value is AlgebraicBinaryScalar && value.op == times) -> "${op.meta.op}${value.self()}"
             else -> "${op.meta.op}(${value.self()})"
         }
         is NamedMatrixVariable -> Identifier.string(name)
