@@ -5,7 +5,7 @@
 # registerNamedMatrixShape  
 [jvm]  
 Content  
-fun [registerNamedMatrixShape](register-named-matrix-shape.md)(name: [Id](../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1934932389), init: () -> [MatrixShape](../-matrix-shape/index.md))  
+fun [registerNamedMatrixShape](register-named-matrix-shape.md)(name: [Id](../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1978423998), init: () -> [MatrixShape](../-matrix-shape/index.md))  
 
 
 
