@@ -10,44 +10,9 @@ Once you have a notebook running a Kotlin kernal add a dependency on the Kane li
 
 
 ```kotlin
-%use lets-plot
-@file:DependsOn("com.github.jomof:kane:0.2.25")
+@file:DependsOn("com.github.jomof:kane:0.2.30")
 import com.github.jomof.kane.*
 ```
-
-
-<div id="tEIogq"></div>
-<script type="text/javascript" data-lets-plot-script="library">
-    if(!window.letsPlotCallQueue) {
-        window.letsPlotCallQueue = [];
-    }; 
-    window.letsPlotCall = function(f) {
-        window.letsPlotCallQueue.push(f);
-    };
-    (function() {
-        var script = document.createElement("script");
-        script.type = "text/javascript";
-        script.src = "https://dl.bintray.com/jetbrains/lets-plot/lets-plot-1.5.2.min.js";
-        script.onload = function() {
-            window.letsPlotCall = function(f) {f();};
-            window.letsPlotCallQueue.forEach(function(f) {f();});
-            window.letsPlotCallQueue = [];
-
-
-        };
-        script.onerror = function(event) {
-            window.letsPlotCall = function(f) {};
-            window.letsPlotCallQueue = [];
-            var div = document.createElement("div");
-            div.style.color = 'darkred';
-            div.textContent = 'Error loading Lets-Plot JS';
-            document.getElementById("tEIogq").appendChild(div);
-        };
-        var e = document.getElementById("tEIogq");
-        e.appendChild(script);
-    })();
-</script>
-
 
 Kane sheets are constructed with the **sheetOf** function:
 
@@ -127,6 +92,8 @@ HTML(sheet.copy("A1" to 2.0).eval().html)
 
 Sheet instances are immutable, so a new sheet was created with the copy(...) function. While the semantics are immutable, copy didn't duplicate any memory unnecessarily. So new sheets are inexpensive to create and destroy. 
 
+## Formatting
+
 Sheet cells support formatting. For example, we can set cell A1 to a value in dollars.
 
 
@@ -150,12 +117,16 @@ HTML(sheet.copy("A1" to "$5.20").eval().html)
 
 
 
-Here's a list of the currently supported data types.
+Here's a list of the currently supported data formats.
 
 
 ```kotlin
 HTML(Kane.dataFormats.html)
 ```
+
+
+
+
 
 <table id="table_id" class="display">
 <thead><tr>
@@ -170,6 +141,28 @@ HTML(Kane.dataFormats.html)
   </tbody>
 </table>
 
+
+
+
+## Plotting
+
+Kane can interoperate with lets_plot with the toMap() function.
+
+
+```kotlin
+%use lets-plot
+val rand = java.util.Random(7)
+val sheet = sheetOf {
+    val rating by List(200) { rand.nextGaussian() } + List(200) { rand.nextGaussian() * 1.5 + 1.5 }
+    val cond by List(200) { "A" } + List(200) { "B" }
+    listOf(rating, cond)
+}
+var p = lets_plot(sheet.toMap())
+p += geom_density(color="dark_green", alpha=.3) { x="rating"; fill="cond" }
+p + ggsize(500, 250)
+```
+
+[![](https://jomof.github.io/kane/figures/readme-density.svg)]
 
 # Other topics
 - [Dealing with large .csv files](https://github.com/jomof/kane/blob/main/LargeCsvSupport.md)
