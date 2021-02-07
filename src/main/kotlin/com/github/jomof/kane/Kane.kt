@@ -47,6 +47,8 @@ class Kane {
          * List of functions that take one parameter.
          */
         val unaryFunctions = listOf(
+            sin,
+            cos,
             lrelu,
             lstep,
             logit,

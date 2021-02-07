@@ -267,6 +267,30 @@ fun sum(algebraic: AlgebraicExpr): ScalarExpr = sumFunc(algebraic)
 fun sum(range: SheetRange): ScalarExpr = sumFunc(range)
 fun sum(expr: Expr): Expr = sumFunc(expr)
 
+// typesafe sin
+private val sinFunc = SinFunction()
+val sin: AlgebraicUnaryScalarFunction = sinFunc
+
+/**
+ * sin function
+ * [![](https://jomof.github.io/kane/figures/sin-profile.svg)]
+ */
+fun sin(matrix: MatrixExpr): MatrixExpr = sinFunc(matrix)
+fun sin(scalar: ScalarExpr): ScalarExpr = sinFunc(scalar)
+fun sin(scalar: Double): Double = sinFunc(scalar)
+
+// typesafe cos
+private val cosFunc = CosFunction()
+val cos: AlgebraicUnaryScalarFunction = cosFunc
+
+/**
+ * cos function
+ * [![](https://jomof.github.io/kane/figures/cos-profile.svg)]
+ */
+fun cos(matrix: MatrixExpr): MatrixExpr = cosFunc(matrix)
+fun cos(scalar: ScalarExpr): ScalarExpr = cosFunc(scalar)
+fun cos(scalar: Double): Double = cosFunc(scalar)
+
 // typesafe lrelu
 private val lreluFunc = LreluFunction()
 val lrelu: AlgebraicUnaryScalarFunction = lreluFunc

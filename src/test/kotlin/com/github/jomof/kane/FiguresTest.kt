@@ -37,22 +37,20 @@ class FiguresTest {
     fun `unary function plots`() {
         for (func in Kane.unaryFunctions) {
 
-            val x by (-100..100).map { (PI * it) / 100.0 }
+            val x by (-200..200).map { (PI * it) / 100.0 }
             val y by func(x)
 
             val op = func.meta.simpleName
 
-            run {
-                val p = lets_plot(y.toMap()) +
-                        geom_point { this.x = "x"; this.y = "y"; color = "y" } +
-                        labs(
-                            title = "$y profile",
-                            x = "$op argument",
-                            y = "$op value",
-                            color = "$op value"
-                        )
-                ggsave(p, "$op-profile.svg", path = images)
-            }
+            val p = lets_plot(y.toMap()) +
+                    geom_point { this.x = "x"; this.y = "y"; color = "y" } +
+                    labs(
+                        title = "$y profile",
+                        x = "$op argument",
+                        y = "$op value",
+                        color = "$op value"
+                    )
+            ggsave(p, "$op-profile.svg", path = images)
         }
     }
 }

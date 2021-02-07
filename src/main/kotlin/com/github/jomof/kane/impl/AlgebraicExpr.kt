@@ -529,6 +529,9 @@ fun differentiate(expr: AlgebraicExpr): AlgebraicExpr {
             is AlgebraicBinaryScalar -> {
                 diffOr() ?: copy(left = left, right = right)
             }
+            is AlgebraicBinaryMatrix -> {
+                diffOr() ?: copy(left = left, right = right)
+            }
             is AlgebraicBinaryScalarMatrix -> {
                 diffOr() ?: run {
                     val left = left.self()
