@@ -15,6 +15,7 @@ fun [percentile75](percentile75.md)(groupBy: [GroupBy](../com.github.jomof.kane.
 fun [percentile75](percentile75.md)(algebraic: [AlgebraicExpr](-algebraic-expr/index.md)): [ScalarExpr](-scalar-expr/index.md)  
 fun [percentile75](percentile75.md)(range: [SheetRange](../com.github.jomof.kane.impl.sheet/-sheet-range/index.md)): [ScalarExpr](-scalar-expr/index.md)  
 fun [percentile75](percentile75.md)(expr: [Expr](-expr/index.md)): [Expr](-expr/index.md)  
+val [percentile75](percentile75.md): [AggregatableFunction](../com.github.jomof.kane.impl.functions/-aggregatable-function/index.md)  
 
 
 

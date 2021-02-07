@@ -9,7 +9,7 @@ fun [Sheet](../com.github.jomof.kane.impl.sheet/-sheet/index.md).[head](head.md)
 More info  
 
 
-Retrieve the first count elements of a sheet.
+Retrieve the first [count](count.md) elements of a sheet.
 
   
 

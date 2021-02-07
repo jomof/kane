@@ -15,6 +15,7 @@ fun [variance](variance.md)(groupBy: [GroupBy](../com.github.jomof.kane.impl.she
 fun [variance](variance.md)(algebraic: [AlgebraicExpr](-algebraic-expr/index.md)): [ScalarExpr](-scalar-expr/index.md)  
 fun [variance](variance.md)(range: [SheetRange](../com.github.jomof.kane.impl.sheet/-sheet-range/index.md)): [ScalarExpr](-scalar-expr/index.md)  
 fun [variance](variance.md)(expr: [Expr](-expr/index.md)): [Expr](-expr/index.md)  
+val [variance](variance.md): [AggregatableFunction](../com.github.jomof.kane.impl.functions/-aggregatable-function/index.md)  
 
 
 

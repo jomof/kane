@@ -15,6 +15,7 @@ fun [sum](sum.md)(groupBy: [GroupBy](../com.github.jomof.kane.impl.sheet/-group-
 fun [sum](sum.md)(algebraic: [AlgebraicExpr](-algebraic-expr/index.md)): [ScalarExpr](-scalar-expr/index.md)  
 fun [sum](sum.md)(range: [SheetRange](../com.github.jomof.kane.impl.sheet/-sheet-range/index.md)): [ScalarExpr](-scalar-expr/index.md)  
 fun [sum](sum.md)(expr: [Expr](-expr/index.md)): [Expr](-expr/index.md)  
+val [sum](sum.md): [AggregatableFunction](../com.github.jomof.kane.impl.functions/-aggregatable-function/index.md)  
 
 
 

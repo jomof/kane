@@ -15,6 +15,7 @@ fun [min](min.md)(groupBy: [GroupBy](../com.github.jomof.kane.impl.sheet/-group-
 fun [min](min.md)(algebraic: [AlgebraicExpr](-algebraic-expr/index.md)): [ScalarExpr](-scalar-expr/index.md)  
 fun [min](min.md)(range: [SheetRange](../com.github.jomof.kane.impl.sheet/-sheet-range/index.md)): [ScalarExpr](-scalar-expr/index.md)  
 fun [min](min.md)(expr: [Expr](-expr/index.md)): [Expr](-expr/index.md)  
+val [min](min.md): [AggregatableFunction](../com.github.jomof.kane.impl.functions/-aggregatable-function/index.md)  
 
 
 

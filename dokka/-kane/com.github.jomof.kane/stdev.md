@@ -15,6 +15,7 @@ fun [stdev](stdev.md)(groupBy: [GroupBy](../com.github.jomof.kane.impl.sheet/-gr
 fun [stdev](stdev.md)(algebraic: [AlgebraicExpr](-algebraic-expr/index.md)): [ScalarExpr](-scalar-expr/index.md)  
 fun [stdev](stdev.md)(range: [SheetRange](../com.github.jomof.kane.impl.sheet/-sheet-range/index.md)): [ScalarExpr](-scalar-expr/index.md)  
 fun [stdev](stdev.md)(expr: [Expr](-expr/index.md)): [Expr](-expr/index.md)  
+val [stdev](stdev.md): [AggregatableFunction](../com.github.jomof.kane.impl.functions/-aggregatable-function/index.md)  
 
 
 

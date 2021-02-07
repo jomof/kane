@@ -15,6 +15,7 @@ fun [count](count.md)(groupBy: [GroupBy](../com.github.jomof.kane.impl.sheet/-gr
 fun [count](count.md)(algebraic: [AlgebraicExpr](-algebraic-expr/index.md)): [ScalarExpr](-scalar-expr/index.md)  
 fun [count](count.md)(range: [SheetRange](../com.github.jomof.kane.impl.sheet/-sheet-range/index.md)): [ScalarExpr](-scalar-expr/index.md)  
 fun [count](count.md)(expr: [Expr](-expr/index.md)): [Expr](-expr/index.md)  
+val [count](count.md): [AggregatableFunction](../com.github.jomof.kane.impl.functions/-aggregatable-function/index.md)  
 
 
 

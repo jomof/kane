@@ -15,6 +15,7 @@ fun [median](median.md)(groupBy: [GroupBy](../com.github.jomof.kane.impl.sheet/-
 fun [median](median.md)(algebraic: [AlgebraicExpr](-algebraic-expr/index.md)): [ScalarExpr](-scalar-expr/index.md)  
 fun [median](median.md)(range: [SheetRange](../com.github.jomof.kane.impl.sheet/-sheet-range/index.md)): [ScalarExpr](-scalar-expr/index.md)  
 fun [median](median.md)(expr: [Expr](-expr/index.md)): [Expr](-expr/index.md)  
+val [median](median.md): [AggregatableFunction](../com.github.jomof.kane.impl.functions/-aggregatable-function/index.md)  
 
 
 
