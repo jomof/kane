@@ -5,7 +5,7 @@
 # copy  
 [jvm]  
 Content  
-fun [copy](copy.md)(name: [Id](../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-2119759707), tiling: [Tiling](../-tiling/index.md)<[E](index.md)>): [NamedTiling](index.md)<[E](index.md)>  
+fun [copy](copy.md)(name: [Id](../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1958197075), tiling: [Tiling](../-tiling/index.md)<[E](index.md)>): [NamedTiling](index.md)<[E](index.md)>  
 
 
 
