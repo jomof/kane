@@ -5,7 +5,7 @@
 # set  
 [jvm]  
 Content  
-fun [set](set.md)(cell: [Id](../../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-757992446), value: [Any](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html), type: [KaneType](../../com.github.jomof.kane.impl.types/-kane-type/index.md)<*>)  
+fun [set](set.md)(cell: [Id](../../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-877297793), value: [Any](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html), type: [KaneType](../../com.github.jomof.kane.impl.types/-kane-type/index.md)<*>)  
 
 
 
