@@ -171,6 +171,8 @@ HTML(Kane.dataFormats.html)
 </table>
 
 
+[![](https://jomof.github.io/kane/figures/readme-density.svg)]
+
 # Other topics
 - [Dealing with large .csv files](https://github.com/jomof/kane/blob/main/LargeCsvSupport.md)
 - [Goal Seeking](https://github.com/jomof/kane/blob/main/GoalSeeking.md)
