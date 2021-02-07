@@ -69,6 +69,23 @@ class GenerateCode {
                 """.trimIndent()
             )
         }
+
+        for (func in Kane.unaryFunctions) {
+            val op = func.meta.simpleName
+            val capped = op[0].toUpperCase() + op.substring(1)
+            sb.append("// typesafe $op\n")
+            sb.append("private val ${op}Func = ${capped}Function()\n")
+            sb.append("val $op : AlgebraicUnaryScalarFunction = ${op}Func\n")
+            sb.append(
+                """
+                fun $op(matrix : MatrixExpr) : MatrixExpr = ${op}Func(matrix)
+                fun $op(scalar : ScalarExpr) : ScalarExpr = ${op}Func(scalar)
+                fun $op(scalar : Double) : Double = ${op}Func(scalar)
+                
+                
+                """.trimIndent()
+            )
+        }
         output.writeText(sb.toString())
     }
 }

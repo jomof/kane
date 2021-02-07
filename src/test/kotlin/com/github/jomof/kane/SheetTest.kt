@@ -1298,13 +1298,11 @@ class SheetTest {
 
     @Test
     fun `repro percent type propagates`() {
-
         val retire = sheetOf {
             val years by columnOf(1) { it }
             val preTax by dollars(1) + dollars(1) stack (years + up)
             val total by preTax + preTax
             val preTaxRatio by percent(preTax / total)
-            val x = preTaxRatio
             listOf(preTaxRatio)
         }
         println(retire)
@@ -1312,7 +1310,6 @@ class SheetTest {
         println(evaled)
         evaled["A2"].assertString("50%")
     }
-
 
     @Test
     fun `cells shouldn't expand unnecessarily`() {

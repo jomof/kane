@@ -2,11 +2,14 @@ package com.github.jomof.kane
 
 import jetbrains.letsPlot.export.ggsave
 import jetbrains.letsPlot.geom.geom_density
+import jetbrains.letsPlot.geom.geom_point
 import jetbrains.letsPlot.ggsize
 import jetbrains.letsPlot.intern.Plot
+import jetbrains.letsPlot.label.labs
 import jetbrains.letsPlot.lets_plot
 import org.junit.Test
 import java.io.File
+import java.lang.Math.PI
 import java.util.*
 
 class FiguresTest {
@@ -28,5 +31,30 @@ class FiguresTest {
 
         ggsave(p, "readme-density.svg", path = images)
 
+    }
+
+    @Test
+    fun `unary function plots`() {
+        for (func in Kane.unaryFunctions) {
+            val sheet = sheetOf {
+                val x by (-100..100).map { (PI * it) / 100.0 }
+                val y by x.map { func(it) }
+                listOf(x, y)
+            }
+
+            val dat = sheet.toMap()
+
+            val op = func.meta.simpleName
+
+            val p = lets_plot(dat) +
+                    geom_point { x = "x"; y = "y"; color = "y" } +
+                    labs(
+                        title = "y=$op(x) profile",
+                        x = "$op argument",
+                        y = "$op value",
+                        color = "$op value"
+                    )
+            ggsave(p, "$op-profile.svg", path = images)
+        }
     }
 }

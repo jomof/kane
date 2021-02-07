@@ -1,13 +1,10 @@
 package com.github.jomof.kane.functions
 
-import com.github.jomof.kane.ScalarExpr
+import com.github.jomof.kane.*
 import com.github.jomof.kane.impl.*
 import com.github.jomof.kane.impl.functions.AlgebraicBinaryScalar
 import com.github.jomof.kane.impl.functions.AlgebraicBinaryScalarFunction
 import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalar
-import com.github.jomof.kane.plus
-import com.github.jomof.kane.pow
-import com.github.jomof.kane.times
 
 val TIMES by BinaryOp(op = "*", precedence = 1, associative = true, infix = true)
 

@@ -554,8 +554,6 @@ fun MatrixExpr.toDataMatrix(): MatrixExpr = when (this) {
     else -> DataMatrix(columns, rows, elements.toList())
 }
 
-fun MatrixExpr.map(action: (ScalarExpr) -> ScalarExpr) = DataMatrix(columns, rows, elements.map(action).toList())
-
 // Allocation tracking
 private var trackingEnabled = false
 private var trackingCount = 0

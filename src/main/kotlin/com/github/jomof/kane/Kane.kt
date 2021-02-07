@@ -42,5 +42,19 @@ class Kane {
             cv,
             sum
         ).map { it as AlgebraicUnaryScalarStatisticFunction }
+
+        /**
+         * List of functions that take one parameter.
+         */
+        val unaryFunctions = listOf(
+            lrelu,
+            lstep,
+            logit,
+            exp,
+            relu,
+            tanh,
+            step,
+            negate
+        ).map { it }
     }
 }

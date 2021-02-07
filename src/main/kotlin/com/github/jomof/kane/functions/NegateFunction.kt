@@ -7,11 +7,12 @@ import com.github.jomof.kane.impl.ScalarListExpr
 import com.github.jomof.kane.impl.UnaryOp
 import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalar
 import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalarFunction
+import com.github.jomof.kane.negate
 
 
-val NEGATE by UnaryOp(op = "-")
+private val NEGATE by UnaryOp(op = "-")
 
-private class NegateFunction : AlgebraicUnaryScalarFunction {
+internal class NegateFunction : AlgebraicUnaryScalarFunction {
     override val meta = NEGATE
     override fun doubleOp(value: Double) = -value
 
@@ -29,7 +30,6 @@ private class NegateFunction : AlgebraicUnaryScalarFunction {
     ) = -exprd
 }
 
-val negate : AlgebraicUnaryScalarFunction = NegateFunction()
 
 // Unary minus
 operator fun ScalarExpr.unaryMinus() = negate(this)

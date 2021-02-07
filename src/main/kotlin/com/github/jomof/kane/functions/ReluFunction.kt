@@ -3,11 +3,13 @@ package com.github.jomof.kane.functions
 import com.github.jomof.kane.ScalarExpr
 import com.github.jomof.kane.impl.UnaryOp
 import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalarFunction
+import com.github.jomof.kane.step
 import com.github.jomof.kane.times
 import kotlin.math.max
 
 val RELU by UnaryOp()
-private class ReluFunction : AlgebraicUnaryScalarFunction {
+
+internal class ReluFunction : AlgebraicUnaryScalarFunction {
     override val meta = RELU
     override fun doubleOp(value: Double) = max(0.0, value)
 
@@ -19,5 +21,3 @@ private class ReluFunction : AlgebraicUnaryScalarFunction {
         return step(expr) * exprd
     }
 }
-
-val relu : AlgebraicUnaryScalarFunction = ReluFunction()

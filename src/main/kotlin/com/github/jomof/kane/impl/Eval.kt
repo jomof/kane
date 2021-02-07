@@ -8,6 +8,7 @@ import com.github.jomof.kane.impl.sheet.*
 import com.github.jomof.kane.impl.types.algebraicType
 import com.github.jomof.kane.impl.types.kaneDouble
 import com.github.jomof.kane.impl.visitor.RewritingVisitor
+import com.github.jomof.kane.map
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.collections.set

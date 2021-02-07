@@ -2,6 +2,7 @@ package com.github.jomof.kane
 
 import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.impl.functions.AggregatableFunction
+import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalarFunction
 import com.github.jomof.kane.impl.sheet.GroupBy
 import com.github.jomof.kane.impl.sheet.Sheet
 import com.github.jomof.kane.impl.sheet.SheetRange
@@ -265,4 +266,60 @@ fun sum(groupBy: GroupBy): Sheet = sumFunc(groupBy)
 fun sum(algebraic: AlgebraicExpr): ScalarExpr = sumFunc(algebraic)
 fun sum(range: SheetRange): ScalarExpr = sumFunc(range)
 fun sum(expr: Expr): Expr = sumFunc(expr)
+
+// typesafe lrelu
+private val lreluFunc = LreluFunction()
+val lrelu: AlgebraicUnaryScalarFunction = lreluFunc
+fun lrelu(matrix: MatrixExpr): MatrixExpr = lreluFunc(matrix)
+fun lrelu(scalar: ScalarExpr): ScalarExpr = lreluFunc(scalar)
+fun lrelu(scalar: Double): Double = lreluFunc(scalar)
+
+// typesafe lstep
+private val lstepFunc = LstepFunction()
+val lstep: AlgebraicUnaryScalarFunction = lstepFunc
+fun lstep(matrix: MatrixExpr): MatrixExpr = lstepFunc(matrix)
+fun lstep(scalar: ScalarExpr): ScalarExpr = lstepFunc(scalar)
+fun lstep(scalar: Double): Double = lstepFunc(scalar)
+
+// typesafe logit
+private val logitFunc = LogitFunction()
+val logit: AlgebraicUnaryScalarFunction = logitFunc
+fun logit(matrix: MatrixExpr): MatrixExpr = logitFunc(matrix)
+fun logit(scalar: ScalarExpr): ScalarExpr = logitFunc(scalar)
+fun logit(scalar: Double): Double = logitFunc(scalar)
+
+// typesafe exp
+private val expFunc = ExpFunction()
+val exp: AlgebraicUnaryScalarFunction = expFunc
+fun exp(matrix: MatrixExpr): MatrixExpr = expFunc(matrix)
+fun exp(scalar: ScalarExpr): ScalarExpr = expFunc(scalar)
+fun exp(scalar: Double): Double = expFunc(scalar)
+
+// typesafe relu
+private val reluFunc = ReluFunction()
+val relu: AlgebraicUnaryScalarFunction = reluFunc
+fun relu(matrix: MatrixExpr): MatrixExpr = reluFunc(matrix)
+fun relu(scalar: ScalarExpr): ScalarExpr = reluFunc(scalar)
+fun relu(scalar: Double): Double = reluFunc(scalar)
+
+// typesafe tanh
+private val tanhFunc = TanhFunction()
+val tanh: AlgebraicUnaryScalarFunction = tanhFunc
+fun tanh(matrix: MatrixExpr): MatrixExpr = tanhFunc(matrix)
+fun tanh(scalar: ScalarExpr): ScalarExpr = tanhFunc(scalar)
+fun tanh(scalar: Double): Double = tanhFunc(scalar)
+
+// typesafe step
+private val stepFunc = StepFunction()
+val step: AlgebraicUnaryScalarFunction = stepFunc
+fun step(matrix: MatrixExpr): MatrixExpr = stepFunc(matrix)
+fun step(scalar: ScalarExpr): ScalarExpr = stepFunc(scalar)
+fun step(scalar: Double): Double = stepFunc(scalar)
+
+// typesafe negate
+private val negateFunc = NegateFunction()
+val negate: AlgebraicUnaryScalarFunction = negateFunc
+fun negate(matrix: MatrixExpr): MatrixExpr = negateFunc(matrix)
+fun negate(scalar: ScalarExpr): ScalarExpr = negateFunc(scalar)
+fun negate(scalar: Double): Double = negateFunc(scalar)
 

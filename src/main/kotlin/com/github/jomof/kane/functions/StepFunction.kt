@@ -6,20 +6,18 @@ import com.github.jomof.kane.impl.constant
 import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalar
 import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalarFunction
 
-val STEP by UnaryOp()
+private val STEP by UnaryOp()
 
-private class StepFunction : AlgebraicUnaryScalarFunction {
+internal class StepFunction : AlgebraicUnaryScalarFunction {
     override val meta = STEP
     override fun doubleOp(value: Double) = if (value < 0.0) 0.0 else 1.0
     override operator fun invoke(value: ScalarExpr): ScalarExpr = AlgebraicUnaryScalar(this, value)
 
     override fun differentiate(
-        expr : ScalarExpr,
-        exprd : ScalarExpr,
-        variable : ScalarExpr
+        expr: ScalarExpr,
+        exprd: ScalarExpr,
+        variable: ScalarExpr
     ): ScalarExpr {
         return constant(0.0)
     }
 }
-
-val step : AlgebraicUnaryScalarFunction = StepFunction()

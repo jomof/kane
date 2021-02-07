@@ -6,6 +6,7 @@ import com.github.jomof.kane.impl.functions.AlgebraicBinaryScalar
 import com.github.jomof.kane.impl.functions.AlgebraicBinaryScalarFunction
 import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalar
 import com.github.jomof.kane.minus
+import com.github.jomof.kane.negate
 import com.github.jomof.kane.plus
 
 val MINUS by BinaryOp(op = "-", precedence = 4, infix = true)
