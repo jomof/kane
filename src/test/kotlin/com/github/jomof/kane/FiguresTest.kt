@@ -36,21 +36,17 @@ class FiguresTest {
     @Test
     fun `unary function plots`() {
         for (func in Kane.unaryFunctions) {
-            lateinit var equation: String
-            val data = sheetOf {
-                val x by (-100..100).map { (PI * it) / 100.0 }
-                val y by func(x)
-                equation = "$y"
-                listOf(x, y)
-            }.toMap()
+
+            val x by (-100..100).map { (PI * it) / 100.0 }
+            val y by func(x)
 
             val op = func.meta.simpleName
 
             run {
-                val p = lets_plot(data) +
-                        geom_point { x = "x"; y = "y"; color = "y" } +
+                val p = lets_plot(y.toMap()) +
+                        geom_point { this.x = "x"; this.y = "y"; color = "y" } +
                         labs(
-                            title = "$equation profile",
+                            title = "$y profile",
                             x = "$op argument",
                             y = "$op value",
                             color = "$op value"
