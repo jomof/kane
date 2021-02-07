@@ -38,7 +38,7 @@ class FiguresTest {
         for (func in Kane.unaryFunctions) {
             val sheet = sheetOf {
                 val x by (-100..100).map { (PI * it) / 100.0 }
-                val y by x.map { func(it) }
+                val y by func(x)
                 listOf(x, y)
             }
 

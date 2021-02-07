@@ -270,6 +270,11 @@ fun sum(expr: Expr): Expr = sumFunc(expr)
 // typesafe lrelu
 private val lreluFunc = LreluFunction()
 val lrelu: AlgebraicUnaryScalarFunction = lreluFunc
+
+/**
+ * lrelu function
+ * [![](https://jomof.github.io/kane/figures/lrelu-profile.svg)]
+ */
 fun lrelu(matrix: MatrixExpr): MatrixExpr = lreluFunc(matrix)
 fun lrelu(scalar: ScalarExpr): ScalarExpr = lreluFunc(scalar)
 fun lrelu(scalar: Double): Double = lreluFunc(scalar)
@@ -277,6 +282,11 @@ fun lrelu(scalar: Double): Double = lreluFunc(scalar)
 // typesafe lstep
 private val lstepFunc = LstepFunction()
 val lstep: AlgebraicUnaryScalarFunction = lstepFunc
+
+/**
+ * lstep function
+ * [![](https://jomof.github.io/kane/figures/lstep-profile.svg)]
+ */
 fun lstep(matrix: MatrixExpr): MatrixExpr = lstepFunc(matrix)
 fun lstep(scalar: ScalarExpr): ScalarExpr = lstepFunc(scalar)
 fun lstep(scalar: Double): Double = lstepFunc(scalar)
@@ -284,6 +294,11 @@ fun lstep(scalar: Double): Double = lstepFunc(scalar)
 // typesafe logit
 private val logitFunc = LogitFunction()
 val logit: AlgebraicUnaryScalarFunction = logitFunc
+
+/**
+ * logit function
+ * [![](https://jomof.github.io/kane/figures/logit-profile.svg)]
+ */
 fun logit(matrix: MatrixExpr): MatrixExpr = logitFunc(matrix)
 fun logit(scalar: ScalarExpr): ScalarExpr = logitFunc(scalar)
 fun logit(scalar: Double): Double = logitFunc(scalar)
@@ -291,6 +306,11 @@ fun logit(scalar: Double): Double = logitFunc(scalar)
 // typesafe exp
 private val expFunc = ExpFunction()
 val exp: AlgebraicUnaryScalarFunction = expFunc
+
+/**
+ * exp function
+ * [![](https://jomof.github.io/kane/figures/exp-profile.svg)]
+ */
 fun exp(matrix: MatrixExpr): MatrixExpr = expFunc(matrix)
 fun exp(scalar: ScalarExpr): ScalarExpr = expFunc(scalar)
 fun exp(scalar: Double): Double = expFunc(scalar)
@@ -298,6 +318,11 @@ fun exp(scalar: Double): Double = expFunc(scalar)
 // typesafe relu
 private val reluFunc = ReluFunction()
 val relu: AlgebraicUnaryScalarFunction = reluFunc
+
+/**
+ * relu function
+ * [![](https://jomof.github.io/kane/figures/relu-profile.svg)]
+ */
 fun relu(matrix: MatrixExpr): MatrixExpr = reluFunc(matrix)
 fun relu(scalar: ScalarExpr): ScalarExpr = reluFunc(scalar)
 fun relu(scalar: Double): Double = reluFunc(scalar)
@@ -305,6 +330,11 @@ fun relu(scalar: Double): Double = reluFunc(scalar)
 // typesafe tanh
 private val tanhFunc = TanhFunction()
 val tanh: AlgebraicUnaryScalarFunction = tanhFunc
+
+/**
+ * tanh function
+ * [![](https://jomof.github.io/kane/figures/tanh-profile.svg)]
+ */
 fun tanh(matrix: MatrixExpr): MatrixExpr = tanhFunc(matrix)
 fun tanh(scalar: ScalarExpr): ScalarExpr = tanhFunc(scalar)
 fun tanh(scalar: Double): Double = tanhFunc(scalar)
@@ -312,6 +342,11 @@ fun tanh(scalar: Double): Double = tanhFunc(scalar)
 // typesafe step
 private val stepFunc = StepFunction()
 val step: AlgebraicUnaryScalarFunction = stepFunc
+
+/**
+ * step function
+ * [![](https://jomof.github.io/kane/figures/step-profile.svg)]
+ */
 fun step(matrix: MatrixExpr): MatrixExpr = stepFunc(matrix)
 fun step(scalar: ScalarExpr): ScalarExpr = stepFunc(scalar)
 fun step(scalar: Double): Double = stepFunc(scalar)
@@ -319,6 +354,11 @@ fun step(scalar: Double): Double = stepFunc(scalar)
 // typesafe negate
 private val negateFunc = NegateFunction()
 val negate: AlgebraicUnaryScalarFunction = negateFunc
+
+/**
+ * negate function
+ * [![](https://jomof.github.io/kane/figures/negate-profile.svg)]
+ */
 fun negate(matrix: MatrixExpr): MatrixExpr = negateFunc(matrix)
 fun negate(scalar: ScalarExpr): ScalarExpr = negateFunc(scalar)
 fun negate(scalar: Double): Double = negateFunc(scalar)

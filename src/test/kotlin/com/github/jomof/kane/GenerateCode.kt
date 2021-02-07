@@ -6,6 +6,9 @@ import java.io.File
 class GenerateCode {
     private val infixMathOperators = listOf("plus", "minus", "times", "div")
 
+    /**
+     *
+     */
     @Test
     fun test() {
         val output = File("src/main/kotlin/com/github/jomof/kane/TypesafeOperations.kt").absoluteFile
@@ -78,6 +81,10 @@ class GenerateCode {
             sb.append("val $op : AlgebraicUnaryScalarFunction = ${op}Func\n")
             sb.append(
                 """
+                /**
+                 * $op function
+                 * [![](https://jomof.github.io/kane/figures/$op-profile.svg)]
+                 */
                 fun $op(matrix : MatrixExpr) : MatrixExpr = ${op}Func(matrix)
                 fun $op(scalar : ScalarExpr) : ScalarExpr = ${op}Func(scalar)
                 fun $op(scalar : Double) : Double = ${op}Func(scalar)
