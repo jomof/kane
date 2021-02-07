@@ -111,7 +111,23 @@ fun analyzeDataType(value: String): AdmissibleDataType<*> {
     return possibleDataFormats.first { it.tryParse(value) != null }
 }
 
-fun analyzeDataTypes(data : List<Map<String, String>>) : DataTypeAnalysis {
+fun analyzeDataListTypes(data: List<String>): AdmissibleDataType<*> {
+    val rows = data.size
+
+    var acceptedDataTypes = possibleDataFormats.toMutableList()
+    var maxWidth = 0
+    var minWidth = Int.MAX_VALUE
+    data.forEach { value ->
+        maxWidth = max(maxWidth, value.length)
+        minWidth = min(minWidth, value.length)
+        acceptedDataTypes = acceptedDataTypes
+            .filter { tryType -> tryType.tryParse(value) != null }
+            .toMutableList()
+    }
+    return acceptedDataTypes.first()
+}
+
+fun analyzeDataTypes(data: List<Map<String, String>>): DataTypeAnalysis {
     val rows = data.size
     val columns = data.flatMap { it.keys }.distinct()
     val columnInfos = columns.map { name ->

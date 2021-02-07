@@ -6,19 +6,9 @@ import com.github.jomof.kane.Expr
 import com.github.jomof.kane.ScalarExpr
 import com.github.jomof.kane.impl.*
 import com.github.jomof.kane.impl.types.KaneType
-import com.github.jomof.kane.impl.types.kaneType
 import kotlin.reflect.KProperty
 
 interface SheetBuilder {
-    operator fun String.getValue(nothing: Nothing?, property: KProperty<*>) = parseAndNameValue(property.name, this)
-    operator fun Number.getValue(nothing: Nothing?, property: KProperty<*>) =
-        NamedScalar(property.name, constant(this.toDouble()))
-
-    operator fun List<Double>.getValue(nothing: Nothing?, property: KProperty<*>) =
-        NamedMatrix(property.name, matrixOf(1, size, *toDoubleArray()))
-
-    operator fun List<String>.getValue(nothing: Nothing?, property: KProperty<*>) =
-        NamedTiling(property.name, Tiling(1, size, this, String::class.java.kaneType))
 
     fun cell(name: String) = SheetBuilderRange(this, cellNameToComputableCoordinate(name))
 
@@ -42,7 +32,7 @@ interface SheetBuilder {
     val right get() = right(1)
 }
 
-private fun parseAndNameValue(name: String, value: String): NamedExpr {
+internal fun parseAndNameValue(name: String, value: String): NamedExpr {
     val admissibleType = analyzeDataType(value)
     return when (val parsed = analyzeDataType(value).parseToExpr(value)) {
         is ScalarExpr -> NamedScalar(name, parsed)

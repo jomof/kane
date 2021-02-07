@@ -7,6 +7,7 @@ import com.github.jomof.kane.impl.types.dollars
 import com.github.jomof.kane.impl.types.kaneDouble
 import org.junit.Test
 import java.util.*
+import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.pow
 
@@ -17,7 +18,7 @@ class KaneTest {
         return diff < 0.000001
     }
 
-    private fun Double.assertNear(expected:Double) {
+    private fun Double.assertNear(expected: Double) {
         assert(near(expected)) {
             "$this was not close enough to $expected"
         }
@@ -26,6 +27,17 @@ class KaneTest {
     @Test
     fun `dont check in tracking enable`() {
         errorIfTrackingEnabled()
+    }
+
+    @Test
+    fun `getValue of List Double`() {
+        val x by (-5..5).map { (PI * it) / 5.0 }
+        val y by tanh(x)
+        y.assertString("y=tanh(x)".trimIndent())
+        y.eval()
+            .assertString("y=[-0.99627|-0.98696|-0.95493|-0.85013|-0.55689|0|0.55689|0.85013|0.95493|0.98696|0.99627]ᵀ")
+        y.toMap()["x"].assertString("[-3.141592653589793, -2.5132741228718345, -1.8849555921538759, -1.2566370614359172, -0.6283185307179586, 0.0, 0.6283185307179586, 1.2566370614359172, 1.8849555921538759, 2.5132741228718345, 3.141592653589793]")
+        y.toMap()["y"].assertString("[-0.9962720762207499, -0.9869627033058326, -0.9549308086042282, -0.8501343239219393, -0.5568933069002107, 0.0, 0.5568933069002105, 0.8501343239219393, 0.9549308086042282, 0.9869627033058325, 0.99627207622075]")
     }
 
     @Test

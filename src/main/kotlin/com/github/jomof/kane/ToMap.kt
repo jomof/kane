@@ -1,17 +1,9 @@
 package com.github.jomof.kane
 
-import com.github.jomof.kane.impl.ValueExpr
-import com.github.jomof.kane.impl.canGetConstant
-import com.github.jomof.kane.impl.coordinate
-import com.github.jomof.kane.impl.getConstant
+import com.github.jomof.kane.impl.*
 import com.github.jomof.kane.impl.sheet.Sheet
+import com.github.jomof.kane.impl.sheet.SheetBuilderImpl
 import com.github.jomof.kane.impl.sheet.columnName
-import kotlin.collections.List
-import kotlin.collections.Map
-import kotlin.collections.contains
-import kotlin.collections.mutableListOf
-import kotlin.collections.mutableMapOf
-import kotlin.collections.plusAssign
 import kotlin.collections.set
 
 /**
@@ -40,4 +32,14 @@ fun Sheet.toMap(): Map<String, List<Any?>> {
         }
         return result
     }
+}
+
+/**
+ * Convert this [NamedExpr] to a map where the key is column name and the value is
+ * a list of cell values for that column. Nested column vectors will be expanded.
+ */
+fun NamedExpr.toMap(): Map<String, List<Any?>> {
+    val sb = SheetBuilderImpl()
+    sb.add(this)
+    return sb.build().toMap()
 }

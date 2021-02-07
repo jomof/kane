@@ -796,6 +796,7 @@ fun Expr.render(entryPoint: Boolean = true, outerType: AlgebraicType? = null): S
         is NamedMatrix -> {
             when {
                 !entryPoint -> Identifier.string(name)
+                matrix is DataMatrix && columns == 1 -> "$name=${matrix.self()}"
                 matrix is DataMatrix && rows != 1 -> "\n$name\n------\n${matrix.self()}"
                 else -> "$name=${matrix.self()}"
             }
