@@ -14,4 +14,9 @@ Builder used to construct a Sheet object.
   
 
 
+[jvm]  
+Content  
+fun [sheetOf](sheet-of.md)(map: [Map](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html)<*, *>): [Sheet](../com.github.jomof.kane.impl.sheet/-sheet/index.md)  
+
+
 
