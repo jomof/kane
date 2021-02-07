@@ -50,7 +50,7 @@ class Coordinate private constructor(val column: Int, val row: Int) {
             Coordinate(column, row)
         }
 
-        fun coordinate(column: Int, row: Int): Coordinate {
+        internal fun coordinate(column: Int, row: Int): Coordinate {
             if (column < coordinateLookupSide && row < coordinateLookupSide) {
                 val result = coordinateLookup[row * coordinateLookupSide + column]
                 assert(result.row == row && result.column == column) {
