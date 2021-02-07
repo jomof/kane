@@ -12,14 +12,14 @@ Topics covered:
 
 
 ```kotlin
-@file:DependsOn("com.github.jomof:kane:0.2.13")
+@file:DependsOn("com.github.jomof:kane:0.2.22")
 import com.github.jomof.kane.*
 
 ```
 
 
 ```kotlin
-val raw = sheetOfCsv {
+val raw = sheetOfCsv(
     """
     A,B
     1.0,-0.5
@@ -27,7 +27,7 @@ val raw = sheetOfCsv {
     3.0,-1.5
     4.0,-2.0
     """
-}
+)
 HTML(raw.html)
 
 ```
