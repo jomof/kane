@@ -10,9 +10,44 @@ Once you have a notebook running a Kotlin kernal add a dependency on the Kane li
 
 
 ```kotlin
-@file:DependsOn("com.github.jomof:kane:0.2.13")
+%use lets-plot
+@file:DependsOn("com.github.jomof:kane:0.2.25")
 import com.github.jomof.kane.*
 ```
+
+
+<div id="tEIogq"></div>
+<script type="text/javascript" data-lets-plot-script="library">
+    if(!window.letsPlotCallQueue) {
+        window.letsPlotCallQueue = [];
+    }; 
+    window.letsPlotCall = function(f) {
+        window.letsPlotCallQueue.push(f);
+    };
+    (function() {
+        var script = document.createElement("script");
+        script.type = "text/javascript";
+        script.src = "https://dl.bintray.com/jetbrains/lets-plot/lets-plot-1.5.2.min.js";
+        script.onload = function() {
+            window.letsPlotCall = function(f) {f();};
+            window.letsPlotCallQueue.forEach(function(f) {f();});
+            window.letsPlotCallQueue = [];
+
+
+        };
+        script.onerror = function(event) {
+            window.letsPlotCall = function(f) {};
+            window.letsPlotCallQueue = [];
+            var div = document.createElement("div");
+            div.style.color = 'darkred';
+            div.textContent = 'Error loading Lets-Plot JS';
+            document.getElementById("tEIogq").appendChild(div);
+        };
+        var e = document.getElementById("tEIogq");
+        e.appendChild(script);
+    })();
+</script>
+
 
 Kane sheets are constructed with the **sheetOf** function:
 
@@ -122,10 +157,6 @@ Here's a list of the currently supported data types.
 HTML(Kane.dataFormats.html)
 ```
 
-
-
-
-
 <table id="table_id" class="display">
 <thead><tr>
   <th/><th>format</th><th>type</th></thead></tr>
@@ -138,8 +169,6 @@ HTML(Kane.dataFormats.html)
     <tr><td>6</td><td>string</td><td>String</td></tr>
   </tbody>
 </table>
-
-
 
 
 # Other topics
