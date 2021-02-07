@@ -728,58 +728,6 @@ class KaneTest {
     }
 
     @Test
-    fun `sheet from map`() {
-        val rand = Random(7)
-        val data = mapOf<String, Any>(
-            "rating" to List(200) { rand.nextGaussian() } + List(200) { rand.nextGaussian() * 1.5 + 1.5 },
-            "cond" to List(200) { "A" } + List(200) { "B" }
-        )
-        val sheet = sheetOf(data)
-        sheet.head().assertString(
-            """
-              rating [A] cond [B] 
-              ---------- -------- 
-            1    0.84521        A 
-            2    0.91288        A 
-            3   -0.28708        A 
-            4    0.75186        A 
-            5    1.33547        A 
-        """.trimIndent()
-        )
-
-        val map = sheet.toMap()
-
-        sheet.toMap()["rating"]!![1]?.assertString("0.9128761787534405")
-        sheet.toMap()["cond"]!![201]?.assertString("B")
-        sheet.toMap().values.size.assertString("2")
-    }
-
-    @Test
-    fun `sheet list of`() {
-        val rand = Random(7)
-        val sheet = sheetOf {
-            val rating by List(200) { rand.nextGaussian() } + List(200) { rand.nextGaussian() * 1.5 + 1.5 }
-            val cond by List(200) { "A" } + List(200) { "B" }
-            listOf(rating, cond)
-        }
-        sheet.head().assertString(
-            """
-              rating [A] cond [B] 
-              ---------- -------- 
-            1    0.84521        A 
-            2    0.91288        A 
-            3   -0.28708        A 
-            4    0.75186        A 
-            5    1.33547        A 
-        """.trimIndent()
-        )
-
-
-        sheet.toMap()["rating"]!![1]?.assertString("0.9128761787534405")
-        sheet.toMap()["cond"]!![201]?.assertString("B")
-    }
-
-    @Test
     fun `dont eagerly expand constants`() {
         val x by constant(1.0)
         val y by constant(1.0)

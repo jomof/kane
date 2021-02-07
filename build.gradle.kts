@@ -21,6 +21,9 @@ dependencies {
     implementation("com.github.doyaaaaaken:kotlin-csv-jvm:0.15.0")
     testImplementation("com.github.doyaaaaaken:kotlin-csv-jvm:0.15.0")
     testImplementation("org.ow2.asm:asm:9.0")
+    testImplementation("org.jetbrains.lets-plot:lets-plot-common:1.5.6")
+    testImplementation("org.jetbrains.lets-plot-kotlin:lets-plot-kotlin-api:1.2.0")
+    testImplementation("org.jetbrains.lets-plot:lets-plot-image-export:1.5.6")
 }
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "1.8"
