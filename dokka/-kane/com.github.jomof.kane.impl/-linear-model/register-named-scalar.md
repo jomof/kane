@@ -5,7 +5,7 @@
 # registerNamedScalar  
 [jvm]  
 Content  
-fun [registerNamedScalar](register-named-scalar.md)(name: [Id](../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-756088064), scalar: [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md))  
+fun [registerNamedScalar](register-named-scalar.md)(name: [Id](../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-2119759707), scalar: [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md))  
 
 
 
