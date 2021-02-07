@@ -5,7 +5,7 @@
 # copy  
 [jvm]  
 Content  
-fun [copy](copy.md)(op: [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) = ""): [UnaryOp](index.md)  
+fun [copy](copy.md)(op: [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) = "", simpleName: [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) = ""): [UnaryOp](index.md)  
 
 
 

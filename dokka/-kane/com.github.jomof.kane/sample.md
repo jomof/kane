@@ -9,7 +9,7 @@ fun [Sheet](../com.github.jomof.kane.impl.sheet/-sheet/index.md).[sample](sample
 More info  
 
 
-Retrieve the last [count](count.md) elements of a sheet.
+Retrieve the last count elements of a sheet.
 
   
 

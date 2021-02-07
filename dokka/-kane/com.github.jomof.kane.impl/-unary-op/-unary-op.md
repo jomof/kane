@@ -5,7 +5,7 @@
 # UnaryOp  
 [jvm]  
 Content  
-fun [UnaryOp](-unary-op.md)(op: [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) = "")  
+fun [UnaryOp](-unary-op.md)(op: [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) = "", simpleName: [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) = "")  
 
 
 
