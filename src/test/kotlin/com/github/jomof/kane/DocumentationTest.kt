@@ -1,6 +1,5 @@
 package com.github.jomof.kane
 
-import com.github.jomof.kane.impl.sheet.aggregate
 import org.junit.Test
 
 /**

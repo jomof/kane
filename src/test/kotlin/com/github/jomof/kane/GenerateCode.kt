@@ -51,7 +51,7 @@ class GenerateCode {
             val capped = op[0].toUpperCase() + op.substring(1)
             sb.append("// typesafe $op\n")
             sb.append("private val ${op}Func = ${capped}Function()\n")
-            sb.append("internal val $op : AggregatableFunction = ${op}Func\n")
+            sb.append("val $op : AggregatableFunction = ${op}Func\n")
             sb.append(
                 """
                 fun $op(list : List<ScalarExpr>) : ScalarExpr = ${op}Func(list)
