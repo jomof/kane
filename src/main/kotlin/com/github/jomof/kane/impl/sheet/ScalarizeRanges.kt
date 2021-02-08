@@ -39,6 +39,7 @@ private fun Expr.ranges(): Set<SheetRangeRef> {
         is AlgebraicBinaryScalarMatrix -> left.ranges() + right.ranges()
         is AlgebraicBinaryMatrixScalar -> left.ranges() + right.ranges()
         is AlgebraicBinaryScalar -> left.ranges() + right.ranges()
+        is CoerceMatrix -> value.ranges()
         is CoerceScalar -> value.ranges()
         is RetypeScalar -> scalar.ranges()
         is RetypeMatrix -> matrix.ranges()
@@ -79,12 +80,13 @@ private fun Expr.replaceColumnWithCell(row: Int): Expr {
     }.rewrite(this)
 }
 
-fun SheetBuilderImpl.scalarizeRanges(cells: Cells): Cells {
-    val result = cells.toMutableMap()
+fun SheetBuilderImpl.scalarizeRanges(sheet: Sheet): Sheet {
+    val result = sheet.cells.toMutableMap()
     var done = false
     while (!done) {
         done = true
         val cellsWithRanges = result
+            .filter { it.value !is SheetRange }
             .map { (name, expr) -> name to expr.ranges() }
             .filter { it.second.isNotEmpty() }
             .map { it.first }
@@ -133,15 +135,15 @@ fun SheetBuilderImpl.scalarizeRanges(cells: Cells): Cells {
         result.remove(name)
     }
 
-    return result.toCells()
+    return sheet.copy(cells = result.toCells())
 }
 
-fun SheetBuilderImpl.convertNamedColumnsToColumnRanges(cells: Cells): Cells {
-    val converter = object : RewritingVisitor() {
+fun convertNamedColumnsToColumnRanges(sheet: Sheet): Sheet {
+    return object : RewritingVisitor() {
         override fun rewrite(expr: SheetRangeExpr): Expr = with(expr) {
             return when (rangeRef) {
                 is NamedColumnRangeRef -> {
-                    val columns = columnDescriptors.filter { it.value.name == rangeRef.name }.map { it.key }
+                    val columns = sheet.columnDescriptors.filter { it.value.name == rangeRef.name }.map { it.key }
                     val columnRange = when {
                         columns.isEmpty() ->
                             error("No column named ${rangeRef.name}")
@@ -153,11 +155,6 @@ fun SheetBuilderImpl.convertNamedColumnsToColumnRanges(cells: Cells): Cells {
                 else -> this
             }
         }
-    }
-    val result = cells.toMutableMap()
-    cells.forEach { (name, expr) ->
-        result[name] = converter(expr)
-    }
-    return result.toCells()
+    }.sheet(sheet)
 }
 

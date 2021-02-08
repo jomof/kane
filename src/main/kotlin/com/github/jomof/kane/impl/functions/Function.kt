@@ -7,7 +7,6 @@ import com.github.jomof.kane.impl.types.AlgebraicType
 import com.github.jomof.kane.impl.types.DollarAlgebraicType
 import com.github.jomof.kane.impl.types.DollarsAndCentsAlgebraicType
 import com.github.jomof.kane.impl.types.algebraicType
-import kotlin.math.min
 import kotlin.reflect.KProperty
 
 // f(scalar,scalar)->scalar (extended to matrix 1<->1 mapping)
@@ -34,19 +33,19 @@ interface AlgebraicBinaryScalarFunction {
         binaryOf(this, constant(p1), CoerceScalar(p2))
 
     operator fun invoke(p1: MatrixExpr, p2: ScalarExpr): MatrixExpr =
-        AlgebraicBinaryMatrixScalar(this, p1.columns, p1.rows, p1, p2)
+        AlgebraicBinaryMatrixScalar(this, p1, p2)
     operator fun  invoke(p1 : Double, p2 : MatrixExpr) : MatrixExpr =
-        AlgebraicBinaryScalarMatrix(this, p2.columns, p2.rows, constant(p1), p2)
+        AlgebraicBinaryScalarMatrix(this, constant(p1), p2)
     operator fun  invoke(p1 : ScalarExpr, p2 : MatrixExpr) : MatrixExpr =
-        AlgebraicBinaryScalarMatrix(this, p2.columns, p2.rows, p1, p2)
+        AlgebraicBinaryScalarMatrix(this, p1, p2)
     operator fun  invoke(p1 : MatrixExpr, p2 : MatrixExpr) : MatrixExpr =
-        AlgebraicBinaryMatrix(this, min(p1.columns, p2.columns), min(p1.rows, p2.rows), p1, p2)
+        AlgebraicBinaryMatrix(this, p1, p2)
     operator fun  invoke(p1 : MatrixExpr, p2 : Double) : MatrixExpr =
-        AlgebraicBinaryMatrixScalar(this, p1.columns, p1.rows, p1, constant(p2))
+        AlgebraicBinaryMatrixScalar(this, p1, constant(p2))
     operator fun  invoke(p1 : Double, p2 : ScalarExpr) : ScalarExpr = invoke(constant(p1), p2)
     operator fun invoke(p1: ScalarExpr, p2: Double): ScalarExpr = invoke(p1, constant(p2))
     operator fun invoke(p1: MatrixExpr, p2: SheetRange): MatrixExpr =
-        AlgebraicBinaryMatrixScalar(this, p1.columns, p1.rows, p1, CoerceScalar(p2))
+        AlgebraicBinaryMatrixScalar(this, p1, CoerceScalar(p2))
 
     fun type(left: AlgebraicType, right: AlgebraicType): AlgebraicType {
         return when {
@@ -110,50 +109,26 @@ data class AlgebraicBinaryScalar(
 
 data class AlgebraicBinaryMatrixScalar(
     val op: AlgebraicBinaryScalarFunction,
-    override val columns: Int,
-    override val rows: Int,
     val left: MatrixExpr,
     val right: ScalarExpr
 ) : MatrixExpr {
-    init {
-        track()
-    }
-    //override fun get(column: Int, row: Int) = AlgebraicBinaryScalar(op, left[column, row], right)
     override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = render()
 }
 
 data class AlgebraicBinaryScalarMatrix(
     val op: AlgebraicBinaryScalarFunction,
-    override val columns: Int,
-    override val rows: Int,
     val left: ScalarExpr,
     val right: MatrixExpr
 ) : MatrixExpr {
-    init {
-        track()
-    }
-
-    //override fun get(column: Int, row: Int) = AlgebraicBinaryScalar(op, left, right[column, row])
     override fun toString() = render()
 }
 
 data class AlgebraicBinaryMatrix(
     val op: AlgebraicBinaryScalarFunction,
-    override val columns: Int,
-    override val rows: Int,
     val left: MatrixExpr,
     val right: MatrixExpr
 ) : MatrixExpr {
-    init {
-        track()
-        assert(left.rows >= rows)
-        assert(left.columns >= columns)
-        assert(right.rows >= rows)
-        assert(right.columns >= columns)
-    }
-
-    //    override fun get(column: Int, row: Int) = AlgebraicBinaryScalar(op, left[column, row], right[column, row])
     override fun toString() = render()
     override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
 }
@@ -202,14 +177,6 @@ data class AlgebraicUnaryMatrix(
     val op: AlgebraicUnaryScalarFunction,
     val value: MatrixExpr
 ) : MatrixExpr {
-    init {
-        track()
-    }
-
-    override val columns get() = value.columns
-    override val rows get() = value.rows
-
-    //override fun get(column: Int, row: Int) = AlgebraicUnaryScalar(op, value[column, row])
     override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = render()
 }
@@ -376,10 +343,5 @@ data class AlgebraicDeferredDataMatrix(
     val right: AlgebraicExpr,
     val data: DataMatrix
 ) : MatrixExpr {
-    init { track() }
-    override val columns = data.columns
-    override val rows = data.rows
-
-    //override fun get(column: Int, row: Int) = data[column, row]
     override fun toString() = render()
 }

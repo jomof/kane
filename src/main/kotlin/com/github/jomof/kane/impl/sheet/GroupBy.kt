@@ -52,13 +52,15 @@ data class GroupBy(
 private fun Sheet.buildGrouping(builder: SheetBuilderImpl): GroupBy {
     val immediate = builder.getImmediateNamedExprs()
     val debuilderized = removeBuilderPrivateExpressions(immediate)
-    val names = debuilderized.map { (name, expr) -> expr.toNamed(Identifier.string(name)) }
+    val names = debuilderized.cells.map { (name, expr) -> expr.toNamed(Identifier.string(name)) }
     return GroupBy(this, names)
 }
 
 fun Sheet.groupOf(selector: SheetBuilder.() -> List<NamedExpr>): GroupBy {
     val builder = SheetBuilderImpl()
-    selector(builder as SheetBuilder).forEach { builder.add(it) }
+    selector(builder as SheetBuilder).forEach {
+        builder.add(it)
+    }
     return buildGrouping(builder)
 }
 

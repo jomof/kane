@@ -12,11 +12,5 @@ private fun Expr.removeBuilderPrivateExpressions(): Expr {
     }.rewrite(this)
 }
 
-fun removeBuilderPrivateExpressions(cells: Cells): Cells {
-    return cells
-        .map { (name, expr) -> name to expr.removeBuilderPrivateExpressions() }
-        .toCells()
-}
-
-fun Sheet.removeBuilderPrivateExpressions() = copy(cells = removeBuilderPrivateExpressions(cells))
+fun removeBuilderPrivateExpressions(sheet: Sheet) = sheet.removeBuilderPrivateExpressions() as Sheet
 

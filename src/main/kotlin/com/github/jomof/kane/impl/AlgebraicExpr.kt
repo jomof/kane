@@ -5,8 +5,7 @@ package com.github.jomof.kane.impl
 import com.github.jomof.kane.*
 import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.impl.functions.*
-import com.github.jomof.kane.impl.sheet.CoerceScalar
-import com.github.jomof.kane.impl.sheet.NamedSheetRangeExpr
+import com.github.jomof.kane.impl.sheet.*
 import com.github.jomof.kane.impl.types.AlgebraicType
 import com.github.jomof.kane.impl.types.KaneType
 import com.github.jomof.kane.impl.types.StringKaneType
@@ -111,30 +110,18 @@ data class MatrixVariable(
     val rows: Int,
     val initial: List<Double>
 ) : AlgebraicExpr {
-    init {
-        track()
-        assert(rows * columns == initial.size) {
-            "expected ${rows * columns} elements"
-        }
-    }
-
     operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = "matrixVariable(${columns}x$rows)"
 }
 
 data class NamedMatrixVariable(
     override val name: Id,
-    override val columns: Int,
+    val columns: Int,
     val initial: List<Double>
 ) : MatrixVariableExpr, NamedMatrixExpr {
-    init {
-        track()
-    }
-
-    override val rows: Int = initial.size / columns
-    //override fun get(column: Int, row: Int) = getMatrixElement(column, row)
     fun get(coordinate: Coordinate) = get(coordinate.column, coordinate.row)
     val elements get() = coordinates.map { get(it) }
+    val rows get() = initial.size / columns
     override fun toString() = render()
 }
 
@@ -157,15 +144,6 @@ data class NamedMatrix(
     override val name: Id,
     val matrix: MatrixExpr
 ) : NamedMatrixExpr {
-    init {
-        track()
-        Identifier.validate(name)
-    }
-
-    override val columns get() = matrix.columns
-    override val rows get() = matrix.rows
-    //override fun get(column: Int, row: Int) = matrix[column, row]
-
     override fun toString() = render()
 }
 
@@ -213,42 +191,14 @@ data class RetypeMatrix(
     val matrix: MatrixExpr,
     val type: AlgebraicType
 ) : MatrixExpr {
-    init {
-        track()
-    }
-
-    override val columns: Int get() = matrix.columns
-    override val rows: Int get() = matrix.rows
-    // override fun get(column: Int, row: Int) = RetypeScalar(matrix[column, row], type)
-
     override fun toString() = render()
 }
 
 data class DataMatrix(
-    override val columns: Int,
-    override val rows: Int,
+    val columns: Int,
+    val rows: Int,
     val elements: List<ScalarExpr>
 ) : MatrixExpr {
-    init {
-        track()
-        assert(columns * rows == elements.size) {
-            "found ${elements.size} elements but needed ${rows * columns} for $columns by $rows matrix"
-        }
-        assert(columns > 0)
-        assert(rows > 0)
-    }
-
-//    private fun coordinateToIndex(column: Int, row: Int) = row * columns + column
-//    override fun get(column: Int, row: Int) = run {
-//        assert(row >= 0)
-//        assert(row < rows) {
-//            "row $row was not less that $rows"
-//        }
-//        assert(column >= 0)
-//        assert(column < columns)
-//        elements[coordinateToIndex(column, row)]
-//    }
-
     override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = render()
 }
@@ -289,18 +239,6 @@ data class MatrixAssign(
     val left: NamedMatrixVariable,
     val right: MatrixExpr
 ) : Expr {
-    init {
-        track()
-        fun lm() = "matrix '${left.name}'"
-        fun rm() = if (right is NamedExpr) "matrix '${right.name}'" else "right matrix"
-        assert(left.rows == right.rows) {
-            "${lm()} columns ${left.rows} did not equal ${rm()} columns ${right.rows}"
-        }
-        assert(left.columns == right.columns) {
-            "${lm()} columns ${left.columns} did not equal ${rm()} columns ${right.columns}"
-        }
-    }
-
     operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
 }
 
@@ -317,32 +255,12 @@ data class NamedMatrixAssign(
     val left: NamedMatrixVariable,
     val right: MatrixExpr
 ) : NamedAlgebraicExpr {
-    init {
-        track()
-        fun lm() = "matrix '${left.name}'"
-        fun rm() = if (right is NamedExpr) "matrix '${right.name}'" else "right matrix"
-        assert(left.rows == right.rows) {
-            "${lm()} columns ${left.rows} did not equal ${rm()} columns ${right.rows}"
-        }
-        assert(left.columns == right.columns) {
-            "${lm()} columns ${left.columns} did not equal ${rm()} columns ${right.columns}"
-        }
-    }
-
     override fun toString() = render()
 }
 
 data class ScalarListExpr(
     val values: List<ScalarExpr>
 ) : ScalarExpr {
-    init {
-        values.forEach {
-            assert(it !is ScalarListExpr) {
-                "list of list?"
-            }
-        }
-    }
-
     override fun toString() = values.toString()
 }
 
@@ -716,6 +634,9 @@ fun Expr.render(entryPoint: Boolean = true, outerType: AlgebraicType? = null): S
         }
     return when (this) {
         is CoerceScalar -> value.self()
+        is CoerceMatrix -> value.self()
+        is SheetRangeExpr -> rangeRef.toString()
+        is SheetBuilderRange -> rangeRef.toString()
         is RetypeScalar -> scalar.render(entryPoint, outerType ?: this.type)
         is RetypeMatrix -> matrix.render(entryPoint, outerType ?: this.type)
         is Slot -> "\$$slot"
@@ -796,6 +717,11 @@ fun Expr.render(entryPoint: Boolean = true, outerType: AlgebraicType? = null): S
                 else -> "$name=${matrix.self()}"
             }
         }
+        is DiscreteUniformRandomVariable -> {
+            val min = values.minByOrNull { it } ?: 0.0
+            val max = values.maxByOrNull { it } ?: 0.0
+            return "random($min to $max)"
+        }
         is MatrixVariableElement -> "${matrix.name}[$column,$row]"
         is ConstantScalar -> (outerType ?: kaneDouble).render(value)
         is AlgebraicUnaryMatrixScalar -> "${op.meta.op}(${value.self()})"
@@ -813,6 +739,7 @@ fun Expr.render(entryPoint: Boolean = true, outerType: AlgebraicType? = null): S
             else -> "${op.meta.op}(${value.self()})"
         }
         is NamedMatrixVariable -> Identifier.string(name)
+        is ValueExpr<*> -> toString()
         is Tableau -> {
             val sb = StringBuilder()
             val sorted = children.sortedBy {
@@ -856,6 +783,6 @@ fun Expr.render(entryPoint: Boolean = true, outerType: AlgebraicType? = null): S
                 "$sb"
             }
         }
-        else -> "$this"
+        else -> error("$javaClass")
     }
 }

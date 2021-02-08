@@ -3,6 +3,7 @@
 package com.github.jomof.kane.impl.sheet
 
 import com.github.jomof.kane.Expr
+import com.github.jomof.kane.MatrixExpr
 import com.github.jomof.kane.ScalarExpr
 import com.github.jomof.kane.impl.*
 import com.github.jomof.kane.impl.types.KaneType
@@ -10,14 +11,14 @@ import kotlin.reflect.KProperty
 
 interface SheetBuilder {
 
-    fun cell(name: String) = SheetBuilderRange(this, cellNameToComputableCoordinate(name))
+    fun cell(name: String): ScalarExpr = CoerceScalar(SheetBuilderRange(this, cellNameToComputableCoordinate(name)))
 
     fun range(range: String): SheetBuilderRange {
         val parsed = parseRange(range)
         return SheetBuilderRange(this, parsed)
     }
 
-    fun column(range: String): SheetBuilderRange
+    fun column(range: String): MatrixExpr = CoerceMatrix(range(range))
     fun nameColumn(column: Int, name: Id)
     fun nameRow(row: Int, name: Id)
     fun nameRow(row: Int, name: List<Expr>)

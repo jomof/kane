@@ -17,7 +17,6 @@ internal fun Expr.visit(f: (expr: Expr) -> Unit) {
         is NamedValueExpr<*>,
         is SheetRangeExpr,
         is DiscreteUniformRandomVariable,
-        //is AlgebraicUnaryRangeStatistic,
         is NamedScalarVariable -> {
         }
         is NamedSheetRangeExpr -> range.visit(f)
@@ -47,6 +46,7 @@ internal fun Expr.visit(f: (expr: Expr) -> Unit) {
         is AlgebraicUnaryMatrix -> value.visit(f)
         is AlgebraicUnaryMatrixScalar -> value.visit(f)
         is CoerceScalar -> value.visit(f)
+        is CoerceMatrix -> value.visit(f)
         is RetypeScalar -> scalar.visit(f)
         is RetypeMatrix -> matrix.visit(f)
         is NamedScalar -> scalar.visit(f)

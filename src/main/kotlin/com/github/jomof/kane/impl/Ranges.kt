@@ -74,6 +74,14 @@ fun coordinatesOf(columns: Int, rows: Int) = sequence {
     }
 }.toList()
 
+fun coordinatesOf(pair: Pair<Int, Int>) = sequence {
+    for (row in 0 until pair.second) {
+        for (column in 0 until pair.first) {
+            yield(coordinate(column, row))
+        }
+    }
+}.toList()
+
 operator fun Coordinate.plus(right: Coordinate) = copy(column = column + right.column, row = row + right.row)
 
 sealed class ComputableIndex {

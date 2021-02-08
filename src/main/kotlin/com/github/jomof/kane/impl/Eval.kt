@@ -254,6 +254,17 @@ private fun Expr.expandSheetCells(sheet: Sheet, excludeVariables: Set<Id>): Expr
             return rewritten
         }
 
+        override fun rewrite(expr: CoerceMatrix): Expr = with(expr) {
+            val rewritten = rewrite(value)
+            if (rewritten === value) return this
+            return when (rewritten) {
+                is ScalarListExpr -> DataMatrix(1, rewritten.values.size, rewritten.values)
+                is ScalarExpr -> DataMatrix(1, 1, listOf(rewritten))
+                else ->
+                    error("${rewritten.javaClass}")
+            }
+        }
+
         override fun rewrite(expr: SheetRangeExpr): Expr = with(expr) {
             if (expr.rangeRef is CellRangeRef && excludeVariables.contains(expr.rangeRef.toCoordinate()))
                 return this
@@ -398,10 +409,11 @@ private fun Expr.evalGradualSingleSample(
         val reducedCoerceScalar = reduceCoerceScalar(reducedRetypeOfRetype)
 
         if (reducedCoerceScalar === last) {
-            if (this is NamedExpr && reducedCoerceScalar !is NamedExpr) {
-                return reducedCoerceScalar.toNamed(name)
+            if (last is CoerceMatrix) last = last.value
+            if (this is NamedExpr && last !is NamedExpr) {
+                last = last.toNamed(name)
             }
-            return reducedCoerceScalar
+            return last
         }
         last = reducedCoerceScalar
     }

@@ -17,9 +17,14 @@ fun Expr.replaceRelativeCellReferences(coordinate: Coordinate): Expr {
         }
 
         override fun rewrite(expr: NamedMatrix) = run {
-            val rebased = expr.matrix.self(com.github.jomof.kane.impl.Identifier.coordinate(expr.name))
-            if (rebased == expr.matrix) expr
-            else expr.copy(matrix = rebased)
+            when (expr.name) {
+                is Coordinate -> {
+                    val rebased = expr.matrix.self(expr.name)
+                    if (rebased == expr.matrix) expr
+                    else expr.copy(matrix = rebased)
+                }
+                else -> super.rewrite(expr)
+            }
         }
     }.rewrite(this)
 }

@@ -4,11 +4,8 @@ import com.github.jomof.kane.AlgebraicExpr
 import com.github.jomof.kane.MatrixExpr
 import com.github.jomof.kane.ScalarExpr
 import com.github.jomof.kane.get
-import com.github.jomof.kane.impl.BinaryOp
-import com.github.jomof.kane.impl.constant
+import com.github.jomof.kane.impl.*
 import com.github.jomof.kane.impl.functions.AlgebraicDeferredDataMatrix
-import com.github.jomof.kane.impl.matrixOf
-import com.github.jomof.kane.impl.repeated
 
 val STACK = BinaryOp(op = " stack ", precedence = 5, associative = true, infix = true)
 

@@ -23,7 +23,7 @@ private fun GroupBy.buildAggregation(builder: SheetBuilderImpl): Sheet {
             nameRow(row++, key)
         }
         val result = mutableListOf<NamedExpr>()
-        for ((name, expr) in debuilderized) {
+        for ((name, expr) in debuilderized.cells) {
             nameColumn(column, name)
             row = 0
             for ((_, sheet) in groupBy) {

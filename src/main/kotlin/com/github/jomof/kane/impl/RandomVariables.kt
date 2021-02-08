@@ -27,11 +27,7 @@ class DiscreteUniformRandomVariable(
 
     override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
 
-    override fun toString(): String {
-        val min = values.minByOrNull { it } ?: 0.0
-        val max = values.maxByOrNull { it } ?: 0.0
-        return "random($min to $max)"
-    }
+    override fun toString() = render()
 
     fun copy(values: List<Double> = this.values): Nothing =
         error("Shouldn't copy DiscreteUniformRandomVariable")

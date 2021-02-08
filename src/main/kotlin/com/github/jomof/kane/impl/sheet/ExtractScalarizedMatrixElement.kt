@@ -80,6 +80,7 @@ fun extractScalarizedMatrixElement(
             RetypeScalar(value, matrix.type)
         }
         is DataMatrix -> matrix[coordinate]
+        is CoerceMatrix -> matrix.getMatrixElement(coordinate.column, coordinate.row)
         else ->
             error("${matrix.javaClass}")
     }
@@ -89,7 +90,9 @@ fun extractScalarizedMatrixElement(
 fun Expr.slideScalarizedCellsRewritingVisitor(upperLeft: Coordinate, offset: Coordinate): Expr {
     val currentCell = upperLeft + offset
     return object : RewritingVisitor() {
-        override fun rewrite(expr: SheetRangeExpr): Expr {
+        override fun rewrite(coerce: CoerceScalar): Expr {
+            val expr = coerce.value
+            if (expr !is SheetRangeExpr) return super.rewrite(coerce)
             val result: SheetRangeExpr = with(expr) {
                 when (rangeRef) {
                     is CellRangeRef ->
@@ -147,7 +150,7 @@ fun Expr.slideScalarizedCellsRewritingVisitor(upperLeft: Coordinate, offset: Coo
                         TODO(rangeRef.javaClass.toString())
                 }
             }
-            return result
+            return CoerceScalar(result)
         }
     }.rewrite(this)
 }

@@ -1,10 +1,8 @@
 package com.github.jomof.kane.functions
 
 import com.github.jomof.kane.*
-import com.github.jomof.kane.impl.BinaryOp
-import com.github.jomof.kane.impl.NamedExpr
+import com.github.jomof.kane.impl.*
 import com.github.jomof.kane.impl.functions.AlgebraicDeferredDataMatrix
-import com.github.jomof.kane.impl.matrixOf
 
 
 val CROSS by BinaryOp(op = " cross ", precedence = 5, associative = false, infix = true)

@@ -184,10 +184,10 @@ class SheetTest {
         }
         sheet.assertString(
             """
-          A   B   columnC [C] 
-          - ----- ----------- 
-        1 0                   
-        2   C1*D2            
+          A   B   columnC [C] columnD [D] 
+          - ----- ----------- ----------- 
+        1 0                               
+        2   C1*D2                                  
         """.trimIndent()
         )
     }
@@ -509,7 +509,7 @@ class SheetTest {
         ).copy {
             val cats by column("cats")
             val dogs by column("dogs")
-            val sum by columnOf(2) { cats + dogs }
+            val sum by cats + dogs
             listOf(sum)
         }
         retire.assertString(
@@ -875,19 +875,19 @@ class SheetTest {
         println(sheet)
         sheet.eval().assertString(
             """
-              weight squared difference 
-              ------ ------- ---------- 
-            1    600   42436       -206 
-            2    470    5776        -76 
-            3    170   50176        224 
-            4    430    1296        -36 
-            5    300    8836         94 
-            mean=394
-            stdev=164.71187
-            stdevExpr=164.71187
-            sumSquared=108520
-            variance=27130
-            varianceExpr=27130  
+          weight difference squared 
+          ------ ---------- ------- 
+        1    600       -206   42436 
+        2    470        -76    5776 
+        3    170        224   50176 
+        4    430        -36    1296 
+        5    300         94    8836 
+        mean=394
+        stdev=164.71187
+        stdevExpr=164.71187
+        sumSquared=108520
+        variance=27130
+        varianceExpr=27130
         """.trimIndent()
         )
     }

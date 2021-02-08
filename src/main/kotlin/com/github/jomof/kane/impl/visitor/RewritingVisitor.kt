@@ -20,6 +20,12 @@ internal open class RewritingVisitor {
         else copy(value = rewritten)
     }
 
+    open fun rewrite(expr: CoerceMatrix): Expr = with(expr) {
+        val rewritten = rewrite(value)
+        return if (rewritten === value) this
+        else copy(value = rewritten)
+    }
+
     open fun rewrite(expr: RetypeScalar): Expr = with(expr) {
         val rewritten = scalar(scalar)
         return if (rewritten === scalar) this
@@ -247,6 +253,7 @@ internal open class RewritingVisitor {
                 is AlgebraicUnaryScalar -> rewrite(expr)
                 is AlgebraicUnaryScalarStatistic -> rewrite(expr)
                 is CoerceScalar -> rewrite(expr)
+                is CoerceMatrix -> rewrite(expr)
                 is DataMatrix -> rewrite(expr)
                 is AlgebraicDeferredDataMatrix -> rewrite(expr)
                 is NamedScalar -> rewrite(expr)
