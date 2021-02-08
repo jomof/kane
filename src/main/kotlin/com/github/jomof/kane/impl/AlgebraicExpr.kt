@@ -132,15 +132,7 @@ data class NamedMatrixVariable(
     }
 
     override val rows: Int = initial.size / columns
-    private fun coordinateToIndex(column: Int, row: Int) = row * columns + column
-    override fun get(column: Int, row: Int) = run {
-        assert(column >= 0)
-        assert(column < columns) { "$column greater than columns $columns of matrix $name" }
-        assert(row >= 0)
-        assert(row < rows) { "$row greater than columns $rows of matrix $name" }
-        MatrixVariableElement(column, row, this, initial[coordinateToIndex(column, row)])
-    }
-
+    //override fun get(column: Int, row: Int) = getMatrixElement(column, row)
     fun get(coordinate: Coordinate) = get(coordinate.column, coordinate.row)
     val elements get() = coordinates.map { get(it) }
     override fun toString() = render()
@@ -172,7 +164,7 @@ data class NamedMatrix(
 
     override val columns get() = matrix.columns
     override val rows get() = matrix.rows
-    override fun get(column: Int, row: Int) = matrix[column, row]
+    //override fun get(column: Int, row: Int) = matrix[column, row]
 
     override fun toString() = render()
 }
@@ -227,7 +219,7 @@ data class RetypeMatrix(
 
     override val columns: Int get() = matrix.columns
     override val rows: Int get() = matrix.rows
-    override fun get(column: Int, row: Int) = RetypeScalar(matrix[column, row], type)
+    // override fun get(column: Int, row: Int) = RetypeScalar(matrix[column, row], type)
 
     override fun toString() = render()
 }
@@ -246,16 +238,16 @@ data class DataMatrix(
         assert(rows > 0)
     }
 
-    private fun coordinateToIndex(column: Int, row: Int) = row * columns + column
-    override fun get(column: Int, row: Int) = run {
-        assert(row >= 0)
-        assert(row < rows) {
-            "row $row was not less that $rows"
-        }
-        assert(column >= 0)
-        assert(column < columns)
-        elements[coordinateToIndex(column, row)]
-    }
+//    private fun coordinateToIndex(column: Int, row: Int) = row * columns + column
+//    override fun get(column: Int, row: Int) = run {
+//        assert(row >= 0)
+//        assert(row < rows) {
+//            "row $row was not less that $rows"
+//        }
+//        assert(column >= 0)
+//        assert(column < columns)
+//        elements[coordinateToIndex(column, row)]
+//    }
 
     override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = render()

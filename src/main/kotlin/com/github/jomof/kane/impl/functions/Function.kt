@@ -118,7 +118,7 @@ data class AlgebraicBinaryMatrixScalar(
     init {
         track()
     }
-    override fun get(column: Int, row: Int) = AlgebraicBinaryScalar(op, left[column, row], right)
+    //override fun get(column: Int, row: Int) = AlgebraicBinaryScalar(op, left[column, row], right)
     override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = render()
 }
@@ -134,7 +134,7 @@ data class AlgebraicBinaryScalarMatrix(
         track()
     }
 
-    override fun get(column: Int, row: Int) = AlgebraicBinaryScalar(op, left, right[column, row])
+    //override fun get(column: Int, row: Int) = AlgebraicBinaryScalar(op, left, right[column, row])
     override fun toString() = render()
 }
 
@@ -153,7 +153,7 @@ data class AlgebraicBinaryMatrix(
         assert(right.columns >= columns)
     }
 
-    override fun get(column: Int, row: Int) = AlgebraicBinaryScalar(op, left[column, row], right[column, row])
+    //    override fun get(column: Int, row: Int) = AlgebraicBinaryScalar(op, left[column, row], right[column, row])
     override fun toString() = render()
     override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
 }
@@ -208,7 +208,8 @@ data class AlgebraicUnaryMatrix(
 
     override val columns get() = value.columns
     override val rows get() = value.rows
-    override fun get(column: Int, row: Int) = AlgebraicUnaryScalar(op, value[column, row])
+
+    //override fun get(column: Int, row: Int) = AlgebraicUnaryScalar(op, value[column, row])
     override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = render()
 }
@@ -378,6 +379,7 @@ data class AlgebraicDeferredDataMatrix(
     init { track() }
     override val columns = data.columns
     override val rows = data.rows
-    override fun get(column: Int, row: Int) = data[column, row]
+
+    //override fun get(column: Int, row: Int) = data[column, row]
     override fun toString() = render()
 }

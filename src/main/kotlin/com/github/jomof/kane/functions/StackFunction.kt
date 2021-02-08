@@ -3,6 +3,7 @@ package com.github.jomof.kane.functions
 import com.github.jomof.kane.AlgebraicExpr
 import com.github.jomof.kane.MatrixExpr
 import com.github.jomof.kane.ScalarExpr
+import com.github.jomof.kane.get
 import com.github.jomof.kane.impl.BinaryOp
 import com.github.jomof.kane.impl.constant
 import com.github.jomof.kane.impl.functions.AlgebraicDeferredDataMatrix
