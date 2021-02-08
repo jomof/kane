@@ -5,7 +5,7 @@
 # convertNamedColumnsToColumnRanges  
 [jvm]  
 Content  
-fun [SheetBuilderImpl](-sheet-builder-impl/index.md).[convertNamedColumnsToColumnRanges](convert-named-columns-to-column-ranges.md)(cells: [Cells](-cells/index.md)): [Cells](-cells/index.md)  
+fun [convertNamedColumnsToColumnRanges](convert-named-columns-to-column-ranges.md)(sheet: [Sheet](-sheet/index.md)): [Sheet](-sheet/index.md)  
 
 
 

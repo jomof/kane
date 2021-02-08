@@ -5,7 +5,7 @@
 # column  
 [jvm]  
 Content  
-abstract fun [column](column.md)(range: [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)): [SheetBuilderRange](../-sheet-builder-range/index.md)  
+open fun [column](column.md)(range: [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)): [MatrixExpr](../../com.github.jomof.kane/-matrix-expr/index.md)  
 
 
 

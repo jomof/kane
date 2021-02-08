@@ -5,7 +5,8 @@
 # replaceNamesWithCellReferences  
 [jvm]  
 Content  
-fun [Expr](../com.github.jomof.kane/-expr/index.md).[replaceNamesWithCellReferences](replace-names-with-cell-references.md)(excluding: [Id](../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-656493898)): [Expr](../com.github.jomof.kane/-expr/index.md)  
+fun [Expr](../com.github.jomof.kane/-expr/index.md).[replaceNamesWithCellReferences](replace-names-with-cell-references.md)(excluding: [Id](../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-35300016)): [Expr](../com.github.jomof.kane/-expr/index.md)  
+fun [replaceNamesWithCellReferences](replace-names-with-cell-references.md)(sheet: [Sheet](-sheet/index.md)): [Sheet](-sheet/index.md)  
 
 
 

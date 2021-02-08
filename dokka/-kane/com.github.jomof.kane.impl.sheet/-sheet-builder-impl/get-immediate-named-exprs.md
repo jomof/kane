@@ -5,7 +5,7 @@
 # getImmediateNamedExprs  
 [jvm]  
 Content  
-fun [getImmediateNamedExprs](get-immediate-named-exprs.md)(): [Cells](../-cells/index.md)  
+fun [getImmediateNamedExprs](get-immediate-named-exprs.md)(): [Sheet](../-sheet/index.md)  
 
 
 

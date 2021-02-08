@@ -5,7 +5,7 @@
 # cell  
 [jvm]  
 Content  
-open fun [cell](cell.md)(name: [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)): [SheetBuilderRange](../-sheet-builder-range/index.md)  
+open fun [cell](cell.md)(name: [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)): [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md)  
 
 
 

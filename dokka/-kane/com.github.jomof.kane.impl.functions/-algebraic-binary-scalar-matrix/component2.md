@@ -5,7 +5,7 @@
 # component2  
 [jvm]  
 Content  
-operator fun [component2](component2.md)(): [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)  
+operator fun [component2](component2.md)(): [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md)  
 
 
 

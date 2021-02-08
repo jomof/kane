@@ -5,7 +5,7 @@
 # scalarizeRanges  
 [jvm]  
 Content  
-fun [SheetBuilderImpl](-sheet-builder-impl/index.md).[scalarizeRanges](scalarize-ranges.md)(cells: [Cells](-cells/index.md)): [Cells](-cells/index.md)  
+fun [SheetBuilderImpl](-sheet-builder-impl/index.md).[scalarizeRanges](scalarize-ranges.md)(sheet: [Sheet](-sheet/index.md)): [Sheet](-sheet/index.md)  
 
 
 

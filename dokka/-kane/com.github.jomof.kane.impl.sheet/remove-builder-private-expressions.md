@@ -5,8 +5,7 @@
 # removeBuilderPrivateExpressions  
 [jvm]  
 Content  
-fun [removeBuilderPrivateExpressions](remove-builder-private-expressions.md)(cells: [Cells](-cells/index.md)): [Cells](-cells/index.md)  
-fun [Sheet](-sheet/index.md).[removeBuilderPrivateExpressions](remove-builder-private-expressions.md)(): [Sheet](-sheet/index.md)  
+fun [removeBuilderPrivateExpressions](remove-builder-private-expressions.md)(sheet: [Sheet](-sheet/index.md)): [Sheet](-sheet/index.md)  
 
 
 
