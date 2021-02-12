@@ -316,7 +316,7 @@ class SheetTest {
 
     @Test
     fun `recursive sheet`() {
-        val sheet = sheetOf2 {
+        val sheet = sheetOf {
             val a1 by down
             val a2 by up + 1
             listOf(a1, a2)
@@ -591,8 +591,8 @@ class SheetTest {
 
     @Test
     fun `division table using fixed column and rows`() {
-        val sheet = sheetOf2 {
-            val b1 by rowOf(10) { it }
+        val sheet = sheetOf {
+            val b1 by (0 until 10).toRow()
             val a2 by 0 until 10
             val b2 by matrixOf(10, 10) {
                 cell("C$1") / cell("\$A3")
@@ -637,7 +637,7 @@ class SheetTest {
 
     @Test
     fun `sum of relative references`() {
-        val sheet = sheetOf2 {
+        val sheet = sheetOf {
             val a1 by listOf(1.0, 1.0)
             val b1 by listOf(left + 1.0, left + 2.0)
             val b3 by sum(b1)
@@ -739,7 +739,7 @@ class SheetTest {
 
     @Test
     fun softmax() {
-        val sheet = sheetOf2 {
+        val sheet = sheetOf {
             val a1 by listOf(1.0, 1.0)
             val b1 by listOf(left + 1.0, left + 2.0)
             val c1 by softmax(b1)
@@ -820,9 +820,9 @@ class SheetTest {
             val b2 by rowOf("x", 92.2, "y", 102.2)
             val b3 by listOf("m", 11.2, "b", 7.1)
             val c3 by rowOf(dollars(1.11), dollars(1.23))
-            val c4 by rowOf(11.0 to 13.0)
+            val c4 by (11..13).toRow()
             val b7 by constant(1492.0)
-            val c5 by rowOf((1..4).map { logit(b7) })
+            val c5 by (1..4).map { logit(b7) }.toRow()
             listOf(a2, b1, b2, b3, c3, c4, c5)
         }
         println(sheet)

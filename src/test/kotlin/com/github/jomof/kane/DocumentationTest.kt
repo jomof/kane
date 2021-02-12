@@ -14,7 +14,7 @@ class DocumentationTest {
          * Unlike, for example, a Pandas dataframe a Kane sheet can hold formulas in cells not just data.
          * Here"s an example of constructing a very simple Kane sheet.
          */
-        val sheet = sheetOf2 {
+        val sheet = sheetOf {
             val a1 by 1.0
             val a2 by a1 + a1
             listOf(a2)

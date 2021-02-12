@@ -5,7 +5,6 @@ import com.github.jomof.kane.functions.sp500
 import com.github.jomof.kane.functions.unaryMinus
 import com.github.jomof.kane.impl.constant
 import com.github.jomof.kane.impl.randomOf
-import com.github.jomof.kane.impl.rowOf
 import org.junit.Test
 
 class GradualEvaluatorTest {
