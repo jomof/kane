@@ -9,7 +9,6 @@ import com.github.jomof.kane.impl.types.KaneType
 import com.github.jomof.kane.impl.types.kaneType
 import kotlin.reflect.KProperty
 
-
 data class Tiling<E : Any>(
     val columns: Int,
     val rows: Int,
@@ -38,38 +37,6 @@ data class NamedTiling<E:Any>(
     val tiling: Tiling<E>
 ) : NamedExpr, TypedExpr<E> {
     override val type get() = tiling.type
-}
-
-fun columnOf(vararg elements : Double) : MatrixExpr = matrixOf(1, elements.size, *elements)
-fun columnOf(vararg elements : ScalarExpr) : MatrixExpr = matrixOf(1, elements.size, *elements)
-fun columnOf(elements: List<ScalarExpr>): MatrixExpr = matrixOf(1, elements.size, *(elements.toTypedArray()))
-fun columnOf(count: Int, init: SheetBuilderImpl.(Int) -> Any): MatrixExpr {
-    val sb = SheetBuilderImpl()
-    val elements = (0 until count)
-        .map {
-            convertAnyToScalarExpr(init(sb, it))
-        }
-    return matrixOf(1, count, *elements.toTypedArray())
-}
-
-fun columnOf(range: Pair<Double, Double>, step: Double = 1.0): MatrixExpr {
-    val (start, stop) = range
-    var current = start
-    val elements = mutableListOf<Double>()
-    while (current < stop + 1) {
-        elements += current
-        current += step
-    }
-    return matrixOf(1, elements.size, elements)
-}
-
-inline fun <reified E : Any> columnOf(vararg elements: E): Tiling<E> {
-    val valueType = E::class.java.kaneType
-    return Tiling(1, elements.size, elements.toList(), valueType)
-}
-
-fun columnOf(elements: List<String>): Tiling<String> {
-    return Tiling(1, elements.size, elements.toList(), String::class.java.kaneType)
 }
 
 fun rowOf(vararg elements : Double) : MatrixExpr = matrixOf(elements.size, 1, *elements)

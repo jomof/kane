@@ -33,7 +33,7 @@ data class GroupBy(
             keySelector.forEachIndexed { index, expr ->
                 nameRow(index + 1, expr.name)
             }
-            val a1 by columnOf(keySelector.map { "${it.toUnnamed()}" })
+            val a1 by keySelector.map { "${it.toUnnamed()}" }
             listOf(a1)
         }
             .showExcelColumnTags(false)

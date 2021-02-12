@@ -11,7 +11,8 @@ import kotlin.reflect.KProperty
 
 interface SheetBuilder {
 
-    fun cell(name: String): ScalarExpr = CoerceScalar(SheetRangeExpr(cellNameToComputableCoordinate(name)))
+    fun cell(name: String): ScalarExpr =
+        CoerceScalar(SheetRangeExpr(cellNameToComputableCoordinate(name)))
 
     fun range(range: String): MatrixExpr {
         val parsed = parseRange(range)

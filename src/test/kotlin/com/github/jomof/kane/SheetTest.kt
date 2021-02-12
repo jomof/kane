@@ -331,12 +331,23 @@ class SheetTest {
     @Test
     fun `columnOf sheet`() {
         val sheet = sheetOf {
-            val a1 by columnOf(2020, 2021, 2022, 2023)
-            val b2 by columnOf(2020, 2021, 2022, 2023)
-            val c3 by columnOf(up + 1, up + 2, up + 3, up + 4)
+            val a1 by listOf(2020, 2021, 2022, 2023)
+            val b2 by listOf(2020, 2021, 2022, 2023)
+            val c3 by listOf(up + 1, up + 2, up + 3, up + 4)
             listOf(a1, b2, c3)
         }
-        println(sheet)
+        sheet.assertString(
+            """
+                A    B    C  
+              ---- ---- ---- 
+            1 2020           
+            2 2021 2020      
+            3 2022 2021 C2+1 
+            4 2023 2022 C3+2 
+            5      2023 C4+3 
+            6           C5+4 
+        """.trimIndent()
+        )
     }
 
     @Test
@@ -383,7 +394,7 @@ class SheetTest {
             val a2 by constant("b")
             val b2 by constant(0.0)
             val a3 by constant("YEAR")
-            val a4 by columnOf(startYear.toDouble() to endYear.toDouble())
+            val a4 by startYear..endYear
             val b3 by constant("Shiller PE")
             val b4 by shillerPE(a4)
             val c3 by constant("S&P 500")
@@ -582,7 +593,7 @@ class SheetTest {
     fun `division table using fixed column and rows`() {
         val sheet = sheetOf2 {
             val b1 by rowOf(10) { it }
-            val a2 by columnOf(10) { it }
+            val a2 by 0 until 10
             val b2 by matrixOf(10, 10) {
                 cell("C$1") / cell("\$A3")
             }
@@ -627,8 +638,8 @@ class SheetTest {
     @Test
     fun `sum of relative references`() {
         val sheet = sheetOf2 {
-            val a1 by columnOf(1.0, 1.0)
-            val b1 by columnOf(left + 1.0, left + 2.0)
+            val a1 by listOf(1.0, 1.0)
+            val b1 by listOf(left + 1.0, left + 2.0)
             val b3 by sum(b1)
             listOf(a1, b1, b3)
         }
@@ -683,7 +694,7 @@ class SheetTest {
     @Test
     fun `sheet with named tiling scalarizes`() {
         val sheet = sheetOf {
-            val tiling by columnOf("a", "b", "c")
+            val tiling by listOf("a", "b", "c")
             listOf(tiling)
         }
         sheet.assertString(
@@ -700,7 +711,7 @@ class SheetTest {
     @Test
     fun `second element of columnOf`() {
         val sheet = sheetOf {
-            val a1 by columnOf(1.0, 2.0)
+            val a1 by listOf(1.0, 2.0)
             listOf(a1)
         }
         println(sheet)
@@ -729,8 +740,8 @@ class SheetTest {
     @Test
     fun softmax() {
         val sheet = sheetOf2 {
-            val a1 by columnOf(1.0, 1.0)
-            val b1 by columnOf(left + 1.0, left + 2.0)
+            val a1 by listOf(1.0, 1.0)
+            val b1 by listOf(left + 1.0, left + 2.0)
             val c1 by softmax(b1)
             listOf(a1, b1, c1)
         }
@@ -761,8 +772,8 @@ class SheetTest {
     @Test
     fun `transitive reference`() {
         val sheet = sheetOf {
-            val a1 by columnOf(0.2, 1.3)
-            val b1 by columnOf((left(1) + 0.0) * left(1), (left(1) + 0.0) * left(1))
+            val a1 by listOf(0.2, 1.3)
+            val b1 by listOf((left(1) + 0.0) * left(1), (left(1) + 0.0) * left(1))
             val d1 by softmax(b1, constant(0.1))
             val e1 by softmin(b1, constant(0.1))
             val b3 by sum(b1)
@@ -775,8 +786,8 @@ class SheetTest {
     @Test
     fun `summation of inline expression`() {
         val sheet = sheetOf {
-            val a1 by columnOf(0.2, 1.3)
-            val b1 by columnOf((left(1) + 0.0) * left(1), (left(1) + 0.0) * left(1))
+            val a1 by listOf(0.2, 1.3)
+            val b1 by listOf((left(1) + 0.0) * left(1), (left(1) + 0.0) * left(1))
             val d1 by softmax(10_000.00 - b1)
             val b3 by sum(b1)
             listOf(d1, b3, b1, a1)
@@ -788,7 +799,7 @@ class SheetTest {
     @Test
     fun `simplest tiling operations`() {
         val sheet = sheetOf {
-            val a1 by columnOf("x", 92.2)
+            val a1 by listOf("x", 92.2)
             listOf(a1)
         }
         sheet.assertString(
@@ -804,10 +815,10 @@ class SheetTest {
     @Test
     fun `tiling operations`() {
         val sheet = sheetOf {
-            val a2 by columnOf("three", "blind", "mice")
+            val a2 by listOf("three", "blind", "mice")
             val b1 by rowOf("see", "how", "they", "run")
             val b2 by rowOf("x", 92.2, "y", 102.2)
-            val b3 by columnOf("m", 11.2, "b", 7.1)
+            val b3 by listOf("m", 11.2, "b", 7.1)
             val c3 by rowOf(dollars(1.11), dollars(1.23))
             val c4 by rowOf(11.0 to 13.0)
             val b7 by constant(1492.0)
@@ -831,7 +842,7 @@ class SheetTest {
     @Test
     fun `statistical functions`() {
         val sheet = sheetOf {
-            val a1 by columnOf(7.0 to 12.0)
+            val a1 by 7..12
             val d1 by "mean"
             val e1 by mean(a1)
             val d2 by "stdev"
@@ -1197,7 +1208,7 @@ class SheetTest {
     fun `repro named matrix issue`() {
         val sheet = sheetOf {
             val a1 by 0.0
-            val b1 by columnOf(left(1) * left(1))
+            val b1 by listOf(left(1) * left(1))
             val a2 by cv(b1)
             listOf(a1, b1, a2)
         }
@@ -1222,7 +1233,7 @@ class SheetTest {
             val a2 by constant("b")
             val b2 by constant(0.0)
             val a3 by constant("YEAR")
-            val a4 by columnOf(startYear.toDouble() to endYear.toDouble())
+            val a4 by startYear..endYear
             val b3 by constant("Shiller PE")
             val b4 by shillerPE(a4)
             val c3 by constant("S&P 500")
@@ -1233,18 +1244,18 @@ class SheetTest {
             val d2 by stdev(d4)
 
             val g3 by constant("stock(%)")
-            val g4 by columnOf((0 until totalYears - rollingWindow).map {
+            val g4 by (0 until totalYears - rollingWindow).map {
                 logit(b1 / left(5) + b2)
-            })
+            }
             val h3 by constant("bond(%)")
-            val h4 by columnOf((0 until totalYears - rollingWindow).map { 1.0 - left })
+            val h4 by (0 until totalYears - rollingWindow).map { 1.0 - left }
 
             val compositeCumulative = (0 until rollingWindow).fold(dollars(1.00)) { prior, current ->
                 prior * (1.0 + left(6).down(current)) * left(2).down(current) +
                         prior * (1.0 + left(5).down(current)) * left(1).down(current)
             }
             val i3 by constant("Mix($)")
-            val i4 by columnOf((0 until totalYears - rollingWindow * 2).map { compositeCumulative })
+            val i4 by (0 until totalYears - rollingWindow * 2).map { compositeCumulative }
             val i2 by cv(i4)
 
             val i1 by constant("error")
@@ -1274,7 +1285,7 @@ class SheetTest {
     @Test
     fun `repro matrix out of range issue`() {
         val retire = sheetOf {
-            val a by columnOf(2) { 1.0 }
+            val a by listOf(1.0, 1.0)
             val b by a * (1.0 stack a * up)
             listOf(a, b)
         }
@@ -1299,7 +1310,7 @@ class SheetTest {
     @Test
     fun `repro percent type propagates`() {
         val retire = sheetOf {
-            val years by columnOf(1) { it }
+            val years by listOf(1)
             val preTax by dollars(1) + dollars(1) stack (years + up)
             val total by preTax + preTax
             val preTaxRatio by percent(preTax / total)
@@ -1331,7 +1342,7 @@ class SheetTest {
 
         val retire = sheetOf {
             val equit by percent(0.7)
-            val years by columnOf(allYears) { constant(start + it) }
+            val years by (0 until allYears).map { start + it }
             val j by years - 1969
             val modelYear by years - start + modelStartYear
             val retired by logit(steepness * ((years - 0.5) - retirementYear))

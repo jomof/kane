@@ -93,16 +93,16 @@ val count: AggregatableFunction = countFunc
 fun count(list: List<Double>): Double = countFunc(list)
 fun count(vararg values: Double): Double = countFunc(values)
 fun count(matrix: MatrixExpr): ScalarExpr = countFunc(matrix)
-fun count(sheet: Sheet) : Sheet = countFunc(sheet)
-fun count(groupBy: GroupBy) : Sheet = countFunc(groupBy)
-fun count(algebraic : AlgebraicExpr) : ScalarExpr = countFunc(algebraic)
-fun count(range : SheetRange) : ScalarExpr = countFunc(range)
-fun count(expr : Expr) : Expr = countFunc(expr)
+fun count(sheet: Sheet): Sheet = countFunc(sheet)
+fun count(groupBy: GroupBy): Sheet = countFunc(groupBy)
+fun count(algebraic: AlgebraicExpr): ScalarExpr = countFunc(algebraic)
+fun count(range: SheetRange): ScalarExpr = countFunc(range)
+fun count(expr: Expr): Expr = countFunc(expr)
 
 // typesafe nans
 private val nansFunc = NansFunction()
-val nans : AggregatableFunction = nansFunc
-fun nans(list : List<Double>) : Double = nansFunc(list)
+val nans: AggregatableFunction = nansFunc
+fun nans(list: List<Double>): Double = nansFunc(list)
 fun nans(vararg values : Double) : Double = nansFunc(values)
 fun nans(matrix : MatrixExpr) : ScalarExpr = nansFunc(matrix)
 fun nans(sheet: Sheet) : Sheet = nansFunc(sheet)

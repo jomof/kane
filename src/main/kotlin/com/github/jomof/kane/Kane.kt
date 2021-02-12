@@ -1,6 +1,5 @@
 package com.github.jomof.kane
 
-import com.github.jomof.kane.impl.columnOf
 import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalarStatisticFunction
 import com.github.jomof.kane.impl.sheet.Sheet
 import com.github.jomof.kane.impl.sheet.possibleDataFormats
@@ -18,8 +17,8 @@ class Kane {
         val dataFormats: Sheet = sheetOf {
             nameColumn(0, "format")
             nameColumn(1, "type")
-            val a1 by columnOf(possibleDataFormats.map { it.toString() })
-            val b1 by columnOf(possibleDataFormats.map { it.type.simpleName })
+            val a1 by possibleDataFormats.map { it.toString() }
+            val b1 by possibleDataFormats.map { it.type.simpleName }
             listOf(a1, b1)
         }.showExcelColumnTags(false).showRowAndColumnForSingleCell(true)
 
