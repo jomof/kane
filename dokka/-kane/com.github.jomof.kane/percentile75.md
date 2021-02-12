@@ -5,8 +5,6 @@
 # percentile75  
 [jvm]  
 Content  
-fun [percentile75](percentile75.md)(list: [List](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)<[ScalarExpr](-scalar-expr/index.md)>): [ScalarExpr](-scalar-expr/index.md)  
-fun [percentile75](percentile75.md)(vararg values: [ScalarExpr](-scalar-expr/index.md)): [ScalarExpr](-scalar-expr/index.md)  
 fun [percentile75](percentile75.md)(list: [List](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)<[Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)>): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)  
 fun [percentile75](percentile75.md)(vararg values: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)  
 fun [percentile75](percentile75.md)(matrix: [MatrixExpr](-matrix-expr/index.md)): [ScalarExpr](-scalar-expr/index.md)  

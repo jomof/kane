@@ -5,8 +5,6 @@
 # sum  
 [jvm]  
 Content  
-fun [sum](sum.md)(list: [List](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)<[ScalarExpr](-scalar-expr/index.md)>): [ScalarExpr](-scalar-expr/index.md)  
-fun [sum](sum.md)(vararg values: [ScalarExpr](-scalar-expr/index.md)): [ScalarExpr](-scalar-expr/index.md)  
 fun [sum](sum.md)(list: [List](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)<[Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)>): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)  
 fun [sum](sum.md)(vararg values: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)  
 fun [sum](sum.md)(matrix: [MatrixExpr](-matrix-expr/index.md)): [ScalarExpr](-scalar-expr/index.md)  

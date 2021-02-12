@@ -5,8 +5,6 @@
 # cv  
 [jvm]  
 Content  
-fun [cv](cv.md)(list: [List](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)<[ScalarExpr](-scalar-expr/index.md)>): [ScalarExpr](-scalar-expr/index.md)  
-fun [cv](cv.md)(vararg values: [ScalarExpr](-scalar-expr/index.md)): [ScalarExpr](-scalar-expr/index.md)  
 fun [cv](cv.md)(list: [List](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)<[Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)>): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)  
 fun [cv](cv.md)(vararg values: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)  
 fun [cv](cv.md)(matrix: [MatrixExpr](-matrix-expr/index.md)): [ScalarExpr](-scalar-expr/index.md)  
