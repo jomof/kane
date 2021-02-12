@@ -58,7 +58,6 @@ internal fun Expr.visit(f: (expr: Expr) -> Unit) {
         is NamedMatrixAssign -> right.visit(f)
         is NamedMatrix -> matrix.visit(f)
         is GroupBy -> sheet.visit(f)
-        is ScalarListExpr -> values.forEach { it.visit(f) }
         is DataMatrix -> elements.forEach { it.visit(f) }
         is AlgebraicDeferredDataMatrix -> {
             left.visit(f)

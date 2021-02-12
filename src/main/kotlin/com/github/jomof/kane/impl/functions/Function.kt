@@ -246,7 +246,6 @@ interface AlgebraicUnaryScalarStatisticFunction : AggregatableFunction {
     fun reduceArithmetic(value: Expr) = when (value) {
         is ScalarStatistic -> reduceArithmetic(value)
         is MatrixExpr -> reduceArithmetic(value)
-        is ScalarListExpr -> reduceArithmetic(value.values)
         is ScalarExpr -> reduceArithmetic(listOf(value))
         else ->
             error("${value.javaClass}")

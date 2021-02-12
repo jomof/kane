@@ -40,9 +40,6 @@ private class ReduceAlgebraicUnaryScalar : RewritingVisitor() {
     override fun rewrite(expr: AlgebraicUnaryScalar): Expr {
         return when (val sub = super.rewrite(expr)) {
             is AlgebraicUnaryScalar -> when (sub.value) {
-                is ScalarListExpr -> {
-                    sub.value.copy(sub.value.values.map { sub.copy(it) })
-                }
                 is RetypeScalar -> {
                     val reduced = sub.op.reduceArithmetic(sub.value)
                     if (reduced == null) sub
@@ -61,7 +58,6 @@ private class ReduceAlgebraicUnaryScalar : RewritingVisitor() {
                 else ->
                     error("${scalar.value.javaClass}")
             }
-            is ScalarListExpr -> scalar.copy(scalar.values.map { expr.copy(scalar = it) })
             is ConstantScalar ->
                 if (expr.scalar === scalar) return expr
                 else expr.copy(scalar = scalar)
@@ -102,7 +98,6 @@ private val reduceAlgebraicBinaryScalarStatistic = object : RewritingVisitor() {
 
         return when {
             left is ScalarStatistic -> op.reduceArithmetic(left, right)
-            left is ScalarListExpr -> op.reduceArithmetic(left.values, right) ?: expr
             left is NamedScalar && left.scalar is ScalarStatistic -> op.reduceArithmetic(left.scalar, right)
             left is RetypeScalar && left.scalar is ScalarStatistic -> {
                 val result = left.copy(scalar = op.reduceArithmetic(left.scalar, right))
@@ -268,7 +263,6 @@ private fun Expr.expandSheetCells(sheet: Sheet, excludeVariables: Set<Id>): Expr
             val rewritten = rewrite(value)
             if (rewritten === value) return this
             return when (rewritten) {
-                is ScalarListExpr -> DataMatrix(1, rewritten.values.size, rewritten.values)
                 is ScalarExpr -> DataMatrix(1, 1, listOf(rewritten))
                 is DataMatrix -> rewritten
                 else ->
@@ -377,9 +371,6 @@ private fun Expr.accumulateStatistics(incoming: Expr) {
             (elements zip incoming.elements).forEach { (left, incoming) -> left.accumulateStatistics(incoming) }
         }
         this is ValueExpr<*> && incoming is ValueExpr<*> -> {
-        }
-        this is ScalarListExpr && incoming is ScalarListExpr -> {
-            (values zip incoming.values).forEach { (left, incoming) -> left.accumulateStatistics(incoming) }
         }
         else ->
             error("$javaClass : ${incoming.javaClass}")

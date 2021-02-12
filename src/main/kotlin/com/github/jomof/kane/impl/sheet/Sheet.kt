@@ -54,12 +54,7 @@ data class CoerceMatrix(
 ) : MatrixExpr {
     init {
         assert(value !is MatrixExpr)
-        assert(value !is ScalarListExpr) {
-            "scalarlistexpr"
-        }
-        assert(value !is SheetRangeExpr || value.rangeRef !is CellRangeRef) {
-            "scalarlistexpr"
-        }
+        assert(value !is SheetRangeExpr || value.rangeRef !is CellRangeRef)
     }
 
     override fun toString() = render()

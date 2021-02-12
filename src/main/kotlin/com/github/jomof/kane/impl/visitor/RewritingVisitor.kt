@@ -109,18 +109,6 @@ internal open class RewritingVisitor(protected val checkIdentity: Boolean = fals
         else this
     }
 
-    open fun rewrite(expr: ScalarListExpr): Expr = with(expr) {
-        var changed = false
-        val rewrittenElements = mutableListOf<ScalarExpr>()
-        for (value in values) {
-            val rewritten = scalar(value)
-            rewrittenElements += rewritten
-            changed = changed || (rewritten !== value)
-        }
-        return if (changed) copy(values = rewrittenElements)
-        else this
-    }
-
     open fun rewrite(expr: AlgebraicUnaryScalar): Expr = with(expr) {
         val rewritten = scalar(value)
         return if (rewritten === value) this
@@ -274,7 +262,6 @@ internal open class RewritingVisitor(protected val checkIdentity: Boolean = fals
                 is Tiling<*> -> rewrite(expr)
                 is ValueExpr<*> -> rewrite(expr)
                 is Sheet -> rewrite(expr)
-                is ScalarListExpr -> rewrite(expr)
                 is ScalarVariable -> rewrite(expr)
                 is MatrixVariableElement -> rewrite(expr)
                 is NamedScalarAssign -> rewrite(expr)
