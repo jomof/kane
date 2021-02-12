@@ -27,10 +27,3 @@
 | <a name="com.github.jomof.kane.impl.functions/AlgebraicUnaryScalarStatistic///PointingToDeclaration/"></a>[AlgebraicUnaryScalarStatistic](-algebraic-unary-scalar-statistic/index.md)| <a name="com.github.jomof.kane.impl.functions/AlgebraicUnaryScalarStatistic///PointingToDeclaration/"></a>[jvm]  <br>Content  <br>data class [AlgebraicUnaryScalarStatistic](-algebraic-unary-scalar-statistic/index.md)(**op**: [AlgebraicUnaryScalarStatisticFunction](-algebraic-unary-scalar-statistic-function/index.md), **value**: [AlgebraicExpr](../com.github.jomof.kane/-algebraic-expr/index.md)) : [ScalarExpr](../com.github.jomof.kane/-scalar-expr/index.md)  <br><br><br>
 | <a name="com.github.jomof.kane.impl.functions/AlgebraicUnaryScalarStatisticFunction///PointingToDeclaration/"></a>[AlgebraicUnaryScalarStatisticFunction](-algebraic-unary-scalar-statistic-function/index.md)| <a name="com.github.jomof.kane.impl.functions/AlgebraicUnaryScalarStatisticFunction///PointingToDeclaration/"></a>[jvm]  <br>Content  <br>interface [AlgebraicUnaryScalarStatisticFunction](-algebraic-unary-scalar-statistic-function/index.md) : [AggregatableFunction](-aggregatable-function/index.md)  <br><br><br>
 
-
-## Functions  
-  
-|  Name|  Summary| 
-|---|---|
-| <a name="com.github.jomof.kane.impl.functions//binaryOf/#com.github.jomof.kane.impl.functions.AlgebraicBinaryScalarFunction#com.github.jomof.kane.ScalarExpr#com.github.jomof.kane.ScalarExpr/PointingToDeclaration/"></a>[binaryOf](binary-of.md)| <a name="com.github.jomof.kane.impl.functions//binaryOf/#com.github.jomof.kane.impl.functions.AlgebraicBinaryScalarFunction#com.github.jomof.kane.ScalarExpr#com.github.jomof.kane.ScalarExpr/PointingToDeclaration/"></a>[jvm]  <br>Content  <br>fun [binaryOf](binary-of.md)(op: [AlgebraicBinaryScalarFunction](-algebraic-binary-scalar-function/index.md), left: [ScalarExpr](../com.github.jomof.kane/-scalar-expr/index.md), right: [ScalarExpr](../com.github.jomof.kane/-scalar-expr/index.md)): [AlgebraicBinaryScalar](-algebraic-binary-scalar/index.md)  <br><br><br>
-

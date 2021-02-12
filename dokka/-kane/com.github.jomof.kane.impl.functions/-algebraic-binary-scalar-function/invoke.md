@@ -20,6 +20,7 @@ open operator fun [invoke](invoke.md)(p1: [MatrixExpr](../../com.github.jomof.ka
 open operator fun [invoke](invoke.md)(p1: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), p2: [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md)): [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md)  
 open operator fun [invoke](invoke.md)(p1: [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md), p2: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md)  
 open operator fun [invoke](invoke.md)(p1: [MatrixExpr](../../com.github.jomof.kane/-matrix-expr/index.md), p2: [SheetRange](../../com.github.jomof.kane.impl.sheet/-sheet-range/index.md)): [MatrixExpr](../../com.github.jomof.kane/-matrix-expr/index.md)  
+open operator fun [invoke](invoke.md)(p1: [SheetRange](../../com.github.jomof.kane.impl.sheet/-sheet-range/index.md), p2: [MatrixExpr](../../com.github.jomof.kane/-matrix-expr/index.md)): [MatrixExpr](../../com.github.jomof.kane/-matrix-expr/index.md)  
 
 
 
