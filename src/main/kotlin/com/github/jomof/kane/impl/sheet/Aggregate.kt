@@ -14,7 +14,6 @@ internal class SheetRangeExprProvider(val sheet: Sheet) : RangeExprProvider {
 
 private fun GroupBy.buildAggregation(builder: SheetBuilderImpl): Sheet {
     val immediate = builder.getImmediateNamedExprs()
-    val debuilderized = removeBuilderPrivateExpressions(immediate)
     var column = 0
     val groupBy = this
     return sheetOf {
@@ -23,7 +22,7 @@ private fun GroupBy.buildAggregation(builder: SheetBuilderImpl): Sheet {
             nameRow(row++, key)
         }
         val result = mutableListOf<NamedExpr>()
-        for ((name, expr) in debuilderized.cells) {
+        for ((name, expr) in immediate.cells) {
             nameColumn(column, name)
             row = 0
             for ((_, sheet) in groupBy) {

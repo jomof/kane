@@ -174,7 +174,7 @@ data class CellRangeRef(
     }
 
     fun toCoordinate(): Coordinate {
-        if (column !is MoveableIndex) error("")
+        if (column !is MoveableIndex) error("${column.javaClass}")
         if (row !is MoveableIndex) error("")
         return coordinate(column.index, row.index)
     }
@@ -340,7 +340,7 @@ data class RectangleRangeRef(
 
 data class ColumnRangeRef(
     val first: ComputableIndex,
-    val second: ComputableIndex
+    val second: ComputableIndex = first
 ) : SheetRangeRef {
     override fun up(move: Int) = CellRangeRef(first, RelativeIndex(-1))
     override fun down(move: Int) = CellRangeRef(first, RelativeIndex(1))
@@ -402,5 +402,6 @@ fun parseRange(range: String): SheetRangeRef {
         cellNameToComputableCoordinate(right)
     )
 }
+
 
 

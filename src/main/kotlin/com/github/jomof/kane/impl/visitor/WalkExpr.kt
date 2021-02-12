@@ -40,14 +40,18 @@ internal fun Expr.visit(f: (expr: Expr) -> Unit) {
             left.visit(f)
             right.visit(f)
         }
+        is AlgebraicBinaryMatrixScalarStatistic -> {
+            left.visit(f)
+            right.visit(f)
+        }
         is AlgebraicUnaryScalarStatistic -> value.visit(f)
-        is AlgebraicBinaryRangeStatistic -> right.visit(f)
         is AlgebraicUnaryScalar -> value.visit(f)
         is AlgebraicUnaryMatrix -> value.visit(f)
         is AlgebraicUnaryMatrixScalar -> value.visit(f)
         is CoerceScalar -> value.visit(f)
         is CoerceMatrix -> value.visit(f)
         is RetypeScalar -> scalar.visit(f)
+        is CellIndexedScalar -> expr.visit(f)
         is RetypeMatrix -> matrix.visit(f)
         is NamedScalar -> scalar.visit(f)
         is NamedScalarAssign -> right.visit(f)
@@ -67,8 +71,6 @@ internal fun Expr.visit(f: (expr: Expr) -> Unit) {
         is Tiling<*> -> {
         }
         is Sheet -> cells.forEach { (_, expr) -> expr.visit(f) }
-        is SheetBuilderRange -> {
-        }
         else ->
             error("$javaClass")
     }

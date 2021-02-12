@@ -11,22 +11,27 @@ import kotlin.reflect.KProperty
 
 interface SheetBuilder {
 
-    fun cell(name: String): ScalarExpr = CoerceScalar(SheetBuilderRange(this, cellNameToComputableCoordinate(name)))
+    fun cell(name: String): ScalarExpr = CoerceScalar(SheetRangeExpr(cellNameToComputableCoordinate(name)))
 
-    fun range(range: String): SheetBuilderRange {
+    fun range(range: String): MatrixExpr {
         val parsed = parseRange(range)
-        return SheetBuilderRange(this, parsed)
+        return CoerceMatrix(SheetRangeExpr(parsed))
     }
 
-    fun column(range: String): MatrixExpr = CoerceMatrix(range(range))
+    fun column(range: String): MatrixExpr {
+        val parsed = parseRange(range)
+        assert(parsed is ColumnRangeRef || parsed is NamedColumnRangeRef)
+        return CoerceMatrix(SheetRangeExpr(parsed))
+    }
+
     fun nameColumn(column: Int, name: Id)
     fun nameRow(row: Int, name: Id)
     fun nameRow(row: Int, name: List<Expr>)
 
-    fun up(offset: Int) = SheetBuilderRange(this, CellRangeRef.relative(column = 0, row = -offset))
-    fun down(offset: Int) = SheetBuilderRange(this, CellRangeRef.relative(column = 0, row = offset))
-    fun left(offset: Int) = SheetBuilderRange(this, CellRangeRef.relative(column = -offset, row = 0))
-    fun right(offset: Int) = SheetBuilderRange(this, CellRangeRef.relative(column = offset, row = 0))
+    fun up(offset: Int) = SheetRangeExpr(CellRangeRef.relative(column = 0, row = -offset))
+    fun down(offset: Int) = SheetRangeExpr(CellRangeRef.relative(column = 0, row = offset))
+    fun left(offset: Int) = SheetRangeExpr(CellRangeRef.relative(column = -offset, row = 0))
+    fun right(offset: Int) = SheetRangeExpr(CellRangeRef.relative(column = offset, row = 0))
     val up get() = up(1)
     val down get() = down(1)
     val left get() = left(1)
@@ -42,7 +47,7 @@ internal fun parseAndNameValue(name: String, value: String): NamedExpr {
     }
 }
 
-data class SheetBuilderRange(
+private data class SheetBuilderRange(
     private val builder: SheetBuilder,
     val rangeRef: SheetRangeRef
 ) : SheetRange {

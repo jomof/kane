@@ -86,10 +86,22 @@ class RandomVariablesTest {
         )
     }
 
+
+    @Test
+    fun `repro scalar stat issue`() {
+        val b1 by randomOf(1928.0 to 1929.0)
+        val c1 by randomOf(1928.0 to 1929.0)
+        step(sp500(b1) * sp500(c1)).eval().assertString("1")
+        step(sp500(b1) / sp500(c1)).eval().assertString("1")
+        step(sp500(b1) + sp500(c1)).eval().assertString("1")
+        step(sp500(b1) - sp500(c1)).eval().assertString("1")
+    }
+
+
     @Test
     fun `sheet with accumulated step`() {
         val sample = StreamingSamples()
-        for(i in 1928 .. 2019) {
+        for (i in 1928..2019) {
             sample.insert(sp500(i.toDouble()))
         }
         println("mean=${sample.mean}")
@@ -114,26 +126,52 @@ class RandomVariablesTest {
             val a6 by constant("5th percentile")
             val b6 by percentile(b2, 0.05)
             val c6 by percentile(c2, 0.05)
-            val a7 by constant("95th percentile")
-            val b7 by percentile(b2, 0.95)
-            val c7 by percentile(c2, 0.95)
+            val a7 by constant("50th percentile")
+            val b7 by percentile(b2, 0.50)
+            val c7 by percentile(c2, 0.50)
             val a8 by constant("95th percentile")
-            val b8 by percentile(b2, 0.255)
-            val c8 by percentile(c2, 0.255)
+            val b8 by percentile(b2, 0.95)
+            val c8 by percentile(c2, 0.95)
             listOf(
                 a1, a2, b2, a3, b3, a4, b4, a5, b5, a6, b6, a7, b7, a8, b8,
                 c1, c2, c3, c4, c5, c6, c7, c8
             )
         }
-        println(sheet)
+        sheet.assertString(
+            """
+                 A                    B                        C            
+          --------------- ------------------------ ------------------------ 
+        1          random random(1928.0 to 2019.0) random(1928.0 to 2019.0) 
+        2         s&p 500                sp500(B1)      sp500(B1)*sp500(C1) 
+        3            mean                 mean(B2)                 mean(C2) 
+        4          median               median(B2)               median(C2) 
+        5        positive           mean(step(B2))           mean(step(C2)) 
+        6  5th percentile      percentile(B2,0.05)      percentile(C2,0.05) 
+        7 50th percentile       percentile(B2,0.5)       percentile(C2,0.5) 
+        8 95th percentile      percentile(B2,0.95)      percentile(C2,0.95) 
+        """.trimIndent()
+        )
         val eval = sheet.eval()
-        println(eval)
+        eval.assertString(
+            """
+                 A           B       C    
+          --------------- ------- ------- 
+        1          random    1975    1974 
+        2         s&p 500     15%      1% 
+        3            mean     12%      1% 
+        4          median     15%      1% 
+        5        positive 0.72826 0.60421 
+        6  5th percentile  (-22%)   (-5%) 
+        7 50th percentile     15%      1% 
+        8 95th percentile     44%     10% 
+        """.trimIndent()
+        )
         eval["B3"].assertString("12%")
-        eval["B4"].assertString("14%")
-        eval["B5"].assertString("73%")
-        eval["B6"].assertString("(-25%)")
-//        eval["B7"].assertString("0.4372")
-//        eval["B8"].assertString("-0.0119")
+        eval["B4"].assertString("15%")
+        eval["B5"].assertString("0.72826")
+        eval["B6"].assertString("(-22%)")
+        eval["B7"].assertString("15%")
+        eval["B8"].assertString("44%")
     }
 
     @Test

@@ -1,6 +1,8 @@
 package com.github.jomof.kane
 
-import com.github.jomof.kane.functions.*
+import com.github.jomof.kane.functions.percentile
+import com.github.jomof.kane.functions.sp500
+import com.github.jomof.kane.functions.unaryMinus
 import com.github.jomof.kane.impl.constant
 import com.github.jomof.kane.impl.randomOf
 import com.github.jomof.kane.impl.rowOf
@@ -172,14 +174,14 @@ class GradualEvaluatorTest {
             """
         )
             .copy {
-                val x by range("A")
-                val actual by range("B")
+                val x by column("A")
+                val actual by column("B")
                 val m by 0.0
                 val b by 0.0
                 val prediction by m * x + b
                 val error by pow(prediction - actual, 2.0)
                 val totalError by sum(error)
-                listOf(totalError)
+                listOf(prediction, totalError)
             }
         val evaled = sheet.eval()
         evaled.assertString(
@@ -200,7 +202,7 @@ class GradualEvaluatorTest {
     @Test
     fun `repro formula adjustment in filtering`() {
         val bmi = measurements.copy {
-            val bmi by range("weight") / pow(range("height"), 2.0)
+            val bmi by column("weight") / pow(column("height"), 2.0)
             listOf(bmi)
         }
         val expected = bmi.eval().filterRows { row -> row["gender"] == "male" }

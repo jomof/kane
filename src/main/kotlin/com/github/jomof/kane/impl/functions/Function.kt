@@ -2,7 +2,10 @@ package com.github.jomof.kane.impl.functions
 
 import com.github.jomof.kane.*
 import com.github.jomof.kane.impl.*
-import com.github.jomof.kane.impl.sheet.*
+import com.github.jomof.kane.impl.sheet.CoerceScalar
+import com.github.jomof.kane.impl.sheet.GroupBy
+import com.github.jomof.kane.impl.sheet.Sheet
+import com.github.jomof.kane.impl.sheet.SheetRange
 import com.github.jomof.kane.impl.types.AlgebraicType
 import com.github.jomof.kane.impl.types.DollarAlgebraicType
 import com.github.jomof.kane.impl.types.DollarsAndCentsAlgebraicType
@@ -275,23 +278,18 @@ data class AlgebraicUnaryScalarStatistic(
 // f(scalar statistic, scalar)->scalar
 interface AlgebraicBinaryScalarStatisticFunction {
     val meta: BinaryOp
+
+    operator fun invoke(left: MatrixExpr, right: ScalarExpr) =
+        AlgebraicBinaryMatrixScalarStatistic(this, left, right)
+
+    operator fun invoke(left: MatrixExpr, right: Double) =
+        AlgebraicBinaryMatrixScalarStatistic(this, left, constant(right))
+
     operator fun invoke(left: ScalarExpr, right: ScalarExpr) =
         AlgebraicBinaryScalarStatistic(this, left, right)
 
     operator fun invoke(left: ScalarExpr, right: Double) =
         AlgebraicBinaryScalarStatistic(this, left, constant(right))
-
-    operator fun invoke(value: SheetRangeExpr, right: ScalarExpr) =
-        AlgebraicBinaryRangeStatistic(this, value, right)
-
-    operator fun invoke(value: NamedSheetRangeExpr, right: ScalarExpr) =
-        AlgebraicBinaryRangeStatistic(this, value.range, right)
-
-    operator fun invoke(value: SheetRangeExpr, right: Double) =
-        AlgebraicBinaryRangeStatistic(this, value, constant(right))
-
-    operator fun invoke(value: NamedSheetRangeExpr, right: Double) =
-        AlgebraicBinaryRangeStatistic(this, value.range, constant(right))
 
     fun reduceArithmetic(left: ScalarStatistic, right: ScalarExpr): ScalarExpr
     fun reduceArithmetic(left: List<ScalarExpr>, right: ScalarExpr): ScalarExpr?
@@ -308,9 +306,9 @@ data class AlgebraicBinaryScalarStatistic(
     override fun toString() = render()
 }
 
-data class AlgebraicBinaryRangeStatistic(
+data class AlgebraicBinaryMatrixScalarStatistic(
     val op: AlgebraicBinaryScalarStatisticFunction,
-    val left: SheetRange,
+    val left: MatrixExpr,
     val right: ScalarExpr
 ) : ScalarExpr {
     init {

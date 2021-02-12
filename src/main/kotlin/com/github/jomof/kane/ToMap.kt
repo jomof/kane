@@ -24,7 +24,8 @@ fun Sheet.toMap(): Map<String, List<Any?>> {
                     when {
                         value is ValueExpr<*> -> list += value.value
                         value.canGetConstant() -> list += value.getConstant()
-                        else -> error("${value.javaClass}")
+                        else ->
+                            error("${value.javaClass}")
                     }
                 }
             }

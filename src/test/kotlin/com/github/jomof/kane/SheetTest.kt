@@ -3,6 +3,7 @@ package com.github.jomof.kane
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
 import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.impl.*
+import com.github.jomof.kane.impl.sheet.Sheet
 import com.github.jomof.kane.impl.sheet.analyzeDataTypes
 import com.github.jomof.kane.impl.types.dollars
 import com.github.jomof.kane.impl.types.percent
@@ -167,27 +168,15 @@ class SheetTest {
             2.0,-1.0
             """
         ).copy {
-            val c1 by range("A") + range("B")
+            val c1 by column("A") + column("B")
             listOf(c1)
-        }
-        println(sheet)
-    }
-
-    @Test
-    fun `reference range up past end of sheet`() {
-        val sheet = sheetOf {
-            val columnC by range("C")
-            val columnD by range("D")
-            val a1 by 0.0
-            val b2 by columnC.up * columnD
-            listOf(a1, b2)
         }
         sheet.assertString(
             """
-          A   B   columnC [C] columnD [D] 
-          - ----- ----------- ----------- 
-        1 0                               
-        2   C1*D2                                  
+              A   B    C   
+              - ---- ----- 
+            1 1 -0.4 A1+B1 
+            2 2   -1 A2+B2 
         """.trimIndent()
         )
     }
@@ -202,18 +191,18 @@ class SheetTest {
             """
         )
             .copy {
-                val x by range("A")
+                val x by column("A")
                 val m by 0.0
                 val b by 0.0
-                val c1 by m * x + b
-                listOf(c1)
+                val result by m * x + b
+                listOf(result)
             }
         sheet.assertString(
             """
-          x [A] B    C   
-          ----- - ------ 
-        1     1   m*A1+b 
-        2     2   m*A2+b 
+          x [A] result [B] 
+          ----- ---------- 
+        1     1     m*A1+b 
+        2     2     m*A2+b 
         b=0
         m=0
         """.trimIndent()
@@ -231,15 +220,15 @@ class SheetTest {
         ).copy {
             val m by 0.0
             val b by 0.0
-            val c1 by m * range("A") + b
-            listOf(c1)
+            val result by m * column("A") + b
+            listOf(result)
         }
         sheet.assertString(
             """
-              A B    C   
-              - - ------ 
-            1 1   m*A1+b 
-            2 2   m*A2+b 
+              A result [B] 
+              - ---------- 
+            1 1     m*A1+b 
+            2 2     m*A2+b 
             b=0
             m=0
         """.trimIndent()
@@ -255,7 +244,7 @@ class SheetTest {
             2.0
             """
         ).copy {
-            val x by range("A")
+            val x by column("A")
             val m by 0.0
             val b by 0.0
             val prediction by m * x + b
@@ -282,21 +271,21 @@ class SheetTest {
             2.0
             """
         ).copy {
-            val x by range("A")
+            val x by column("A")
             val m by 0.0
             val b by 0.0
             val prediction by m * x + b
             val error by prediction - 5.0
-            listOf(error)
+            listOf(prediction, error)
         }
         sheet.assertString(
             """
-          x [A] prediction [B] error [C] 
-          ----- -------------- --------- 
-        1     1         m*A1+b  m*A1+b-5 
-        2     2         m*A2+b  m*A2+b-5 
-        b=0
-        m=0
+              x [A] prediction [B] error [C] 
+              ----- -------------- --------- 
+            1     1         m*A1+b      B1-5 
+            2     2         m*A2+b      B2-5 
+            b=0
+            m=0
         """.trimIndent()
         )
     }
@@ -310,45 +299,24 @@ class SheetTest {
             2.0
             """
         ).copy {
-            val x by range("A")
+            val x by column("A")
             val total by sum(x)
             listOf(total)
         }
         sheet.assertString(
             """
-          x [A] 
+              x [A] 
           ----- 
         1     1 
         2     2 
-        total=sum(A)
+        total=sum(A1:A2)
         """.trimIndent()
         )
     }
 
     @Test
-    fun `basic define column`() {
-        val sheet = sheetOf {
-            val increasing by range("B")
-            val a2 by columnOf(5) { 1.1 + increasing.up }
-            val b1 by columnOf(5) { constant(1.0 + it) }
-            listOf(a2, b1)
-        }.eval()
-        println(sheet)
-        sheet.assertString("""
-               A  increasing 
-              --- ---------- 
-            1              1 
-            2 2.1          2 
-            3 3.1          3 
-            4 4.1          4 
-            5 5.1          5 
-            6 6.1            
-        """.trimIndent())
-    }
-
-    @Test
     fun `recursive sheet`() {
-        val sheet = sheetOf {
+        val sheet = sheetOf2 {
             val a1 by down
             val a2 by up + 1
             listOf(a1, a2)
@@ -531,17 +499,17 @@ class SheetTest {
                 3,4
             """.trimIndent()
         ).copy {
-            val a by range("A")
-            val b by range("B")
-            val c1 by columnOf(2) { a + b }
-            listOf(c1)
+            val a by column("A")
+            val b by column("B")
+            val result by a + b
+            listOf(result)
         }
         retire.assertString(
             """
-              a b   C   
-              - - ----- 
-            1 1 2 A1+B1 
-            2 3 4 A2+B2
+          a b result [C] 
+          - - ---------- 
+        1 1 2      A1+B1 
+        2 3 4      A2+B2 
         """.trimIndent()
         )
     }
@@ -555,17 +523,17 @@ class SheetTest {
                 3,4
             """.trimIndent()
         ).copy {
-            val a = range("A")
-            val b = range("B")
-            val c1 by columnOf(2) { a + b }
-            listOf(c1)
+            val a = column("A")
+            val b = column("B")
+            val result by a + b
+            listOf(result)
         }
         retire.assertString(
             """
-              A B   C   
-              - - ----- 
-            1 1 2 A1+B1 
-            2 3 4 A2+B2
+          A B result [C] 
+          - - ---------- 
+        1 1 2      A1+B1 
+        2 3 4      A2+B2 
         """.trimIndent()
         )
     }
@@ -585,15 +553,16 @@ class SheetTest {
             val percentile by percentile(r, 0.25)
             listOf(mean, stdev, percentile)
         }
+        println(check)
         check.assertString(
             """
-                  A B 
-                  - - 
-                1 1 2 
-                2 3 4 
-                mean=mean(A1:B2)
-                percentile=percentile(A1:B2,0.25)
-                stdev=stdev(A1:B2)
+              A B 
+              - - 
+            1 1 2 
+            2 3 4 
+            mean=mean(A1:B2)
+            percentile=percentile(A1:B2,0.25)
+            stdev=stdev(A1:B2)
             """.trimIndent()
         )
         check.eval().assertString(
@@ -611,7 +580,7 @@ class SheetTest {
 
     @Test
     fun `division table using fixed column and rows`() {
-        val sheet = sheetOf {
+        val sheet = sheetOf2 {
             val b1 by rowOf(10) { it }
             val a2 by columnOf(10) { it }
             val b2 by matrixOf(10, 10) {
@@ -657,7 +626,7 @@ class SheetTest {
 
     @Test
     fun `sum of relative references`() {
-        val sheet = sheetOf {
+        val sheet = sheetOf2 {
             val a1 by columnOf(1.0, 1.0)
             val b1 by columnOf(left + 1.0, left + 2.0)
             val b3 by sum(b1)
@@ -669,7 +638,7 @@ class SheetTest {
         sheet["A2"].assertString("1")
         sheet["B1"].assertString("A1+1")
         sheet["B2"].assertString("A2+2")
-        sheet["B3"].assertString("sum(B1)")
+        sheet["B3"].assertString("sum(B1:B2)")
         println(sheet.eval())
         sheet.eval()["B3"].assertString("5")
     }
@@ -740,22 +709,53 @@ class SheetTest {
     }
 
     @Test
-    fun softmax() {
+    fun `tiling of string`() {
         val sheet = sheetOf {
+            val cond by List(2) { "A" } + List(2) { "B" }
+            listOf(cond)
+        }
+        sheet.assertString(
+            """
+              cond [A] 
+              -------- 
+            1        A 
+            2        A 
+            3        B 
+            4        B 
+        """.trimIndent()
+        )
+    }
+
+    @Test
+    fun softmax() {
+        val sheet = sheetOf2 {
             val a1 by columnOf(1.0, 1.0)
             val b1 by columnOf(left + 1.0, left + 2.0)
             val c1 by softmax(b1)
             listOf(a1, b1, c1)
         }
-        println(sheet)
-        println(sheet.eval())
+        sheet.assertString(
+            """
+          A   B             C            
+          - ---- ----------------------- 
+        1 1 A1+1 exp(B1)/sum(exp(B1:B2)) 
+        2 1 A2+2 exp(B2)/sum(exp(B1:B2)) 
+        """.trimIndent()
+        )
+        sheet.eval().assertString(
+            """
+          A B    C    
+          - - ------- 
+        1 1 2 0.26894 
+        2 1 3 0.73106 
+        """.trimIndent()
+        )
         sheet["A1"].assertString("1")
         sheet["A2"].assertString("1")
         sheet["B1"].assertString("A1+1")
         sheet["B2"].assertString("A2+2")
-        sheet["C1"].assertString("exp(B1)/sum(exp(B1))")
-        sheet["C2"].assertString("exp(B2)/sum(exp(B1))")
-
+        sheet["C1"].assertString("exp(B1)/sum(exp(B1:B2))")
+        sheet["C2"].assertString("exp(B2)/sum(exp(B1:B2))")
     }
 
     @Test
@@ -1280,10 +1280,10 @@ class SheetTest {
         }
         retire.assertString(
             """
-          a     b    
-          - -------- 
-        1 1     A1*1 
-        2 1 A2*A1*B1 
+          a    b    
+          - ------- 
+        1 1    A1*1 
+        2 1 A2*1*B1 
         """.trimIndent()
         )
         retire.eval().assertString(
@@ -1355,6 +1355,24 @@ class SheetTest {
         }
         println(retire)
         println(retire.eval())
+    }
+
+    @Test
+    fun `market monte carlo`() {
+        val data = readCsv("data/market.csv")
+        println(data)
+        fun lookup(data: Sheet, keyColumn: String, valueColumn: String, startYear: ScalarExpr) {}
+        val startYear = randomOf(1871.0 to 1990.0)
+//        val sheet = sheetOf {
+//        //    val ourYear by data["year"] + startYear
+//        // lookup(data, "year", "growth", startYear)
+//        //            listOf(ourYear)
+//        }
+        /*
+        lookup(data, "year", "growth", 1871 + random())
+
+         */
+
     }
 
 }

@@ -9,6 +9,7 @@ import com.github.jomof.kane.impl.sheet.*
 import com.github.jomof.kane.impl.types.algebraicType
 import com.github.jomof.kane.impl.types.kaneDouble
 import com.github.jomof.kane.impl.visitor.RewritingVisitor
+import com.github.jomof.kane.impl.visitor.SheetRewritingVisitor
 import com.github.jomof.kane.map
 import kotlin.collections.component1
 import kotlin.collections.component2
@@ -80,13 +81,15 @@ private class ReduceAlgebraicUnaryScalar : RewritingVisitor() {
     }
 }
 
-private val reduceAlgebraicBinaryMatrix = object : RewritingVisitor() {
+private val reduceAlgebraicBinaryMatrix = object : SheetRewritingVisitor() {
     override fun rewrite(expr: AlgebraicBinaryMatrix): Expr = with(expr) {
-        val left = left.toDataMatrix()
-        val right = right.toDataMatrix()
+        val (columns, rows) = tryGetDimensions(rowCount())
+        if (columns == null || rows == null) error("Could not get column or row count")
+        val left = left.toDataMatrix(columns, rows)
+        val right = right.toDataMatrix(columns, rows)
         assert(left.columns == right.columns)
         assert(left.rows == right.rows)
-        return DataMatrix(left.columns, left.rows, (left.elements zip right.elements).map { (l, r) ->
+        return DataMatrix(columns, rows, (left.elements zip right.elements).map { (l, r) ->
             binaryOf(op, l, r)
         })
     }
@@ -120,6 +123,15 @@ private val reduceAlgebraicBinaryScalarStatistic = object : RewritingVisitor() {
                 error("${left.javaClass}")
         }
     }
+
+    override fun rewrite(expr: AlgebraicBinaryMatrixScalarStatistic): Expr = with(expr) {
+
+        return when {
+            left is DataMatrix -> expr.op.reduceArithmetic(expr.left.elements, expr.right) ?: expr
+            else ->
+                error("${left.javaClass}")
+        }
+    }
 }
 
 private val reduceNakedScalarStatistic = object : RewritingVisitor() {
@@ -135,13 +147,23 @@ private class ReduceRandomVariables(val variables: Map<RandomVariableExpr, Const
         val leftRewritten = scalar(left)
         val rightRewritten = scalar(right)
         if (leftRewritten === left && rightRewritten === right) return this
-        return op.reduceArithmetic(leftRewritten, rightRewritten) ?: copy(leftRewritten, rightRewritten)
+        val type = expr.op.type(expr.left.algebraicType, expr.right.algebraicType)
+        val reduced = expr.op.reduceArithmetic(leftRewritten, rightRewritten)
+        val typed =
+            if (reduced != null && type != kaneDouble) RetypeScalar(reduced, type)
+            else reduced
+        return typed ?: copy(leftRewritten, rightRewritten)
     }
 
     override fun rewrite(expr: AlgebraicUnaryScalar): Expr = with(expr) {
         val rewritten = scalar(value)
-        return if (rewritten === value) this
-        else op.reduceArithmetic(rewritten) ?: copy(rewritten)
+        if (rewritten === value) return this
+        val reduced = op.reduceArithmetic(rewritten)
+        val type = expr.algebraicType
+        val typed =
+            if (reduced != null && type != kaneDouble) RetypeScalar(reduced, type)
+            else reduced
+        return typed ?: copy(rewritten)
     }
 }
 
@@ -224,14 +246,15 @@ private val reduceRetypeOfRetype = object : RewritingVisitor() {
 
 private fun Expr.expandSheetCells(sheet: Sheet, excludeVariables: Set<Id>): Expr {
     return object : RewritingVisitor() {
-        override fun rewrite(expr: AlgebraicBinaryRangeStatistic): Expr = with(expr) {
+        override fun rewrite(expr: AlgebraicBinaryMatrixScalarStatistic): Expr = with(expr) {
             val leftRewritten = rewrite(left)
             val rightRewritten = scalar(right)
             if (leftRewritten === left && rightRewritten == right) return this
             return when (leftRewritten) {
-                is SheetRangeExpr -> copy(left = leftRewritten, right = rightRewritten)
                 is ScalarExpr -> AlgebraicBinaryScalarStatistic(expr.op, left = leftRewritten, right = right)
-                else -> error("${leftRewritten.javaClass}")
+                is DataMatrix -> copy(left = leftRewritten, right = rightRewritten)
+                else ->
+                    error("${leftRewritten.javaClass}")
             }
         }
 
@@ -376,6 +399,18 @@ private fun Expr.accumulateStatistics(incoming: Expr) {
     }
 }
 
+private class ReduceCoerceMatrix : SheetRewritingVisitor() {
+    override fun rewrite(expr: CoerceMatrix): Expr {
+        val (columns, rows) = expr.tryGetDimensions(rowCount())
+        if (columns == null || rows == null) return expr
+        val elements = coordinatesOf(columns, rows).map {
+            val element = expr.getMatrixElement(it.column, it.row)
+            element
+        }
+        return DataMatrix(columns, rows, elements)
+    }
+}
+
 private class NopRangeExprProvider : RangeExprProvider
 
 private fun Expr.evalGradualSingleSample(
@@ -392,6 +427,7 @@ private fun Expr.evalGradualSingleSample(
     val reduceProvidedSheetRangeExprs = ReduceProvidedSheetRangeExprs(rangeExprProvider)
     val reduceAlgebraicBinaryScalar = ReduceAlgebraicBinaryScalar()
     val reduceAlgebraicUnaryScalar = ReduceAlgebraicUnaryScalar()
+    val reduceCoerceMatrix = ReduceCoerceMatrix()
     while (true) {
         if (--allowedReductions == 0) error("Reduction took too long")
         val namedVariableLookup = if (last is Sheet) last.cells else Cells(mapOf())

@@ -109,7 +109,7 @@ class GroupByTest {
     @Test
     fun `repro range issue`() {
         val bmi = measurements.copy {
-            val bmi by range("weight") / pow(range("height"), 2.0)
+            val bmi by column("weight") / pow(column("height"), 2.0)
             listOf(bmi)
         }.showExcelColumnTags(false)
         bmi.head().assertString(
@@ -128,7 +128,7 @@ class GroupByTest {
     @Test
     fun `repro formula adjustment in filtering`() {
         val bmi = measurements.copy {
-            val bmi by range("weight") / pow(range("height"), 2.0)
+            val bmi by column("weight") / pow(column("height"), 2.0)
             listOf(bmi)
         }
         val expected = bmi.eval().filterRows { row -> row["gender"] == "male" }
@@ -176,7 +176,7 @@ class GroupByTest {
     @Test
     fun `repro formula adjustment in grouping`() {
         val bmi = measurements.copy {
-            val bmi by range("weight") / pow(range("height"), 2.0)
+            val bmi by column("weight") / pow(column("height"), 2.0)
             listOf(bmi)
         }
         val evalThenGroup = bmi.eval().groupBy("gender")["female"]

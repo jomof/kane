@@ -14,7 +14,7 @@ class DocumentationTest {
          * Unlike, for example, a Pandas dataframe a Kane sheet can hold formulas in cells not just data.
          * Here"s an example of constructing a very simple Kane sheet.
          */
-        val sheet = sheetOf {
+        val sheet = sheetOf2 {
             val a1 by 1.0
             val a2 by a1 + a1
             listOf(a2)
@@ -269,26 +269,26 @@ class DocumentationTest {
          * Lastly, we'll define 'totalError' which is the sum of all of the 'error' rows.
          */
         sheet = sheet.copy {
-            val x by range("A")
-            val actual by range("B")
+            val x by column("A")
+            val actual by column("B")
             val m by 0.0
             val b by 0.0
             val prediction by m * x + b
             val error by pow(prediction - actual, 2.0)
             val totalError by sum(error)
-            listOf(totalError)
+            listOf(prediction, totalError)
         }
         sheet.assertString(
             """
-          x [A] actual [B] prediction [C]   error [D]  
-          ----- ---------- -------------- ------------ 
-        1     1       -0.5         m*A1+b (m*A1+b-B1)² 
-        2     2         -1         m*A2+b (m*A2+b-B2)² 
-        3     3       -1.5         m*A3+b (m*A3+b-B3)² 
-        4     4         -2         m*A4+b (m*A4+b-B4)² 
-        b=0
-        m=0
-        totalError=sum((m*A+b-B)²)
+              x [A] actual [B] prediction [C] error [D] 
+              ----- ---------- -------------- --------- 
+            1     1       -0.5         m*A1+b  (C1-B1)² 
+            2     2         -1         m*A2+b  (C2-B2)² 
+            3     3       -1.5         m*A3+b  (C3-B3)² 
+            4     4         -2         m*A4+b  (C4-B4)² 
+            b=0
+            m=0
+            totalError=sum(D1:D4)
         """.trimIndent()
         )
 

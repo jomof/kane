@@ -41,8 +41,8 @@ class FiguresTest {
             val y by func(x)
 
             val op = func.meta.simpleName
-
-            val p = lets_plot(y.toMap()) +
+            val map = y.toMap()
+            val p = lets_plot(map) +
                     geom_point { this.x = "x"; this.y = "y"; color = "y" } +
                     labs(
                         title = "$y profile",

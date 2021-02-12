@@ -16,6 +16,12 @@ fun sheetOf(init: SheetBuilder.() -> List<NamedExpr>): Sheet {
     return builder.build()
 }
 
+fun sheetOf2(init: SheetBuilder.() -> List<NamedExpr>): Sheet {
+    val builder = SheetBuilderImpl()
+    init(builder as SheetBuilder).forEach { builder.add(it) }
+    return builder.build()
+}
+
 fun sheetOf(map: Map<*, *>): Sheet {
     val sb = SheetBuilderImpl()
 

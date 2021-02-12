@@ -53,6 +53,11 @@ internal fun CoerceMatrix.getMatrixElement(column: Int, row: Int): ScalarExpr {
                 }
                 else -> error("$ref")
             }
+            is RectangleRangeRef -> {
+                val coordinate = coordinate(ref.first.column.index + column, ref.first.row.index + row)
+                val cell = CoerceScalar(SheetRangeExpr(coordinate.toComputableCoordinate()))
+                cell
+            }
             else -> error("${ref.javaClass}")
         }
         is Sheet -> value.cells[coordinate(column, row)] as ScalarExpr
@@ -77,7 +82,7 @@ internal fun Expr.getMatrixElement(column: Int, row: Int): ScalarExpr {
     }
 }
 
-internal fun MatrixExpr.tryGetDimensions(): Pair<Int?, Int?> {
+internal fun MatrixExpr.tryGetDimensions(sheetRowCount: Int? = null): Pair<Int?, Int?> {
     return when (this) {
         is CoerceMatrix -> when (value) {
             is SheetRangeExpr -> when (value.rangeRef) {
@@ -87,7 +92,19 @@ internal fun MatrixExpr.tryGetDimensions(): Pair<Int?, Int?> {
                         ref.first is MoveableIndex && ref.second is MoveableIndex -> (ref.second.index - ref.first.index) + 1
                         else -> error("${value.rangeRef.javaClass}")
                     }
-                    columns to null
+                    columns to sheetRowCount
+                }
+                is RectangleRangeRef -> {
+                    val ref = value.rangeRef
+                    val columns = when {
+                        ref.first.column is MoveableIndex && ref.second.column is MoveableIndex -> (ref.second.column.index - ref.first.column.index) + 1
+                        else -> error("${value.rangeRef.javaClass}")
+                    }
+                    val rows = when {
+                        ref.first.row is MoveableIndex && ref.second.row is MoveableIndex -> (ref.second.row.index - ref.first.row.index) + 1
+                        else -> error("${value.rangeRef.javaClass}")
+                    }
+                    columns to rows
                 }
                 else -> error("${value.rangeRef.javaClass}")
             }
@@ -95,17 +112,17 @@ internal fun MatrixExpr.tryGetDimensions(): Pair<Int?, Int?> {
             else ->
                 error("${value.javaClass}")
         }
-        is NamedMatrix -> matrix.tryGetDimensions()
+        is NamedMatrix -> matrix.tryGetDimensions(sheetRowCount)
         is NamedMatrixVariable -> columns to rows
         is DataMatrix -> columns to rows
-        is RetypeMatrix -> matrix.tryGetDimensions()
-        is AlgebraicUnaryMatrix -> value.tryGetDimensions()
-        is AlgebraicDeferredDataMatrix -> data.tryGetDimensions()
-        is AlgebraicBinaryMatrixScalar -> left.tryGetDimensions()
-        is AlgebraicBinaryScalarMatrix -> right.tryGetDimensions()
+        is RetypeMatrix -> matrix.tryGetDimensions(sheetRowCount)
+        is AlgebraicUnaryMatrix -> value.tryGetDimensions(sheetRowCount)
+        is AlgebraicDeferredDataMatrix -> data.tryGetDimensions(sheetRowCount)
+        is AlgebraicBinaryMatrixScalar -> left.tryGetDimensions(sheetRowCount)
+        is AlgebraicBinaryScalarMatrix -> right.tryGetDimensions(sheetRowCount)
         is AlgebraicBinaryMatrix -> {
-            val left = left.tryGetDimensions()
-            val right = right.tryGetDimensions()
+            val left = left.tryGetDimensions(sheetRowCount)
+            val right = right.tryGetDimensions(sheetRowCount)
             val leftColumns = left.first
             val rightColumns = right.first
             val columns = when {
@@ -131,4 +148,12 @@ internal fun MatrixExpr.tryGetDimensions(): Pair<Int?, Int?> {
 
 
 val MatrixExpr.columns get() = tryGetDimensions().first!!
-val MatrixExpr.rows get() = tryGetDimensions().second!!
+val MatrixExpr.rows
+    get() : Int {
+        val (_, rows) = tryGetDimensions()
+        if (rows == null) {
+            tryGetDimensions()
+            error("Could not get dimensions for ${this.javaClass}")
+        }
+        return rows
+    }

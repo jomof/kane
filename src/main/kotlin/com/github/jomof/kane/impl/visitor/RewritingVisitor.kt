@@ -11,9 +11,8 @@ import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.collections.set
 
-internal open class RewritingVisitor {
+internal open class RewritingVisitor(protected val checkIdentity: Boolean = false) {
     private var depth = 0
-    protected val checkIdentity = false
     open fun rewrite(expr: CoerceScalar): Expr = with(expr) {
         val rewritten = rewrite(value)
         return if (rewritten === value) this
@@ -32,6 +31,12 @@ internal open class RewritingVisitor {
         else copy(scalar = rewritten)
     }
 
+    open fun rewrite(expr: CellIndexedScalar): Expr {
+        val rewritten = rewrite(expr.expr)
+        return if (rewritten === expr.expr) expr
+        else expr.copy(expr = rewritten)
+    }
+
     open fun rewrite(expr: RetypeMatrix): Expr = with(expr) {
         val rewritten = matrix(matrix)
         return if (rewritten === matrix) this
@@ -48,7 +53,6 @@ internal open class RewritingVisitor {
     open fun rewrite(expr: ConstantScalar): Expr = expr
     open fun rewrite(expr: DiscreteUniformRandomVariable): Expr = expr
     open fun rewrite(expr: SheetRangeExpr): Expr = expr
-    open fun rewrite(expr: SheetBuilderRange): Expr = expr
     open fun rewrite(expr: Tiling<*>): Expr = expr
     open fun rewrite(expr: ValueExpr<*>): Expr = expr
     open fun rewrite(expr: NamedScalarVariable): Expr = expr
@@ -141,13 +145,6 @@ internal open class RewritingVisitor {
         else copy(value = rewritten)
     }
 
-    open fun rewrite(expr: AlgebraicBinaryRangeStatistic): Expr = with(expr) {
-        val leftRewritten = range(left)
-        val rightRewritten = scalar(right)
-        if (leftRewritten === left && rightRewritten === right) return this
-        return copy(left = leftRewritten, right = rightRewritten)
-    }
-
     open fun rewrite(expr: AlgebraicBinaryMatrix): Expr = with(expr) {
         val leftRewritten = matrix(left)
         val rightRewritten = matrix(right)
@@ -183,14 +180,22 @@ internal open class RewritingVisitor {
         return copy(left = leftRewritten, right = rightRewritten)
     }
 
+    open fun rewrite(expr: AlgebraicBinaryMatrixScalarStatistic): Expr = with(expr) {
+        val leftRewritten = matrix(left)
+        val rightRewritten = scalar(right)
+        if (leftRewritten === left && rightRewritten === right) return this
+        return copy(left = leftRewritten, right = rightRewritten)
+    }
+
     open fun rewrite(expr: Sheet): Expr = with(expr) {
         var changed = false
         val rewrittenElements = mutableMapOf<Id, Expr>()
         for (cell in cells) {
             val (name, cellExpr) = cell
-            val rewritten = rewrite(cellExpr)
-            changed = changed || (rewritten !== cellExpr)
-            rewrittenElements[name] = rewritten
+            val (rewrittenName, rewrittenCell) = cell(name, cellExpr)
+            changed = changed || (rewrittenCell !== cellExpr)
+            changed = changed || (rewrittenName !== name)
+            rewrittenElements[rewrittenName] = rewrittenCell
         }
         return if (changed) copy(cells = rewrittenElements.toCells())
         else this
@@ -215,6 +220,10 @@ internal open class RewritingVisitor {
             "result '${result.javaClass.simpleName}' was not ScalarExpr"
         }
         return result as ScalarExpr
+    }
+
+    open fun cell(name: Id, expr: Expr): Pair<Id, Expr> {
+        return name to rewrite(expr)
     }
 
     open fun sheet(expr: Sheet) = rewrite(expr) as Sheet
@@ -244,10 +253,10 @@ internal open class RewritingVisitor {
                 is ScalarStatistic -> rewrite(expr)
                 is AlgebraicBinaryMatrix -> rewrite(expr)
                 is AlgebraicBinaryMatrixScalar -> rewrite(expr)
-                is AlgebraicBinaryRangeStatistic -> rewrite(expr)
                 is AlgebraicBinaryScalar -> rewrite(expr)
                 is AlgebraicBinaryScalarMatrix -> rewrite(expr)
                 is AlgebraicBinaryScalarStatistic -> rewrite(expr)
+                is AlgebraicBinaryMatrixScalarStatistic -> rewrite(expr)
                 is AlgebraicUnaryMatrix -> rewrite(expr)
                 is AlgebraicUnaryMatrixScalar -> rewrite(expr)
                 is AlgebraicUnaryScalar -> rewrite(expr)
@@ -271,10 +280,10 @@ internal open class RewritingVisitor {
                 is NamedScalarAssign -> rewrite(expr)
                 is NamedMatrixAssign -> rewrite(expr)
                 is Tableau -> rewrite(expr)
-                is SheetBuilderRange -> rewrite(expr)
                 is RetypeScalar -> rewrite(expr)
                 is RetypeMatrix -> rewrite(expr)
                 is GroupBy -> rewrite(expr)
+                is CellIndexedScalar -> rewrite(expr)
                 else -> error("${expr.javaClass}")
             }
             if (checkIdentity && result !== expr) {
@@ -291,4 +300,5 @@ internal open class RewritingVisitor {
     }
 
     open operator fun invoke(expr: Expr) = rewrite(expr)
+    open operator fun invoke(expr: Sheet) = sheet(expr)
 }

@@ -17,7 +17,8 @@ private class MultiplyFunction : AlgebraicBinaryScalarFunction {
         val leftIsConst = p1.canGetConstant()
         val rightIsConst = p2.canGetConstant()
 
-        return when {
+        val result = when {
+            leftIsConst && rightIsConst -> constant(invoke(p1.getConstant(), p2.getConstant()))
             p1 == p2 && p1 is AlgebraicUnaryScalar && p1.op == negate -> pow(p1.value, 2.0)
             p1 == p2 -> pow(p1, 2.0)
             rightIsConst && p2.getConstant() == 0.0 -> p2
@@ -28,7 +29,7 @@ private class MultiplyFunction : AlgebraicBinaryScalarFunction {
             leftIsConst && p1.getConstant() == 1.0 -> p2
             leftIsConst && p1.getConstant() == -1.0 -> -p2
             rightIsConst && p2.getConstant() == -1.0 -> -p1
-            leftIsConst && rightIsConst -> constant(p1.getConstant() * p2.getConstant())
+
             p1 is AlgebraicUnaryScalar && p1.op == negate -> {
                 // -(x*y)*z -> -(x*y*z)
                 -(p1.value * p2)
@@ -59,6 +60,7 @@ private class MultiplyFunction : AlgebraicBinaryScalarFunction {
             !leftIsConst && rightIsConst -> p2 * p1
             else -> null
         }
+        return result
     }
     override fun differentiate(
         p1: ScalarExpr,

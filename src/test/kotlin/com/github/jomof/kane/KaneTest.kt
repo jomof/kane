@@ -5,6 +5,7 @@ import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.impl.*
 import com.github.jomof.kane.impl.types.dollars
 import com.github.jomof.kane.impl.types.kaneDouble
+import com.github.jomof.kane.impl.types.percent
 import org.junit.Test
 import java.util.*
 import kotlin.math.PI
@@ -27,6 +28,16 @@ class KaneTest {
     @Test
     fun `dont check in tracking enable`() {
         errorIfTrackingEnabled()
+    }
+
+    @Test
+    fun `eval produce of two percent`() {
+        val a by percent(0.1)
+        val b by percent(0.2)
+        (a * b).eval().assertString("2%")
+        (a / b).eval().assertString("50%")
+        (a + b).eval().assertString("30%")
+        (a - b).eval().assertString("(-10%)")
     }
 
     @Test

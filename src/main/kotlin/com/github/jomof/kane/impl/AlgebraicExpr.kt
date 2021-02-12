@@ -5,7 +5,10 @@ package com.github.jomof.kane.impl
 import com.github.jomof.kane.*
 import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.impl.functions.*
-import com.github.jomof.kane.impl.sheet.*
+import com.github.jomof.kane.impl.sheet.CoerceMatrix
+import com.github.jomof.kane.impl.sheet.CoerceScalar
+import com.github.jomof.kane.impl.sheet.NamedSheetRangeExpr
+import com.github.jomof.kane.impl.sheet.SheetRangeExpr
 import com.github.jomof.kane.impl.types.AlgebraicType
 import com.github.jomof.kane.impl.types.KaneType
 import com.github.jomof.kane.impl.types.StringKaneType
@@ -467,6 +470,17 @@ fun MatrixExpr.toDataMatrix(): MatrixExpr = when (this) {
     else -> DataMatrix(columns, rows, elements.toList())
 }
 
+fun MatrixExpr.toDataMatrix(columns: Int, rows: Int): MatrixExpr = when (this) {
+    is DataMatrix -> this
+    is NamedMatrix -> copy(matrix = matrix.toDataMatrix(columns, rows))
+    else -> {
+        val elements = coordinatesOf(columns to rows).map { coordinate ->
+            getMatrixElement(coordinate.column, coordinate.row)
+        }
+        DataMatrix(columns, rows, elements)
+    }
+}
+
 // Allocation tracking
 private var trackingEnabled = false
 private var trackingCount = 0
@@ -636,7 +650,6 @@ fun Expr.render(entryPoint: Boolean = true, outerType: AlgebraicType? = null): S
         is CoerceScalar -> value.self()
         is CoerceMatrix -> value.self()
         is SheetRangeExpr -> rangeRef.toString()
-        is SheetBuilderRange -> rangeRef.toString()
         is RetypeScalar -> scalar.render(entryPoint, outerType ?: this.type)
         is RetypeMatrix -> matrix.render(entryPoint, outerType ?: this.type)
         is Slot -> "\$$slot"
@@ -693,7 +706,7 @@ fun Expr.render(entryPoint: Boolean = true, outerType: AlgebraicType? = null): S
                 else -> binary(op.meta, left, right)
             }
         }
-        is AlgebraicBinaryRangeStatistic -> {
+        is AlgebraicBinaryMatrixScalarStatistic -> {
             when (op) {
                 pow -> {
                     val rightSuper = tryConvertToSuperscript(right.self())

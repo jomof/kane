@@ -51,8 +51,7 @@ data class GroupBy(
 
 private fun Sheet.buildGrouping(builder: SheetBuilderImpl): GroupBy {
     val immediate = builder.getImmediateNamedExprs()
-    val debuilderized = removeBuilderPrivateExpressions(immediate)
-    val names = debuilderized.cells.map { (name, expr) -> expr.toNamed(Identifier.string(name)) }
+    val names = immediate.cells.map { (name, expr) -> expr.toNamed(Identifier.string(name)) }
     return GroupBy(this, names)
 }
 

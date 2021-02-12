@@ -4,6 +4,7 @@ import com.github.jomof.kane.AlgebraicExpr
 import com.github.jomof.kane.Expr
 import com.github.jomof.kane.MatrixExpr
 import com.github.jomof.kane.ScalarExpr
+import com.github.jomof.kane.impl.sheet.NamedSheet
 import com.github.jomof.kane.impl.sheet.NamedSheetRangeExpr
 import com.github.jomof.kane.impl.sheet.SheetRange
 import com.github.jomof.kane.impl.sheet.SheetRangeExpr
@@ -47,6 +48,7 @@ fun Expr.toUnnamed(): Expr {
         is NamedValueExpr<*> -> toUnnamedValueExpr()
         is NamedScalarVariable -> ScalarVariable(initial)
         is NamedMatrixVariable -> MatrixVariable(columns, rows, initial)
+        is NamedSheet -> sheet
         else -> TODO()
     }
 }
