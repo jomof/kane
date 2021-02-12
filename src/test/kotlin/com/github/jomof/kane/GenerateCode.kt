@@ -57,8 +57,6 @@ class GenerateCode {
             sb.append("val $op : AggregatableFunction = ${op}Func\n")
             sb.append(
                 """
-                fun $op(list : List<ScalarExpr>) : ScalarExpr = ${op}Func(list)
-                fun $op(vararg values : ScalarExpr) : ScalarExpr = ${op}Func(values)
                 fun $op(list : List<Double>) : Double = ${op}Func(list)
                 fun $op(vararg values : Double) : Double = ${op}Func(values)
                 fun $op(matrix : MatrixExpr) : ScalarExpr = ${op}Func(matrix)

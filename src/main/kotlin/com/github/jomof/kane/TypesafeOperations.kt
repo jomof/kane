@@ -74,8 +74,6 @@ operator fun MatrixExpr.div(right: SheetRange) = div(this, right)
 // typesafe count
 private val countFunc = CountFunction()
 val count: AggregatableFunction = countFunc
-fun count(list: List<ScalarExpr>): ScalarExpr = countFunc(list)
-fun count(vararg values: ScalarExpr): ScalarExpr = countFunc(values)
 fun count(list: List<Double>): Double = countFunc(list)
 fun count(vararg values: Double): Double = countFunc(values)
 fun count(matrix: MatrixExpr): ScalarExpr = countFunc(matrix)
@@ -88,8 +86,6 @@ fun count(expr: Expr): Expr = countFunc(expr)
 // typesafe nans
 private val nansFunc = NansFunction()
 val nans: AggregatableFunction = nansFunc
-fun nans(list: List<ScalarExpr>): ScalarExpr = nansFunc(list)
-fun nans(vararg values: ScalarExpr): ScalarExpr = nansFunc(values)
 fun nans(list: List<Double>): Double = nansFunc(list)
 fun nans(vararg values: Double): Double = nansFunc(values)
 fun nans(matrix: MatrixExpr): ScalarExpr = nansFunc(matrix)
@@ -102,8 +98,6 @@ fun nans(expr: Expr): Expr = nansFunc(expr)
 // typesafe mean
 private val meanFunc = MeanFunction()
 val mean: AggregatableFunction = meanFunc
-fun mean(list: List<ScalarExpr>): ScalarExpr = meanFunc(list)
-fun mean(vararg values: ScalarExpr): ScalarExpr = meanFunc(values)
 fun mean(list: List<Double>): Double = meanFunc(list)
 fun mean(vararg values: Double): Double = meanFunc(values)
 fun mean(matrix: MatrixExpr): ScalarExpr = meanFunc(matrix)
@@ -116,8 +110,6 @@ fun mean(expr: Expr): Expr = meanFunc(expr)
 // typesafe min
 private val minFunc = MinFunction()
 val min: AggregatableFunction = minFunc
-fun min(list: List<ScalarExpr>): ScalarExpr = minFunc(list)
-fun min(vararg values: ScalarExpr): ScalarExpr = minFunc(values)
 fun min(list: List<Double>): Double = minFunc(list)
 fun min(vararg values: Double): Double = minFunc(values)
 fun min(matrix: MatrixExpr): ScalarExpr = minFunc(matrix)
@@ -130,8 +122,6 @@ fun min(expr: Expr): Expr = minFunc(expr)
 // typesafe percentile25
 private val percentile25Func = Percentile25Function()
 val percentile25: AggregatableFunction = percentile25Func
-fun percentile25(list: List<ScalarExpr>): ScalarExpr = percentile25Func(list)
-fun percentile25(vararg values: ScalarExpr): ScalarExpr = percentile25Func(values)
 fun percentile25(list: List<Double>): Double = percentile25Func(list)
 fun percentile25(vararg values: Double): Double = percentile25Func(values)
 fun percentile25(matrix: MatrixExpr): ScalarExpr = percentile25Func(matrix)
@@ -144,8 +134,6 @@ fun percentile25(expr: Expr): Expr = percentile25Func(expr)
 // typesafe median
 private val medianFunc = MedianFunction()
 val median: AggregatableFunction = medianFunc
-fun median(list: List<ScalarExpr>): ScalarExpr = medianFunc(list)
-fun median(vararg values: ScalarExpr): ScalarExpr = medianFunc(values)
 fun median(list: List<Double>): Double = medianFunc(list)
 fun median(vararg values: Double): Double = medianFunc(values)
 fun median(matrix: MatrixExpr): ScalarExpr = medianFunc(matrix)
@@ -158,8 +146,6 @@ fun median(expr: Expr): Expr = medianFunc(expr)
 // typesafe percentile75
 private val percentile75Func = Percentile75Function()
 val percentile75: AggregatableFunction = percentile75Func
-fun percentile75(list: List<ScalarExpr>): ScalarExpr = percentile75Func(list)
-fun percentile75(vararg values: ScalarExpr): ScalarExpr = percentile75Func(values)
 fun percentile75(list: List<Double>): Double = percentile75Func(list)
 fun percentile75(vararg values: Double): Double = percentile75Func(values)
 fun percentile75(matrix: MatrixExpr): ScalarExpr = percentile75Func(matrix)
@@ -172,8 +158,6 @@ fun percentile75(expr: Expr): Expr = percentile75Func(expr)
 // typesafe max
 private val maxFunc = MaxFunction()
 val max: AggregatableFunction = maxFunc
-fun max(list: List<ScalarExpr>): ScalarExpr = maxFunc(list)
-fun max(vararg values: ScalarExpr): ScalarExpr = maxFunc(values)
 fun max(list: List<Double>): Double = maxFunc(list)
 fun max(vararg values: Double): Double = maxFunc(values)
 fun max(matrix: MatrixExpr): ScalarExpr = maxFunc(matrix)
@@ -186,8 +170,6 @@ fun max(expr: Expr): Expr = maxFunc(expr)
 // typesafe variance
 private val varianceFunc = VarianceFunction()
 val variance: AggregatableFunction = varianceFunc
-fun variance(list: List<ScalarExpr>): ScalarExpr = varianceFunc(list)
-fun variance(vararg values: ScalarExpr): ScalarExpr = varianceFunc(values)
 fun variance(list: List<Double>): Double = varianceFunc(list)
 fun variance(vararg values: Double): Double = varianceFunc(values)
 fun variance(matrix: MatrixExpr): ScalarExpr = varianceFunc(matrix)
@@ -200,8 +182,6 @@ fun variance(expr: Expr): Expr = varianceFunc(expr)
 // typesafe stdev
 private val stdevFunc = StdevFunction()
 val stdev: AggregatableFunction = stdevFunc
-fun stdev(list: List<ScalarExpr>): ScalarExpr = stdevFunc(list)
-fun stdev(vararg values: ScalarExpr): ScalarExpr = stdevFunc(values)
 fun stdev(list: List<Double>): Double = stdevFunc(list)
 fun stdev(vararg values: Double): Double = stdevFunc(values)
 fun stdev(matrix: MatrixExpr): ScalarExpr = stdevFunc(matrix)
@@ -214,8 +194,6 @@ fun stdev(expr: Expr): Expr = stdevFunc(expr)
 // typesafe skewness
 private val skewnessFunc = SkewnessFunction()
 val skewness: AggregatableFunction = skewnessFunc
-fun skewness(list: List<ScalarExpr>): ScalarExpr = skewnessFunc(list)
-fun skewness(vararg values: ScalarExpr): ScalarExpr = skewnessFunc(values)
 fun skewness(list: List<Double>): Double = skewnessFunc(list)
 fun skewness(vararg values: Double): Double = skewnessFunc(values)
 fun skewness(matrix: MatrixExpr): ScalarExpr = skewnessFunc(matrix)
@@ -228,8 +206,6 @@ fun skewness(expr: Expr): Expr = skewnessFunc(expr)
 // typesafe kurtosis
 private val kurtosisFunc = KurtosisFunction()
 val kurtosis: AggregatableFunction = kurtosisFunc
-fun kurtosis(list: List<ScalarExpr>): ScalarExpr = kurtosisFunc(list)
-fun kurtosis(vararg values: ScalarExpr): ScalarExpr = kurtosisFunc(values)
 fun kurtosis(list: List<Double>): Double = kurtosisFunc(list)
 fun kurtosis(vararg values: Double): Double = kurtosisFunc(values)
 fun kurtosis(matrix: MatrixExpr): ScalarExpr = kurtosisFunc(matrix)
@@ -242,8 +218,6 @@ fun kurtosis(expr: Expr): Expr = kurtosisFunc(expr)
 // typesafe cv
 private val cvFunc = CvFunction()
 val cv: AggregatableFunction = cvFunc
-fun cv(list: List<ScalarExpr>): ScalarExpr = cvFunc(list)
-fun cv(vararg values: ScalarExpr): ScalarExpr = cvFunc(values)
 fun cv(list: List<Double>): Double = cvFunc(list)
 fun cv(vararg values: Double): Double = cvFunc(values)
 fun cv(matrix: MatrixExpr): ScalarExpr = cvFunc(matrix)
@@ -256,8 +230,6 @@ fun cv(expr: Expr): Expr = cvFunc(expr)
 // typesafe sum
 private val sumFunc = SumFunction()
 val sum: AggregatableFunction = sumFunc
-fun sum(list: List<ScalarExpr>): ScalarExpr = sumFunc(list)
-fun sum(vararg values: ScalarExpr): ScalarExpr = sumFunc(values)
 fun sum(list: List<Double>): Double = sumFunc(list)
 fun sum(vararg values: Double): Double = sumFunc(values)
 fun sum(matrix: MatrixExpr): ScalarExpr = sumFunc(matrix)

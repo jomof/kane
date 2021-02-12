@@ -205,16 +205,6 @@ interface AlgebraicUnaryScalarStatisticFunction : AggregatableFunction {
         return lookupStatistic(statistic)
     }
 
-    operator fun invoke(values: List<ScalarExpr>) = when (values.size) {
-        1 -> AlgebraicUnaryScalarStatistic(this, values[0])
-        else -> AlgebraicUnaryScalarStatistic(this, ScalarListExpr(values))
-    }
-
-    operator fun invoke(values: Array<out ScalarExpr>) = when (values.size) {
-        1 -> AlgebraicUnaryScalarStatistic(this, values[0])
-        else -> AlgebraicUnaryScalarStatistic(this, ScalarListExpr(values.toList()))
-    }
-
     operator fun invoke(value: Sheet): Sheet {
         val filtered = value.describe().filterRows { row -> "$row" == meta.op }
         if (filtered.columns == 1)
