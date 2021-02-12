@@ -22,25 +22,14 @@ private val reduceNamedMatrix = object : RewritingVisitor() {
 private class ReduceAlgebraicBinaryScalar : RewritingVisitor() {
     override fun rewrite(expr: AlgebraicBinaryScalar): Expr {
         return when (val sub = super.rewrite(expr)) {
-            is AlgebraicBinaryScalar -> when {
-                sub.left is ScalarListExpr && sub.right is ScalarListExpr ->
-                    ScalarListExpr((sub.left.values zip sub.right.values).map { (l, r) ->
-                        sub.copy(
-                            left = l,
-                            right = r
-                        )
-                    })
-                sub.left is ScalarListExpr -> sub.left.copy(sub.left.values.map { sub.copy(left = it) })
-                sub.right is ScalarListExpr -> sub.right.copy(sub.right.values.map { sub.copy(right = it) })
-                else -> {
-                    val type = sub.op.type(sub.left.algebraicType, sub.right.algebraicType)
-                    val reduced = sub.op.reduceArithmetic(sub.left, sub.right)
-                    val typed =
-                        if (reduced != null && type != kaneDouble)
-                            RetypeScalar(reduced, type)
-                        else reduced
-                    typed ?: sub
-                }
+            is AlgebraicBinaryScalar -> {
+                val type = sub.op.type(sub.left.algebraicType, sub.right.algebraicType)
+                val reduced = sub.op.reduceArithmetic(sub.left, sub.right)
+                val typed =
+                    if (reduced != null && type != kaneDouble)
+                        RetypeScalar(reduced, type)
+                    else reduced
+                typed ?: sub
             }
             else -> sub
         }
@@ -227,8 +216,6 @@ private val convertVariablesToStatistics = object : RewritingVisitor() {
 private val reduceCoerceScalar = object : RewritingVisitor() {
     override fun rewrite(expr: CoerceScalar): Expr {
         return when (expr.value) {
-            is Sheet ->
-                ScalarListExpr(expr.value.cells.map { it.value as ScalarExpr })
             is SheetRangeExpr -> expr
             else -> error("${expr.value.javaClass}")
         }

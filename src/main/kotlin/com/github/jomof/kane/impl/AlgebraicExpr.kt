@@ -261,7 +261,7 @@ data class NamedMatrixAssign(
     override fun toString() = render()
 }
 
-data class ScalarListExpr(
+data class ScalarListExpr private constructor(
     val values: List<ScalarExpr>
 ) : ScalarExpr {
     override fun toString() = values.toString()
