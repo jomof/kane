@@ -1,4 +1,4 @@
-//[Kane](../../index.md)/[com.github.jomof.kane.impl.functions](../index.md)/[AlgebraicBinaryRangeStatistic](index.md)/[toString](to-string.md)
+//[Kane](../../index.md)/[com.github.jomof.kane.impl.functions](../index.md)/[AlgebraicBinaryMatrixScalarStatistic](index.md)/[toString](to-string.md)
 
 
 

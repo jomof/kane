@@ -5,8 +5,8 @@
 # left  
 [jvm]  
 Content  
-open fun [left](left.md)(offset: [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)): [SheetBuilderRange](../-sheet-builder-range/index.md)  
-open val [left](left.md): [SheetBuilderRange](../-sheet-builder-range/index.md)  
+open fun [left](left.md)(offset: [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)): [SheetRangeExpr](../-sheet-range-expr/index.md)  
+open val [left](left.md): [SheetRangeExpr](../-sheet-range-expr/index.md)  
 
 
 

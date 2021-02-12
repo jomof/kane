@@ -5,7 +5,7 @@
 # copy  
 [jvm]  
 Content  
-fun [copy](copy.md)(first: [ComputableIndex](../-computable-index/index.md), second: [ComputableIndex](../-computable-index/index.md)): [ColumnRangeRef](index.md)  
+fun [copy](copy.md)(first: [ComputableIndex](../-computable-index/index.md), second: [ComputableIndex](../-computable-index/index.md) = first): [ColumnRangeRef](index.md)  
 
 
 

@@ -5,7 +5,7 @@
 # ColumnRangeRef  
 [jvm]  
 Content  
-fun [ColumnRangeRef](-column-range-ref.md)(first: [ComputableIndex](../-computable-index/index.md), second: [ComputableIndex](../-computable-index/index.md))  
+fun [ColumnRangeRef](-column-range-ref.md)(first: [ComputableIndex](../-computable-index/index.md), second: [ComputableIndex](../-computable-index/index.md) = first)  
 
 
 
