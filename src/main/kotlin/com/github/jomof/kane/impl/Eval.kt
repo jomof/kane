@@ -283,6 +283,7 @@ private fun Expr.expandSheetCells(sheet: Sheet, excludeVariables: Set<Id>): Expr
             return when (rewritten) {
                 is ScalarListExpr -> DataMatrix(1, rewritten.values.size, rewritten.values)
                 is ScalarExpr -> DataMatrix(1, 1, listOf(rewritten))
+                is DataMatrix -> rewritten
                 else ->
                     error("${rewritten.javaClass}")
             }
@@ -316,8 +317,7 @@ private fun Expr.expandSheetCells(sheet: Sheet, excludeVariables: Set<Id>): Expr
                 result
             }
             if (list.isEmpty()) return this
-            if (list.size == 1) return list.first()
-            return ScalarListExpr(list)
+            return DataMatrix(list.size, 1, list)
 
         }
     }.rewrite(this)
