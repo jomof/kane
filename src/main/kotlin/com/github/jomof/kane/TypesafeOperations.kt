@@ -1,79 +1,98 @@
 package com.github.jomof.kane
 
 import com.github.jomof.kane.functions.*
-import com.github.jomof.kane.impl.functions.*
-import com.github.jomof.kane.impl.sheet.*
+import com.github.jomof.kane.impl.functions.AggregatableFunction
+import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalarFunction
+import com.github.jomof.kane.impl.sheet.GroupBy
+import com.github.jomof.kane.impl.sheet.Sheet
+import com.github.jomof.kane.impl.sheet.SheetRange
 
 // plus typesafe infix operators
-operator fun ScalarExpr.plus(right: Number) = plus(this, right.toDouble())
 operator fun Number.plus(right: ScalarExpr) = plus(this.toDouble(), right)
+operator fun Number.plus(right: MatrixExpr) = plus(this.toDouble(), right)
+operator fun Number.plus(right: SheetRange) = plus(this.toDouble(), right)
+
+operator fun ScalarExpr.plus(right: Number) = plus(this, right.toDouble())
 operator fun ScalarExpr.plus(right: ScalarExpr) = plus(this, right)
+operator fun ScalarExpr.plus(right: MatrixExpr) = plus(this, right)
+operator fun ScalarExpr.plus(right: SheetRange) = plus(this, right)
+
 operator fun MatrixExpr.plus(right: Number) = plus(this, right.toDouble())
 operator fun MatrixExpr.plus(right: ScalarExpr) = plus(this, right)
-operator fun Number.plus(right: MatrixExpr) = plus(this.toDouble(), right)
-operator fun ScalarExpr.plus(right: MatrixExpr) = plus(this, right)
 operator fun MatrixExpr.plus(right: MatrixExpr) = plus(this, right)
-operator fun ScalarExpr.plus(right: SheetRange) = plus(this, right)
-operator fun SheetRange.plus(right: ScalarExpr) = plus(this, right)
-operator fun SheetRange.plus(right: Number) = plus(this, right.toDouble())
-operator fun Number.plus(right: SheetRange) = plus(this.toDouble(), right)
-operator fun SheetRange.plus(right: SheetRange) = plus(this, right)
 operator fun MatrixExpr.plus(right: SheetRange) = plus(this, right)
 
+operator fun SheetRange.plus(right: Number) = plus(this, right.toDouble())
+operator fun SheetRange.plus(right: ScalarExpr) = plus(this, right)
+operator fun SheetRange.plus(right: MatrixExpr) = plus(this, right)
+operator fun SheetRange.plus(right: SheetRange) = plus(this, right)
+
 // minus typesafe infix operators
-operator fun ScalarExpr.minus(right: Number) = minus(this, right.toDouble())
 operator fun Number.minus(right: ScalarExpr) = minus(this.toDouble(), right)
+operator fun Number.minus(right: MatrixExpr) = minus(this.toDouble(), right)
+operator fun Number.minus(right: SheetRange) = minus(this.toDouble(), right)
+
+operator fun ScalarExpr.minus(right: Number) = minus(this, right.toDouble())
 operator fun ScalarExpr.minus(right: ScalarExpr) = minus(this, right)
+operator fun ScalarExpr.minus(right: MatrixExpr) = minus(this, right)
+operator fun ScalarExpr.minus(right: SheetRange) = minus(this, right)
+
 operator fun MatrixExpr.minus(right: Number) = minus(this, right.toDouble())
 operator fun MatrixExpr.minus(right: ScalarExpr) = minus(this, right)
-operator fun Number.minus(right: MatrixExpr) = minus(this.toDouble(), right)
-operator fun ScalarExpr.minus(right: MatrixExpr) = minus(this, right)
 operator fun MatrixExpr.minus(right: MatrixExpr) = minus(this, right)
-operator fun ScalarExpr.minus(right: SheetRange) = minus(this, right)
-operator fun SheetRange.minus(right: ScalarExpr) = minus(this, right)
-operator fun SheetRange.minus(right: Number) = minus(this, right.toDouble())
-operator fun Number.minus(right: SheetRange) = minus(this.toDouble(), right)
-operator fun SheetRange.minus(right: SheetRange) = minus(this, right)
 operator fun MatrixExpr.minus(right: SheetRange) = minus(this, right)
 
+operator fun SheetRange.minus(right: Number) = minus(this, right.toDouble())
+operator fun SheetRange.minus(right: ScalarExpr) = minus(this, right)
+operator fun SheetRange.minus(right: MatrixExpr) = minus(this, right)
+operator fun SheetRange.minus(right: SheetRange) = minus(this, right)
+
 // times typesafe infix operators
-operator fun ScalarExpr.times(right: Number) = times(this, right.toDouble())
 operator fun Number.times(right: ScalarExpr) = times(this.toDouble(), right)
+operator fun Number.times(right: MatrixExpr) = times(this.toDouble(), right)
+operator fun Number.times(right: SheetRange) = times(this.toDouble(), right)
+
+operator fun ScalarExpr.times(right: Number) = times(this, right.toDouble())
 operator fun ScalarExpr.times(right: ScalarExpr) = times(this, right)
+operator fun ScalarExpr.times(right: MatrixExpr) = times(this, right)
+operator fun ScalarExpr.times(right: SheetRange) = times(this, right)
+
 operator fun MatrixExpr.times(right: Number) = times(this, right.toDouble())
 operator fun MatrixExpr.times(right: ScalarExpr) = times(this, right)
-operator fun Number.times(right: MatrixExpr) = times(this.toDouble(), right)
-operator fun ScalarExpr.times(right: MatrixExpr) = times(this, right)
 operator fun MatrixExpr.times(right: MatrixExpr) = times(this, right)
-operator fun ScalarExpr.times(right: SheetRange) = times(this, right)
-operator fun SheetRange.times(right: ScalarExpr) = times(this, right)
-operator fun SheetRange.times(right: Number) = times(this, right.toDouble())
-operator fun Number.times(right: SheetRange) = times(this.toDouble(), right)
-operator fun SheetRange.times(right: SheetRange) = times(this, right)
 operator fun MatrixExpr.times(right: SheetRange) = times(this, right)
 
+operator fun SheetRange.times(right: Number) = times(this, right.toDouble())
+operator fun SheetRange.times(right: ScalarExpr) = times(this, right)
+operator fun SheetRange.times(right: MatrixExpr) = times(this, right)
+operator fun SheetRange.times(right: SheetRange) = times(this, right)
+
 // div typesafe infix operators
-operator fun ScalarExpr.div(right: Number) = div(this, right.toDouble())
 operator fun Number.div(right: ScalarExpr) = div(this.toDouble(), right)
+operator fun Number.div(right: MatrixExpr) = div(this.toDouble(), right)
+operator fun Number.div(right: SheetRange) = div(this.toDouble(), right)
+
+operator fun ScalarExpr.div(right: Number) = div(this, right.toDouble())
 operator fun ScalarExpr.div(right: ScalarExpr) = div(this, right)
+operator fun ScalarExpr.div(right: MatrixExpr) = div(this, right)
+operator fun ScalarExpr.div(right: SheetRange) = div(this, right)
+
 operator fun MatrixExpr.div(right: Number) = div(this, right.toDouble())
 operator fun MatrixExpr.div(right: ScalarExpr) = div(this, right)
-operator fun Number.div(right: MatrixExpr) = div(this.toDouble(), right)
-operator fun ScalarExpr.div(right: MatrixExpr) = div(this, right)
 operator fun MatrixExpr.div(right: MatrixExpr) = div(this, right)
-operator fun ScalarExpr.div(right: SheetRange) = div(this, right)
-operator fun SheetRange.div(right: ScalarExpr) = div(this, right)
-operator fun SheetRange.div(right: Number) = div(this, right.toDouble())
-operator fun Number.div(right: SheetRange) = div(this.toDouble(), right)
-operator fun SheetRange.div(right: SheetRange) = div(this, right)
 operator fun MatrixExpr.div(right: SheetRange) = div(this, right)
+
+operator fun SheetRange.div(right: Number) = div(this, right.toDouble())
+operator fun SheetRange.div(right: ScalarExpr) = div(this, right)
+operator fun SheetRange.div(right: MatrixExpr) = div(this, right)
+operator fun SheetRange.div(right: SheetRange) = div(this, right)
 
 // typesafe count
 private val countFunc = CountFunction()
-val count : AggregatableFunction = countFunc
-fun count(list : List<Double>) : Double = countFunc(list)
-fun count(vararg values : Double) : Double = countFunc(values)
-fun count(matrix : MatrixExpr) : ScalarExpr = countFunc(matrix)
+val count: AggregatableFunction = countFunc
+fun count(list: List<Double>): Double = countFunc(list)
+fun count(vararg values: Double): Double = countFunc(values)
+fun count(matrix: MatrixExpr): ScalarExpr = countFunc(matrix)
 fun count(sheet: Sheet) : Sheet = countFunc(sheet)
 fun count(groupBy: GroupBy) : Sheet = countFunc(groupBy)
 fun count(algebraic : AlgebraicExpr) : ScalarExpr = countFunc(algebraic)

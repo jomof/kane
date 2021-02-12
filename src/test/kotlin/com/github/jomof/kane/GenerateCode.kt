@@ -29,24 +29,27 @@ class GenerateCode {
             sb.append(
                 """
                 // $op typesafe infix operators
-                operator fun ScalarExpr.$op(right: Number) = $op(this, right.toDouble())
                 operator fun Number.$op(right: ScalarExpr) = $op(this.toDouble(), right)
+                operator fun Number.$op(right: MatrixExpr) = $op(this.toDouble(), right)                
+                operator fun Number.$op(right: SheetRange) = $op(this.toDouble(), right)
+
+                operator fun ScalarExpr.$op(right: Number) = $op(this, right.toDouble())
                 operator fun ScalarExpr.$op(right: ScalarExpr) = $op(this, right)
+                operator fun ScalarExpr.$op(right: MatrixExpr) = $op(this, right)
+                operator fun ScalarExpr.$op(right: SheetRange) = $op(this, right)
+                
                 operator fun MatrixExpr.$op(right: Number) = $op(this, right.toDouble())
                 operator fun MatrixExpr.$op(right: ScalarExpr) = $op(this, right)
-                operator fun Number.$op(right: MatrixExpr) = $op(this.toDouble(), right)
-                operator fun ScalarExpr.$op(right: MatrixExpr) = $op(this, right)
                 operator fun MatrixExpr.$op(right: MatrixExpr) = $op(this, right)
-                operator fun ScalarExpr.$op(right: SheetRange) = $op(this, right)
-                operator fun SheetRange.$op(right: ScalarExpr) = $op(this, right)
-                operator fun SheetRange.$op(right: Number) = $op(this, right.toDouble())
-                operator fun Number.$op(right: SheetRange) = $op(this.toDouble(), right)
-                operator fun SheetRange.$op(right: SheetRange) = $op(this, right)
                 operator fun MatrixExpr.$op(right: SheetRange) = $op(this, right)
                 
-                
+                operator fun SheetRange.$op(right: Number) = $op(this, right.toDouble())
+                operator fun SheetRange.$op(right: ScalarExpr) = $op(this, right)
+                operator fun SheetRange.$op(right: MatrixExpr) = $op(this, right)
+                operator fun SheetRange.$op(right: SheetRange) = $op(this, right)
                 """.trimIndent()
             )
+            sb.append("\n\n")
         }
 
         for (func in Kane.unaryStatisticsFunctions) {

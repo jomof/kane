@@ -75,7 +75,7 @@ private val reduceAlgebraicBinaryMatrix = object : SheetRewritingVisitor() {
         assert(left.columns == right.columns)
         assert(left.rows == right.rows)
         return DataMatrix(columns, rows, (left.elements zip right.elements).map { (l, r) ->
-            binaryOf(op, l, r)
+            AlgebraicBinaryScalar(op, l, r)
         })
     }
 }
