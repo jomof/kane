@@ -1,4 +1,4 @@
-//[Kane](../../index.md)/[com.github.jomof.kane.impl](../index.md)/[ScalarStatistic](index.md)/[statistic](statistic.md)
+//[Kane](../../index.md)/[com.github.jomof.kane.impl](../index.md)/[StatsiticExpr](index.md)/[statistic](statistic.md)
 
 
 
