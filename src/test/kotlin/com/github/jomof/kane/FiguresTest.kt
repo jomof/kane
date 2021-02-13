@@ -54,7 +54,7 @@ class FiguresTest {
     }
 
     @Test
-    fun `READ standalone equation`() {
+    fun `README standalone equation`() {
         val x by (-200..200).map { (3.14 * it) / 100.0 }
         val y by sin(exp(x) / 20.0)
         val p = lets_plot(y.toMap()) +

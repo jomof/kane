@@ -1,8 +1,8 @@
 package com.github.jomof.kane
 
-import com.github.jomof.kane.functions.d
-import com.github.jomof.kane.functions.times
 import com.github.jomof.kane.impl.*
+import com.github.jomof.kane.impl.functions.d
+import com.github.jomof.kane.impl.functions.times
 import com.github.jomof.kane.impl.sheet.*
 import com.github.jomof.kane.impl.types.kaneDouble
 import kotlin.math.abs

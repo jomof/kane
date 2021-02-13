@@ -1,8 +1,8 @@
 package com.github.jomof.kane.impl
 
-import com.github.jomof.kane.functions.div
-import com.github.jomof.kane.functions.minus
-import com.github.jomof.kane.functions.times
+import com.github.jomof.kane.impl.functions.div
+import com.github.jomof.kane.impl.functions.minus
+import com.github.jomof.kane.impl.functions.times
 import com.github.jomof.kane.impl.types.AlgebraicType
 import com.github.jomof.kane.impl.types.kaneDouble
 

@@ -1,8 +1,8 @@
 package com.github.jomof.kane
 
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
-import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.impl.*
+import com.github.jomof.kane.impl.functions.*
 import com.github.jomof.kane.impl.sheet.Sheet
 import com.github.jomof.kane.impl.sheet.analyzeDataTypes
 import com.github.jomof.kane.impl.types.dollars

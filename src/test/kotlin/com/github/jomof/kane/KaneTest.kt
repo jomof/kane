@@ -1,8 +1,8 @@
 @file:Suppress("UNCHECKED_CAST")
 package com.github.jomof.kane
 
-import com.github.jomof.kane.functions.*
 import com.github.jomof.kane.impl.*
+import com.github.jomof.kane.impl.functions.*
 import com.github.jomof.kane.impl.types.dollars
 import com.github.jomof.kane.impl.types.kaneDouble
 import com.github.jomof.kane.impl.types.percent

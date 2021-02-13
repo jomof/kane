@@ -1,10 +1,10 @@
 package com.github.jomof.kane
 
-import com.github.jomof.kane.functions.percentile
-import com.github.jomof.kane.functions.sp500
 import com.github.jomof.kane.impl.StreamingSamples
 import com.github.jomof.kane.impl.constant
 import com.github.jomof.kane.impl.findRandomVariables
+import com.github.jomof.kane.impl.functions.percentile
+import com.github.jomof.kane.impl.functions.sp500
 import com.github.jomof.kane.impl.randomOf
 import org.junit.Test
 
