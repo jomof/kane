@@ -52,4 +52,16 @@ class FiguresTest {
             ggsave(p, "$op-profile.svg", path = images)
         }
     }
+
+    @Test
+    fun `READ standalone equation`() {
+        val x by (-200..200).map { (3.14 * it) / 100.0 }
+        val y by sin(exp(x) / 20.0)
+        val p = lets_plot(y.toMap()) +
+                geom_point { this.x = "x"; this.y = "y"; color = "y" } +
+                labs(
+                    title = "$y",
+                )
+        ggsave(p, "readme-standalone-equation.svg", path = images)
+    }
 }
