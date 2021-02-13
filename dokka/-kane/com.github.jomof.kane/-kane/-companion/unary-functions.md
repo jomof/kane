@@ -5,7 +5,7 @@
 # unaryFunctions  
 [jvm]  
 Content  
-val [unaryFunctions](unary-functions.md): [List](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)<[AlgebraicUnaryScalarFunction](../../../com.github.jomof.kane.impl.functions/-algebraic-unary-scalar-function/index.md)>  
+val [unaryFunctions](unary-functions.md): [List](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)<[AlgebraicUnaryFunction](../../../com.github.jomof.kane.impl.functions/-algebraic-unary-function/index.md)>  
 More info  
 
 

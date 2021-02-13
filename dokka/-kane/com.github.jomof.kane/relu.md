@@ -20,7 +20,7 @@ fun [relu](relu.md)(matrix: [DataMatrix](../com.github.jomof.kane.impl/-data-mat
 fun [relu](relu.md)(matrix: [MatrixExpr](-matrix-expr/index.md)): [MatrixExpr](-matrix-expr/index.md)  
 fun [relu](relu.md)(scalar: [ScalarExpr](-scalar-expr/index.md)): [ScalarExpr](-scalar-expr/index.md)  
 fun [relu](relu.md)(scalar: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)  
-val [relu](relu.md): [AlgebraicUnaryScalarFunction](../com.github.jomof.kane.impl.functions/-algebraic-unary-scalar-function/index.md)  
+val [relu](relu.md): [AlgebraicUnaryFunction](../com.github.jomof.kane.impl.functions/-algebraic-unary-function/index.md)  
 
 
 

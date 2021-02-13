@@ -5,7 +5,7 @@
 # minus  
 [jvm]  
 Content  
-val [minus](minus.md): [AlgebraicBinaryScalarFunction](-algebraic-binary-scalar-function/index.md)  
+val [minus](minus.md): [AlgebraicBinaryFunction](-algebraic-binary-function/index.md)  
 
 
 

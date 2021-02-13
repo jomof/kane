@@ -5,7 +5,7 @@
 # name  
 [jvm]  
 Content  
-open override val [name](name.md): [Id](../../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-831550086)  
+open override val [name](name.md): [Id](../../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-562016314)  
 
 
 

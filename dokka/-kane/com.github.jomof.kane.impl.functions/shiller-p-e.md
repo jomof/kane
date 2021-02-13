@@ -5,7 +5,7 @@
 # shillerPE  
 [jvm]  
 Content  
-val [shillerPE](shiller-p-e.md): [AlgebraicUnaryScalarFunction](-algebraic-unary-scalar-function/index.md)  
+val [shillerPE](shiller-p-e.md): [AlgebraicUnaryFunction](-algebraic-unary-function/index.md)  
 
 
 

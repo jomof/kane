@@ -5,7 +5,7 @@
 # op  
 [jvm]  
 Content  
-val [op](op.md): [AlgebraicBinaryScalarFunction](../-algebraic-binary-scalar-function/index.md)  
+val [op](op.md): [AlgebraicBinaryFunction](../-algebraic-binary-function/index.md)  
 
 
 

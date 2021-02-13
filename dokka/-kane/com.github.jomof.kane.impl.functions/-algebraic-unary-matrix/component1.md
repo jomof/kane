@@ -5,7 +5,7 @@
 # component1  
 [jvm]  
 Content  
-operator fun [component1](component1.md)(): [AlgebraicUnaryScalarFunction](../-algebraic-unary-scalar-function/index.md)  
+operator fun [component1](component1.md)(): [AlgebraicUnaryFunction](../-algebraic-unary-function/index.md)  
 
 
 

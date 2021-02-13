@@ -5,7 +5,7 @@
 # d  
 [jvm]  
 Content  
-val [d](d.md): [AlgebraicUnaryScalarFunction](-algebraic-unary-scalar-function/index.md)  
+val [d](d.md): [AlgebraicUnaryFunction](-algebraic-unary-function/index.md)  
 
 
 

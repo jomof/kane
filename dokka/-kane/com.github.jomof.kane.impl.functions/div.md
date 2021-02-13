@@ -5,7 +5,7 @@
 # div  
 [jvm]  
 Content  
-val [div](div.md): [AlgebraicBinaryScalarFunction](-algebraic-binary-scalar-function/index.md)  
+val [div](div.md): [AlgebraicBinaryFunction](-algebraic-binary-function/index.md)  
 
 
 

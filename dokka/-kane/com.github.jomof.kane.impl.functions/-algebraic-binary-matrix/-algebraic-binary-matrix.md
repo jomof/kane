@@ -5,7 +5,7 @@
 # AlgebraicBinaryMatrix  
 [jvm]  
 Content  
-fun [AlgebraicBinaryMatrix](-algebraic-binary-matrix.md)(op: [AlgebraicBinaryScalarFunction](../-algebraic-binary-scalar-function/index.md), left: [MatrixExpr](../../com.github.jomof.kane/-matrix-expr/index.md), right: [MatrixExpr](../../com.github.jomof.kane/-matrix-expr/index.md))  
+fun [AlgebraicBinaryMatrix](-algebraic-binary-matrix.md)(op: [AlgebraicBinaryFunction](../-algebraic-binary-function/index.md), left: [MatrixExpr](../../com.github.jomof.kane/-matrix-expr/index.md), right: [MatrixExpr](../../com.github.jomof.kane/-matrix-expr/index.md))  
 
 
 

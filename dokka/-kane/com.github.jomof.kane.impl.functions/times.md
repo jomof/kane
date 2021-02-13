@@ -5,7 +5,7 @@
 # times  
 [jvm]  
 Content  
-val [times](times.md): [AlgebraicBinaryScalarFunction](-algebraic-binary-scalar-function/index.md)  
+val [times](times.md): [AlgebraicBinaryFunction](-algebraic-binary-function/index.md)  
 
 
 

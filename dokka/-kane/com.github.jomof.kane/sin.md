@@ -20,7 +20,7 @@ fun [sin](sin.md)(matrix: [DataMatrix](../com.github.jomof.kane.impl/-data-matri
 fun [sin](sin.md)(matrix: [MatrixExpr](-matrix-expr/index.md)): [MatrixExpr](-matrix-expr/index.md)  
 fun [sin](sin.md)(scalar: [ScalarExpr](-scalar-expr/index.md)): [ScalarExpr](-scalar-expr/index.md)  
 fun [sin](sin.md)(scalar: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)  
-val [sin](sin.md): [AlgebraicUnaryScalarFunction](../com.github.jomof.kane.impl.functions/-algebraic-unary-scalar-function/index.md)  
+val [sin](sin.md): [AlgebraicUnaryFunction](../com.github.jomof.kane.impl.functions/-algebraic-unary-function/index.md)  
 
 
 
