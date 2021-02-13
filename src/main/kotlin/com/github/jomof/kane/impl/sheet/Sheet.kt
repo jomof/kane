@@ -116,6 +116,7 @@ data class Cells(private val map: Map<Id, Expr>) {
     fun toMutableMap() = map.toMutableMap()
     fun toMap() = map
     val keys get() = map.keys
+    val values get() = map.values
     operator fun iterator() = map.iterator()
     fun isEmpty() = map.isEmpty()
     fun isNotEmpty() = map.isNotEmpty()

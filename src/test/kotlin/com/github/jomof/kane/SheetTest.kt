@@ -1369,11 +1369,40 @@ class SheetTest {
     }
 
     @Test
+    fun `toInt and toDouble`() {
+        val sheet = sheetOf {
+            val a1 by 1.0
+            listOf(a1)
+        }
+        val p by percent(1.0)
+        val d by dollars(1.0)
+        val m by matrixOf(1, 1, 1.0)
+        sheet.toDouble().assertString("1.0")
+        sheet.toInt().assertString("1")
+        sheet["A1"].toDouble().assertString("1.0")
+        sheet["A1"].toInt().assertString("1")
+        mean(sheet).toDouble().assertString("1.0")
+        mean(sheet).toInt().assertString("1")
+        p.toDouble().assertString("1.0")
+        p.toInt().assertString("1")
+        d.toDouble().assertString("1.0")
+        d.toInt().assertString("1")
+        (p * d).toDouble().assertString("1.0")
+        (p * d).toInt().assertString("1")
+        m.toDouble().assertString("1.0")
+        m.toInt().assertString("1")
+    }
+
+    @Test
     fun `market monte carlo`() {
         val data = readCsv("data/market.csv")
-        println(data)
+//        println(data)
+        val firstYear = min(data["year"]).toInt()
+        val lastYear = max(data["year"]).toInt()
+        println(firstYear)
+        println(lastYear)
         fun lookup(data: Sheet, keyColumn: String, valueColumn: String, startYear: ScalarExpr) {}
-        val startYear = randomOf(1871.0 to 1990.0)
+        //       val startYear = randomOf(1871.0 to 1990.0)
 //        val sheet = sheetOf {
 //        //    val ourYear by data["year"] + startYear
 //        // lookup(data, "year", "growth", startYear)
