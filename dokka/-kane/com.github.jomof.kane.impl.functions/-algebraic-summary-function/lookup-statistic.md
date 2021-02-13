@@ -1,4 +1,4 @@
-//[Kane](../../index.md)/[com.github.jomof.kane.impl.functions](../index.md)/[AlgebraicUnaryScalarStatisticFunction](index.md)/[lookupStatistic](lookup-statistic.md)
+//[Kane](../../index.md)/[com.github.jomof.kane.impl.functions](../index.md)/[AlgebraicSummaryFunction](index.md)/[lookupStatistic](lookup-statistic.md)
 
 
 

@@ -5,7 +5,7 @@
 # component1  
 [jvm]  
 Content  
-operator fun [component1](component1.md)(): [AlgebraicUnaryScalarStatisticFunction](../-algebraic-unary-scalar-statistic-function/index.md)  
+operator fun [component1](component1.md)(): [AlgebraicSummaryFunction](../-algebraic-summary-function/index.md)  
 
 
 

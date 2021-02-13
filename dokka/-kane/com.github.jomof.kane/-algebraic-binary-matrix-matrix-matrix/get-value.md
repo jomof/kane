@@ -1,4 +1,4 @@
-//[Kane](../../index.md)/[com.github.jomof.kane.impl.functions](../index.md)/[AlgebraicBinaryMatrix](index.md)/[getValue](get-value.md)
+//[Kane](../../index.md)/[com.github.jomof.kane](../index.md)/[AlgebraicBinaryMatrixMatrixMatrix](index.md)/[getValue](get-value.md)
 
 
 

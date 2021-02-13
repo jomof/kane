@@ -5,7 +5,7 @@
 # unaryStatisticsFunctions  
 [jvm]  
 Content  
-val [unaryStatisticsFunctions](unary-statistics-functions.md): [List](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)<[AlgebraicUnaryScalarStatisticFunction](../../../com.github.jomof.kane.impl.functions/-algebraic-unary-scalar-statistic-function/index.md)>  
+val [unaryStatisticsFunctions](unary-statistics-functions.md): [List](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)<[AlgebraicSummaryFunction](../../../com.github.jomof.kane.impl.functions/-algebraic-summary-function/index.md)>  
 More info  
 
 

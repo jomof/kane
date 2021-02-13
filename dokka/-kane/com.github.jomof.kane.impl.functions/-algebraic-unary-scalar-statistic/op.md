@@ -5,7 +5,7 @@
 # op  
 [jvm]  
 Content  
-val [op](op.md): [AlgebraicUnaryScalarStatisticFunction](../-algebraic-unary-scalar-statistic-function/index.md)  
+val [op](op.md): [AlgebraicSummaryFunction](../-algebraic-summary-function/index.md)  
 
 
 

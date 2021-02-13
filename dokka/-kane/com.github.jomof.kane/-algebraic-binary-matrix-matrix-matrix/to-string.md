@@ -1,4 +1,4 @@
-//[Kane](../../index.md)/[com.github.jomof.kane.impl.functions](../index.md)/[AlgebraicBinaryMatrix](index.md)/[toString](to-string.md)
+//[Kane](../../index.md)/[com.github.jomof.kane](../index.md)/[AlgebraicBinaryMatrixMatrixMatrix](index.md)/[toString](to-string.md)
 
 
 
