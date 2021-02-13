@@ -180,9 +180,9 @@ text {
         <line x1="0.0" y1="0.0" x2="0.0" y2="260.3333333333333" stroke-width="1.0" stroke="rgb(0,0,0)" stroke-opacity="1.0">
         </line>
       </g>
-      <g transform="translate(35.8 0.0 ) " clip-path="url(#AIQFnp)" clip-bounds-jfx="[rect (0.0, 0.0), (327.77, 260.3333333333333)]">
+      <g transform="translate(35.8 0.0 ) " clip-path="url(#cFYC3p)" clip-bounds-jfx="[rect (0.0, 0.0), (327.77, 260.3333333333333)]">
         <defs>
-          <clipPath id="AIQFnp">
+          <clipPath id="cFYC3p">
             <rect x="0.0" y="0.0" width="327.77" height="260.3333333333333">
             </rect>
           </clipPath>
