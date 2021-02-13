@@ -6,17 +6,16 @@ import com.github.jomof.kane.impl.sheet.CoerceScalar
 import com.github.jomof.kane.impl.sheet.GroupBy
 import com.github.jomof.kane.impl.sheet.Sheet
 import com.github.jomof.kane.impl.sheet.SheetRange
-import com.github.jomof.kane.impl.types.AlgebraicType
-import com.github.jomof.kane.impl.types.DollarAlgebraicType
-import com.github.jomof.kane.impl.types.DollarsAndCentsAlgebraicType
-import com.github.jomof.kane.impl.types.algebraicType
+import com.github.jomof.kane.impl.types.*
 import kotlin.reflect.KProperty
 
 // f(scalar,scalar)->scalar (extended to matrix 1<->1 mapping)
 interface AlgebraicBinaryScalarFunction {
     val meta: BinaryOp
-    operator fun invoke(p1: Double, p2: Double) = doubleOp(p1, p2)
     fun doubleOp(p1: Double, p2: Double): Double
+
+    operator fun invoke(p1: Double, p2: Double) = doubleOp(p1, p2)
+
     operator fun invoke(p1: ScalarExpr, p2: ScalarExpr): ScalarExpr =
         AlgebraicBinaryScalar(this, p1, p2)
 
@@ -206,6 +205,14 @@ interface AlgebraicUnaryScalarStatisticFunction : AggregatableFunction {
         return lookupStatistic(statistic)
     }
 
+    operator fun invoke(values: Array<out Number>): Double {
+        val statistic = StreamingSamples()
+        values.forEach {
+            statistic.insert(it.toDouble())
+        }
+        return lookupStatistic(statistic)
+    }
+
     operator fun invoke(values: List<Double>): Double {
         val statistic = StreamingSamples()
         values.forEach {
@@ -223,14 +230,26 @@ interface AlgebraicUnaryScalarStatisticFunction : AggregatableFunction {
 
     operator fun invoke(expr: GroupBy): Sheet = expr.aggregate(this)
 
+    operator fun invoke(exprs: Array<out ScalarExpr>): ScalarExpr =
+        AlgebraicUnaryScalarStatistic(
+            this,
+            DataMatrix(exprs.size, 1, exprs.toList())
+        )
+
+    operator fun invoke(exprs: Array<out Any>): ScalarExpr =
+        AlgebraicUnaryScalarStatistic(
+            this,
+            DataMatrix(exprs.size, 1, exprs.toList().map { convertAnyToScalarExpr(it) })
+        )
+
     operator fun invoke(expr: SheetRange): ScalarExpr =
         AlgebraicUnaryScalarStatistic(
             this,
             CoerceScalar(expr)
         )
 
-    operator fun invoke(expr: AlgebraicExpr): ScalarExpr =
-        AlgebraicUnaryScalarStatistic(this, expr)
+    operator fun invoke(expr: ScalarExpr): ScalarExpr = AlgebraicUnaryScalarStatistic(this, expr)
+    operator fun invoke(expr: MatrixExpr): ScalarExpr = AlgebraicUnaryScalarStatistic(this, expr)
 
     operator fun invoke(expr: Expr): Expr = when (expr) {
         is AlgebraicExpr -> invoke(expr)
@@ -244,11 +263,16 @@ interface AlgebraicUnaryScalarStatisticFunction : AggregatableFunction {
     fun reduceArithmetic(elements: List<ScalarExpr>): ScalarExpr? {
         if (elements.isEmpty()) return null
         if (!elements.all { it.canGetConstant() }) return null
+
+
         val statistic = StreamingSamples()
         elements.forEach {
             statistic.insert(it.getConstant())
         }
-        return reduceArithmetic(ScalarStatistic(statistic))
+        val reduced = reduceArithmetic(ScalarStatistic(statistic))
+        val type = elements[0].algebraicType
+        return if (type == kaneDouble) reduced
+        else RetypeScalar(reduced, type)
     }
 
     fun reduceArithmetic(value: MatrixExpr) = reduceArithmetic(value.elements)

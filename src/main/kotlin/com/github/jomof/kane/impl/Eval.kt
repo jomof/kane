@@ -88,7 +88,9 @@ private val reduceAlgebraicUnaryScalarStatistic = object : RewritingVisitor() {
     override fun rewrite(expr: AlgebraicUnaryScalarStatistic): Expr = with(expr) {
         return when (expr.value) {
             is RetypeScalar -> rewrite(expr.value.copy(expr.copy(value = expr.value.scalar)))
-            else -> op.reduceArithmetic(value) ?: super.rewrite(expr)
+            else -> {
+                op.reduceArithmetic(value) ?: super.rewrite(expr)
+            }
         }
     }
 }

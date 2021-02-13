@@ -1,15 +1,12 @@
 package com.github.jomof.kane
 
 import com.github.jomof.kane.functions.*
-import com.github.jomof.kane.impl.functions.AggregatableFunction
-import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalarFunction
-import com.github.jomof.kane.impl.sheet.GroupBy
-import com.github.jomof.kane.impl.sheet.Sheet
-import com.github.jomof.kane.impl.sheet.SheetRange
+import com.github.jomof.kane.impl.functions.*
+import com.github.jomof.kane.impl.sheet.*
 
 // plus typesafe infix operators
 operator fun Number.plus(right: ScalarExpr) = plus(this.toDouble(), right)
-operator fun Number.plus(right: MatrixExpr) = plus(this.toDouble(), right)
+operator fun Number.plus(right: MatrixExpr) = plus(this.toDouble(), right)                
 operator fun Number.plus(right: SheetRange) = plus(this.toDouble(), right)
 
 operator fun ScalarExpr.plus(right: Number) = plus(this, right.toDouble())
@@ -29,7 +26,7 @@ operator fun SheetRange.plus(right: SheetRange) = plus(this, right)
 
 // minus typesafe infix operators
 operator fun Number.minus(right: ScalarExpr) = minus(this.toDouble(), right)
-operator fun Number.minus(right: MatrixExpr) = minus(this.toDouble(), right)
+operator fun Number.minus(right: MatrixExpr) = minus(this.toDouble(), right)                
 operator fun Number.minus(right: SheetRange) = minus(this.toDouble(), right)
 
 operator fun ScalarExpr.minus(right: Number) = minus(this, right.toDouble())
@@ -49,7 +46,7 @@ operator fun SheetRange.minus(right: SheetRange) = minus(this, right)
 
 // times typesafe infix operators
 operator fun Number.times(right: ScalarExpr) = times(this.toDouble(), right)
-operator fun Number.times(right: MatrixExpr) = times(this.toDouble(), right)
+operator fun Number.times(right: MatrixExpr) = times(this.toDouble(), right)                
 operator fun Number.times(right: SheetRange) = times(this.toDouble(), right)
 
 operator fun ScalarExpr.times(right: Number) = times(this, right.toDouble())
@@ -69,7 +66,7 @@ operator fun SheetRange.times(right: SheetRange) = times(this, right)
 
 // div typesafe infix operators
 operator fun Number.div(right: ScalarExpr) = div(this.toDouble(), right)
-operator fun Number.div(right: MatrixExpr) = div(this.toDouble(), right)
+operator fun Number.div(right: MatrixExpr) = div(this.toDouble(), right)                
 operator fun Number.div(right: SheetRange) = div(this.toDouble(), right)
 
 operator fun ScalarExpr.div(right: Number) = div(this, right.toDouble())
@@ -89,169 +86,183 @@ operator fun SheetRange.div(right: SheetRange) = div(this, right)
 
 // typesafe count
 private val countFunc = CountFunction()
-val count: AggregatableFunction = countFunc
-fun count(list: List<Double>): Double = countFunc(list)
-fun count(vararg values: Double): Double = countFunc(values)
-fun count(matrix: MatrixExpr): ScalarExpr = countFunc(matrix)
-fun count(sheet: Sheet): Sheet = countFunc(sheet)
-fun count(groupBy: GroupBy): Sheet = countFunc(groupBy)
-fun count(algebraic: AlgebraicExpr): ScalarExpr = countFunc(algebraic)
-fun count(range: SheetRange): ScalarExpr = countFunc(range)
-fun count(expr: Expr): Expr = countFunc(expr)
+val count : AggregatableFunction = countFunc
+fun count(vararg values : Number) : Double = countFunc(values)
+fun count(vararg values : ScalarExpr) : ScalarExpr = countFunc(values)
+fun count(vararg values : Any) : ScalarExpr = countFunc(values)
+fun count(sheet: Sheet) : Sheet = countFunc(sheet)
+fun count(groupBy: GroupBy) : Sheet = countFunc(groupBy)
+fun count(scalar : ScalarExpr) : ScalarExpr = countFunc(scalar)
+fun count(matrix : MatrixExpr) : ScalarExpr = countFunc(matrix)
+fun count(range : SheetRange) : ScalarExpr = countFunc(range)
+fun count(expr : Expr) : Expr = countFunc(expr)
 
 // typesafe nans
 private val nansFunc = NansFunction()
-val nans: AggregatableFunction = nansFunc
-fun nans(list: List<Double>): Double = nansFunc(list)
-fun nans(vararg values: Double): Double = nansFunc(values)
-fun nans(matrix: MatrixExpr): ScalarExpr = nansFunc(matrix)
-fun nans(sheet: Sheet): Sheet = nansFunc(sheet)
-fun nans(groupBy: GroupBy): Sheet = nansFunc(groupBy)
-fun nans(algebraic: AlgebraicExpr): ScalarExpr = nansFunc(algebraic)
-fun nans(range: SheetRange): ScalarExpr = nansFunc(range)
-fun nans(expr: Expr): Expr = nansFunc(expr)
+val nans : AggregatableFunction = nansFunc
+fun nans(vararg values : Number) : Double = nansFunc(values)
+fun nans(vararg values : ScalarExpr) : ScalarExpr = nansFunc(values)
+fun nans(vararg values : Any) : ScalarExpr = nansFunc(values)
+fun nans(sheet: Sheet) : Sheet = nansFunc(sheet)
+fun nans(groupBy: GroupBy) : Sheet = nansFunc(groupBy)
+fun nans(scalar : ScalarExpr) : ScalarExpr = nansFunc(scalar)
+fun nans(matrix : MatrixExpr) : ScalarExpr = nansFunc(matrix)
+fun nans(range : SheetRange) : ScalarExpr = nansFunc(range)
+fun nans(expr : Expr) : Expr = nansFunc(expr)
 
 // typesafe mean
 private val meanFunc = MeanFunction()
 val mean : AggregatableFunction = meanFunc
-fun mean(list : List<Double>) : Double = meanFunc(list)
-fun mean(vararg values : Double) : Double = meanFunc(values)
-fun mean(matrix : MatrixExpr) : ScalarExpr = meanFunc(matrix)
+fun mean(vararg values : Number) : Double = meanFunc(values)
+fun mean(vararg values : ScalarExpr) : ScalarExpr = meanFunc(values)
+fun mean(vararg values : Any) : ScalarExpr = meanFunc(values)
 fun mean(sheet: Sheet) : Sheet = meanFunc(sheet)
 fun mean(groupBy: GroupBy) : Sheet = meanFunc(groupBy)
-fun mean(algebraic : AlgebraicExpr) : ScalarExpr = meanFunc(algebraic)
+fun mean(scalar : ScalarExpr) : ScalarExpr = meanFunc(scalar)
+fun mean(matrix : MatrixExpr) : ScalarExpr = meanFunc(matrix)
 fun mean(range : SheetRange) : ScalarExpr = meanFunc(range)
 fun mean(expr : Expr) : Expr = meanFunc(expr)
 
 // typesafe min
 private val minFunc = MinFunction()
 val min : AggregatableFunction = minFunc
-fun min(list : List<Double>) : Double = minFunc(list)
-fun min(vararg values : Double) : Double = minFunc(values)
-fun min(matrix : MatrixExpr) : ScalarExpr = minFunc(matrix)
+fun min(vararg values : Number) : Double = minFunc(values)
+fun min(vararg values : ScalarExpr) : ScalarExpr = minFunc(values)
+fun min(vararg values : Any) : ScalarExpr = minFunc(values)
 fun min(sheet: Sheet) : Sheet = minFunc(sheet)
 fun min(groupBy: GroupBy) : Sheet = minFunc(groupBy)
-fun min(algebraic : AlgebraicExpr) : ScalarExpr = minFunc(algebraic)
+fun min(scalar : ScalarExpr) : ScalarExpr = minFunc(scalar)
+fun min(matrix : MatrixExpr) : ScalarExpr = minFunc(matrix)
 fun min(range : SheetRange) : ScalarExpr = minFunc(range)
 fun min(expr : Expr) : Expr = minFunc(expr)
 
 // typesafe percentile25
 private val percentile25Func = Percentile25Function()
 val percentile25 : AggregatableFunction = percentile25Func
-fun percentile25(list : List<Double>) : Double = percentile25Func(list)
-fun percentile25(vararg values : Double) : Double = percentile25Func(values)
-fun percentile25(matrix : MatrixExpr) : ScalarExpr = percentile25Func(matrix)
+fun percentile25(vararg values : Number) : Double = percentile25Func(values)
+fun percentile25(vararg values : ScalarExpr) : ScalarExpr = percentile25Func(values)
+fun percentile25(vararg values : Any) : ScalarExpr = percentile25Func(values)
 fun percentile25(sheet: Sheet) : Sheet = percentile25Func(sheet)
 fun percentile25(groupBy: GroupBy) : Sheet = percentile25Func(groupBy)
-fun percentile25(algebraic : AlgebraicExpr) : ScalarExpr = percentile25Func(algebraic)
+fun percentile25(scalar : ScalarExpr) : ScalarExpr = percentile25Func(scalar)
+fun percentile25(matrix : MatrixExpr) : ScalarExpr = percentile25Func(matrix)
 fun percentile25(range : SheetRange) : ScalarExpr = percentile25Func(range)
 fun percentile25(expr : Expr) : Expr = percentile25Func(expr)
 
 // typesafe median
 private val medianFunc = MedianFunction()
 val median : AggregatableFunction = medianFunc
-fun median(list : List<Double>) : Double = medianFunc(list)
-fun median(vararg values : Double) : Double = medianFunc(values)
-fun median(matrix : MatrixExpr) : ScalarExpr = medianFunc(matrix)
+fun median(vararg values : Number) : Double = medianFunc(values)
+fun median(vararg values : ScalarExpr) : ScalarExpr = medianFunc(values)
+fun median(vararg values : Any) : ScalarExpr = medianFunc(values)
 fun median(sheet: Sheet) : Sheet = medianFunc(sheet)
 fun median(groupBy: GroupBy) : Sheet = medianFunc(groupBy)
-fun median(algebraic : AlgebraicExpr) : ScalarExpr = medianFunc(algebraic)
+fun median(scalar : ScalarExpr) : ScalarExpr = medianFunc(scalar)
+fun median(matrix : MatrixExpr) : ScalarExpr = medianFunc(matrix)
 fun median(range : SheetRange) : ScalarExpr = medianFunc(range)
 fun median(expr : Expr) : Expr = medianFunc(expr)
 
 // typesafe percentile75
 private val percentile75Func = Percentile75Function()
 val percentile75 : AggregatableFunction = percentile75Func
-fun percentile75(list : List<Double>) : Double = percentile75Func(list)
-fun percentile75(vararg values : Double) : Double = percentile75Func(values)
-fun percentile75(matrix : MatrixExpr) : ScalarExpr = percentile75Func(matrix)
+fun percentile75(vararg values : Number) : Double = percentile75Func(values)
+fun percentile75(vararg values : ScalarExpr) : ScalarExpr = percentile75Func(values)
+fun percentile75(vararg values : Any) : ScalarExpr = percentile75Func(values)
 fun percentile75(sheet: Sheet) : Sheet = percentile75Func(sheet)
 fun percentile75(groupBy: GroupBy) : Sheet = percentile75Func(groupBy)
-fun percentile75(algebraic : AlgebraicExpr) : ScalarExpr = percentile75Func(algebraic)
+fun percentile75(scalar : ScalarExpr) : ScalarExpr = percentile75Func(scalar)
+fun percentile75(matrix : MatrixExpr) : ScalarExpr = percentile75Func(matrix)
 fun percentile75(range : SheetRange) : ScalarExpr = percentile75Func(range)
 fun percentile75(expr : Expr) : Expr = percentile75Func(expr)
 
 // typesafe max
 private val maxFunc = MaxFunction()
 val max : AggregatableFunction = maxFunc
-fun max(list : List<Double>) : Double = maxFunc(list)
-fun max(vararg values : Double) : Double = maxFunc(values)
-fun max(matrix : MatrixExpr) : ScalarExpr = maxFunc(matrix)
+fun max(vararg values : Number) : Double = maxFunc(values)
+fun max(vararg values : ScalarExpr) : ScalarExpr = maxFunc(values)
+fun max(vararg values : Any) : ScalarExpr = maxFunc(values)
 fun max(sheet: Sheet) : Sheet = maxFunc(sheet)
 fun max(groupBy: GroupBy) : Sheet = maxFunc(groupBy)
-fun max(algebraic : AlgebraicExpr) : ScalarExpr = maxFunc(algebraic)
+fun max(scalar : ScalarExpr) : ScalarExpr = maxFunc(scalar)
+fun max(matrix : MatrixExpr) : ScalarExpr = maxFunc(matrix)
 fun max(range : SheetRange) : ScalarExpr = maxFunc(range)
 fun max(expr : Expr) : Expr = maxFunc(expr)
 
 // typesafe variance
 private val varianceFunc = VarianceFunction()
 val variance : AggregatableFunction = varianceFunc
-fun variance(list : List<Double>) : Double = varianceFunc(list)
-fun variance(vararg values : Double) : Double = varianceFunc(values)
-fun variance(matrix : MatrixExpr) : ScalarExpr = varianceFunc(matrix)
+fun variance(vararg values : Number) : Double = varianceFunc(values)
+fun variance(vararg values : ScalarExpr) : ScalarExpr = varianceFunc(values)
+fun variance(vararg values : Any) : ScalarExpr = varianceFunc(values)
 fun variance(sheet: Sheet) : Sheet = varianceFunc(sheet)
 fun variance(groupBy: GroupBy) : Sheet = varianceFunc(groupBy)
-fun variance(algebraic : AlgebraicExpr) : ScalarExpr = varianceFunc(algebraic)
+fun variance(scalar : ScalarExpr) : ScalarExpr = varianceFunc(scalar)
+fun variance(matrix : MatrixExpr) : ScalarExpr = varianceFunc(matrix)
 fun variance(range : SheetRange) : ScalarExpr = varianceFunc(range)
 fun variance(expr : Expr) : Expr = varianceFunc(expr)
 
 // typesafe stdev
 private val stdevFunc = StdevFunction()
 val stdev : AggregatableFunction = stdevFunc
-fun stdev(list : List<Double>) : Double = stdevFunc(list)
-fun stdev(vararg values : Double) : Double = stdevFunc(values)
-fun stdev(matrix : MatrixExpr) : ScalarExpr = stdevFunc(matrix)
+fun stdev(vararg values : Number) : Double = stdevFunc(values)
+fun stdev(vararg values : ScalarExpr) : ScalarExpr = stdevFunc(values)
+fun stdev(vararg values : Any) : ScalarExpr = stdevFunc(values)
 fun stdev(sheet: Sheet) : Sheet = stdevFunc(sheet)
 fun stdev(groupBy: GroupBy) : Sheet = stdevFunc(groupBy)
-fun stdev(algebraic : AlgebraicExpr) : ScalarExpr = stdevFunc(algebraic)
+fun stdev(scalar : ScalarExpr) : ScalarExpr = stdevFunc(scalar)
+fun stdev(matrix : MatrixExpr) : ScalarExpr = stdevFunc(matrix)
 fun stdev(range : SheetRange) : ScalarExpr = stdevFunc(range)
 fun stdev(expr : Expr) : Expr = stdevFunc(expr)
 
 // typesafe skewness
 private val skewnessFunc = SkewnessFunction()
 val skewness : AggregatableFunction = skewnessFunc
-fun skewness(list : List<Double>) : Double = skewnessFunc(list)
-fun skewness(vararg values : Double) : Double = skewnessFunc(values)
-fun skewness(matrix : MatrixExpr) : ScalarExpr = skewnessFunc(matrix)
+fun skewness(vararg values : Number) : Double = skewnessFunc(values)
+fun skewness(vararg values : ScalarExpr) : ScalarExpr = skewnessFunc(values)
+fun skewness(vararg values : Any) : ScalarExpr = skewnessFunc(values)
 fun skewness(sheet: Sheet) : Sheet = skewnessFunc(sheet)
 fun skewness(groupBy: GroupBy) : Sheet = skewnessFunc(groupBy)
-fun skewness(algebraic : AlgebraicExpr) : ScalarExpr = skewnessFunc(algebraic)
+fun skewness(scalar : ScalarExpr) : ScalarExpr = skewnessFunc(scalar)
+fun skewness(matrix : MatrixExpr) : ScalarExpr = skewnessFunc(matrix)
 fun skewness(range : SheetRange) : ScalarExpr = skewnessFunc(range)
 fun skewness(expr : Expr) : Expr = skewnessFunc(expr)
 
 // typesafe kurtosis
 private val kurtosisFunc = KurtosisFunction()
 val kurtosis : AggregatableFunction = kurtosisFunc
-fun kurtosis(list : List<Double>) : Double = kurtosisFunc(list)
-fun kurtosis(vararg values : Double) : Double = kurtosisFunc(values)
-fun kurtosis(matrix : MatrixExpr) : ScalarExpr = kurtosisFunc(matrix)
+fun kurtosis(vararg values : Number) : Double = kurtosisFunc(values)
+fun kurtosis(vararg values : ScalarExpr) : ScalarExpr = kurtosisFunc(values)
+fun kurtosis(vararg values : Any) : ScalarExpr = kurtosisFunc(values)
 fun kurtosis(sheet: Sheet) : Sheet = kurtosisFunc(sheet)
 fun kurtosis(groupBy: GroupBy) : Sheet = kurtosisFunc(groupBy)
-fun kurtosis(algebraic : AlgebraicExpr) : ScalarExpr = kurtosisFunc(algebraic)
+fun kurtosis(scalar : ScalarExpr) : ScalarExpr = kurtosisFunc(scalar)
+fun kurtosis(matrix : MatrixExpr) : ScalarExpr = kurtosisFunc(matrix)
 fun kurtosis(range : SheetRange) : ScalarExpr = kurtosisFunc(range)
 fun kurtosis(expr : Expr) : Expr = kurtosisFunc(expr)
 
 // typesafe cv
 private val cvFunc = CvFunction()
 val cv : AggregatableFunction = cvFunc
-fun cv(list : List<Double>) : Double = cvFunc(list)
-fun cv(vararg values : Double) : Double = cvFunc(values)
-fun cv(matrix : MatrixExpr) : ScalarExpr = cvFunc(matrix)
+fun cv(vararg values : Number) : Double = cvFunc(values)
+fun cv(vararg values : ScalarExpr) : ScalarExpr = cvFunc(values)
+fun cv(vararg values : Any) : ScalarExpr = cvFunc(values)
 fun cv(sheet: Sheet) : Sheet = cvFunc(sheet)
 fun cv(groupBy: GroupBy) : Sheet = cvFunc(groupBy)
-fun cv(algebraic : AlgebraicExpr) : ScalarExpr = cvFunc(algebraic)
+fun cv(scalar : ScalarExpr) : ScalarExpr = cvFunc(scalar)
+fun cv(matrix : MatrixExpr) : ScalarExpr = cvFunc(matrix)
 fun cv(range : SheetRange) : ScalarExpr = cvFunc(range)
 fun cv(expr : Expr) : Expr = cvFunc(expr)
 
 // typesafe sum
 private val sumFunc = SumFunction()
 val sum : AggregatableFunction = sumFunc
-fun sum(list : List<Double>) : Double = sumFunc(list)
-fun sum(vararg values : Double) : Double = sumFunc(values)
-fun sum(matrix : MatrixExpr) : ScalarExpr = sumFunc(matrix)
+fun sum(vararg values : Number) : Double = sumFunc(values)
+fun sum(vararg values : ScalarExpr) : ScalarExpr = sumFunc(values)
+fun sum(vararg values : Any) : ScalarExpr = sumFunc(values)
 fun sum(sheet: Sheet) : Sheet = sumFunc(sheet)
 fun sum(groupBy: GroupBy) : Sheet = sumFunc(groupBy)
-fun sum(algebraic : AlgebraicExpr) : ScalarExpr = sumFunc(algebraic)
+fun sum(scalar : ScalarExpr) : ScalarExpr = sumFunc(scalar)
+fun sum(matrix : MatrixExpr) : ScalarExpr = sumFunc(matrix)
 fun sum(range : SheetRange) : ScalarExpr = sumFunc(range)
 fun sum(expr : Expr) : Expr = sumFunc(expr)
 

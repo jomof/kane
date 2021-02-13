@@ -60,18 +60,18 @@ class GenerateCode {
             sb.append("val $op : AggregatableFunction = ${op}Func\n")
             sb.append(
                 """
-                fun $op(list : List<Double>) : Double = ${op}Func(list)
-                fun $op(vararg values : Double) : Double = ${op}Func(values)
-                fun $op(matrix : MatrixExpr) : ScalarExpr = ${op}Func(matrix)
+                fun $op(vararg values : Number) : Double = ${op}Func(values)
+                fun $op(vararg values : ScalarExpr) : ScalarExpr = ${op}Func(values)
+                fun $op(vararg values : Any) : ScalarExpr = ${op}Func(values)
                 fun $op(sheet: Sheet) : Sheet = ${op}Func(sheet)
                 fun $op(groupBy: GroupBy) : Sheet = ${op}Func(groupBy)
-                fun $op(algebraic : AlgebraicExpr) : ScalarExpr = ${op}Func(algebraic)
+                fun $op(scalar : ScalarExpr) : ScalarExpr = ${op}Func(scalar)
+                fun $op(matrix : MatrixExpr) : ScalarExpr = ${op}Func(matrix)
                 fun $op(range : SheetRange) : ScalarExpr = ${op}Func(range)
                 fun $op(expr : Expr) : Expr = ${op}Func(expr)
-                
-                
                 """.trimIndent()
             )
+            sb.append("\n\n")
         }
 
         for (func in Kane.unaryFunctions) {

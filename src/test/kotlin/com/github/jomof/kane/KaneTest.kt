@@ -41,6 +41,17 @@ class KaneTest {
     }
 
     @Test
+    fun `vararg of statistic`() {
+        val a by percent(0.1)
+        val b by percent(0.2)
+        mean(a, b).assertString("mean(a|b)")
+        mean(a, b).eval().assertString("15%")
+        mean(1.0, 2.0).assertString("1.5")
+        mean(a, 2.0).assertString("mean(a|2)")
+        mean(a, 2.0).eval().assertString("105%")
+    }
+
+    @Test
     fun `getValue of List Double`() {
         val x by (-5..5).map { (PI * it) / 5.0 }
         val y by tanh(x)
@@ -204,8 +215,8 @@ class KaneTest {
         for(i in 0 until 100) {
             (-5 until 5).forEach { point ->
                 xSlot.set(point.toDouble())
-                val target = relu(10.0 * point.toDouble() + 0.2)
-                targetSlot.set(target)
+                val t = relu(10.0 * point.toDouble() + 0.2)
+                targetSlot.set(t)
                 model.eval(space)
             }
         }
