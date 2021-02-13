@@ -164,6 +164,21 @@ p + ggsize(500, 250)
 
 [![](https://jomof.github.io/kane/figures/readme-density.svg)]
 
+## Standalone Equations
+You can also use equations outside of a sheet.
+
+```kotlin
+val x by (-200..200).map { (3.14 * it) / 100.0 }
+val y by sin(exp(x)/20.0)
+
+lets_plot(y.toMap()) +
+        geom_point { this.x = "x"; this.y = "y"; color = "y" } +
+        labs(
+            title = "$y",
+        )
+```
+[![](https://jomof.github.io/kane/figures/readme-standalone-equation.svg)]
+
 # Other topics
 - [Dealing with large .csv files](https://github.com/jomof/kane/blob/main/LargeCsvSupport.md)
 - [Goal Seeking](https://github.com/jomof/kane/blob/main/GoalSeeking.md)
