@@ -20,6 +20,7 @@ class GenerateCode {
             import com.github.jomof.kane.functions.*
             import com.github.jomof.kane.impl.functions.*
             import com.github.jomof.kane.impl.sheet.*
+            import com.github.jomof.kane.impl.*
             """.trimIndent()
         )
         sb.append("\n\n")
@@ -85,6 +86,8 @@ class GenerateCode {
                  * $op function
                  * [![](https://jomof.github.io/kane/figures/$op-profile.svg)]
                  */
+                fun $op(matrix : NamedMatrix) : MatrixExpr = ${op}Func(matrix as MatrixExpr)
+                fun $op(matrix : DataMatrix) : MatrixExpr = ${op}Func(matrix as MatrixExpr)
                 fun $op(matrix : MatrixExpr) : MatrixExpr = ${op}Func(matrix)
                 fun $op(scalar : ScalarExpr) : ScalarExpr = ${op}Func(scalar)
                 fun $op(scalar : Double) : Double = ${op}Func(scalar)
