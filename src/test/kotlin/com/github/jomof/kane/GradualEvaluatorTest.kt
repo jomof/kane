@@ -126,16 +126,6 @@ class GradualEvaluatorTest {
         mean.eval().assertString("mean=0.8")
     }
 
-//    @Test
-//    fun `cobinary`() {
-//        val a by constant(0.0)
-//        val b by constant(0.0)
-//        val x by randomOf(-1.0 to 3.0)
-//        val y by randomOf(-1.0 to 3.0)
-//        val result by sum(x * a + y * b)
-//        result.evalGradual(setOf("a", "b")).assertString("mean=0.8")
-//    }
-
     @Test
     fun `basic sheet`() {
         val sheet = sheetOf {
