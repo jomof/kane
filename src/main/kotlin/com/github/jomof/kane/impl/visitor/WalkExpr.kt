@@ -28,7 +28,7 @@ internal fun Expr.visit(f: (expr: Expr) -> Unit) {
             left.visit(f)
             right.visit(f)
         }
-        is AlgebraicBinaryMatrix -> {
+        is AlgebraicBinaryMatrixMatrixMatrix -> {
             left.visit(f)
             right.visit(f)
         }

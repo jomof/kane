@@ -1,6 +1,6 @@
 package com.github.jomof.kane
 
-import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalarStatisticFunction
+import com.github.jomof.kane.impl.functions.AlgebraicSummaryFunction
 import com.github.jomof.kane.impl.sheet.Sheet
 import com.github.jomof.kane.impl.sheet.possibleDataFormats
 import com.github.jomof.kane.impl.sheet.showExcelColumnTags
@@ -40,7 +40,7 @@ class Kane {
             kurtosis,
             cv,
             sum
-        ).map { it as AlgebraicUnaryScalarStatisticFunction }
+        ).map { it as AlgebraicSummaryFunction }
 
         /**
          * List of functions that take one parameter.

@@ -4,8 +4,8 @@ import com.github.jomof.kane.ScalarExpr
 import com.github.jomof.kane.impl.*
 
 private val PERCENTILE by BinaryOp(precedence = 7)
-private val PERCENTILE25 by UnaryOp("25%")
-private val PERCENTILE75 by UnaryOp("75%")
+private val PERCENTILE25 by SummaryOp("25%")
+private val PERCENTILE75 by SummaryOp("75%")
 
 open class PercentileFunction : AlgebraicBinaryScalarStatisticFunction {
     override val meta = PERCENTILE
@@ -31,12 +31,12 @@ open class PercentileFunction : AlgebraicBinaryScalarStatisticFunction {
 
 val percentile = PercentileFunction()
 
-class Percentile25Function : AlgebraicUnaryScalarStatisticFunction {
+class Percentile25Function : AlgebraicSummaryFunction {
     override val meta = PERCENTILE25
     override fun lookupStatistic(statistic: StreamingSamples) = statistic.percentile(0.25)
 }
 
-class Percentile75Function : AlgebraicUnaryScalarStatisticFunction {
+class Percentile75Function : AlgebraicSummaryFunction {
     override val meta = PERCENTILE75
     override fun lookupStatistic(statistic: StreamingSamples) = statistic.percentile(0.75)
 }

@@ -32,6 +32,12 @@ data class UnaryOp(val op: String = "", val simpleName: String = "") {
         else this).copy(simpleName = property.name.toLowerCase())
 }
 
+data class SummaryOp(val op: String = "", val simpleName: String = "") {
+    operator fun getValue(nothing: Nothing?, property: KProperty<*>) =
+        (if (op.isBlank()) copy(op = property.name.toLowerCase())
+        else this).copy(simpleName = property.name.toLowerCase())
+}
+
 data class BinaryOp(
     val op: String = "",
     val precedence: Int,
@@ -431,7 +437,7 @@ fun differentiate(expr: AlgebraicExpr): AlgebraicExpr {
             is AlgebraicBinaryScalarScalarScalar -> {
                 diffOr() ?: copy(left = left, right = right)
             }
-            is AlgebraicBinaryMatrix -> {
+            is AlgebraicBinaryMatrixMatrixMatrix -> {
                 diffOr() ?: copy(left = left, right = right)
             }
             is AlgebraicBinaryScalarMatrixMatrix -> {
@@ -554,7 +560,7 @@ fun binaryRequiresParents(parent: BinaryOp, child: BinaryOp, childIsRight: Boole
 
 fun Expr.tryGetBinaryOp(): BinaryOp? = when (this) {
     is AlgebraicBinaryScalarScalarScalar -> op.meta
-    is AlgebraicBinaryMatrix -> op.meta
+    is AlgebraicBinaryMatrixMatrixMatrix -> op.meta
     is AlgebraicBinaryMatrixScalarMatrix -> op.meta
     is AlgebraicBinaryScalarMatrixMatrix -> op.meta
     is AlgebraicDeferredDataMatrix -> op
@@ -659,7 +665,7 @@ fun Expr.render(entryPoint: Boolean = true, outerType: AlgebraicType? = null): S
             op == d && value is NamedMatrixVariable -> "${op.meta.op}${value.self()}"
             op == negate &&
                     (value is NamedMatrixVariable ||
-                            value is AlgebraicBinaryMatrix && value.op == times) -> "${op.meta.op}${value.self()}"
+                            value is AlgebraicBinaryMatrixMatrixMatrix && value.op == times) -> "${op.meta.op}${value.self()}"
             else -> "${op.meta.op}(${value.self()})"
         }
         is AlgebraicBinaryScalarStatistic -> {
@@ -673,7 +679,7 @@ fun Expr.render(entryPoint: Boolean = true, outerType: AlgebraicType? = null): S
                 else -> binary(op.meta, left, right)
             }
         }
-        is AlgebraicBinaryMatrix -> {
+        is AlgebraicBinaryMatrixMatrixMatrix -> {
             when (op) {
                 pow -> {
                     val rightSuper = tryConvertToSuperscript(right.self())

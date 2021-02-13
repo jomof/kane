@@ -127,7 +127,7 @@ internal open class RewritingVisitor(protected val checkIdentity: Boolean = fals
         else copy(value = rewritten)
     }
 
-    open fun rewrite(expr: AlgebraicBinaryMatrix): Expr = with(expr) {
+    open fun rewrite(expr: AlgebraicBinaryMatrixMatrixMatrix): Expr = with(expr) {
         val leftRewritten = matrix(left)
         val rightRewritten = matrix(right)
         if (leftRewritten === left && rightRewritten === right) return this
@@ -233,7 +233,7 @@ internal open class RewritingVisitor(protected val checkIdentity: Boolean = fals
                 is ConstantScalar -> rewrite(expr)
                 is DiscreteUniformRandomVariable -> rewrite(expr)
                 is ScalarStatistic -> rewrite(expr)
-                is AlgebraicBinaryMatrix -> rewrite(expr)
+                is AlgebraicBinaryMatrixMatrixMatrix -> rewrite(expr)
                 is AlgebraicBinaryMatrixScalarMatrix -> rewrite(expr)
                 is AlgebraicBinaryScalarScalarScalar -> rewrite(expr)
                 is AlgebraicBinaryScalarMatrixMatrix -> rewrite(expr)

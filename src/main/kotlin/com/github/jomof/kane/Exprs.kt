@@ -120,3 +120,30 @@ data class AlgebraicBinaryMatrixScalarMatrix(
     override fun toString() = render()
 }
 
+interface IAlgebraicBinaryMatrixMatrixMatrixFunction {
+    val meta: BinaryOp
+    operator fun invoke(left: MatrixExpr, right: MatrixExpr): MatrixExpr =
+        AlgebraicBinaryMatrixMatrixMatrix(this, left, right)
+
+    fun reduceArithmetic(left: MatrixExpr, right: MatrixExpr): MatrixExpr?
+    fun doubleOp(left: List<Double>, right: List<Double>): List<Double>
+    fun differentiate(
+        left: MatrixExpr,
+        leftd: MatrixExpr,
+        right: MatrixExpr,
+        rightd: MatrixExpr,
+        variable: ScalarExpr
+    ): MatrixExpr
+
+    fun type(left: AlgebraicType, right: AlgebraicType): AlgebraicType
+}
+
+data class AlgebraicBinaryMatrixMatrixMatrix(
+    val op: IAlgebraicBinaryMatrixMatrixMatrixFunction,
+    val left: MatrixExpr,
+    val right: MatrixExpr
+) : MatrixExpr {
+    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    override fun toString() = render()
+}
+

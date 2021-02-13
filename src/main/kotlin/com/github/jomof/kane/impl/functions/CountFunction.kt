@@ -4,9 +4,9 @@ import com.github.jomof.kane.MatrixExpr
 import com.github.jomof.kane.ScalarExpr
 import com.github.jomof.kane.impl.*
 
-private val COUNT by UnaryOp()
+private val COUNT by SummaryOp()
 
-class CountFunction : AlgebraicUnaryScalarStatisticFunction {
+class CountFunction : AlgebraicSummaryFunction {
     override val meta = COUNT
     override fun lookupStatistic(statistic: StreamingSamples) = statistic.count.toDouble()
     override fun reduceArithmetic(elements: List<ScalarExpr>) = constant(elements.size.toDouble())

@@ -47,8 +47,12 @@ internal fun AlgebraicBinaryScalarMatrixMatrix.getMatrixElement(column: Int, row
         right.getMatrixElement(column, row)
     )
 
-internal fun AlgebraicBinaryMatrix.getMatrixElement(column: Int, row: Int) =
-    AlgebraicBinaryScalarScalarScalar(op, left.getMatrixElement(column, row), right.getMatrixElement(column, row))
+internal fun AlgebraicBinaryMatrixMatrixMatrix.getMatrixElement(column: Int, row: Int) =
+    AlgebraicBinaryScalarScalarScalar(
+        op as AlgebraicBinaryFunction,
+        left.getMatrixElement(column, row),
+        right.getMatrixElement(column, row)
+    )
 
 internal fun CoerceMatrix.getMatrixElement(column: Int, row: Int): ScalarExpr {
     return when (value) {
@@ -83,7 +87,7 @@ internal fun Expr.getMatrixElement(column: Int, row: Int): ScalarExpr {
         is AlgebraicBinaryScalarMatrixMatrix -> getMatrixElement(column, row)
         is RetypeMatrix -> getMatrixElement(column, row)
         is AlgebraicDeferredDataMatrix -> getMatrixElement(column, row)
-        is AlgebraicBinaryMatrix -> getMatrixElement(column, row)
+        is AlgebraicBinaryMatrixMatrixMatrix -> getMatrixElement(column, row)
         is CoerceMatrix -> getMatrixElement(column, row)
         else ->
             error("$javaClass")
@@ -128,7 +132,7 @@ internal fun MatrixExpr.tryGetDimensions(sheetRowCount: Int? = null): Pair<Int?,
         is AlgebraicDeferredDataMatrix -> data.tryGetDimensions(sheetRowCount)
         is AlgebraicBinaryMatrixScalarMatrix -> left.tryGetDimensions(sheetRowCount)
         is AlgebraicBinaryScalarMatrixMatrix -> right.tryGetDimensions(sheetRowCount)
-        is AlgebraicBinaryMatrix -> {
+        is AlgebraicBinaryMatrixMatrixMatrix -> {
             val left = left.tryGetDimensions(sheetRowCount)
             val right = right.tryGetDimensions(sheetRowCount)
             val leftColumns = left.first

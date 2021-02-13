@@ -398,28 +398,28 @@ private class CollapseCellIndexedScalar : SheetRewritingVisitor() {
         }
     }
 
-    override fun rewrite(expr: AlgebraicBinaryMatrix): Expr = with(expr) {
+    override fun rewrite(expr: AlgebraicBinaryMatrixMatrixMatrix): Expr = with(expr) {
         val leftRewritten = rewrite(left)
         val rightRewritten = rewrite(right)
         if (leftRewritten === left && rightRewritten === right) return this
         return when {
             leftRewritten is ScalarExpr && rightRewritten is ScalarExpr -> AlgebraicBinaryScalarScalarScalar(
-                op,
+                op as AlgebraicBinaryFunction,
                 leftRewritten,
                 rightRewritten
             )
             leftRewritten is ScalarExpr && rightRewritten is MatrixExpr -> AlgebraicBinaryScalarMatrixMatrix(
-                op,
+                op as AlgebraicBinaryFunction,
                 leftRewritten,
                 rightRewritten
             )
             leftRewritten is MatrixExpr && rightRewritten is ScalarExpr -> AlgebraicBinaryMatrixScalarMatrix(
-                op,
+                op as AlgebraicBinaryFunction,
                 leftRewritten,
                 rightRewritten
             )
-            leftRewritten is MatrixExpr && rightRewritten is MatrixExpr -> AlgebraicBinaryMatrix(
-                op,
+            leftRewritten is MatrixExpr && rightRewritten is MatrixExpr -> AlgebraicBinaryMatrixMatrixMatrix(
+                op as AlgebraicBinaryFunction,
                 leftRewritten,
                 rightRewritten
             )

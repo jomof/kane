@@ -13,7 +13,8 @@ import kotlin.reflect.KProperty
 interface AlgebraicBinaryFunction :
     IAlgebraicBinaryScalarScalarScalarFunction,
     IAlgebraicBinaryMatrixScalarMatrixFunction,
-    IAlgebraicBinaryScalarMatrixMatrixFunction {
+    IAlgebraicBinaryScalarMatrixMatrixFunction,
+    IAlgebraicBinaryMatrixMatrixMatrixFunction {
     override val meta: BinaryOp
     override fun doubleOp(p1: Double, p2: Double): Double
     override fun doubleOp(left: List<Double>, right: Double): List<Double> {
@@ -21,6 +22,10 @@ interface AlgebraicBinaryFunction :
     }
 
     override fun doubleOp(left: Double, right: List<Double>): List<Double> {
+        TODO("Not yet implemented")
+    }
+
+    override fun doubleOp(left: List<Double>, right: List<Double>): List<Double> {
         TODO("Not yet implemented")
     }
 
@@ -44,8 +49,8 @@ interface AlgebraicBinaryFunction :
     operator fun invoke(p1: Double, p2: MatrixExpr): MatrixExpr =
         AlgebraicBinaryScalarMatrixMatrix(this, constant(p1), p2)
 
-    operator fun invoke(p1: MatrixExpr, p2: MatrixExpr): MatrixExpr =
-        AlgebraicBinaryMatrix(this, p1, p2)
+    override fun invoke(p1: MatrixExpr, p2: MatrixExpr): MatrixExpr =
+        AlgebraicBinaryMatrixMatrixMatrix(this, p1, p2)
 
     operator fun invoke(p1: MatrixExpr, p2: Double): MatrixExpr =
         AlgebraicBinaryMatrixScalarMatrix(this, p1, constant(p2))
@@ -81,6 +86,10 @@ interface AlgebraicBinaryFunction :
         TODO("Not yet implemented")
     }
 
+    override fun reduceArithmetic(left: MatrixExpr, right: MatrixExpr): MatrixExpr? {
+        TODO("Not yet implemented")
+    }
+
     override fun differentiate(
         p1: ScalarExpr,
         p1d: ScalarExpr,
@@ -108,15 +117,16 @@ interface AlgebraicBinaryFunction :
     ): MatrixExpr {
         TODO("Not yet implemented")
     }
-}
 
-data class AlgebraicBinaryMatrix(
-    val op: AlgebraicBinaryFunction,
-    val left: MatrixExpr,
-    val right: MatrixExpr
-) : MatrixExpr {
-    override fun toString() = render()
-    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    override fun differentiate(
+        left: MatrixExpr,
+        leftd: MatrixExpr,
+        right: MatrixExpr,
+        rightd: MatrixExpr,
+        variable: ScalarExpr
+    ): MatrixExpr {
+        TODO("Not yet implemented")
+    }
 }
 
 // f(scalar)->scalar
@@ -165,8 +175,8 @@ interface AlgebraicUnaryFunction :
 
 // f(scalar statistic)->scalar
 interface AggregatableFunction
-interface AlgebraicUnaryScalarStatisticFunction : AggregatableFunction {
-    val meta: UnaryOp
+interface AlgebraicSummaryFunction : AggregatableFunction {
+    val meta: SummaryOp
 
     fun call(values: Array<out Number>): Double {
         val statistic = StreamingSamples()
@@ -241,7 +251,7 @@ interface AlgebraicUnaryScalarStatisticFunction : AggregatableFunction {
 }
 
 data class AlgebraicUnaryScalarStatistic(
-    val op: AlgebraicUnaryScalarStatisticFunction,
+    val op: AlgebraicSummaryFunction,
     val value: AlgebraicExpr
 ) : ScalarExpr {
     init {
@@ -302,13 +312,6 @@ interface AlgebraicUnaryMatrixScalarFunction :
     IAlgebraicUnaryMatrixMatrixFunction {
     override val meta: UnaryOp
 }
-
-//data class AlgebraicUnaryMatrixScalar(
-//    val op: AlgebraicUnaryMatrixScalarFunction,
-//    val value: MatrixExpr
-//) : ScalarExpr {
-//    override fun toString() = render()
-//}
 
 // f(expr, expr) -> matrix
 data class AlgebraicDeferredDataMatrix(

@@ -67,7 +67,7 @@ private class ReduceAlgebraicUnaryScalar : RewritingVisitor() {
 }
 
 private val reduceAlgebraicBinaryMatrix = object : SheetRewritingVisitor() {
-    override fun rewrite(expr: AlgebraicBinaryMatrix): Expr = with(expr) {
+    override fun rewrite(expr: AlgebraicBinaryMatrixMatrixMatrix): Expr = with(expr) {
         val (columns, rows) = tryGetDimensions(rowCount())
         if (columns == null || rows == null) error("Could not get column or row count")
         val left = left.toDataMatrix(columns, rows)
@@ -75,7 +75,7 @@ private val reduceAlgebraicBinaryMatrix = object : SheetRewritingVisitor() {
         assert(left.columns == right.columns)
         assert(left.rows == right.rows)
         return DataMatrix(columns, rows, (left.elements zip right.elements).map { (l, r) ->
-            AlgebraicBinaryScalarScalarScalar(op, l, r)
+            AlgebraicBinaryScalarScalarScalar(op as AlgebraicBinaryFunction, l, r)
         })
     }
 }
