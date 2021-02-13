@@ -321,7 +321,11 @@ private fun AlgebraicExpr.evalSpace(space : DoubleArray) : Double {
         is AlgebraicBinaryScalarScalarScalar -> op.doubleOp(left.evalSpace(space), right.evalSpace(space))
         is AlgebraicUnaryScalarScalar -> op.doubleOp(value.evalSpace(space))
         is RetypeScalar -> getConstant()
-        is AlgebraicUnaryMatrixScalar -> op.doubleOp(value.elements.map { it.evalSpace(space) })
+        is AlgebraicUnaryMatrixScalar -> (op as AlgebraicUnaryMatrixScalarFunction).doubleOp(value.elements.map {
+            it.evalSpace(
+                space
+            )
+        })
         else ->
             error("$javaClass")
     }

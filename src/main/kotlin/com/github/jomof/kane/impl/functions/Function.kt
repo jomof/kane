@@ -16,6 +16,13 @@ interface AlgebraicBinaryFunction :
     IAlgebraicBinaryScalarMatrixMatrixFunction {
     override val meta: BinaryOp
     override fun doubleOp(p1: Double, p2: Double): Double
+    override fun doubleOp(left: List<Double>, right: Double): List<Double> {
+        TODO("Not yet implemented")
+    }
+
+    override fun doubleOp(left: Double, right: List<Double>): List<Double> {
+        TODO("Not yet implemented")
+    }
 
     operator fun invoke(p1: Double, p2: Double) = doubleOp(p1, p2)
 
@@ -113,7 +120,9 @@ data class AlgebraicBinaryMatrix(
 }
 
 // f(scalar)->scalar
-interface AlgebraicUnaryFunction : IAlgebraicUnaryScalarScalarFunction {
+interface AlgebraicUnaryFunction :
+    IAlgebraicUnaryMatrixMatrixFunction,
+    IAlgebraicUnaryScalarScalarFunction {
     override val meta: UnaryOp
     val type: AlgebraicType? get() = null
     private fun wrap(expr: ScalarExpr): ScalarExpr {
@@ -128,8 +137,12 @@ interface AlgebraicUnaryFunction : IAlgebraicUnaryScalarScalarFunction {
 
     operator fun invoke(value: Double) = doubleOp(value)
     override fun doubleOp(value: Double): Double
+    override fun doubleOp(value: List<Double>): List<Double> {
+        TODO("Not yet implemented")
+    }
+
     override fun invoke(value: ScalarExpr): ScalarExpr = wrap(AlgebraicUnaryScalarScalar(this, value))
-    operator fun invoke(value: MatrixExpr): MatrixExpr = wrap(AlgebraicUnaryMatrix(this, value))
+    override fun invoke(value: MatrixExpr): MatrixExpr = wrap(AlgebraicUnaryMatrixMatrix(this, value))
     override fun reduceArithmetic(value: ScalarExpr): ScalarExpr? {
         val isConstValue = value.canGetConstant()
         return when {
@@ -138,16 +151,16 @@ interface AlgebraicUnaryFunction : IAlgebraicUnaryScalarScalarFunction {
         }
     }
 
-    override fun differentiate(expr: ScalarExpr, exprd: ScalarExpr, variable: ScalarExpr): ScalarExpr
-    override fun type(value: AlgebraicType) = value
-}
+    override fun reduceArithmetic(value: MatrixExpr): MatrixExpr? {
+        TODO("Not yet implemented")
+    }
 
-data class AlgebraicUnaryMatrix(
-    val op: AlgebraicUnaryFunction,
-    val value: MatrixExpr
-) : MatrixExpr {
-    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
-    override fun toString() = render()
+    override fun differentiate(expr: ScalarExpr, exprd: ScalarExpr, variable: ScalarExpr): ScalarExpr
+    override fun differentiate(value: MatrixExpr, valued: MatrixExpr, variable: ScalarExpr): MatrixExpr {
+        TODO("Not yet implemented")
+    }
+
+    override fun type(value: AlgebraicType) = value
 }
 
 // f(scalar statistic)->scalar
@@ -284,19 +297,21 @@ data class AlgebraicBinaryMatrixScalarStatistic(
 }
 
 // f(matrix)->scalar
-interface AlgebraicUnaryMatrixScalarFunction {
-    val meta: UnaryOp
-    fun doubleOp(values: List<Double>): Double
-    operator fun invoke(value: MatrixExpr): ScalarExpr = AlgebraicUnaryMatrixScalar(this, value)
-    fun reduceArithmetic(value: MatrixExpr): ScalarExpr?
+interface AlgebraicUnaryMatrixScalarFunction :
+    IAlgebraicUnaryScalarScalarFunction,
+    IAlgebraicUnaryMatrixScalarFunction {
+    override val meta: UnaryOp
+    override fun doubleOp(values: List<Double>): Double
+    override fun invoke(value: MatrixExpr): ScalarExpr = AlgebraicUnaryMatrixScalar(this, value)
+    override fun reduceArithmetic(value: MatrixExpr): ScalarExpr?
 }
 
-data class AlgebraicUnaryMatrixScalar(
-    val op: AlgebraicUnaryMatrixScalarFunction,
-    val value: MatrixExpr
-) : ScalarExpr {
-    override fun toString() = render()
-}
+//data class AlgebraicUnaryMatrixScalar(
+//    val op: AlgebraicUnaryMatrixScalarFunction,
+//    val value: MatrixExpr
+//) : ScalarExpr {
+//    override fun toString() = render()
+//}
 
 // f(expr, expr) -> matrix
 data class AlgebraicDeferredDataMatrix(

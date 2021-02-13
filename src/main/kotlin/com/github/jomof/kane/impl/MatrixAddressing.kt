@@ -21,8 +21,8 @@ internal fun DataMatrix.getMatrixElement(column: Int, row: Int): ScalarExpr {
     return elements[coordinateToIndex(column, row)]
 }
 
-internal fun AlgebraicUnaryMatrix.getMatrixElement(column: Int, row: Int) =
-    AlgebraicUnaryScalarScalar(op, value.getMatrixElement(column, row))
+internal fun AlgebraicUnaryMatrixMatrix.getMatrixElement(column: Int, row: Int) =
+    AlgebraicUnaryScalarScalar(op as IAlgebraicUnaryScalarScalarFunction, value.getMatrixElement(column, row))
 
 internal fun AlgebraicBinaryMatrixScalarMatrix.getMatrixElement(column: Int, row: Int) =
     AlgebraicBinaryScalarScalarScalar(
@@ -78,7 +78,7 @@ internal fun Expr.getMatrixElement(column: Int, row: Int): ScalarExpr {
         is NamedMatrixVariable -> getMatrixElement(column, row)
         is NamedMatrix -> getMatrixElement(column, row)
         is DataMatrix -> getMatrixElement(column, row)
-        is AlgebraicUnaryMatrix -> getMatrixElement(column, row)
+        is AlgebraicUnaryMatrixMatrix -> getMatrixElement(column, row)
         is AlgebraicBinaryMatrixScalarMatrix -> getMatrixElement(column, row)
         is AlgebraicBinaryScalarMatrixMatrix -> getMatrixElement(column, row)
         is RetypeMatrix -> getMatrixElement(column, row)
@@ -124,7 +124,7 @@ internal fun MatrixExpr.tryGetDimensions(sheetRowCount: Int? = null): Pair<Int?,
         is NamedMatrixVariable -> columns to rows
         is DataMatrix -> columns to rows
         is RetypeMatrix -> matrix.tryGetDimensions(sheetRowCount)
-        is AlgebraicUnaryMatrix -> value.tryGetDimensions(sheetRowCount)
+        is AlgebraicUnaryMatrixMatrix -> value.tryGetDimensions(sheetRowCount)
         is AlgebraicDeferredDataMatrix -> data.tryGetDimensions(sheetRowCount)
         is AlgebraicBinaryMatrixScalarMatrix -> left.tryGetDimensions(sheetRowCount)
         is AlgebraicBinaryScalarMatrixMatrix -> right.tryGetDimensions(sheetRowCount)

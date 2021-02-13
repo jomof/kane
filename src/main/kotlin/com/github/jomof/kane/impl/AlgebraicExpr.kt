@@ -368,7 +368,7 @@ fun differentiate(expr: AlgebraicExpr): AlgebraicExpr {
     }
 
     fun MatrixExpr.tryD() = when {
-        this is AlgebraicUnaryMatrix && op == d -> value
+        this is AlgebraicUnaryMatrixMatrix && op == d -> value
         else -> null
     }
 
@@ -654,7 +654,7 @@ fun Expr.render(entryPoint: Boolean = true, outerType: AlgebraicType? = null): S
             (outerType ?: kaneDouble).render(initial)
         is NamedScalarAssign -> "${left.self()} <- ${right.self()}"
         is NamedMatrixAssign -> "${left.self()} <- ${right.self()}"
-        is AlgebraicUnaryMatrix -> when {
+        is AlgebraicUnaryMatrixMatrix -> when {
             op == exp -> {
                 val rightSuper = tryConvertToSuperscript(value.self())
                 if (rightSuper == null) "${op.meta.op}(${value.self()})"

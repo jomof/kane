@@ -22,6 +22,40 @@ data class AlgebraicUnaryScalarScalar(
     override fun toString() = render()
 }
 
+interface IAlgebraicUnaryMatrixScalarFunction {
+    val meta: UnaryOp
+    operator fun invoke(value: MatrixExpr): ScalarExpr = AlgebraicUnaryMatrixScalar(this, value)
+    fun reduceArithmetic(value: MatrixExpr): ScalarExpr?
+    fun doubleOp(value: List<Double>): Double
+    fun differentiate(value: MatrixExpr, valued: MatrixExpr, variable: ScalarExpr): ScalarExpr
+    fun type(value: AlgebraicType): AlgebraicType
+}
+
+data class AlgebraicUnaryMatrixScalar(
+    val op: IAlgebraicUnaryMatrixScalarFunction,
+    val value: MatrixExpr
+) : ScalarExpr {
+    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    override fun toString() = render()
+}
+
+interface IAlgebraicUnaryMatrixMatrixFunction {
+    val meta: UnaryOp
+    operator fun invoke(value: MatrixExpr): MatrixExpr = AlgebraicUnaryMatrixMatrix(this, value)
+    fun reduceArithmetic(value: MatrixExpr): MatrixExpr?
+    fun doubleOp(value: List<Double>): List<Double>
+    fun differentiate(value: MatrixExpr, valued: MatrixExpr, variable: ScalarExpr): MatrixExpr
+    fun type(value: AlgebraicType): AlgebraicType
+}
+
+data class AlgebraicUnaryMatrixMatrix(
+    val op: IAlgebraicUnaryMatrixMatrixFunction,
+    val value: MatrixExpr
+) : MatrixExpr {
+    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    override fun toString() = render()
+}
+
 interface IAlgebraicBinaryScalarScalarScalarFunction {
     val meta: BinaryOp
     operator fun invoke(left: ScalarExpr, right: ScalarExpr): ScalarExpr =
@@ -55,7 +89,7 @@ interface IAlgebraicBinaryScalarMatrixMatrixFunction {
         AlgebraicBinaryScalarMatrixMatrix(this, left, right)
 
     fun reduceArithmetic(left: ScalarExpr, right: MatrixExpr): MatrixExpr?
-    fun doubleOp(left: Double, right: Double): Double
+    fun doubleOp(left: Double, right: List<Double>): List<Double>
     fun differentiate(
         left: ScalarExpr,
         leftd: ScalarExpr,
@@ -82,7 +116,7 @@ interface IAlgebraicBinaryMatrixScalarMatrixFunction {
         AlgebraicBinaryMatrixScalarMatrix(this, left, right)
 
     fun reduceArithmetic(left: MatrixExpr, right: ScalarExpr): MatrixExpr?
-    fun doubleOp(left: Double, right: Double): Double
+    fun doubleOp(left: List<Double>, right: Double): List<Double>
     fun differentiate(
         left: MatrixExpr,
         leftd: MatrixExpr,

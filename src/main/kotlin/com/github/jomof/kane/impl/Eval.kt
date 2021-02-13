@@ -80,8 +80,8 @@ private val reduceAlgebraicBinaryMatrix = object : SheetRewritingVisitor() {
     }
 }
 private val reduceAlgebraicUnaryMatrix = object : RewritingVisitor() {
-    override fun rewrite(expr: AlgebraicUnaryMatrix) = expr.value.map {
-        AlgebraicUnaryScalarScalar(expr.op, it)
+    override fun rewrite(expr: AlgebraicUnaryMatrixMatrix) = expr.value.map {
+        AlgebraicUnaryScalarScalar(expr.op as IAlgebraicUnaryScalarScalarFunction, it)
     }
 }
 private val reduceAlgebraicUnaryScalarStatistic = object : RewritingVisitor() {

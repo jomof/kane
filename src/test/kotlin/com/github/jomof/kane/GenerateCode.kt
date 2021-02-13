@@ -9,8 +9,7 @@ class GenerateCode {
 
     private enum class Shape {
         Scalar,
-        Matrix,
-        Function
+        Matrix
     }
 
     private data class Parameter(
@@ -26,7 +25,8 @@ class GenerateCode {
 
     private val operators = listOf(
         Operator("Unary", Scalar, listOf(Parameter("value", Scalar))),
-        //      Operator("Unary", Scalar, listOf(Parameter("value", Matrix))),
+        Operator("Unary", Scalar, listOf(Parameter("value", Matrix))),
+        Operator("Unary", Matrix, listOf(Parameter("value", Matrix))),
         Operator("Binary", Scalar, listOf(Parameter("left", Scalar), Parameter("right", Scalar))),
         Operator("Binary", Matrix, listOf(Parameter("left", Scalar), Parameter("right", Matrix))),
         Operator("Binary", Matrix, listOf(Parameter("left", Matrix), Parameter("right", Scalar))),
@@ -75,10 +75,16 @@ class GenerateCode {
             sb.append(") : ${op.shape}Expr?\n")
             sb.append("    fun doubleOp(")
             for ((index, p) in op.parameters.withIndex()) {
-                sb.append("${p.name} : Double")
+                when (p.kind) {
+                    Scalar -> sb.append("${p.name} : Double")
+                    Matrix -> sb.append("${p.name} : List<Double>")
+                }
                 if (index != op.parameters.size - 1) sb.append(", ")
             }
-            sb.append(") : Double\n")
+            when (op.shape) {
+                Scalar -> sb.append(") : Double\n")
+                Matrix -> sb.append(") : List<Double>\n")
+            }
             sb.append("    fun differentiate(")
             for ((index, p) in op.parameters.withIndex()) {
                 sb.append("${p.name} : ${p.kind}Expr, ")
