@@ -290,7 +290,7 @@ val cos: AlgebraicUnaryScalarFunction = cosFunc
  * [![](https://jomof.github.io/kane/figures/cos-profile.svg)]
  */
 fun cos(matrix: MatrixExpr): MatrixExpr = cosFunc(matrix)
-fun cos(scalar : ScalarExpr) : ScalarExpr = cosFunc(scalar)
+fun cos(scalar: ScalarExpr): ScalarExpr = cosFunc(scalar)
 fun cos(scalar : Double) : Double = cosFunc(scalar)
 
 // typesafe lrelu
