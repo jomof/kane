@@ -5,7 +5,7 @@ import com.github.jomof.kane.impl.UnaryOp
 
 val D by UnaryOp()
 
-private class DFunction : AlgebraicUnaryScalarFunction {
+private class DFunction : AlgebraicUnaryFunction {
     override val meta = D
     override fun doubleOp(value: Double) = error("")
 
@@ -14,10 +14,10 @@ private class DFunction : AlgebraicUnaryScalarFunction {
     }
 
     override fun differentiate(
-        expr : ScalarExpr,
-        exprd : ScalarExpr,
+        expr: ScalarExpr,
+        exprd: ScalarExpr,
         variable : ScalarExpr
     ) = error("")
 }
 
-val d : AlgebraicUnaryScalarFunction = DFunction()
+val d: AlgebraicUnaryFunction = DFunction()

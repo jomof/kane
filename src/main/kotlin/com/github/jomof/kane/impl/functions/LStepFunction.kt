@@ -6,7 +6,7 @@ import com.github.jomof.kane.impl.constant
 
 private val LSTEP by UnaryOp()
 
-internal class LstepFunction : AlgebraicUnaryScalarFunction {
+internal class LstepFunction : AlgebraicUnaryFunction {
     override val meta = LSTEP
     override fun doubleOp(value: Double) = if (value < 0.0) 0.1 else 1.0
 

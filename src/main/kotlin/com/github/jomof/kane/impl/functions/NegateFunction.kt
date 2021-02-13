@@ -9,12 +9,12 @@ import com.github.jomof.kane.negate
 
 private val NEGATE by UnaryOp(op = "-")
 
-internal class NegateFunction : AlgebraicUnaryScalarFunction {
+internal class NegateFunction : AlgebraicUnaryFunction {
     override val meta = NEGATE
     override fun doubleOp(value: Double) = -value
 
     override fun reduceArithmetic(value: ScalarExpr): ScalarExpr? {
-        if (value is AlgebraicUnaryScalar && value.op == negate) return value.value
+        if (value is AlgebraicUnaryScalarScalar && value.op == negate) return value.value
         if (value is ConstantScalar) return value.copy(value = -value.value)
         return null
     }

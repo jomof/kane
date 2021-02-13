@@ -10,44 +10,38 @@ import com.github.jomof.kane.impl.types.*
 import kotlin.reflect.KProperty
 
 // f(scalar,scalar)->scalar (extended to matrix 1<->1 mapping)
-interface AlgebraicBinaryScalarFunction {
-    val meta: BinaryOp
-    fun doubleOp(p1: Double, p2: Double): Double
+interface AlgebraicBinaryFunction :
+    IAlgebraicBinaryScalarScalarScalarFunction,
+    IAlgebraicBinaryMatrixScalarMatrixFunction,
+    IAlgebraicBinaryScalarMatrixMatrixFunction {
+    override val meta: BinaryOp
+    override fun doubleOp(p1: Double, p2: Double): Double
 
     operator fun invoke(p1: Double, p2: Double) = doubleOp(p1, p2)
 
-    operator fun invoke(p1: ScalarExpr, p2: ScalarExpr): ScalarExpr =
-        AlgebraicBinaryScalar(this, p1, p2)
-
     operator fun invoke(p1: SheetRange, p2: ScalarExpr): ScalarExpr =
-        AlgebraicBinaryScalar(this, CoerceScalar(p1), p2)
+        AlgebraicBinaryScalarScalarScalar(this, CoerceScalar(p1), p2)
 
     operator fun invoke(p1: SheetRange, p2: SheetRange): ScalarExpr =
-        AlgebraicBinaryScalar(this, CoerceScalar(p1), CoerceScalar(p2))
+        AlgebraicBinaryScalarScalarScalar(this, CoerceScalar(p1), CoerceScalar(p2))
 
     operator fun invoke(p1: ScalarExpr, p2: SheetRange): ScalarExpr =
-        AlgebraicBinaryScalar(this, p1, CoerceScalar(p2))
+        AlgebraicBinaryScalarScalarScalar(this, p1, CoerceScalar(p2))
 
     operator fun invoke(p1: SheetRange, p2: Double): ScalarExpr =
-        AlgebraicBinaryScalar(this, CoerceScalar(p1), constant(p2))
+        AlgebraicBinaryScalarScalarScalar(this, CoerceScalar(p1), constant(p2))
 
     operator fun invoke(p1: Double, p2: SheetRange): ScalarExpr =
-        AlgebraicBinaryScalar(this, constant(p1), CoerceScalar(p2))
-
-    operator fun invoke(p1: MatrixExpr, p2: ScalarExpr): MatrixExpr =
-        AlgebraicBinaryMatrixScalar(this, p1, p2)
+        AlgebraicBinaryScalarScalarScalar(this, constant(p1), CoerceScalar(p2))
 
     operator fun invoke(p1: Double, p2: MatrixExpr): MatrixExpr =
-        AlgebraicBinaryScalarMatrix(this, constant(p1), p2)
-
-    operator fun invoke(p1: ScalarExpr, p2: MatrixExpr): MatrixExpr =
-        AlgebraicBinaryScalarMatrix(this, p1, p2)
+        AlgebraicBinaryScalarMatrixMatrix(this, constant(p1), p2)
 
     operator fun invoke(p1: MatrixExpr, p2: MatrixExpr): MatrixExpr =
         AlgebraicBinaryMatrix(this, p1, p2)
 
     operator fun invoke(p1: MatrixExpr, p2: Double): MatrixExpr =
-        AlgebraicBinaryMatrixScalar(this, p1, constant(p2))
+        AlgebraicBinaryMatrixScalarMatrix(this, p1, constant(p2))
 
     operator fun invoke(p1: Double, p2: ScalarExpr): ScalarExpr =
         invoke(constant(p1), p2)
@@ -56,12 +50,12 @@ interface AlgebraicBinaryScalarFunction {
         invoke(p1, constant(p2))
 
     operator fun invoke(p1: MatrixExpr, p2: SheetRange): MatrixExpr =
-        AlgebraicBinaryMatrixScalar(this, p1, CoerceScalar(p2))
+        AlgebraicBinaryMatrixScalarMatrix(this, p1, CoerceScalar(p2))
 
     operator fun invoke(p1: SheetRange, p2: MatrixExpr): MatrixExpr =
-        AlgebraicBinaryScalarMatrix(this, CoerceScalar(p1), p2)
+        AlgebraicBinaryScalarMatrixMatrix(this, CoerceScalar(p1), p2)
 
-    fun type(left: AlgebraicType, right: AlgebraicType): AlgebraicType {
+    override fun type(left: AlgebraicType, right: AlgebraicType): AlgebraicType {
         return when {
             left == DollarAlgebraicType.kaneType -> DollarAlgebraicType.kaneType
             right == DollarAlgebraicType.kaneType -> DollarAlgebraicType.kaneType
@@ -71,72 +65,46 @@ interface AlgebraicBinaryScalarFunction {
         }
     }
 
-    fun reduceArithmetic(p1: ScalarExpr, p2: ScalarExpr): ScalarExpr?
-    fun differentiate(
+    override fun reduceArithmetic(p1: ScalarExpr, p2: ScalarExpr): ScalarExpr?
+    override fun reduceArithmetic(left: ScalarExpr, right: MatrixExpr): MatrixExpr? {
+        TODO("Not yet implemented")
+    }
+
+    override fun reduceArithmetic(left: MatrixExpr, right: ScalarExpr): MatrixExpr? {
+        TODO("Not yet implemented")
+    }
+
+    override fun differentiate(
         p1: ScalarExpr,
         p1d: ScalarExpr,
         p2: ScalarExpr,
         p2d: ScalarExpr,
         variable: ScalarExpr
     ): ScalarExpr
-}
 
-data class AlgebraicBinaryScalar(
-    val op: AlgebraicBinaryScalarFunction,
-    val left: ScalarExpr,
-    val right: ScalarExpr
-) : ScalarExpr {
-    private val hashCode = op.hashCode() * 3 + left.hashCode() * 7 + right.hashCode() * 9
-    override fun hashCode() = hashCode
-
-    override fun equals(other: Any?): Boolean {
-        if (other == null) return false
-        if (other !is AlgebraicBinaryScalar) return false
-        if (op != other.op) return false
-        if (left != other.left) return false
-        if (right != other.right) return false
-        if (algebraicType != other.algebraicType) return false
-        return true
+    override fun differentiate(
+        left: ScalarExpr,
+        leftd: ScalarExpr,
+        right: MatrixExpr,
+        rightd: MatrixExpr,
+        variable: ScalarExpr
+    ): MatrixExpr {
+        TODO("Not yet implemented")
     }
 
-    init {
-        track()
-        ++allocs
+    override fun differentiate(
+        left: MatrixExpr,
+        leftd: MatrixExpr,
+        right: ScalarExpr,
+        rightd: ScalarExpr,
+        variable: ScalarExpr
+    ): MatrixExpr {
+        TODO("Not yet implemented")
     }
-
-    companion object {
-        var allocs = 0
-    }
-
-    override fun toString() = render()
-    fun copy(
-        left: ScalarExpr = this.left,
-        right: ScalarExpr = this.right
-    ): AlgebraicBinaryScalar {
-        if (this.left === left && this.right === right) return this
-        return AlgebraicBinaryScalar(op, left, right)
-    }
-}
-
-data class AlgebraicBinaryMatrixScalar(
-    val op: AlgebraicBinaryScalarFunction,
-    val left: MatrixExpr,
-    val right: ScalarExpr
-) : MatrixExpr {
-    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
-    override fun toString() = render()
-}
-
-data class AlgebraicBinaryScalarMatrix(
-    val op: AlgebraicBinaryScalarFunction,
-    val left: ScalarExpr,
-    val right: MatrixExpr
-) : MatrixExpr {
-    override fun toString() = render()
 }
 
 data class AlgebraicBinaryMatrix(
-    val op: AlgebraicBinaryScalarFunction,
+    val op: AlgebraicBinaryFunction,
     val left: MatrixExpr,
     val right: MatrixExpr
 ) : MatrixExpr {
@@ -145,8 +113,8 @@ data class AlgebraicBinaryMatrix(
 }
 
 // f(scalar)->scalar
-interface AlgebraicUnaryScalarFunction {
-    val meta: UnaryOp
+interface AlgebraicUnaryFunction : IAlgebraicUnaryScalarScalarFunction {
+    override val meta: UnaryOp
     val type: AlgebraicType? get() = null
     private fun wrap(expr: ScalarExpr): ScalarExpr {
         if (type == null) return expr
@@ -159,10 +127,10 @@ interface AlgebraicUnaryScalarFunction {
     }
 
     operator fun invoke(value: Double) = doubleOp(value)
-    fun doubleOp(value: Double): Double
-    operator fun invoke(value: ScalarExpr): ScalarExpr = wrap(AlgebraicUnaryScalar(this, value))
+    override fun doubleOp(value: Double): Double
+    override fun invoke(value: ScalarExpr): ScalarExpr = wrap(AlgebraicUnaryScalarScalar(this, value))
     operator fun invoke(value: MatrixExpr): MatrixExpr = wrap(AlgebraicUnaryMatrix(this, value))
-    fun reduceArithmetic(value: ScalarExpr): ScalarExpr? {
+    override fun reduceArithmetic(value: ScalarExpr): ScalarExpr? {
         val isConstValue = value.canGetConstant()
         return when {
             isConstValue -> wrap(constant(doubleOp(value.getConstant())))
@@ -170,11 +138,12 @@ interface AlgebraicUnaryScalarFunction {
         }
     }
 
-    fun differentiate(expr: ScalarExpr, exprd: ScalarExpr, variable: ScalarExpr): ScalarExpr
+    override fun differentiate(expr: ScalarExpr, exprd: ScalarExpr, variable: ScalarExpr): ScalarExpr
+    override fun type(value: AlgebraicType) = value
 }
 
 data class AlgebraicUnaryMatrix(
-    val op: AlgebraicUnaryScalarFunction,
+    val op: AlgebraicUnaryFunction,
     val value: MatrixExpr
 ) : MatrixExpr {
     override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)

@@ -7,7 +7,7 @@ import com.github.jomof.kane.times
 
 private val EXP by UnaryOp()
 
-internal class ExpFunction : AlgebraicUnaryScalarFunction {
+internal class ExpFunction : AlgebraicUnaryFunction {
     override val meta = EXP
     override fun doubleOp(value: Double) = Math.exp(value)
 

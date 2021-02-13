@@ -8,7 +8,7 @@ import com.github.jomof.kane.plus
 
 val MINUS by BinaryOp(op = "-", precedence = 4, infix = true)
 
-private class SubtractFunction : AlgebraicBinaryScalarFunction {
+private class SubtractFunction : AlgebraicBinaryFunction {
     override val meta = MINUS
     override fun doubleOp(p1: Double, p2: Double) = p1 - p2
 
@@ -22,10 +22,10 @@ private class SubtractFunction : AlgebraicBinaryScalarFunction {
             rightIsConst && p2.getConstant() == 0.0 -> p1
             rightIsConst && p2.getConstant() == -0.0 -> p1
             leftIsConst && rightIsConst -> constant(invoke(p1.getConstant(), p2.getConstant()))
-            rightIsConst && p1 is AlgebraicBinaryScalar && p1.op == plus && p1.right is ConstantScalar -> {
+            rightIsConst && p1 is AlgebraicBinaryScalarScalarScalar && p1.op == plus && p1.right is ConstantScalar -> {
                 p1.left + (p1.right - p2.getConstant())
             }
-            p2 is AlgebraicUnaryScalar && p2.op == negate -> p1 + p2.value
+            p2 is AlgebraicUnaryScalarScalar && p2.op == negate -> p1 + p2.value
             else ->
                 null
         }
@@ -39,4 +39,4 @@ private class SubtractFunction : AlgebraicBinaryScalarFunction {
     ) = p1d - p2d
 }
 
-val minus: AlgebraicBinaryScalarFunction = SubtractFunction()
+val minus: AlgebraicBinaryFunction = SubtractFunction()

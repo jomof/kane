@@ -109,7 +109,7 @@ fun baaCorporateBond(year : Int) : Double {
 }
 private val BAACORPORATEBOND by UnaryOp()
 
-private class BAACorporateBondFunctionFunction : AlgebraicUnaryScalarFunction {
+private class BAACorporateBondFunctionFunction : AlgebraicUnaryFunction {
     override val meta = BAACORPORATEBOND
     override val type = PercentAlgebraicType.kaneType
     override fun doubleOp(value: Double) = baaCorporateBond(value.toInt())
@@ -118,11 +118,12 @@ private class BAACorporateBondFunctionFunction : AlgebraicUnaryScalarFunction {
         if (!value.canGetConstant()) return null
         return percent(baaCorporateBond(value.getConstant().toInt()))
     }
+
     override fun differentiate(
-        expr : ScalarExpr,
+        expr: ScalarExpr,
         exprd : ScalarExpr,
         variable : ScalarExpr
     ) = error("not differentiable")
 }
 
-val baaCorporateBond : AlgebraicUnaryScalarFunction = BAACorporateBondFunctionFunction()
+val baaCorporateBond: AlgebraicUnaryFunction = BAACorporateBondFunctionFunction()

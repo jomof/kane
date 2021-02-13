@@ -20,9 +20,9 @@ private val reduceNamedMatrix = object : RewritingVisitor() {
 }
 
 private class ReduceAlgebraicBinaryScalar : RewritingVisitor() {
-    override fun rewrite(expr: AlgebraicBinaryScalar): Expr {
+    override fun rewrite(expr: AlgebraicBinaryScalarScalarScalar): Expr {
         return when (val sub = super.rewrite(expr)) {
-            is AlgebraicBinaryScalar -> {
+            is AlgebraicBinaryScalarScalarScalar -> {
                 val type = sub.op.type(sub.left.algebraicType, sub.right.algebraicType)
                 val reduced = sub.op.reduceArithmetic(sub.left, sub.right)
                 val typed =
@@ -37,9 +37,9 @@ private class ReduceAlgebraicBinaryScalar : RewritingVisitor() {
 }
 
 private class ReduceAlgebraicUnaryScalar : RewritingVisitor() {
-    override fun rewrite(expr: AlgebraicUnaryScalar): Expr {
+    override fun rewrite(expr: AlgebraicUnaryScalarScalar): Expr {
         return when (val sub = super.rewrite(expr)) {
-            is AlgebraicUnaryScalar -> when (sub.value) {
+            is AlgebraicUnaryScalarScalar -> when (sub.value) {
                 is RetypeScalar -> {
                     val reduced = sub.op.reduceArithmetic(sub.value)
                     if (reduced == null) sub
@@ -75,13 +75,13 @@ private val reduceAlgebraicBinaryMatrix = object : SheetRewritingVisitor() {
         assert(left.columns == right.columns)
         assert(left.rows == right.rows)
         return DataMatrix(columns, rows, (left.elements zip right.elements).map { (l, r) ->
-            AlgebraicBinaryScalar(op, l, r)
+            AlgebraicBinaryScalarScalarScalar(op, l, r)
         })
     }
 }
 private val reduceAlgebraicUnaryMatrix = object : RewritingVisitor() {
     override fun rewrite(expr: AlgebraicUnaryMatrix) = expr.value.map {
-        AlgebraicUnaryScalar(expr.op, it)
+        AlgebraicUnaryScalarScalar(expr.op, it)
     }
 }
 private val reduceAlgebraicUnaryScalarStatistic = object : RewritingVisitor() {
@@ -129,7 +129,7 @@ private class ReduceRandomVariables(val variables: Map<RandomVariableExpr, Const
     override fun rewrite(expr: DiscreteUniformRandomVariable) =
         variables[expr] ?: expr
 
-    override fun rewrite(expr: AlgebraicBinaryScalar): Expr = with(expr) {
+    override fun rewrite(expr: AlgebraicBinaryScalarScalarScalar): Expr = with(expr) {
         val leftRewritten = scalar(left)
         val rightRewritten = scalar(right)
         if (leftRewritten === left && rightRewritten === right) return this
@@ -138,10 +138,10 @@ private class ReduceRandomVariables(val variables: Map<RandomVariableExpr, Const
         val typed =
             if (reduced != null && type != kaneDouble) RetypeScalar(reduced, type)
             else reduced
-        return typed ?: copy(leftRewritten, rightRewritten)
+        return typed ?: copy(left = leftRewritten, right = rightRewritten)
     }
 
-    override fun rewrite(expr: AlgebraicUnaryScalar): Expr = with(expr) {
+    override fun rewrite(expr: AlgebraicUnaryScalarScalar): Expr = with(expr) {
         val rewritten = scalar(value)
         if (rewritten === value) return this
         val reduced = op.reduceArithmetic(rewritten)
@@ -242,7 +242,7 @@ private fun Expr.expandSheetCells(sheet: Sheet, excludeVariables: Set<Id>): Expr
             }
         }
 
-        override fun rewrite(expr: AlgebraicBinaryScalar): Expr = with(expr) {
+        override fun rewrite(expr: AlgebraicBinaryScalarScalarScalar): Expr = with(expr) {
             val leftRewritten = scalar(left)
             val rightRewritten = scalar(right)
             if (leftRewritten === left && rightRewritten === right) return this
@@ -348,10 +348,10 @@ private fun Expr.accumulateStatistics(incoming: Expr) {
         this is RetypeScalar && incoming is RetypeScalar -> {
             this.scalar.accumulateStatistics(incoming.scalar)
         }
-        this is AlgebraicUnaryScalar && incoming is AlgebraicUnaryScalar -> {
+        this is AlgebraicUnaryScalarScalar && incoming is AlgebraicUnaryScalarScalar -> {
             this.value.accumulateStatistics(incoming.value)
         }
-        this is AlgebraicBinaryScalar && incoming is AlgebraicBinaryScalar -> {
+        this is AlgebraicBinaryScalarScalarScalar && incoming is AlgebraicBinaryScalarScalarScalar -> {
             this.left.accumulateStatistics(incoming.left)
             this.right.accumulateStatistics(incoming.right)
         }

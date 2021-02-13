@@ -20,11 +20,11 @@ internal fun Expr.visit(f: (expr: Expr) -> Unit) {
         is NamedScalarVariable -> {
         }
         is NamedSheetRangeExpr -> range.visit(f)
-        is AlgebraicBinaryScalar -> {
+        is AlgebraicBinaryScalarScalarScalar -> {
             left.visit(f)
             right.visit(f)
         }
-        is AlgebraicBinaryMatrixScalar -> {
+        is AlgebraicBinaryMatrixScalarMatrix -> {
             left.visit(f)
             right.visit(f)
         }
@@ -32,7 +32,7 @@ internal fun Expr.visit(f: (expr: Expr) -> Unit) {
             left.visit(f)
             right.visit(f)
         }
-        is AlgebraicBinaryScalarMatrix -> {
+        is AlgebraicBinaryScalarMatrixMatrix -> {
             left.visit(f)
             right.visit(f)
         }
@@ -45,7 +45,7 @@ internal fun Expr.visit(f: (expr: Expr) -> Unit) {
             right.visit(f)
         }
         is AlgebraicUnaryScalarStatistic -> value.visit(f)
-        is AlgebraicUnaryScalar -> value.visit(f)
+        is AlgebraicUnaryScalarScalar -> value.visit(f)
         is AlgebraicUnaryMatrix -> value.visit(f)
         is AlgebraicUnaryMatrixScalar -> value.visit(f)
         is CoerceScalar -> value.visit(f)

@@ -269,7 +269,7 @@ fun sum(expr : Expr) : Expr = sumFunc.call(expr)
 
 // typesafe sin
 private val sinFunc = SinFunction()
-val sin : AlgebraicUnaryScalarFunction = sinFunc
+val sin: AlgebraicUnaryFunction = sinFunc
 /**
  * sin function
  * [![](https://jomof.github.io/kane/figures/sin-profile.svg)]
@@ -282,7 +282,7 @@ fun sin(scalar : Double) : Double = sinFunc(scalar)
 
 // typesafe cos
 private val cosFunc = CosFunction()
-val cos : AlgebraicUnaryScalarFunction = cosFunc
+val cos: AlgebraicUnaryFunction = cosFunc
 /**
  * cos function
  * [![](https://jomof.github.io/kane/figures/cos-profile.svg)]
@@ -295,7 +295,7 @@ fun cos(scalar : Double) : Double = cosFunc(scalar)
 
 // typesafe lrelu
 private val lreluFunc = LreluFunction()
-val lrelu : AlgebraicUnaryScalarFunction = lreluFunc
+val lrelu: AlgebraicUnaryFunction = lreluFunc
 /**
  * lrelu function
  * [![](https://jomof.github.io/kane/figures/lrelu-profile.svg)]
@@ -308,7 +308,7 @@ fun lrelu(scalar : Double) : Double = lreluFunc(scalar)
 
 // typesafe lstep
 private val lstepFunc = LstepFunction()
-val lstep : AlgebraicUnaryScalarFunction = lstepFunc
+val lstep: AlgebraicUnaryFunction = lstepFunc
 /**
  * lstep function
  * [![](https://jomof.github.io/kane/figures/lstep-profile.svg)]
@@ -321,7 +321,7 @@ fun lstep(scalar : Double) : Double = lstepFunc(scalar)
 
 // typesafe logit
 private val logitFunc = LogitFunction()
-val logit : AlgebraicUnaryScalarFunction = logitFunc
+val logit: AlgebraicUnaryFunction = logitFunc
 /**
  * logit function
  * [![](https://jomof.github.io/kane/figures/logit-profile.svg)]
@@ -334,7 +334,7 @@ fun logit(scalar : Double) : Double = logitFunc(scalar)
 
 // typesafe exp
 private val expFunc = ExpFunction()
-val exp : AlgebraicUnaryScalarFunction = expFunc
+val exp: AlgebraicUnaryFunction = expFunc
 /**
  * exp function
  * [![](https://jomof.github.io/kane/figures/exp-profile.svg)]
@@ -347,7 +347,7 @@ fun exp(scalar : Double) : Double = expFunc(scalar)
 
 // typesafe relu
 private val reluFunc = ReluFunction()
-val relu : AlgebraicUnaryScalarFunction = reluFunc
+val relu: AlgebraicUnaryFunction = reluFunc
 /**
  * relu function
  * [![](https://jomof.github.io/kane/figures/relu-profile.svg)]
@@ -360,7 +360,7 @@ fun relu(scalar : Double) : Double = reluFunc(scalar)
 
 // typesafe tanh
 private val tanhFunc = TanhFunction()
-val tanh : AlgebraicUnaryScalarFunction = tanhFunc
+val tanh: AlgebraicUnaryFunction = tanhFunc
 /**
  * tanh function
  * [![](https://jomof.github.io/kane/figures/tanh-profile.svg)]
@@ -373,7 +373,7 @@ fun tanh(scalar : Double) : Double = tanhFunc(scalar)
 
 // typesafe step
 private val stepFunc = StepFunction()
-val step : AlgebraicUnaryScalarFunction = stepFunc
+val step: AlgebraicUnaryFunction = stepFunc
 /**
  * step function
  * [![](https://jomof.github.io/kane/figures/step-profile.svg)]
@@ -386,7 +386,7 @@ fun step(scalar : Double) : Double = stepFunc(scalar)
 
 // typesafe negate
 private val negateFunc = NegateFunction()
-val negate : AlgebraicUnaryScalarFunction = negateFunc
+val negate: AlgebraicUnaryFunction = negateFunc
 /**
  * negate function
  * [![](https://jomof.github.io/kane/figures/negate-profile.svg)]

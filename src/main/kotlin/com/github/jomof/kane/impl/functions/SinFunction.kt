@@ -7,7 +7,7 @@ import kotlin.math.sin
 
 private val SIN by UnaryOp()
 
-internal class SinFunction : AlgebraicUnaryScalarFunction {
+internal class SinFunction : AlgebraicUnaryFunction {
     override val meta = SIN
     override fun doubleOp(value: Double) = sin(value)
 

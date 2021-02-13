@@ -5,7 +5,7 @@ import com.github.jomof.kane.impl.*
 
 val DIV by BinaryOp(op = "/", precedence = 2, infix = true)
 
-private class DivideFunction : AlgebraicBinaryScalarFunction {
+private class DivideFunction : AlgebraicBinaryFunction {
     override val meta = DIV
     override fun doubleOp(p1: Double, p2: Double) = p1 / p2
 
@@ -17,8 +17,8 @@ private class DivideFunction : AlgebraicBinaryScalarFunction {
             leftIsConst && p1.getConstant() == 0.0 -> p1
             rightIsConst && p2.getConstant() == 1.0 -> p1
             leftIsConst && rightIsConst -> constant(invoke(p1.getConstant(), p2.getConstant()))
-            p1 is AlgebraicUnaryScalar && p1.op == negate && p2 is AlgebraicUnaryScalar && p2.op == negate -> p1.value / p2.value
-            p2 is AlgebraicBinaryScalar && p2.op == pow -> p1 * pow(p2.left, -p2.right)
+            p1 is AlgebraicUnaryScalarScalar && p1.op == negate && p2 is AlgebraicUnaryScalarScalar && p2.op == negate -> p1.value / p2.value
+            p2 is AlgebraicBinaryScalarScalarScalar && p2.op == pow -> p1 * pow(p2.left, -p2.right)
             else -> null
         }
     }
@@ -38,4 +38,4 @@ private class DivideFunction : AlgebraicBinaryScalarFunction {
     }
 }
 
-val div: AlgebraicBinaryScalarFunction = DivideFunction()
+val div: AlgebraicBinaryFunction = DivideFunction()

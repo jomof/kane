@@ -1,10 +1,36 @@
 package com.github.jomof.kane
 
+import com.github.jomof.kane.GenerateCode.Shape.*
 import org.junit.Test
 import java.io.File
 
 class GenerateCode {
     private val infixMathOperators = listOf("plus", "minus", "times", "div")
+
+    private enum class Shape {
+        Scalar,
+        Matrix,
+        Function
+    }
+
+    private data class Parameter(
+        val name: String,
+        val kind: Shape
+    )
+
+    private data class Operator(
+        val name: String,
+        val shape: Shape,
+        val parameters: List<Parameter>
+    )
+
+    private val operators = listOf(
+        Operator("Unary", Scalar, listOf(Parameter("value", Scalar))),
+        //      Operator("Unary", Scalar, listOf(Parameter("value", Matrix))),
+        Operator("Binary", Scalar, listOf(Parameter("left", Scalar), Parameter("right", Scalar))),
+        Operator("Binary", Matrix, listOf(Parameter("left", Scalar), Parameter("right", Matrix))),
+        Operator("Binary", Matrix, listOf(Parameter("left", Matrix), Parameter("right", Scalar))),
+    )
 
     /**
      *
@@ -17,12 +43,72 @@ class GenerateCode {
             """
             package com.github.jomof.kane
 
-
-            import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalarFunction
-            import com.github.jomof.kane.impl.render
+            import com.github.jomof.kane.impl.*
+            import com.github.jomof.kane.impl.types.*
+            import kotlin.reflect.KProperty
+            
             """.trimIndent()
         )
+        sb.append("\n\n")
+        fun line(s: String = "") = sb.append("$s\n")
+        for (op in operators) {
+            val inputShape = op.parameters.joinToString("") { it.kind.toString() }
+            val operatorClassName = "Algebraic${op.name}$inputShape${op.shape}"
+            line("interface I${operatorClassName}Function {")
+            line("    val meta : ${op.name}Op")
+            sb.append("    operator fun invoke(")
+            for ((index, p) in op.parameters.withIndex()) {
+                sb.append("${p.name} : ${p.kind}Expr")
+                if (index != op.parameters.size - 1) sb.append(", ")
+            }
+            sb.append(") : ${op.shape}Expr = Algebraic${op.name}$inputShape${op.shape}(this, ")
+            for ((index, p) in op.parameters.withIndex()) {
+                sb.append(p.name)
+                if (index != op.parameters.size - 1) sb.append(", ")
+            }
+            line(")")
+            sb.append("    fun reduceArithmetic(")
+            for ((index, p) in op.parameters.withIndex()) {
+                sb.append("${p.name} : ${p.kind}Expr")
+                if (index != op.parameters.size - 1) sb.append(", ")
+            }
+            sb.append(") : ${op.shape}Expr?\n")
+            sb.append("    fun doubleOp(")
+            for ((index, p) in op.parameters.withIndex()) {
+                sb.append("${p.name} : Double")
+                if (index != op.parameters.size - 1) sb.append(", ")
+            }
+            sb.append(") : Double\n")
+            sb.append("    fun differentiate(")
+            for ((index, p) in op.parameters.withIndex()) {
+                sb.append("${p.name} : ${p.kind}Expr, ")
+                sb.append("${p.name}d : ${p.kind}Expr, ")
+            }
+            sb.append("variable : ScalarExpr")
+            sb.append(") : ${op.shape}Expr\n")
+            sb.append("    fun type(")
+            for ((index, p) in op.parameters.withIndex()) {
+                sb.append("${p.name} : AlgebraicType")
+                if (index != op.parameters.size - 1) sb.append(", ")
+            }
+            sb.append(") : AlgebraicType\n")
+            line("}")
+            line()
 
+            line("data class $operatorClassName(")
+            line("    val op : I${operatorClassName}Function,")
+            for ((index, p) in op.parameters.withIndex()) {
+                sb.append("    val ${p.name} : ${p.kind}Expr")
+                if (index != op.parameters.size - 1) sb.append(",")
+                line()
+            }
+            line(") : ${op.shape}Expr {")
+            line("    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)")
+            line("    override fun toString() = render()")
+            line("}")
+            line()
+        }
+        output.writeText(sb.toString())
     }
 
     /**
@@ -98,7 +184,7 @@ class GenerateCode {
             val capped = op[0].toUpperCase() + op.substring(1)
             sb.append("// typesafe $op\n")
             sb.append("private val ${op}Func = ${capped}Function()\n")
-            sb.append("val $op : AlgebraicUnaryScalarFunction = ${op}Func\n")
+            sb.append("val $op : AlgebraicUnaryFunction = ${op}Func\n")
             sb.append(
                 """
                 /**

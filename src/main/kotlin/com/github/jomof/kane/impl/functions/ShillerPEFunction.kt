@@ -108,20 +108,20 @@ private fun shillerPEImpl(year : Int) : Double {
 }
 private val SHILLERPE by UnaryOp()
 
-private class ShillerPEFunction : AlgebraicUnaryScalarFunction {
+private class ShillerPEFunction : AlgebraicUnaryFunction {
     override val meta = SHILLERPE
     override fun doubleOp(value: Double) = shillerPEImpl(value.toInt())
 
-    override fun reduceArithmetic(value: ScalarExpr) : ScalarExpr? {
+    override fun reduceArithmetic(value: ScalarExpr): ScalarExpr? {
         if (!value.canGetConstant()) return null
         return constant(shillerPEImpl(value.getConstant().toInt()))
     }
 
     override fun differentiate(
-        expr : ScalarExpr,
+        expr: ScalarExpr,
         exprd : ScalarExpr,
         variable : ScalarExpr
     ) = error("not differentiable")
 }
 
-val shillerPE : AlgebraicUnaryScalarFunction = ShillerPEFunction()
+val shillerPE: AlgebraicUnaryFunction = ShillerPEFunction()

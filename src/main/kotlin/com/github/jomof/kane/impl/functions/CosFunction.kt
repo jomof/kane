@@ -7,7 +7,7 @@ import kotlin.math.cos
 
 private val COS by UnaryOp()
 
-internal class CosFunction : AlgebraicUnaryScalarFunction {
+internal class CosFunction : AlgebraicUnaryFunction {
     override val meta = COS
     override fun doubleOp(value: Double) = cos(value)
 

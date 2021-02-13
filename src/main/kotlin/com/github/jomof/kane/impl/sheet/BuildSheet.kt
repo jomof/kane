@@ -1,14 +1,11 @@
 package com.github.jomof.kane.impl.sheet
 
-import com.github.jomof.kane.Expr
+import com.github.jomof.kane.*
 import com.github.jomof.kane.MatrixExpr
 import com.github.jomof.kane.ScalarExpr
 import com.github.jomof.kane.impl.*
 import com.github.jomof.kane.impl.ComputableIndex.*
-import com.github.jomof.kane.impl.functions.AlgebraicBinaryMatrix
-import com.github.jomof.kane.impl.functions.AlgebraicBinaryMatrixScalar
-import com.github.jomof.kane.impl.functions.AlgebraicBinaryScalar
-import com.github.jomof.kane.impl.functions.AlgebraicBinaryScalarMatrix
+import com.github.jomof.kane.impl.functions.*
 import com.github.jomof.kane.impl.visitor.SheetRewritingVisitor
 import com.github.jomof.kane.impl.visitor.visit
 
@@ -371,23 +368,31 @@ private class CollapseCellIndexedScalar : SheetRewritingVisitor() {
         }
     }
 
-    override fun rewrite(expr: AlgebraicBinaryScalarMatrix): Expr = with(expr) {
+    override fun rewrite(expr: AlgebraicBinaryScalarMatrixMatrix): Expr = with(expr) {
         val leftRewritten = scalar(left)
         val rightRewritten = rewrite(right)
         if (leftRewritten === left && rightRewritten === right) return this
         return when (rightRewritten) {
-            is ScalarExpr -> AlgebraicBinaryScalar(op, leftRewritten, rightRewritten)
+            is ScalarExpr -> AlgebraicBinaryScalarScalarScalar(
+                op as IAlgebraicBinaryScalarScalarScalarFunction,
+                leftRewritten,
+                rightRewritten
+            )
             is MatrixExpr -> expr.copy(left = leftRewritten, right = rightRewritten)
             else -> error("${rightRewritten.javaClass}")
         }
     }
 
-    override fun rewrite(expr: AlgebraicBinaryMatrixScalar): Expr = with(expr) {
+    override fun rewrite(expr: AlgebraicBinaryMatrixScalarMatrix): Expr = with(expr) {
         val leftRewritten = rewrite(left)
         val rightRewritten = scalar(right)
         if (leftRewritten === left && rightRewritten === right) return this
         return when (leftRewritten) {
-            is ScalarExpr -> AlgebraicBinaryScalar(op, leftRewritten, rightRewritten)
+            is ScalarExpr -> AlgebraicBinaryScalarScalarScalar(
+                op as IAlgebraicBinaryScalarScalarScalarFunction,
+                leftRewritten,
+                rightRewritten
+            )
             is MatrixExpr -> expr.copy(left = leftRewritten, right = rightRewritten)
             else -> error("${leftRewritten.javaClass}")
         }
@@ -398,17 +403,17 @@ private class CollapseCellIndexedScalar : SheetRewritingVisitor() {
         val rightRewritten = rewrite(right)
         if (leftRewritten === left && rightRewritten === right) return this
         return when {
-            leftRewritten is ScalarExpr && rightRewritten is ScalarExpr -> AlgebraicBinaryScalar(
+            leftRewritten is ScalarExpr && rightRewritten is ScalarExpr -> AlgebraicBinaryScalarScalarScalar(
                 op,
                 leftRewritten,
                 rightRewritten
             )
-            leftRewritten is ScalarExpr && rightRewritten is MatrixExpr -> AlgebraicBinaryScalarMatrix(
+            leftRewritten is ScalarExpr && rightRewritten is MatrixExpr -> AlgebraicBinaryScalarMatrixMatrix(
                 op,
                 leftRewritten,
                 rightRewritten
             )
-            leftRewritten is MatrixExpr && rightRewritten is ScalarExpr -> AlgebraicBinaryMatrixScalar(
+            leftRewritten is MatrixExpr && rightRewritten is ScalarExpr -> AlgebraicBinaryMatrixScalarMatrix(
                 op,
                 leftRewritten,
                 rightRewritten

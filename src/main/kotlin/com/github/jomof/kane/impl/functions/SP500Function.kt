@@ -109,12 +109,12 @@ fun sp500(year : Int) : Double {
 }
 private val SP500 by UnaryOp()
 
-private class SP500Function : AlgebraicUnaryScalarFunction {
+private class SP500Function : AlgebraicUnaryFunction {
     override val meta = SP500
     override val type = PercentAlgebraicType.kaneType
     override fun doubleOp(value: Double) = sp500(value.toInt())
 
-    override fun reduceArithmetic(value: ScalarExpr) : ScalarExpr? {
+    override fun reduceArithmetic(value: ScalarExpr): ScalarExpr? {
         if (!value.canGetConstant()) return null
         return percent(sp500(value.getConstant().toInt()))
     }
@@ -126,4 +126,4 @@ private class SP500Function : AlgebraicUnaryScalarFunction {
     ) = error("not differentiable")
 }
 
-val sp500 : AlgebraicUnaryScalarFunction = SP500Function()
+val sp500: AlgebraicUnaryFunction = SP500Function()

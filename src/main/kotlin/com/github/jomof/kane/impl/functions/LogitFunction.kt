@@ -10,7 +10,7 @@ import kotlin.math.exp
 
 private val LOGIT by UnaryOp()
 
-internal class LogitFunction : AlgebraicUnaryScalarFunction {
+internal class LogitFunction : AlgebraicUnaryFunction {
     override val meta = LOGIT
     override fun doubleOp(value: Double) = 1.0 / (1.0 + exp(-value))
 

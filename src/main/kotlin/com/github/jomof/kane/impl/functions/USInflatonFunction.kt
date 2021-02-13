@@ -3,7 +3,6 @@ package com.github.jomof.kane.impl.functions
 import com.github.jomof.kane.ScalarExpr
 import com.github.jomof.kane.impl.UnaryOp
 import com.github.jomof.kane.impl.canGetConstant
-import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalarFunction
 import com.github.jomof.kane.impl.getConstant
 import com.github.jomof.kane.impl.types.PercentAlgebraicType
 import com.github.jomof.kane.impl.types.percent
@@ -122,7 +121,7 @@ fun usInflation(year : Int) : Double {
 }
 private val USINFLATION by UnaryOp()
 
-private class USInflationFunction : AlgebraicUnaryScalarFunction {
+private class USInflationFunction : AlgebraicUnaryFunction {
     override val meta = USINFLATION
     override val type = PercentAlgebraicType.kaneType
     override fun doubleOp(value: Double) = usInflation(value.toInt())
@@ -131,11 +130,12 @@ private class USInflationFunction : AlgebraicUnaryScalarFunction {
         if (!value.canGetConstant()) return null
         return percent(usInflation(value.getConstant().toInt()))
     }
+
     override fun differentiate(
-        expr : ScalarExpr,
+        expr: ScalarExpr,
         exprd : ScalarExpr,
         variable : ScalarExpr
     ) = error("not differentiable")
 }
 
-val usInflation : AlgebraicUnaryScalarFunction = USInflationFunction()
+val usInflation: AlgebraicUnaryFunction = USInflationFunction()

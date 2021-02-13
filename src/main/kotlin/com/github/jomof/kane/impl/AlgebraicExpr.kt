@@ -338,7 +338,7 @@ fun diff(expr: ScalarExpr, variable: ScalarExpr): ScalarExpr {
         is MatrixVariableElement -> ConstantScalar(0.0)
         is ScalarVariableExpr -> ConstantScalar(0.0)
         is ConstantScalar -> ConstantScalar(0.0)
-        is AlgebraicUnaryScalar -> {
+        is AlgebraicUnaryScalarScalar -> {
             val reduced = expr.op.reduceArithmetic(expr.value)
             if (reduced != null) diff(reduced, variable)
             else {
@@ -346,7 +346,7 @@ fun diff(expr: ScalarExpr, variable: ScalarExpr): ScalarExpr {
                 expr.op.differentiate(expr.value, vd, variable)
             }
         }
-        is AlgebraicBinaryScalar -> {
+        is AlgebraicBinaryScalarScalarScalar -> {
             val p1d = diff(expr.left, variable)
             val p2d = diff(expr.right, variable)
             expr.op.differentiate(expr.left, p1d, expr.right, p2d, variable)
@@ -363,7 +363,7 @@ fun diff(expr: ScalarExpr, variable: ScalarExpr): ScalarExpr {
 
 fun differentiate(expr: AlgebraicExpr): AlgebraicExpr {
     fun ScalarExpr.tryD() = when {
-        this is AlgebraicUnaryScalar && op == d -> value
+        this is AlgebraicUnaryScalarScalar && op == d -> value
         else -> null
     }
 
@@ -374,7 +374,7 @@ fun differentiate(expr: AlgebraicExpr): AlgebraicExpr {
 
     fun ScalarExpr.diffOr(): ScalarExpr? {
         when (this) {
-            is AlgebraicBinaryScalar -> {
+            is AlgebraicBinaryScalarScalarScalar -> {
                 if (op != div) return null
                 val dleft = left.tryD() ?: return null
                 val dright = right.tryD() ?: return null
@@ -385,7 +385,7 @@ fun differentiate(expr: AlgebraicExpr): AlgebraicExpr {
     }
 
     fun MatrixExpr.diffOr(): MatrixExpr? {
-        if (this !is AlgebraicBinaryScalarMatrix) return null
+        if (this !is AlgebraicBinaryScalarMatrixMatrix) return null
         if (op != div) return null
         val dleft = left.tryD() ?: return null
         val dright = right.tryD() ?: return null
@@ -427,18 +427,18 @@ fun differentiate(expr: AlgebraicExpr): AlgebraicExpr {
                     else this
                 }
             }
-            is AlgebraicUnaryScalar -> {
+            is AlgebraicUnaryScalarScalar -> {
                 val value = value.self()
                 if (this.value !== value) copy(value = value)
                 else this
             }
-            is AlgebraicBinaryScalar -> {
+            is AlgebraicBinaryScalarScalarScalar -> {
                 diffOr() ?: copy(left = left, right = right)
             }
             is AlgebraicBinaryMatrix -> {
                 diffOr() ?: copy(left = left, right = right)
             }
-            is AlgebraicBinaryScalarMatrix -> {
+            is AlgebraicBinaryScalarMatrixMatrix -> {
                 diffOr() ?: run {
                     val left = left.self()
                     val right = right.self()
@@ -557,10 +557,10 @@ fun binaryRequiresParents(parent: BinaryOp, child: BinaryOp, childIsRight: Boole
 }
 
 fun Expr.tryGetBinaryOp(): BinaryOp? = when (this) {
-    is AlgebraicBinaryScalar -> op.meta
+    is AlgebraicBinaryScalarScalarScalar -> op.meta
     is AlgebraicBinaryMatrix -> op.meta
-    is AlgebraicBinaryMatrixScalar -> op.meta
-    is AlgebraicBinaryScalarMatrix -> op.meta
+    is AlgebraicBinaryMatrixScalarMatrix -> op.meta
+    is AlgebraicBinaryScalarMatrixMatrix -> op.meta
     is AlgebraicDeferredDataMatrix -> op
     else -> null
 }
@@ -688,7 +688,7 @@ fun Expr.render(entryPoint: Boolean = true, outerType: AlgebraicType? = null): S
                 else -> binary(op.meta, left, right)
             }
         }
-        is AlgebraicBinaryScalar -> {
+        is AlgebraicBinaryScalarScalarScalar -> {
             when (op) {
                 pow -> {
                     val rightSuper = tryConvertToSuperscript(right.self())
@@ -710,8 +710,8 @@ fun Expr.render(entryPoint: Boolean = true, outerType: AlgebraicType? = null): S
                 else -> binary(op.meta, left, right)
             }
         }
-        is AlgebraicBinaryMatrixScalar -> binary(op.meta, left, right)
-        is AlgebraicBinaryScalarMatrix -> binary(op.meta, left, right)
+        is AlgebraicBinaryMatrixScalarMatrix -> binary(op.meta, left, right)
+        is AlgebraicBinaryScalarMatrixMatrix -> binary(op.meta, left, right)
         is NamedScalar ->
             if (entryPoint) "$name=${scalar.self()}"
             else Identifier.string(name)
@@ -732,7 +732,7 @@ fun Expr.render(entryPoint: Boolean = true, outerType: AlgebraicType? = null): S
         is ConstantScalar -> (outerType ?: kaneDouble).render(value)
         is AlgebraicUnaryMatrixScalar -> "${op.meta.op}(${value.self()})"
         is AlgebraicUnaryScalarStatistic -> "${op.meta.op}(${value.self()})"
-        is AlgebraicUnaryScalar -> when {
+        is AlgebraicUnaryScalarScalar -> when {
             op == exp -> {
                 val rightSuper = tryConvertToSuperscript(value.self())
                 if (rightSuper == null) "${op.meta.op}(${value.self()})"
@@ -741,7 +741,7 @@ fun Expr.render(entryPoint: Boolean = true, outerType: AlgebraicType? = null): S
             op == d && value is NamedScalarVariable -> "${op.meta.op}${value.self()}"
             op == negate &&
                     (value is NamedScalarVariable ||
-                            value is AlgebraicBinaryScalar && value.op == times) -> "${op.meta.op}${value.self()}"
+                            value is AlgebraicBinaryScalarScalarScalar && value.op == times) -> "${op.meta.op}${value.self()}"
             else -> "${op.meta.op}(${value.self()})"
         }
         is NamedMatrixVariable -> Identifier.string(name)

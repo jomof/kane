@@ -2,9 +2,7 @@ package com.github.jomof.kane.impl.sheet
 
 import com.github.jomof.kane.*
 import com.github.jomof.kane.impl.*
-import com.github.jomof.kane.impl.functions.AlgebraicBinaryScalar
-import com.github.jomof.kane.impl.functions.AlgebraicBinaryScalarStatistic
-import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalarStatistic
+import com.github.jomof.kane.impl.functions.*
 
 private fun AlgebraicExpr.expandNamedCells(lookup: Cells): AlgebraicExpr {
     fun ScalarExpr.self() = expandNamedCells(lookup) as ScalarExpr
@@ -16,8 +14,8 @@ private fun AlgebraicExpr.expandNamedCells(lookup: Cells): AlgebraicExpr {
         is NamedMatrix -> copy(matrix = matrix.self())
         is AlgebraicUnaryScalarStatistic -> copy(value = value.expandNamedCells(lookup))
         is AlgebraicBinaryScalarStatistic -> copy(left = left.self(), right = right.self())
-        is AlgebraicUnaryScalar -> copy(value = value.self())
-        is AlgebraicBinaryScalar -> {
+        is AlgebraicUnaryScalarScalar -> copy(value = value.self())
+        is AlgebraicBinaryScalarScalarScalar -> {
             val changed = copy(left = left.self(), right = right.self())
             if (changed !== this) changed.eval()
             else this

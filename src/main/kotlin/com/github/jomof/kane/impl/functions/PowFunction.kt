@@ -1,6 +1,6 @@
 package com.github.jomof.kane.impl.functions
 
-import com.github.jomof.kane.ScalarExpr
+import com.github.jomof.kane.*
 import com.github.jomof.kane.impl.*
 import com.github.jomof.kane.minus
 import com.github.jomof.kane.pow
@@ -9,7 +9,7 @@ import kotlin.math.pow
 
 val POW by BinaryOp(precedence = 0)
 
-internal class PowFunction : AlgebraicBinaryScalarFunction {
+internal class PowFunction : AlgebraicBinaryFunction {
     override val meta = POW
     override fun doubleOp(p1: Double, p2: Double) = p1.pow(p2)
 
@@ -24,7 +24,7 @@ internal class PowFunction : AlgebraicBinaryScalarFunction {
             rightIsConst && p2.getConstant() == 0.0 -> ConstantScalar(1.0)
             rightIsConst && p2.getConstant() == -0.0 -> ConstantScalar(1.0)
             leftIsConst && rightIsConst -> constant(invoke(p1.getConstant(), p2.getConstant()))
-            p1 is AlgebraicBinaryScalar && p1.op == pow ->
+            p1 is AlgebraicBinaryScalarScalarScalar && p1.op == pow ->
                 pow(p1.left, p2 * p1.right)
             else -> null
         }

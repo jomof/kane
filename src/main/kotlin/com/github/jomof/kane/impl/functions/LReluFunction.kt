@@ -8,7 +8,7 @@ import kotlin.math.max
 
 private val LRELU by UnaryOp()
 
-internal class LreluFunction : AlgebraicUnaryScalarFunction {
+internal class LreluFunction : AlgebraicUnaryFunction {
     override val meta = LRELU
     override fun doubleOp(value: Double) = max(0.1 * value, value)
 

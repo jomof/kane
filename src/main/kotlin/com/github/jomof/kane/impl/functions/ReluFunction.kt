@@ -8,7 +8,7 @@ import kotlin.math.max
 
 val RELU by UnaryOp()
 
-internal class ReluFunction : AlgebraicUnaryScalarFunction {
+internal class ReluFunction : AlgebraicUnaryFunction {
     override val meta = RELU
     override fun doubleOp(value: Double) = max(0.0, value)
 

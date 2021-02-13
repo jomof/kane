@@ -187,9 +187,9 @@ private fun AlgebraicExpr.linearizeExpr(model: LinearModel = LinearModel(kaneDou
         is MatrixVariableElement -> model.slotOfExistingMatrixVariableElement(this)
         is NamedScalarVariable -> model.slotOfExistingNamedScalarVariable(this)
         is RandomVariableExpr -> model.slotOfExistingRandomVariable(this)
-        is AlgebraicUnaryScalar -> model.computeSlot(this) { copy(value = value.linearizeExpr(model) as ScalarExpr) }
+        is AlgebraicUnaryScalarScalar -> model.computeSlot(this) { copy(value = value.linearizeExpr(model) as ScalarExpr) }
         is AlgebraicUnaryMatrixScalar -> model.computeSlot(this) { copy(value = value.linearizeExpr(model) as MatrixExpr) }
-        is AlgebraicBinaryScalar -> model.computeSlot(this) {
+        is AlgebraicBinaryScalarScalarScalar -> model.computeSlot(this) {
             copy(
                 left = left.linearizeExpr(model) as ScalarExpr,
                 right = right.linearizeExpr(model) as ScalarExpr
@@ -314,12 +314,12 @@ private fun AlgebraicExpr.claimMatrixVariables(model: LinearModel = LinearModel(
 }
 
 private fun AlgebraicExpr.evalSpace(space : DoubleArray) : Double {
-    return when(this) {
+    return when (this) {
         is ConstantScalar -> value
         is Slot -> space[slot]
         is NamedScalar -> scalar.evalSpace(space)
-        is AlgebraicBinaryScalar -> op.doubleOp(left.evalSpace(space), right.evalSpace(space))
-        is AlgebraicUnaryScalar -> op.doubleOp(value.evalSpace(space))
+        is AlgebraicBinaryScalarScalarScalar -> op.doubleOp(left.evalSpace(space), right.evalSpace(space))
+        is AlgebraicUnaryScalarScalar -> op.doubleOp(value.evalSpace(space))
         is RetypeScalar -> getConstant()
         is AlgebraicUnaryMatrixScalar -> op.doubleOp(value.elements.map { it.evalSpace(space) })
         else ->
@@ -360,13 +360,13 @@ private fun AlgebraicExpr.stripNames() : AlgebraicExpr {
         is NamedMatrix -> matrix.self()
         is NamedScalar -> scalar.self()
         is AlgebraicUnaryScalarStatistic -> copy(value = value)
-        is AlgebraicUnaryScalar -> {
+        is AlgebraicUnaryScalarScalar -> {
             val value = value.self()
             if (this.value !== value) copy(value = value)
             else this
         }
         is AlgebraicBinaryScalarStatistic -> copy(left = left, right = right)
-        is AlgebraicBinaryScalar -> copy(left = left, right = right)
+        is AlgebraicBinaryScalarScalarScalar -> copy(left = left, right = right)
         is DataMatrix -> map { it.self() }
         is Tableau -> copy(children= children.map { child ->
             when(child) {
@@ -391,9 +391,9 @@ private fun Expr.terminal(): Boolean =
         is NamedScalarVariable -> true
         is MatrixVariableElement -> true
         is DiscreteUniformRandomVariable -> true
-        is AlgebraicBinaryScalar -> false
+        is AlgebraicBinaryScalarScalarScalar -> false
         is AlgebraicUnaryMatrixScalar -> false
-        is AlgebraicUnaryScalar -> false
+        is AlgebraicUnaryScalarScalar -> false
         is RetypeScalar -> false
         else ->
             error("$javaClass")
@@ -401,12 +401,12 @@ private fun Expr.terminal(): Boolean =
 
 fun AlgebraicExpr.rollUpCommonSubexpressions(model : LinearModel) : AlgebraicExpr {
     return object : RewritingVisitor() {
-        override fun rewrite(expr: AlgebraicUnaryScalar): Expr {
+        override fun rewrite(expr: AlgebraicUnaryScalarScalar): Expr {
             if (expr.value.terminal()) return expr.linearizeExpr(model) as ScalarExpr
             return super.rewrite(expr)
         }
 
-        override fun rewrite(expr: AlgebraicBinaryScalar): Expr {
+        override fun rewrite(expr: AlgebraicBinaryScalarScalarScalar): Expr {
             if (expr.left.terminal() && expr.right.terminal()) return expr.linearizeExpr(model) as ScalarExpr
             return super.rewrite(expr)
         }

@@ -109,7 +109,7 @@ internal open class RewritingVisitor(protected val checkIdentity: Boolean = fals
         else this
     }
 
-    open fun rewrite(expr: AlgebraicUnaryScalar): Expr = with(expr) {
+    open fun rewrite(expr: AlgebraicUnaryScalarScalar): Expr = with(expr) {
         val rewritten = scalar(value)
         return if (rewritten === value) this
         else copy(value = rewritten)
@@ -140,21 +140,21 @@ internal open class RewritingVisitor(protected val checkIdentity: Boolean = fals
         return copy(left = leftRewritten, right = rightRewritten)
     }
 
-    open fun rewrite(expr: AlgebraicBinaryMatrixScalar): Expr = with(expr) {
+    open fun rewrite(expr: AlgebraicBinaryMatrixScalarMatrix): Expr = with(expr) {
         val leftRewritten = matrix(left)
         val rightRewritten = scalar(right)
         if (leftRewritten === left && rightRewritten === right) return this
         return copy(left = leftRewritten, right = rightRewritten)
     }
 
-    open fun rewrite(expr: AlgebraicBinaryScalar): Expr = with(expr) {
+    open fun rewrite(expr: AlgebraicBinaryScalarScalarScalar): Expr = with(expr) {
         val leftRewritten = scalar(left)
         val rightRewritten = scalar(right)
         if (leftRewritten === left && rightRewritten === right) return this
         return copy(left = leftRewritten, right = rightRewritten)
     }
 
-    open fun rewrite(expr: AlgebraicBinaryScalarMatrix): Expr = with(expr) {
+    open fun rewrite(expr: AlgebraicBinaryScalarMatrixMatrix): Expr = with(expr) {
         val leftRewritten = scalar(left)
         val rightRewritten = matrix(right)
         if (leftRewritten === left && rightRewritten === right) return this
@@ -240,14 +240,14 @@ internal open class RewritingVisitor(protected val checkIdentity: Boolean = fals
                 is DiscreteUniformRandomVariable -> rewrite(expr)
                 is ScalarStatistic -> rewrite(expr)
                 is AlgebraicBinaryMatrix -> rewrite(expr)
-                is AlgebraicBinaryMatrixScalar -> rewrite(expr)
-                is AlgebraicBinaryScalar -> rewrite(expr)
-                is AlgebraicBinaryScalarMatrix -> rewrite(expr)
+                is AlgebraicBinaryMatrixScalarMatrix -> rewrite(expr)
+                is AlgebraicBinaryScalarScalarScalar -> rewrite(expr)
+                is AlgebraicBinaryScalarMatrixMatrix -> rewrite(expr)
                 is AlgebraicBinaryScalarStatistic -> rewrite(expr)
                 is AlgebraicBinaryMatrixScalarStatistic -> rewrite(expr)
                 is AlgebraicUnaryMatrix -> rewrite(expr)
                 is AlgebraicUnaryMatrixScalar -> rewrite(expr)
-                is AlgebraicUnaryScalar -> rewrite(expr)
+                is AlgebraicUnaryScalarScalar -> rewrite(expr)
                 is AlgebraicUnaryScalarStatistic -> rewrite(expr)
                 is CoerceScalar -> rewrite(expr)
                 is CoerceMatrix -> rewrite(expr)
