@@ -85,9 +85,18 @@ private val reduceAlgebraicUnaryMatrix = object : RewritingVisitor() {
     }
 }
 private val reduceAlgebraicUnaryScalarStatistic = object : RewritingVisitor() {
-    override fun rewrite(expr: AlgebraicUnaryScalarStatistic): Expr = with(expr) {
+    override fun rewrite(expr: AlgebraicSummaryScalarScalar): Expr = with(expr) {
         return when (expr.value) {
             is RetypeScalar -> rewrite(expr.value.copy(expr.copy(value = expr.value.scalar)))
+            else -> {
+                op.reduceArithmetic(value) ?: super.rewrite(expr)
+            }
+        }
+    }
+
+    override fun rewrite(expr: AlgebraicSummaryMatrixScalar): Expr = with(expr) {
+        return when (expr.value) {
+            is RetypeMatrix -> error("Something to do here?")
             else -> {
                 op.reduceArithmetic(value) ?: super.rewrite(expr)
             }
@@ -342,7 +351,10 @@ private fun Expr.accumulateStatistics(incoming: Expr) {
         this is ScalarStatistic && incoming is ConstantScalar -> {
             statistic.insert(incoming.value)
         }
-        this is AlgebraicUnaryScalarStatistic && incoming is AlgebraicUnaryScalarStatistic -> {
+        this is AlgebraicSummaryScalarScalar && incoming is AlgebraicSummaryScalarScalar -> {
+            value.accumulateStatistics(incoming.value)
+        }
+        this is AlgebraicSummaryMatrixScalar && incoming is AlgebraicSummaryMatrixScalar -> {
             value.accumulateStatistics(incoming.value)
         }
         this is RetypeScalar && incoming is RetypeScalar -> {

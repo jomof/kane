@@ -353,7 +353,10 @@ fun diff(expr: ScalarExpr, variable: ScalarExpr): ScalarExpr {
             val p2d = diff(expr.right, variable)
             expr.op.differentiate(expr.left, p1d, expr.right, p2d, variable)
         }
-        is AlgebraicUnaryScalarStatistic -> {
+        is AlgebraicSummaryMatrixScalar -> {
+            diff(expr.eval(), variable)
+        }
+        is AlgebraicSummaryScalarScalar -> {
             diff(expr.eval(), variable)
         }
         is RetypeScalar -> diff(expr.scalar, variable)
@@ -732,7 +735,8 @@ fun Expr.render(entryPoint: Boolean = true, outerType: AlgebraicType? = null): S
         }
         is MatrixVariableElement -> "${matrix.name}[$column,$row]"
         is ConstantScalar -> (outerType ?: kaneDouble).render(value)
-        is AlgebraicUnaryScalarStatistic -> "${op.meta.op}(${value.self()})"
+        is AlgebraicSummaryScalarScalar -> "${op.meta.op}(${value.self()})"
+        is AlgebraicSummaryMatrixScalar -> "${op.meta.op}(${value.self()})"
         is AlgebraicUnaryScalarScalar -> when {
             op == exp -> {
                 val rightSuper = tryConvertToSuperscript(value.self())

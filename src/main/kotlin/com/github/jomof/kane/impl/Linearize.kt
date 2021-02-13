@@ -99,7 +99,8 @@ class LinearModel(val type : AlgebraicType) {
     }
 
     fun computeSlot(expr : ScalarExpr, compute:(ScalarExpr) -> ScalarExpr) : Slot {
-        assert(expr !is AlgebraicUnaryScalarStatistic)
+        assert(expr !is AlgebraicSummaryScalarScalar)
+        assert(expr !is AlgebraicSummaryMatrixScalar)
         assert(expr !is AlgebraicBinaryScalarStatistic)
         if (map.containsKey(expr)) return map.getValue(expr)
         val computed = compute(expr)
@@ -179,7 +180,8 @@ private fun AlgebraicExpr.linearizeExpr(model: LinearModel = LinearModel(kaneDou
         is Slot -> this
         is ConstantScalar -> this
         is RetypeScalar -> copy(scalar = scalar.linearizeExpr(model) as ScalarExpr)
-        is AlgebraicUnaryScalarStatistic -> copy(value = value.linearizeExpr(model) as ScalarExpr)
+        is AlgebraicSummaryScalarScalar -> copy(value = value.linearizeExpr(model) as ScalarExpr)
+        is AlgebraicSummaryMatrixScalar -> copy(value = value.linearizeExpr(model) as MatrixExpr)
         is AlgebraicBinaryScalarStatistic -> copy(
             left = left.linearizeExpr(model) as ScalarExpr,
             right = right.linearizeExpr(model) as ScalarExpr,
@@ -196,7 +198,10 @@ private fun AlgebraicExpr.linearizeExpr(model: LinearModel = LinearModel(kaneDou
         }
         is DataMatrix -> map { it.linearizeExpr(model) as ScalarExpr }
         is NamedScalar -> {
-            if (scalar !is AlgebraicBinaryScalarStatistic && scalar !is AlgebraicUnaryScalarStatistic) {
+            if (scalar !is AlgebraicBinaryScalarStatistic
+                && scalar !is AlgebraicSummaryScalarScalar
+                && scalar !is AlgebraicSummaryMatrixScalar
+            ) {
                 val result = model.computeSlot(scalar) { scalar.linearizeExpr(model) as ScalarExpr }
                 model.registerNamedScalar(name, result)
                 result
@@ -357,7 +362,7 @@ private fun AlgebraicExpr.stripNames() : AlgebraicExpr {
         is RetypeScalar -> scalar.self()
         is NamedMatrix -> matrix.self()
         is NamedScalar -> scalar.self()
-        is AlgebraicUnaryScalarStatistic -> copy(value = value)
+        is AlgebraicSummaryScalarScalar -> copy(value = value)
         is AlgebraicUnaryScalarScalar -> {
             val value = value.self()
             if (this.value !== value) copy(value = value)

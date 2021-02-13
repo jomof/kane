@@ -196,25 +196,25 @@ interface AlgebraicSummaryFunction : AggregatableFunction {
     fun call(expr: GroupBy): Sheet = expr.aggregate(this)
 
     fun call(exprs: Array<out ScalarExpr>): ScalarExpr =
-        AlgebraicUnaryScalarStatistic(
+        AlgebraicSummaryMatrixScalar(
             this,
             DataMatrix(exprs.size, 1, exprs.toList())
         )
 
     fun call(exprs: Array<out Any>): ScalarExpr =
-        AlgebraicUnaryScalarStatistic(
+        AlgebraicSummaryMatrixScalar(
             this,
             DataMatrix(exprs.size, 1, exprs.toList().map { convertAnyToScalarExpr(it) })
         )
 
     fun call(expr: SheetRange): ScalarExpr =
-        AlgebraicUnaryScalarStatistic(
+        AlgebraicSummaryScalarScalar(
             this,
             CoerceScalar(expr)
         )
 
-    fun call(expr: ScalarExpr): ScalarExpr = AlgebraicUnaryScalarStatistic(this, expr)
-    fun call(expr: MatrixExpr): ScalarExpr = AlgebraicUnaryScalarStatistic(this, expr)
+    fun call(expr: ScalarExpr): ScalarExpr = AlgebraicSummaryScalarScalar(this, expr)
+    fun call(expr: MatrixExpr): ScalarExpr = AlgebraicSummaryMatrixScalar(this, expr)
 
     fun call(expr: Expr): Expr = when (expr) {
         is AlgebraicExpr -> call(expr)
@@ -250,14 +250,17 @@ interface AlgebraicSummaryFunction : AggregatableFunction {
     }
 }
 
-data class AlgebraicUnaryScalarStatistic(
+data class AlgebraicSummaryScalarScalar(
     val op: AlgebraicSummaryFunction,
-    val value: AlgebraicExpr
+    val value: ScalarExpr
 ) : ScalarExpr {
-    init {
-        track()
-    }
+    override fun toString() = render()
+}
 
+data class AlgebraicSummaryMatrixScalar(
+    val op: AlgebraicSummaryFunction,
+    val value: MatrixExpr
+) : ScalarExpr {
     override fun toString() = render()
 }
 
