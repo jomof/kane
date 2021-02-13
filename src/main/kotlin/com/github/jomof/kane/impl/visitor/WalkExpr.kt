@@ -1,6 +1,6 @@
 package com.github.jomof.kane.impl.visitor
 
-import com.github.jomof.kane.Expr
+import com.github.jomof.kane.*
 import com.github.jomof.kane.impl.*
 import com.github.jomof.kane.impl.functions.*
 import com.github.jomof.kane.impl.sheet.*

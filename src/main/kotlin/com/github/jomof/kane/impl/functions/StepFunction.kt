@@ -1,6 +1,6 @@
 package com.github.jomof.kane.impl.functions
 
-import com.github.jomof.kane.ScalarExpr
+import com.github.jomof.kane.*
 import com.github.jomof.kane.impl.UnaryOp
 import com.github.jomof.kane.impl.constant
 

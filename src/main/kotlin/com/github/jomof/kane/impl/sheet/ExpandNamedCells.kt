@@ -4,7 +4,6 @@ import com.github.jomof.kane.*
 import com.github.jomof.kane.impl.*
 import com.github.jomof.kane.impl.functions.AlgebraicBinaryScalar
 import com.github.jomof.kane.impl.functions.AlgebraicBinaryScalarStatistic
-import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalar
 import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalarStatistic
 
 private fun AlgebraicExpr.expandNamedCells(lookup: Cells): AlgebraicExpr {

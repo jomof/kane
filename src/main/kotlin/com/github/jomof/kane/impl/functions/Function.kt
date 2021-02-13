@@ -173,17 +173,6 @@ interface AlgebraicUnaryScalarFunction {
     fun differentiate(expr: ScalarExpr, exprd: ScalarExpr, variable: ScalarExpr): ScalarExpr
 }
 
-data class AlgebraicUnaryScalar(
-    val op: AlgebraicUnaryScalarFunction,
-    val value: ScalarExpr
-) : ScalarExpr {
-    override fun toString() = render()
-//    fun copy(value: ScalarExpr): AlgebraicUnaryScalar {
-//        return if (value === this.value) return this
-//        else AlgebraicUnaryScalar(op, value)
-//    }
-}
-
 data class AlgebraicUnaryMatrix(
     val op: AlgebraicUnaryScalarFunction,
     val value: MatrixExpr

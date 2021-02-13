@@ -1,11 +1,9 @@
 package com.github.jomof.kane
 
-import com.github.jomof.kane.impl.DataMatrix
-import com.github.jomof.kane.impl.NamedMatrix
 import com.github.jomof.kane.impl.functions.*
-import com.github.jomof.kane.impl.sheet.GroupBy
-import com.github.jomof.kane.impl.sheet.Sheet
-import com.github.jomof.kane.impl.sheet.SheetRange
+import com.github.jomof.kane.impl.functions.*
+import com.github.jomof.kane.impl.sheet.*
+import com.github.jomof.kane.impl.*
 
 // plus typesafe infix operators
 operator fun Number.plus(right: ScalarExpr) = plus(this.toDouble(), right)

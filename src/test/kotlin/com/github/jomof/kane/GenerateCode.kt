@@ -11,7 +11,18 @@ class GenerateCode {
      */
     @Test
     fun exprs() {
-        val output = File("src/main/kotlin/com/github/jomof/kane/TypesafeOperations.kt").absoluteFile
+        val output = File("src/main/kotlin/com/github/jomof/kane/Exprs.kt").absoluteFile
+        val sb = StringBuilder()
+        sb.append(
+            """
+            package com.github.jomof.kane
+
+
+            import com.github.jomof.kane.impl.functions.AlgebraicUnaryScalarFunction
+            import com.github.jomof.kane.impl.render
+            """.trimIndent()
+        )
+
     }
 
     /**

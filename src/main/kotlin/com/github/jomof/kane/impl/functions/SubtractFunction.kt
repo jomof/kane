@@ -1,6 +1,6 @@
 package com.github.jomof.kane.impl.functions
 
-import com.github.jomof.kane.ScalarExpr
+import com.github.jomof.kane.*
 import com.github.jomof.kane.impl.*
 import com.github.jomof.kane.minus
 import com.github.jomof.kane.negate
