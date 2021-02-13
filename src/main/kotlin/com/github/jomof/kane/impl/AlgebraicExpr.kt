@@ -331,10 +331,6 @@ fun diff(expr: ScalarExpr, variable: ScalarExpr): ScalarExpr {
         is NamedScalar -> {
             diff(expr.scalar, variable)
         }
-        is AlgebraicUnaryMatrixScalar -> {
-            val evaled = expr.eval()
-            diff(evaled, variable)
-        }
         is MatrixVariableElement -> ConstantScalar(0.0)
         is ScalarVariableExpr -> ConstantScalar(0.0)
         is ConstantScalar -> ConstantScalar(0.0)
@@ -730,7 +726,6 @@ fun Expr.render(entryPoint: Boolean = true, outerType: AlgebraicType? = null): S
         }
         is MatrixVariableElement -> "${matrix.name}[$column,$row]"
         is ConstantScalar -> (outerType ?: kaneDouble).render(value)
-        is AlgebraicUnaryMatrixScalar -> "${op.meta.op}(${value.self()})"
         is AlgebraicUnaryScalarStatistic -> "${op.meta.op}(${value.self()})"
         is AlgebraicUnaryScalarScalar -> when {
             op == exp -> {

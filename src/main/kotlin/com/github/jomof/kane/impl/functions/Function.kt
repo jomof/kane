@@ -299,11 +299,8 @@ data class AlgebraicBinaryMatrixScalarStatistic(
 // f(matrix)->scalar
 interface AlgebraicUnaryMatrixScalarFunction :
     IAlgebraicUnaryScalarScalarFunction,
-    IAlgebraicUnaryMatrixScalarFunction {
+    IAlgebraicUnaryMatrixMatrixFunction {
     override val meta: UnaryOp
-    override fun doubleOp(values: List<Double>): Double
-    override fun invoke(value: MatrixExpr): ScalarExpr = AlgebraicUnaryMatrixScalar(this, value)
-    override fun reduceArithmetic(value: MatrixExpr): ScalarExpr?
 }
 
 //data class AlgebraicUnaryMatrixScalar(

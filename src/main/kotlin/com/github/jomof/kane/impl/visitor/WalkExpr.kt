@@ -47,7 +47,6 @@ internal fun Expr.visit(f: (expr: Expr) -> Unit) {
         is AlgebraicUnaryScalarStatistic -> value.visit(f)
         is AlgebraicUnaryScalarScalar -> value.visit(f)
         is AlgebraicUnaryMatrixMatrix -> value.visit(f)
-        is AlgebraicUnaryMatrixScalar -> value.visit(f)
         is CoerceScalar -> value.visit(f)
         is CoerceMatrix -> value.visit(f)
         is RetypeScalar -> scalar.visit(f)

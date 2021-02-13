@@ -188,7 +188,6 @@ private fun AlgebraicExpr.linearizeExpr(model: LinearModel = LinearModel(kaneDou
         is NamedScalarVariable -> model.slotOfExistingNamedScalarVariable(this)
         is RandomVariableExpr -> model.slotOfExistingRandomVariable(this)
         is AlgebraicUnaryScalarScalar -> model.computeSlot(this) { copy(value = value.linearizeExpr(model) as ScalarExpr) }
-        is AlgebraicUnaryMatrixScalar -> model.computeSlot(this) { copy(value = value.linearizeExpr(model) as MatrixExpr) }
         is AlgebraicBinaryScalarScalarScalar -> model.computeSlot(this) {
             copy(
                 left = left.linearizeExpr(model) as ScalarExpr,
@@ -321,11 +320,6 @@ private fun AlgebraicExpr.evalSpace(space : DoubleArray) : Double {
         is AlgebraicBinaryScalarScalarScalar -> op.doubleOp(left.evalSpace(space), right.evalSpace(space))
         is AlgebraicUnaryScalarScalar -> op.doubleOp(value.evalSpace(space))
         is RetypeScalar -> getConstant()
-        is AlgebraicUnaryMatrixScalar -> (op as AlgebraicUnaryMatrixScalarFunction).doubleOp(value.elements.map {
-            it.evalSpace(
-                space
-            )
-        })
         else ->
             error("$javaClass")
     }
@@ -396,7 +390,6 @@ private fun Expr.terminal(): Boolean =
         is MatrixVariableElement -> true
         is DiscreteUniformRandomVariable -> true
         is AlgebraicBinaryScalarScalarScalar -> false
-        is AlgebraicUnaryMatrixScalar -> false
         is AlgebraicUnaryScalarScalar -> false
         is RetypeScalar -> false
         else ->

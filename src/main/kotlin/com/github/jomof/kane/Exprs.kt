@@ -22,23 +22,6 @@ data class AlgebraicUnaryScalarScalar(
     override fun toString() = render()
 }
 
-interface IAlgebraicUnaryMatrixScalarFunction {
-    val meta: UnaryOp
-    operator fun invoke(value: MatrixExpr): ScalarExpr = AlgebraicUnaryMatrixScalar(this, value)
-    fun reduceArithmetic(value: MatrixExpr): ScalarExpr?
-    fun doubleOp(value: List<Double>): Double
-    fun differentiate(value: MatrixExpr, valued: MatrixExpr, variable: ScalarExpr): ScalarExpr
-    fun type(value: AlgebraicType): AlgebraicType
-}
-
-data class AlgebraicUnaryMatrixScalar(
-    val op: IAlgebraicUnaryMatrixScalarFunction,
-    val value: MatrixExpr
-) : ScalarExpr {
-    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
-    override fun toString() = render()
-}
-
 interface IAlgebraicUnaryMatrixMatrixFunction {
     val meta: UnaryOp
     operator fun invoke(value: MatrixExpr): MatrixExpr = AlgebraicUnaryMatrixMatrix(this, value)
