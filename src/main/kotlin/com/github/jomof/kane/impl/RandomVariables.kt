@@ -33,7 +33,7 @@ class DiscreteUniformRandomVariable(
         error("Shouldn't copy DiscreteUniformRandomVariable")
 }
 
-class ScalarStatistic(
+class StatsiticExpr(
     val statistic: StreamingSamples
 ) : ScalarExpr {
     override fun toString(): String {
@@ -41,7 +41,7 @@ class ScalarStatistic(
     }
 
     fun copy(statistic: StreamingSamples = this.statistic) =
-        ScalarStatistic(statistic)
+        StatsiticExpr(statistic)
 }
 
 fun randomOf(range : Pair<Double, Double>, step : Double = 1.0) : DiscreteUniformRandomVariable {

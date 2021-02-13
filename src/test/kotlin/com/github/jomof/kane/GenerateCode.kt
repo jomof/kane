@@ -9,7 +9,8 @@ class GenerateCode {
 
     private enum class Shape {
         Scalar,
-        Matrix
+        Matrix,
+        Statistic
     }
 
     private data class Parameter(
@@ -25,6 +26,7 @@ class GenerateCode {
 
     private val operators = listOf(
         Operator("Summary", Scalar, listOf(Parameter("value", Scalar))),
+        //Operator("Summary", Scalar, listOf(Parameter("value", Statistic))),
         Operator("Summary", Scalar, listOf(Parameter("value", Matrix))),
         Operator("Unary", Scalar, listOf(Parameter("value", Scalar))),
         Operator("Unary", Matrix, listOf(Parameter("value", Matrix))),

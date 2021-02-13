@@ -277,13 +277,14 @@ val sin: AlgebraicUnaryFunction = sinFunc
  */
 fun sin(matrix: NamedMatrix): MatrixExpr = sinFunc(matrix as MatrixExpr)
 fun sin(matrix: DataMatrix): MatrixExpr = sinFunc(matrix as MatrixExpr)
-fun sin(matrix : MatrixExpr) : MatrixExpr = sinFunc(matrix)
-fun sin(scalar : ScalarExpr) : ScalarExpr = sinFunc(scalar)
-fun sin(scalar : Double) : Double = sinFunc(scalar)
+fun sin(matrix: MatrixExpr): MatrixExpr = sinFunc(matrix)
+fun sin(scalar: ScalarExpr): ScalarExpr = sinFunc(scalar)
+fun sin(scalar: Double): Double = sinFunc(scalar)
 
 // typesafe cos
 private val cosFunc = CosFunction()
 val cos: AlgebraicUnaryFunction = cosFunc
+
 /**
  * cos function
  * [![](https://jomof.github.io/kane/figures/cos-profile.svg)]

@@ -103,9 +103,9 @@ private val reduceAlgebraicBinaryScalarStatistic = object : RewritingVisitor() {
     override fun rewrite(expr: AlgebraicBinaryScalarStatistic): Expr = with(expr) {
 
         return when {
-            left is ScalarStatistic -> op.reduceArithmetic(left, right)
-            left is NamedScalar && left.scalar is ScalarStatistic -> op.reduceArithmetic(left.scalar, right)
-            left is RetypeScalar && left.scalar is ScalarStatistic -> {
+            left is StatsiticExpr -> op.reduceArithmetic(left, right)
+            left is NamedScalar && left.scalar is StatsiticExpr -> op.reduceArithmetic(left.scalar, right)
+            left is RetypeScalar && left.scalar is StatsiticExpr -> {
                 val result = left.copy(scalar = op.reduceArithmetic(left.scalar, right))
                 result
             }
@@ -125,7 +125,7 @@ private val reduceAlgebraicBinaryScalarStatistic = object : RewritingVisitor() {
 }
 
 private val reduceNakedScalarStatistic = object : RewritingVisitor() {
-    override fun rewrite(expr: ScalarStatistic) = constant(expr.statistic.median)
+    override fun rewrite(expr: StatsiticExpr) = constant(expr.statistic.median)
 }
 
 private class ReduceRandomVariables(
@@ -212,7 +212,7 @@ private val convertVariablesToStatistics = object : RewritingVisitor() {
     override fun rewrite(expr: ConstantScalar): Expr {
         val stream = StreamingSamples()
         stream.insert(expr.value)
-        return ScalarStatistic(stream)
+        return StatsiticExpr(stream)
     }
 }
 
@@ -345,7 +345,7 @@ private fun Expr.accumulateStatistics(incoming: Expr) {
             assert(name == incoming.name)
             matrix.accumulateStatistics(incoming.matrix)
         }
-        this is ScalarStatistic && incoming is ConstantScalar -> {
+        this is StatsiticExpr && incoming is ConstantScalar -> {
             statistic.insert(incoming.value)
         }
         this is AlgebraicSummaryScalarScalar && incoming is AlgebraicSummaryScalarScalar -> {
