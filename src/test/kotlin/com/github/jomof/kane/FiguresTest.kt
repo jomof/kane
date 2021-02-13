@@ -39,7 +39,6 @@ class FiguresTest {
 
             val x by (-200..200).map { (PI * it) / 100.0 }
             val y by func(x)
-
             val op = func.meta.simpleName
             val map = y.toMap()
             val p = lets_plot(map) +

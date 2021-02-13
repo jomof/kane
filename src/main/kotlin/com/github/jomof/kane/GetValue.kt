@@ -15,7 +15,7 @@ operator fun String.getValue(nothing: Nothing?, property: KProperty<*>) =
 operator fun Number.getValue(nothing: Nothing?, property: KProperty<*>) =
     NamedScalar(property.name, constant(this.toDouble()))
 
-operator fun List<Number>.getValue(nothing: Nothing?, property: KProperty<*>) =
+operator fun <E : Number> List<E>.getValue(nothing: Nothing?, property: KProperty<*>) =
     NamedMatrix(property.name, DataMatrix(1, size, map { constant(it.toDouble()) }))
 
 inline operator fun <reified E : Any> List<E>.getValue(nothing: Nothing?, property: KProperty<*>) =
