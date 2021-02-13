@@ -162,7 +162,7 @@ p += geom_density(color="dark_green", alpha=.3) { x="rating"; fill="cond" }
 p + ggsize(500, 250)
 ```
 
-[![](https://jomof.github.io/kane/figures/readme-density.svg)]
+![](https://jomof.github.io/kane/figures/readme-density.svg)
 
 ## Standalone Equations
 You can also use equations outside of a sheet.
@@ -177,7 +177,7 @@ lets_plot(y.toMap()) +
             title = "$y",
         )
 ```
-[![](https://jomof.github.io/kane/figures/readme-standalone-equation.svg)]
+![](https://jomof.github.io/kane/figures/readme-standalone-equation.svg)
 
 # Other topics
 - [Dealing with large .csv files](https://github.com/jomof/kane/blob/main/LargeCsvSupport.md)
