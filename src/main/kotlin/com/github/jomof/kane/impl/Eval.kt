@@ -149,7 +149,7 @@ private class ReduceRandomVariables(val variables: Map<RandomVariableExpr, Const
         val typed =
             if (reduced != null && type != kaneDouble) RetypeScalar(reduced, type)
             else reduced
-        return typed ?: copy(rewritten)
+        return typed ?: copy(value = rewritten)
     }
 }
 

@@ -10,14 +10,21 @@ class GenerateCode {
      *
      */
     @Test
-    fun test() {
+    fun exprs() {
+        val output = File("src/main/kotlin/com/github/jomof/kane/TypesafeOperations.kt").absoluteFile
+    }
+
+    /**
+     *
+     */
+    @Test
+    fun typesafe() {
         val output = File("src/main/kotlin/com/github/jomof/kane/TypesafeOperations.kt").absoluteFile
         val sb = StringBuilder()
         sb.append(
             """
             package com.github.jomof.kane
 
-            import com.github.jomof.kane.functions.*
             import com.github.jomof.kane.impl.functions.*
             import com.github.jomof.kane.impl.functions.*
             import com.github.jomof.kane.impl.sheet.*

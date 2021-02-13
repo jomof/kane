@@ -178,10 +178,10 @@ data class AlgebraicUnaryScalar(
     val value: ScalarExpr
 ) : ScalarExpr {
     override fun toString() = render()
-    fun copy(value: ScalarExpr): AlgebraicUnaryScalar {
-        return if (value === this.value) return this
-        else AlgebraicUnaryScalar(op, value)
-    }
+//    fun copy(value: ScalarExpr): AlgebraicUnaryScalar {
+//        return if (value === this.value) return this
+//        else AlgebraicUnaryScalar(op, value)
+//    }
 }
 
 data class AlgebraicUnaryMatrix(
