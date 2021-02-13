@@ -5,6 +5,40 @@ import com.github.jomof.kane.impl.types.*
 import kotlin.reflect.KProperty
 
 
+interface IAlgebraicSummaryScalarScalarFunction {
+    val meta: SummaryOp
+    operator fun invoke(value: ScalarExpr): ScalarExpr = AlgebraicSummaryScalarScalar(this, value)
+    fun reduceArithmetic(value: ScalarExpr): ScalarExpr?
+    fun doubleOp(value: Double): Double
+    fun differentiate(value: ScalarExpr, valued: ScalarExpr, variable: ScalarExpr): ScalarExpr
+    fun type(value: AlgebraicType): AlgebraicType
+}
+
+data class AlgebraicSummaryScalarScalar(
+    val op: IAlgebraicSummaryScalarScalarFunction,
+    val value: ScalarExpr
+) : ScalarExpr {
+    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    override fun toString() = render()
+}
+
+interface IAlgebraicSummaryMatrixScalarFunction {
+    val meta: SummaryOp
+    operator fun invoke(value: MatrixExpr): ScalarExpr = AlgebraicSummaryMatrixScalar(this, value)
+    fun reduceArithmetic(value: MatrixExpr): ScalarExpr?
+    fun doubleOp(value: List<Double>): Double
+    fun differentiate(value: MatrixExpr, valued: MatrixExpr, variable: ScalarExpr): ScalarExpr
+    fun type(value: AlgebraicType): AlgebraicType
+}
+
+data class AlgebraicSummaryMatrixScalar(
+    val op: IAlgebraicSummaryMatrixScalarFunction,
+    val value: MatrixExpr
+) : ScalarExpr {
+    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    override fun toString() = render()
+}
+
 interface IAlgebraicUnaryScalarScalarFunction {
     val meta: UnaryOp
     operator fun invoke(value: ScalarExpr): ScalarExpr = AlgebraicUnaryScalarScalar(this, value)

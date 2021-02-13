@@ -86,12 +86,7 @@ private val reduceAlgebraicUnaryMatrix = object : RewritingVisitor() {
 }
 private val reduceAlgebraicUnaryScalarStatistic = object : RewritingVisitor() {
     override fun rewrite(expr: AlgebraicSummaryScalarScalar): Expr = with(expr) {
-        return when (expr.value) {
-            is RetypeScalar -> rewrite(expr.value.copy(expr.copy(value = expr.value.scalar)))
-            else -> {
-                op.reduceArithmetic(value) ?: super.rewrite(expr)
-            }
-        }
+        return op.reduceArithmetic(value) ?: super.rewrite(expr)
     }
 
     override fun rewrite(expr: AlgebraicSummaryMatrixScalar): Expr = with(expr) {
@@ -133,7 +128,9 @@ private val reduceNakedScalarStatistic = object : RewritingVisitor() {
     override fun rewrite(expr: ScalarStatistic) = constant(expr.statistic.median)
 }
 
-private class ReduceRandomVariables(val variables: Map<RandomVariableExpr, ConstantScalar>) :
+private class ReduceRandomVariables(
+    val variables: Map<RandomVariableExpr, ConstantScalar>
+) :
     RewritingVisitor() {
     override fun rewrite(expr: DiscreteUniformRandomVariable) =
         variables[expr] ?: expr
@@ -391,18 +388,6 @@ private fun Expr.accumulateStatistics(incoming: Expr) {
     }
 }
 
-private class ReduceCoerceMatrix : SheetRewritingVisitor() {
-    override fun rewrite(expr: CoerceMatrix): Expr {
-        val (columns, rows) = expr.tryGetDimensions(rowCount())
-        if (columns == null || rows == null) return expr
-        val elements = coordinatesOf(columns, rows).map {
-            val element = expr.getMatrixElement(it.column, it.row)
-            element
-        }
-        return DataMatrix(columns, rows, elements)
-    }
-}
-
 private class NopRangeExprProvider : RangeExprProvider
 
 private fun Expr.evalGradualSingleSample(
@@ -419,7 +404,6 @@ private fun Expr.evalGradualSingleSample(
     val reduceProvidedSheetRangeExprs = ReduceProvidedSheetRangeExprs(rangeExprProvider)
     val reduceAlgebraicBinaryScalar = ReduceAlgebraicBinaryScalar()
     val reduceAlgebraicUnaryScalar = ReduceAlgebraicUnaryScalar()
-    val reduceCoerceMatrix = ReduceCoerceMatrix()
     while (true) {
         if (--allowedReductions == 0) error("Reduction took too long")
         val namedVariableLookup = if (last is Sheet) last.cells else Cells(mapOf())

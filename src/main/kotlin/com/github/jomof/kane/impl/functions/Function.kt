@@ -175,10 +175,23 @@ interface AlgebraicUnaryFunction :
 
 // f(scalar statistic)->scalar
 interface AggregatableFunction
-interface AlgebraicSummaryFunction : AggregatableFunction {
-    val meta: SummaryOp
+interface AlgebraicSummaryFunction :
+    IAlgebraicSummaryScalarScalarFunction,
+    IAlgebraicSummaryMatrixScalarFunction,
+    AggregatableFunction {
+    override val meta: SummaryOp
 
-    fun call(values: Array<out Number>): Double {
+    override fun doubleOp(value: Double): Double {
+        TODO("Not yet implemented")
+    }
+
+    override fun doubleOp(value: List<Double>): Double {
+        TODO("Not yet implemented")
+    }
+
+    override fun type(value: AlgebraicType) = value
+
+    operator fun invoke(values: Array<out Number>): Double {
         val statistic = StreamingSamples()
         values.forEach {
             statistic.insert(it.toDouble())
@@ -186,46 +199,44 @@ interface AlgebraicSummaryFunction : AggregatableFunction {
         return lookupStatistic(statistic)
     }
 
-    fun call(value: Sheet): Sheet {
+    operator fun invoke(value: Sheet): Sheet {
         val filtered = value.describe().filterRows { row -> "$row" == meta.op }
         if (filtered.columns == 1)
             return filtered["A1"]
         return filtered
     }
 
-    fun call(expr: GroupBy): Sheet = expr.aggregate(this)
+    operator fun invoke(expr: GroupBy): Sheet = expr.aggregate(this)
 
-    fun call(exprs: Array<out ScalarExpr>): ScalarExpr =
+    operator fun invoke(exprs: Array<out ScalarExpr>): ScalarExpr =
         AlgebraicSummaryMatrixScalar(
             this,
             DataMatrix(exprs.size, 1, exprs.toList())
         )
 
-    fun call(exprs: Array<out Any>): ScalarExpr =
+    operator fun invoke(exprs: Array<out Any>): ScalarExpr =
         AlgebraicSummaryMatrixScalar(
             this,
             DataMatrix(exprs.size, 1, exprs.toList().map { convertAnyToScalarExpr(it) })
         )
 
-    fun call(expr: SheetRange): ScalarExpr =
+    operator fun invoke(expr: SheetRange): ScalarExpr =
         AlgebraicSummaryScalarScalar(
-            this,
+            this as IAlgebraicSummaryScalarScalarFunction,
             CoerceScalar(expr)
         )
 
-    fun call(expr: ScalarExpr): ScalarExpr = AlgebraicSummaryScalarScalar(this, expr)
-    fun call(expr: MatrixExpr): ScalarExpr = AlgebraicSummaryMatrixScalar(this, expr)
-
-    fun call(expr: Expr): Expr = when (expr) {
-        is AlgebraicExpr -> call(expr)
-        is SheetRange -> call(expr)
-        is Sheet -> call(expr)
+    operator fun invoke(expr: Expr): Expr = when (expr) {
+        is AlgebraicExpr -> invoke(expr)
+        is SheetRange -> invoke(expr)
+        is Sheet -> invoke(expr)
         else -> error("${expr.javaClass}")
     }
 
     fun lookupStatistic(statistic: StreamingSamples): Double
     fun reduceArithmetic(value: ScalarStatistic) = constant(lookupStatistic(value.statistic))
     fun reduceArithmetic(elements: List<ScalarExpr>): ScalarExpr? {
+        if (elements.any { it is ScalarStatistic }) error("")
         if (elements.isEmpty()) return null
         if (!elements.all { it.canGetConstant() }) return null
 
@@ -240,7 +251,7 @@ interface AlgebraicSummaryFunction : AggregatableFunction {
         else RetypeScalar(reduced, type)
     }
 
-    fun reduceArithmetic(value: MatrixExpr) = reduceArithmetic(value.elements)
+    override fun reduceArithmetic(value: MatrixExpr) = reduceArithmetic(value.elements)
     fun reduceArithmetic(value: Expr) = when (value) {
         is ScalarStatistic -> reduceArithmetic(value)
         is MatrixExpr -> reduceArithmetic(value)
@@ -248,21 +259,29 @@ interface AlgebraicSummaryFunction : AggregatableFunction {
         else ->
             error("${value.javaClass}")
     }
+
+    override fun reduceArithmetic(value: ScalarExpr) = when (value) {
+        is ScalarStatistic -> reduceArithmetic(value)
+        is ScalarExpr -> reduceArithmetic(listOf(value))
+        else ->
+            error("${value.javaClass}")
+    }
+
+    override fun differentiate(value: ScalarExpr, valued: ScalarExpr, variable: ScalarExpr): ScalarExpr {
+        TODO("Not yet implemented")
+    }
+
+    override fun differentiate(value: MatrixExpr, valued: MatrixExpr, variable: ScalarExpr): ScalarExpr {
+        TODO("Not yet implemented")
+    }
 }
 
-data class AlgebraicSummaryScalarScalar(
-    val op: AlgebraicSummaryFunction,
-    val value: ScalarExpr
-) : ScalarExpr {
-    override fun toString() = render()
-}
-
-data class AlgebraicSummaryMatrixScalar(
-    val op: AlgebraicSummaryFunction,
-    val value: MatrixExpr
-) : ScalarExpr {
-    override fun toString() = render()
-}
+//data class AlgebraicSummaryMatrixScalar(
+//    val op: AlgebraicSummaryFunction,
+//    val value: MatrixExpr
+//) : ScalarExpr {
+//    override fun toString() = render()
+//}
 
 
 // f(scalar statistic, scalar)->scalar

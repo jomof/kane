@@ -24,6 +24,8 @@ class GenerateCode {
     )
 
     private val operators = listOf(
+        Operator("Summary", Scalar, listOf(Parameter("value", Scalar))),
+        Operator("Summary", Scalar, listOf(Parameter("value", Matrix))),
         Operator("Unary", Scalar, listOf(Parameter("value", Scalar))),
         Operator("Unary", Matrix, listOf(Parameter("value", Matrix))),
         Operator("Binary", Scalar, listOf(Parameter("left", Scalar), Parameter("right", Scalar))),
@@ -171,15 +173,15 @@ class GenerateCode {
             sb.append("val $op : AggregatableFunction = ${op}Func\n")
             sb.append(
                 """
-                fun $op(vararg values : Number) : Double = ${op}Func.call(values)
-                fun $op(vararg values : ScalarExpr) : ScalarExpr = ${op}Func.call(values)
-                fun $op(vararg values : Any) : ScalarExpr = ${op}Func.call(values)
-                fun $op(sheet: Sheet) : Sheet = ${op}Func.call(sheet)
-                fun $op(groupBy: GroupBy) : Sheet = ${op}Func.call(groupBy)
-                fun $op(scalar : ScalarExpr) : ScalarExpr = ${op}Func.call(scalar)
-                fun $op(matrix : MatrixExpr) : ScalarExpr = ${op}Func.call(matrix)
-                fun $op(range : SheetRange) : ScalarExpr = ${op}Func.call(range)
-                fun $op(expr : Expr) : Expr = ${op}Func.call(expr)
+                fun $op(vararg values : Number) : Double = ${op}Func.invoke(values)
+                fun $op(vararg values : ScalarExpr) : ScalarExpr = ${op}Func.invoke(values)
+                fun $op(vararg values : Any) : ScalarExpr = ${op}Func.invoke(values)
+                fun $op(sheet: Sheet) : Sheet = ${op}Func.invoke(sheet)
+                fun $op(groupBy: GroupBy) : Sheet = ${op}Func.invoke(groupBy)
+                fun $op(scalar : ScalarExpr) : ScalarExpr = ${op}Func.invoke(scalar)
+                fun $op(matrix : MatrixExpr) : ScalarExpr = ${op}Func.invoke(matrix)
+                fun $op(range : SheetRange) : ScalarExpr = ${op}Func.invoke(range)
+                fun $op(expr : Expr) : Expr = ${op}Func.invoke(expr)
                 """.trimIndent()
             )
             sb.append("\n\n")
