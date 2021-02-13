@@ -88,6 +88,7 @@ class GenerateCode {
                 fun $op(matrix : MatrixExpr) : MatrixExpr = ${op}Func(matrix)
                 fun $op(scalar : ScalarExpr) : ScalarExpr = ${op}Func(scalar)
                 fun $op(scalar : Double) : Double = ${op}Func(scalar)
+                fun $op(scalar : Double) : Double = ${op}Func(scalar)
                 
                 
                 """.trimIndent()
