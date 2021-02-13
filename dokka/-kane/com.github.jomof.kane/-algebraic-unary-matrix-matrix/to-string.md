@@ -1,4 +1,4 @@
-//[Kane](../../index.md)/[com.github.jomof.kane.impl.functions](../index.md)/[AlgebraicUnaryMatrixScalar](index.md)/[toString](to-string.md)
+//[Kane](../../index.md)/[com.github.jomof.kane](../index.md)/[AlgebraicUnaryMatrixMatrix](index.md)/[toString](to-string.md)
 
 
 

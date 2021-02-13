@@ -5,7 +5,7 @@
 # meta  
 [jvm]  
 Content  
-abstract val [meta](meta.md): [UnaryOp](../../com.github.jomof.kane.impl/-unary-op/index.md)  
+abstract override val [meta](meta.md): [UnaryOp](../../com.github.jomof.kane.impl/-unary-op/index.md)  
 
 
 
