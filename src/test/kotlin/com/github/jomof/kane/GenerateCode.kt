@@ -20,10 +20,9 @@ class GenerateCode {
             import com.github.jomof.kane.functions.*
             import com.github.jomof.kane.impl.functions.*
             import com.github.jomof.kane.impl.sheet.*
-            
-            
             """.trimIndent()
         )
+        sb.append("\n\n")
 
         for (op in infixMathOperators) {
             sb.append(
@@ -60,15 +59,15 @@ class GenerateCode {
             sb.append("val $op : AggregatableFunction = ${op}Func\n")
             sb.append(
                 """
-                fun $op(vararg values : Number) : Double = ${op}Func(values)
-                fun $op(vararg values : ScalarExpr) : ScalarExpr = ${op}Func(values)
-                fun $op(vararg values : Any) : ScalarExpr = ${op}Func(values)
-                fun $op(sheet: Sheet) : Sheet = ${op}Func(sheet)
-                fun $op(groupBy: GroupBy) : Sheet = ${op}Func(groupBy)
-                fun $op(scalar : ScalarExpr) : ScalarExpr = ${op}Func(scalar)
-                fun $op(matrix : MatrixExpr) : ScalarExpr = ${op}Func(matrix)
-                fun $op(range : SheetRange) : ScalarExpr = ${op}Func(range)
-                fun $op(expr : Expr) : Expr = ${op}Func(expr)
+                fun $op(vararg values : Number) : Double = ${op}Func.call(values)
+                fun $op(vararg values : ScalarExpr) : ScalarExpr = ${op}Func.call(values)
+                fun $op(vararg values : Any) : ScalarExpr = ${op}Func.call(values)
+                fun $op(sheet: Sheet) : Sheet = ${op}Func.call(sheet)
+                fun $op(groupBy: GroupBy) : Sheet = ${op}Func.call(groupBy)
+                fun $op(scalar : ScalarExpr) : ScalarExpr = ${op}Func.call(scalar)
+                fun $op(matrix : MatrixExpr) : ScalarExpr = ${op}Func.call(matrix)
+                fun $op(range : SheetRange) : ScalarExpr = ${op}Func.call(range)
+                fun $op(expr : Expr) : Expr = ${op}Func.call(expr)
                 """.trimIndent()
             )
             sb.append("\n\n")

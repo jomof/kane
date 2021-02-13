@@ -197,15 +197,7 @@ interface AggregatableFunction
 interface AlgebraicUnaryScalarStatisticFunction : AggregatableFunction {
     val meta: UnaryOp
 
-    operator fun invoke(values: DoubleArray): Double {
-        val statistic = StreamingSamples()
-        values.forEach {
-            statistic.insert(it)
-        }
-        return lookupStatistic(statistic)
-    }
-
-    operator fun invoke(values: Array<out Number>): Double {
+    fun call(values: Array<out Number>): Double {
         val statistic = StreamingSamples()
         values.forEach {
             statistic.insert(it.toDouble())
@@ -213,48 +205,40 @@ interface AlgebraicUnaryScalarStatisticFunction : AggregatableFunction {
         return lookupStatistic(statistic)
     }
 
-    operator fun invoke(values: List<Double>): Double {
-        val statistic = StreamingSamples()
-        values.forEach {
-            statistic.insert(it)
-        }
-        return lookupStatistic(statistic)
-    }
-
-    operator fun invoke(value: Sheet): Sheet {
+    fun call(value: Sheet): Sheet {
         val filtered = value.describe().filterRows { row -> "$row" == meta.op }
         if (filtered.columns == 1)
             return filtered["A1"]
         return filtered
     }
 
-    operator fun invoke(expr: GroupBy): Sheet = expr.aggregate(this)
+    fun call(expr: GroupBy): Sheet = expr.aggregate(this)
 
-    operator fun invoke(exprs: Array<out ScalarExpr>): ScalarExpr =
+    fun call(exprs: Array<out ScalarExpr>): ScalarExpr =
         AlgebraicUnaryScalarStatistic(
             this,
             DataMatrix(exprs.size, 1, exprs.toList())
         )
 
-    operator fun invoke(exprs: Array<out Any>): ScalarExpr =
+    fun call(exprs: Array<out Any>): ScalarExpr =
         AlgebraicUnaryScalarStatistic(
             this,
             DataMatrix(exprs.size, 1, exprs.toList().map { convertAnyToScalarExpr(it) })
         )
 
-    operator fun invoke(expr: SheetRange): ScalarExpr =
+    fun call(expr: SheetRange): ScalarExpr =
         AlgebraicUnaryScalarStatistic(
             this,
             CoerceScalar(expr)
         )
 
-    operator fun invoke(expr: ScalarExpr): ScalarExpr = AlgebraicUnaryScalarStatistic(this, expr)
-    operator fun invoke(expr: MatrixExpr): ScalarExpr = AlgebraicUnaryScalarStatistic(this, expr)
+    fun call(expr: ScalarExpr): ScalarExpr = AlgebraicUnaryScalarStatistic(this, expr)
+    fun call(expr: MatrixExpr): ScalarExpr = AlgebraicUnaryScalarStatistic(this, expr)
 
-    operator fun invoke(expr: Expr): Expr = when (expr) {
-        is AlgebraicExpr -> invoke(expr)
-        is SheetRange -> invoke(expr)
-        is Sheet -> invoke(expr)
+    fun call(expr: Expr): Expr = when (expr) {
+        is AlgebraicExpr -> call(expr)
+        is SheetRange -> call(expr)
+        is Sheet -> call(expr)
         else -> error("${expr.javaClass}")
     }
 
