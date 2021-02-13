@@ -280,7 +280,6 @@ val sin: AlgebraicUnaryScalarFunction = sinFunc
 fun sin(matrix: MatrixExpr): MatrixExpr = sinFunc(matrix)
 fun sin(scalar: ScalarExpr): ScalarExpr = sinFunc(scalar)
 fun sin(scalar: Double): Double = sinFunc(scalar)
-fun sin(scalar: Double): Double = sinFunc(scalar)
 
 // typesafe cos
 private val cosFunc = CosFunction()
@@ -292,7 +291,6 @@ val cos: AlgebraicUnaryScalarFunction = cosFunc
  */
 fun cos(matrix: MatrixExpr): MatrixExpr = cosFunc(matrix)
 fun cos(scalar: ScalarExpr): ScalarExpr = cosFunc(scalar)
-fun cos(scalar: Double): Double = cosFunc(scalar)
 fun cos(scalar: Double): Double = cosFunc(scalar)
 
 // typesafe lrelu
@@ -306,18 +304,17 @@ val lrelu: AlgebraicUnaryScalarFunction = lreluFunc
 fun lrelu(matrix: MatrixExpr): MatrixExpr = lreluFunc(matrix)
 fun lrelu(scalar: ScalarExpr): ScalarExpr = lreluFunc(scalar)
 fun lrelu(scalar: Double): Double = lreluFunc(scalar)
-fun lrelu(scalar: Double): Double = lreluFunc(scalar)
 
 // typesafe lstep
 private val lstepFunc = LstepFunction()
-val lstep : AlgebraicUnaryScalarFunction = lstepFunc
+val lstep: AlgebraicUnaryScalarFunction = lstepFunc
+
 /**
  * lstep function
  * [![](https://jomof.github.io/kane/figures/lstep-profile.svg)]
  */
-fun lstep(matrix : MatrixExpr) : MatrixExpr = lstepFunc(matrix)
-fun lstep(scalar : ScalarExpr) : ScalarExpr = lstepFunc(scalar)
-fun lstep(scalar: Double): Double = lstepFunc(scalar)
+fun lstep(matrix: MatrixExpr): MatrixExpr = lstepFunc(matrix)
+fun lstep(scalar: ScalarExpr): ScalarExpr = lstepFunc(scalar)
 fun lstep(scalar: Double): Double = lstepFunc(scalar)
 
 // typesafe logit
@@ -328,8 +325,7 @@ val logit : AlgebraicUnaryScalarFunction = logitFunc
  * [![](https://jomof.github.io/kane/figures/logit-profile.svg)]
  */
 fun logit(matrix : MatrixExpr) : MatrixExpr = logitFunc(matrix)
-fun logit(scalar : ScalarExpr) : ScalarExpr = logitFunc(scalar)
-fun logit(scalar: Double): Double = logitFunc(scalar)
+fun logit(scalar: ScalarExpr): ScalarExpr = logitFunc(scalar)
 fun logit(scalar: Double): Double = logitFunc(scalar)
 
 // typesafe exp
@@ -340,8 +336,7 @@ val exp : AlgebraicUnaryScalarFunction = expFunc
  * [![](https://jomof.github.io/kane/figures/exp-profile.svg)]
  */
 fun exp(matrix : MatrixExpr) : MatrixExpr = expFunc(matrix)
-fun exp(scalar : ScalarExpr) : ScalarExpr = expFunc(scalar)
-fun exp(scalar: Double): Double = expFunc(scalar)
+fun exp(scalar: ScalarExpr): ScalarExpr = expFunc(scalar)
 fun exp(scalar: Double): Double = expFunc(scalar)
 
 // typesafe relu
@@ -352,8 +347,7 @@ val relu : AlgebraicUnaryScalarFunction = reluFunc
  * [![](https://jomof.github.io/kane/figures/relu-profile.svg)]
  */
 fun relu(matrix : MatrixExpr) : MatrixExpr = reluFunc(matrix)
-fun relu(scalar : ScalarExpr) : ScalarExpr = reluFunc(scalar)
-fun relu(scalar: Double): Double = reluFunc(scalar)
+fun relu(scalar: ScalarExpr): ScalarExpr = reluFunc(scalar)
 fun relu(scalar: Double): Double = reluFunc(scalar)
 
 // typesafe tanh
@@ -364,8 +358,7 @@ val tanh : AlgebraicUnaryScalarFunction = tanhFunc
  * [![](https://jomof.github.io/kane/figures/tanh-profile.svg)]
  */
 fun tanh(matrix : MatrixExpr) : MatrixExpr = tanhFunc(matrix)
-fun tanh(scalar : ScalarExpr) : ScalarExpr = tanhFunc(scalar)
-fun tanh(scalar: Double): Double = tanhFunc(scalar)
+fun tanh(scalar: ScalarExpr): ScalarExpr = tanhFunc(scalar)
 fun tanh(scalar: Double): Double = tanhFunc(scalar)
 
 // typesafe step
@@ -376,8 +369,7 @@ val step : AlgebraicUnaryScalarFunction = stepFunc
  * [![](https://jomof.github.io/kane/figures/step-profile.svg)]
  */
 fun step(matrix : MatrixExpr) : MatrixExpr = stepFunc(matrix)
-fun step(scalar : ScalarExpr) : ScalarExpr = stepFunc(scalar)
-fun step(scalar: Double): Double = stepFunc(scalar)
+fun step(scalar: ScalarExpr): ScalarExpr = stepFunc(scalar)
 fun step(scalar: Double): Double = stepFunc(scalar)
 
 // typesafe negate
@@ -388,7 +380,6 @@ val negate : AlgebraicUnaryScalarFunction = negateFunc
  * [![](https://jomof.github.io/kane/figures/negate-profile.svg)]
  */
 fun negate(matrix : MatrixExpr) : MatrixExpr = negateFunc(matrix)
-fun negate(scalar : ScalarExpr) : ScalarExpr = negateFunc(scalar)
-fun negate(scalar: Double): Double = negateFunc(scalar)
+fun negate(scalar: ScalarExpr): ScalarExpr = negateFunc(scalar)
 fun negate(scalar: Double): Double = negateFunc(scalar)
 
