@@ -5,7 +5,7 @@
 # toNamedValueExpr  
 [jvm]  
 Content  
-fun [toNamedValueExpr](to-named-value-expr.md)(name: [Id](../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-637547099)): [NamedValueExpr](../-named-value-expr/index.md)<[E](index.md)>  
+fun [toNamedValueExpr](to-named-value-expr.md)(name: [Id](../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-831550086)): [NamedValueExpr](../-named-value-expr/index.md)<[E](index.md)>  
 
 
 
