@@ -5,7 +5,7 @@
 # get  
 [jvm]  
 Content  
-operator fun [get](get.md)(key: [Id](../../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1044181621)): [Expr](../../com.github.jomof.kane/-expr/index.md)?  
+operator fun [get](get.md)(key: [Id](../../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-661999227)): [Expr](../../com.github.jomof.kane/-expr/index.md)?  
 
 
 

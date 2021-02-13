@@ -5,7 +5,7 @@
 # meta  
 [jvm]  
 Content  
-abstract val [meta](meta.md): [SummaryOp](../../com.github.jomof.kane.impl/-summary-op/index.md)  
+abstract override val [meta](meta.md): [SummaryOp](../../com.github.jomof.kane.impl/-summary-op/index.md)  
 
 
 
