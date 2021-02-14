@@ -94,7 +94,7 @@ class GenerateCode {
                 Statistic -> sb.append(") : List<Double>\n")
             }
             sb.append("    fun differentiate(")
-            for ((index, p) in op.parameters.withIndex()) {
+            for (p in op.parameters) {
                 sb.append("${p.name} : ${p.kind}Expr, ")
                 sb.append("${p.name}d : ${p.kind}Expr, ")
             }
@@ -127,7 +127,7 @@ class GenerateCode {
             line(") : $operatorClassName {")
             sb.append("        if (op === this.op && ")
             for ((index, p) in op.parameters.withIndex()) {
-                sb.append("${p.name} == this.${p.name}")
+                sb.append("${p.name} === this.${p.name}")
                 if (index != op.parameters.size - 1) sb.append(" && ")
             }
             line(") return this")

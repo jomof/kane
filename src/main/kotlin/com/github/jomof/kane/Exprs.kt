@@ -24,7 +24,7 @@ data class AlgebraicSummaryScalarScalar(
         op: IAlgebraicSummaryScalarScalarFunction = this.op,
         value: ScalarExpr = this.value
     ): AlgebraicSummaryScalarScalar {
-        if (op === this.op && value == this.value) return this
+        if (op === this.op && value === this.value) return this
         return AlgebraicSummaryScalarScalar(op, value)
     }
 }
@@ -48,7 +48,7 @@ data class AlgebraicSummaryMatrixScalar(
         op: IAlgebraicSummaryMatrixScalarFunction = this.op,
         value: MatrixExpr = this.value
     ): AlgebraicSummaryMatrixScalar {
-        if (op === this.op && value == this.value) return this
+        if (op === this.op && value === this.value) return this
         return AlgebraicSummaryMatrixScalar(op, value)
     }
 }
@@ -72,7 +72,7 @@ data class AlgebraicUnaryScalarScalar(
         op: IAlgebraicUnaryScalarScalarFunction = this.op,
         value: ScalarExpr = this.value
     ): AlgebraicUnaryScalarScalar {
-        if (op === this.op && value == this.value) return this
+        if (op === this.op && value === this.value) return this
         return AlgebraicUnaryScalarScalar(op, value)
     }
 }
@@ -96,7 +96,7 @@ data class AlgebraicUnaryMatrixMatrix(
         op: IAlgebraicUnaryMatrixMatrixFunction = this.op,
         value: MatrixExpr = this.value
     ): AlgebraicUnaryMatrixMatrix {
-        if (op === this.op && value == this.value) return this
+        if (op === this.op && value === this.value) return this
         return AlgebraicUnaryMatrixMatrix(op, value)
     }
 }
@@ -122,7 +122,7 @@ data class AlgebraicBinaryScalarScalarScalar(
         left: ScalarExpr = this.left,
         right: ScalarExpr = this.right
     ): AlgebraicBinaryScalarScalarScalar {
-        if (op === this.op && left == this.left && right == this.right) return this
+        if (op === this.op && left === this.left && right === this.right) return this
         return AlgebraicBinaryScalarScalarScalar(op, left, right)
     }
 }
@@ -148,7 +148,7 @@ data class AlgebraicBinaryScalarMatrixMatrix(
         left: ScalarExpr = this.left,
         right: MatrixExpr = this.right
     ): AlgebraicBinaryScalarMatrixMatrix {
-        if (op === this.op && left == this.left && right == this.right) return this
+        if (op === this.op && left === this.left && right === this.right) return this
         return AlgebraicBinaryScalarMatrixMatrix(op, left, right)
     }
 }
@@ -174,7 +174,7 @@ data class AlgebraicBinaryMatrixScalarMatrix(
         left: MatrixExpr = this.left,
         right: ScalarExpr = this.right
     ): AlgebraicBinaryMatrixScalarMatrix {
-        if (op === this.op && left == this.left && right == this.right) return this
+        if (op === this.op && left === this.left && right === this.right) return this
         return AlgebraicBinaryMatrixScalarMatrix(op, left, right)
     }
 }
@@ -200,7 +200,7 @@ data class AlgebraicBinaryMatrixMatrixMatrix(
         left: MatrixExpr = this.left,
         right: MatrixExpr = this.right
     ): AlgebraicBinaryMatrixMatrixMatrix {
-        if (op === this.op && left == this.left && right == this.right) return this
+        if (op === this.op && left === this.left && right === this.right) return this
         return AlgebraicBinaryMatrixMatrixMatrix(op, left, right)
     }
 }
@@ -226,7 +226,7 @@ data class AlgebraicBinarySummaryScalarScalarScalar(
         left: ScalarExpr = this.left,
         right: ScalarExpr = this.right
     ): AlgebraicBinarySummaryScalarScalarScalar {
-        if (op === this.op && left == this.left && right == this.right) return this
+        if (op === this.op && left === this.left && right === this.right) return this
         return AlgebraicBinarySummaryScalarScalarScalar(op, left, right)
     }
 }
@@ -252,7 +252,7 @@ data class AlgebraicBinarySummaryMatrixScalarScalar(
         left: MatrixExpr = this.left,
         right: ScalarExpr = this.right
     ): AlgebraicBinarySummaryMatrixScalarScalar {
-        if (op === this.op && left == this.left && right == this.right) return this
+        if (op === this.op && left === this.left && right === this.right) return this
         return AlgebraicBinarySummaryMatrixScalarScalar(op, left, right)
     }
 }
