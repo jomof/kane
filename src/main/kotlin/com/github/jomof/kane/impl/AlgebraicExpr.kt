@@ -60,6 +60,7 @@ data class ConstantScalar(
         track()
     }
 
+    override fun getValue(thisRef: Any?, property: KProperty<*>) = NamedScalar(property.name, this)
     override fun toString() = render()
 }
 
@@ -156,6 +157,14 @@ data class NamedMatrix(
     override val name: Id,
     val matrix: MatrixExpr
 ) : NamedMatrixExpr {
+    init {
+        track()
+        assert(matrix !is NamedMatrix) {
+            "Named of named"
+        }
+    }
+
+    override fun getValue(thisRef: Any?, property: KProperty<*>) = NamedMatrix(property.name, matrix)
     override fun toString() = render()
 }
 
@@ -222,9 +231,10 @@ data class DataMatrix(
 }
 
 data class Tableau(
-    val children: List<NamedAlgebraicExpr>
+    val children: List<AlgebraicExpr>
 ) : AlgebraicExpr {
     init {
+        assert(children.all { it.hasName() })
         track()
     }
 
@@ -296,13 +306,13 @@ fun matrixVariable(columns: Int, rows: Int, type: AlgebraicType, init: (Coordina
 fun variable(initial: Double = 0.0) = ScalarVariable(initial)
 
 // Constant
-fun constant(value: Double): ScalarExpr = ConstantScalar(value)
-fun constant(value: Int): ScalarExpr = constant(value.toDouble())
+fun constant(value: Double) = ConstantScalar(value)
+fun constant(value: Int) = constant(value.toDouble())
 fun constant(value: String) = ValueExpr(value, StringKaneType.kaneType)
 //inline fun <reified E:Any> constant(value : E) = ValueExpr(value, object : KaneType<E>(E::class.java) { })
 
 // Tableau
-fun tableauOf(vararg elements: NamedAlgebraicExpr): Tableau = Tableau(elements.toList())
+fun tableauOf(vararg elements: AlgebraicExpr): Tableau = Tableau(elements.toList())
 
 // Misc
 fun repeated(columns: Int, rows: Int, value: Double): MatrixExpr =
@@ -413,7 +423,7 @@ fun differentiate(expr: AlgebraicExpr): AlgebraicExpr {
     fun ScalarExpr.self() = differentiate(this)
     fun MatrixExpr.self() = differentiate(this)
     with(expr) {
-        return when (this) {
+        val result = when (this) {
             is NamedScalarAssign -> {
                 val right = right.self()
                 if (this.right !== right) copy(right = right)
@@ -460,6 +470,7 @@ fun differentiate(expr: AlgebraicExpr): AlgebraicExpr {
             else ->
                 error("${expr.javaClass}")
         }
+        return result.withNameOf(expr) { "${expr.name}'" }
     }
 }
 
@@ -468,20 +479,18 @@ fun differentiate(expr: MatrixExpr): MatrixExpr = (differentiate(expr as Algebra
 
 // Data matrix
 
-fun MatrixExpr.toDataMatrix(): MatrixExpr = when (this) {
-    is DataMatrix -> this
-    is NamedMatrix -> copy(matrix = matrix.toDataMatrix())
-    else -> DataMatrix(columns, rows, elements.toList())
+fun MatrixExpr.toDataMatrix(): MatrixExpr = when {
+    this is DataMatrix -> this
+    else -> DataMatrix(columns, rows, elements.toList()).withNameOf(this)
 }
 
 fun MatrixExpr.toDataMatrix(columns: Int, rows: Int): MatrixExpr = when (this) {
     is DataMatrix -> this
-    is NamedMatrix -> copy(matrix = matrix.toDataMatrix(columns, rows))
     else -> {
         val elements = coordinatesOf(columns to rows).map { coordinate ->
             getMatrixElement(coordinate.column, coordinate.row)
         }
-        DataMatrix(columns, rows, elements)
+        DataMatrix(columns, rows, elements).withNameOf(this)
     }
 }
 
@@ -656,7 +665,25 @@ fun Expr.render(entryPoint: Boolean = true, outerType: AlgebraicType? = null): S
             op.infix -> "${left.self()}${op.op}${right.self(true)}"
             else -> "${op.op}(${left.self()},${right.self()})"
         }
-    return when (this) {
+    if (!entryPoint && hasName()) return Identifier.string(name)
+    if (this is NamedMatrix) {
+        return when {
+            !entryPoint -> Identifier.string(name)
+            matrix is DataMatrix && columns == 1 -> "$name=${matrix.self()}"
+            matrix is DataMatrix && rows != 1 -> "\n$name\n------\n${matrix.self()}"
+            else -> "$name=${matrix.self()}"
+        }
+    }
+    if (this is NamedScalarVariable || this is NamedMatrixVariable) {
+        return Identifier.string(name)
+    }
+    if (this is NamedScalarAssign) {
+        return "${left.self()} <- ${right.self()}"
+    }
+    if (this is NamedMatrixAssign) {
+        return "${left.self()} <- ${right.self()}"
+    }
+    val result = when (this) {
         is CoerceScalar -> value.self()
         is CoerceMatrix -> value.self()
         is SheetRangeExpr -> rangeRef.toString()
@@ -664,13 +691,9 @@ fun Expr.render(entryPoint: Boolean = true, outerType: AlgebraicType? = null): S
         is RetypeMatrix -> matrix.render(entryPoint, outerType ?: this.type)
         is Slot -> "\$$slot"
         is NamedScalarVariable -> Identifier.string(name)
-        is NamedSheetRangeExpr ->
-            if (entryPoint) "$name=${range.self()}"
-            else Identifier.string(name)
+        is NamedSheetRangeExpr -> range.self()
         is ScalarVariable ->
             (outerType ?: kaneDouble).render(initial)
-        is NamedScalarAssign -> "${left.self()} <- ${right.self()}"
-        is NamedMatrixAssign -> "${left.self()} <- ${right.self()}"
         is AlgebraicUnaryMatrixMatrix -> when {
             op == exp -> {
                 val rightSuper = tryConvertToSuperscript(value.self())
@@ -729,17 +752,7 @@ fun Expr.render(entryPoint: Boolean = true, outerType: AlgebraicType? = null): S
         }
         is AlgebraicBinaryMatrixScalarMatrix -> binary(op.meta, left, right)
         is AlgebraicBinaryScalarMatrixMatrix -> binary(op.meta, left, right)
-        is NamedScalar ->
-            if (entryPoint) "$name=${scalar.self()}"
-            else Identifier.string(name)
-        is NamedMatrix -> {
-            when {
-                !entryPoint -> Identifier.string(name)
-                matrix is DataMatrix && columns == 1 -> "$name=${matrix.self()}"
-                matrix is DataMatrix && rows != 1 -> "\n$name\n------\n${matrix.self()}"
-                else -> "$name=${matrix.self()}"
-            }
-        }
+        is NamedScalar -> scalar.self()
         is DiscreteUniformRandomVariable -> {
             val min = values.minByOrNull { it } ?: 0.0
             val max = values.maxByOrNull { it } ?: 0.0
@@ -808,4 +821,7 @@ fun Expr.render(entryPoint: Boolean = true, outerType: AlgebraicType? = null): S
         }
         else -> error("$javaClass")
     }
+    if (entryPoint && hasName())
+        return Identifier.string(name) + "=$result"
+    return result
 }

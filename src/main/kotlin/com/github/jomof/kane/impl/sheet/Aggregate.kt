@@ -21,7 +21,7 @@ private fun GroupBy.buildAggregation(builder: SheetBuilderImpl): Sheet {
         for ((key, _) in groupBy) {
             nameRow(row++, key)
         }
-        val result = mutableListOf<NamedExpr>()
+        val result = mutableListOf<Expr>()
         for ((name, expr) in immediate.cells) {
             nameColumn(column, name)
             row = 0
@@ -35,7 +35,7 @@ private fun GroupBy.buildAggregation(builder: SheetBuilderImpl): Sheet {
     }.showExcelColumnTags(false)
 }
 
-internal fun GroupBy.aggregate(selector: SheetBuilder.() -> List<NamedExpr>): Sheet {
+internal fun GroupBy.aggregate(selector: SheetBuilder.() -> List<Expr>): Sheet {
     val builder = SheetBuilderImpl()
     selector(builder as SheetBuilder).forEach { builder.add(it) }
     return buildAggregation(builder)

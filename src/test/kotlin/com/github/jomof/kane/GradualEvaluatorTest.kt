@@ -102,6 +102,7 @@ class GradualEvaluatorTest {
     fun `sum of mean of random`() {
         val roll by randomOf(1.0 to 6.0)
         val health by mean(roll) + mean(roll)
+        val x = health.eval()
         health.eval().assertString("health=7")
     }
 

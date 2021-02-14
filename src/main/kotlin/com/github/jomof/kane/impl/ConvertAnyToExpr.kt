@@ -26,6 +26,6 @@ fun convertAnyToScalarExpr(any: Any): ScalarExpr =
             error("${expr.javaClass}")
     }
 
-fun convertAnyToNamedExpr(name: Id, any: Any): NamedExpr {
+fun convertAnyToNamedExpr(name: Id, any: Any): Expr {
     return convertAnyToExpr(any).toNamed(name)
 }

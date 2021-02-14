@@ -27,7 +27,7 @@ data class AlgebraicSummaryScalarScalar(
         name: Id = this.name
     ): AlgebraicSummaryScalarScalar {
         if (op === this.op && value === this.value && name == this.name) return this
-        return AlgebraicSummaryScalarScalar(op, value)
+        return AlgebraicSummaryScalarScalar(op, value, name)
     }
 }
 
@@ -53,7 +53,7 @@ data class AlgebraicSummaryMatrixScalar(
         name: Id = this.name
     ): AlgebraicSummaryMatrixScalar {
         if (op === this.op && value === this.value && name == this.name) return this
-        return AlgebraicSummaryMatrixScalar(op, value)
+        return AlgebraicSummaryMatrixScalar(op, value, name)
     }
 }
 
@@ -79,7 +79,7 @@ data class AlgebraicUnaryScalarScalar(
         name: Id = this.name
     ): AlgebraicUnaryScalarScalar {
         if (op === this.op && value === this.value && name == this.name) return this
-        return AlgebraicUnaryScalarScalar(op, value)
+        return AlgebraicUnaryScalarScalar(op, value, name)
     }
 }
 
@@ -105,7 +105,7 @@ data class AlgebraicUnaryMatrixMatrix(
         name: Id = this.name
     ): AlgebraicUnaryMatrixMatrix {
         if (op === this.op && value === this.value && name == this.name) return this
-        return AlgebraicUnaryMatrixMatrix(op, value)
+        return AlgebraicUnaryMatrixMatrix(op, value, name)
     }
 }
 
@@ -142,7 +142,7 @@ data class AlgebraicBinaryScalarScalarScalar(
         name: Id = this.name
     ): AlgebraicBinaryScalarScalarScalar {
         if (op === this.op && left === this.left && right === this.right && name == this.name) return this
-        return AlgebraicBinaryScalarScalarScalar(op, left, right)
+        return AlgebraicBinaryScalarScalarScalar(op, left, right, name)
     }
 }
 
@@ -179,7 +179,7 @@ data class AlgebraicBinaryScalarMatrixMatrix(
         name: Id = this.name
     ): AlgebraicBinaryScalarMatrixMatrix {
         if (op === this.op && left === this.left && right === this.right && name == this.name) return this
-        return AlgebraicBinaryScalarMatrixMatrix(op, left, right)
+        return AlgebraicBinaryScalarMatrixMatrix(op, left, right, name)
     }
 }
 
@@ -216,7 +216,7 @@ data class AlgebraicBinaryMatrixScalarMatrix(
         name: Id = this.name
     ): AlgebraicBinaryMatrixScalarMatrix {
         if (op === this.op && left === this.left && right === this.right && name == this.name) return this
-        return AlgebraicBinaryMatrixScalarMatrix(op, left, right)
+        return AlgebraicBinaryMatrixScalarMatrix(op, left, right, name)
     }
 }
 
@@ -253,7 +253,7 @@ data class AlgebraicBinaryMatrixMatrixMatrix(
         name: Id = this.name
     ): AlgebraicBinaryMatrixMatrixMatrix {
         if (op === this.op && left === this.left && right === this.right && name == this.name) return this
-        return AlgebraicBinaryMatrixMatrixMatrix(op, left, right)
+        return AlgebraicBinaryMatrixMatrixMatrix(op, left, right, name)
     }
 }
 
@@ -290,7 +290,7 @@ data class AlgebraicBinarySummaryScalarScalarScalar(
         name: Id = this.name
     ): AlgebraicBinarySummaryScalarScalarScalar {
         if (op === this.op && left === this.left && right === this.right && name == this.name) return this
-        return AlgebraicBinarySummaryScalarScalarScalar(op, left, right)
+        return AlgebraicBinarySummaryScalarScalarScalar(op, left, right, name)
     }
 }
 
@@ -327,7 +327,7 @@ data class AlgebraicBinarySummaryMatrixScalarScalar(
         name: Id = this.name
     ): AlgebraicBinarySummaryMatrixScalarScalar {
         if (op === this.op && left === this.left && right === this.right && name == this.name) return this
-        return AlgebraicBinarySummaryMatrixScalarScalar(op, left, right)
+        return AlgebraicBinarySummaryMatrixScalarScalar(op, left, right, name)
     }
 }
 

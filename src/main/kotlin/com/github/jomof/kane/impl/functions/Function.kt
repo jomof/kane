@@ -251,6 +251,7 @@ interface AlgebraicSummaryFunction :
         is RetypeScalar -> RetypeScalar(reduceArithmetic(value.scalar), value.type)
         //is StatisticExpr -> reduceArithmetic(value)
         //is ScalarExpr -> reduceArithmetic(listOf(value))
+        is NamedScalar -> value.copy(scalar = reduceArithmetic(value.scalar))
         else ->
             error("${value.javaClass}")
     }

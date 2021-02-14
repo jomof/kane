@@ -129,11 +129,10 @@ class GenerateCode {
             }
             line("name == this.name) return this")
             sb.append("        return $operatorClassName(op, ")
-            for ((index, p) in op.parameters.withIndex()) {
-                sb.append(p.name)
-                if (index != op.parameters.size - 1) sb.append(", ")
+            for (p in op.parameters) {
+                sb.append("${p.name}, ")
             }
-            line(")")
+            line("name)")
             line("    }")
             line("}")
             line()

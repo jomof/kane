@@ -20,13 +20,13 @@ interface NamedScalarExpr : NamedAlgebraicExpr, ScalarExpr
 interface NamedMatrixExpr : NamedAlgebraicExpr, MatrixExpr
 
 interface ScalarExpr : AlgebraicExpr {
-    operator fun getValue(thisRef: Any?, property: KProperty<*>): NamedScalarExpr = toNamed(property.name)
+    operator fun getValue(thisRef: Any?, property: KProperty<*>): ScalarExpr = toNamed(property.name)
 }
 
 interface StatisticExpr : ScalarExpr
 
 interface MatrixExpr : AlgebraicExpr {
-    operator fun getValue(thisRef: Any?, property: KProperty<*>): NamedMatrixExpr = toNamed(property.name)
+    operator fun getValue(thisRef: Any?, property: KProperty<*>): MatrixExpr = toNamed(property.name)
 }
 
 const val anonymous = "<anon>"

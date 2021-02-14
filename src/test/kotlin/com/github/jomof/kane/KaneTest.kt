@@ -76,6 +76,8 @@ class KaneTest {
             1.0, 2.0, 3.0,
             4.0, 5.0, 6.0
         )
+        val x = m1
+        val d = x.describe()
         m1.describe().assertString(
             """
                         m1    

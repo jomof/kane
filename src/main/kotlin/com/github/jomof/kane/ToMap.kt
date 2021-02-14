@@ -44,3 +44,13 @@ fun NamedExpr.toMap(): Map<String, List<Any?>> {
     sb.add(this)
     return sb.build().toMap()
 }
+
+/**
+ * Convert this [MatrixExpr] to a map where the key is column name and the value is
+ * a list of cell values for that column. Nested column vectors will be expanded.
+ */
+fun MatrixExpr.toMap(): Map<String, List<Any?>> {
+    val sb = SheetBuilderImpl()
+    sb.add(this)
+    return sb.build().toMap()
+}

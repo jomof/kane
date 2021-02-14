@@ -10,7 +10,7 @@ import com.github.jomof.kane.impl.*
  */
 data class GroupBy(
     val sheet: Sheet,
-    private val keySelector: List<NamedExpr>
+    private val keySelector: List<Expr>
 ) : Expr {
     private val groups by lazy { createGroups() }
 
@@ -55,7 +55,7 @@ private fun Sheet.buildGrouping(builder: SheetBuilderImpl): GroupBy {
     return GroupBy(this, names)
 }
 
-fun Sheet.groupOf(selector: SheetBuilder.() -> List<NamedExpr>): GroupBy {
+fun Sheet.groupOf(selector: SheetBuilder.() -> List<Expr>): GroupBy {
     val builder = SheetBuilderImpl()
     selector(builder as SheetBuilder).forEach {
         builder.add(it)

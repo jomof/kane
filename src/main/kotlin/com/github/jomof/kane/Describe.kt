@@ -35,10 +35,17 @@ fun Sheet.describe(): Sheet {
 fun Expr.describe(): Sheet = when (this) {
     is Sheet -> describe()
     is MatrixExpr -> describe()
-    is NamedMatrix -> matrix.describe(name)
     else -> error("$javaClass")
 }
 
+/**
+ * Return a  sheet with data summarized into statistics
+ */
+fun MatrixExpr.describe(name: Id = "matrix"): Sheet = when (this) {
+    is NamedMatrix -> describe()
+    is DataMatrix -> describe(name)
+    else -> error("$javaClass")
+}
 
 /**
  * Return a new sheet with data summarized into statistics
@@ -48,7 +55,7 @@ fun NamedMatrix.describe() = matrix.describe(name)
 /**
  * Return a new sheet with data summarized into statistics
  */
-fun MatrixExpr.describe(name: Id = "matrix"): Sheet {
+fun DataMatrix.describe(name: Id = "matrix"): Sheet {
     val statistic = StreamingSamples()
     elements.forEach {
         if (!it.eval().canGetConstant()) error("Could not evaluate constant for all elements")

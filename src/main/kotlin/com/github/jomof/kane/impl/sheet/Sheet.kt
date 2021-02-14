@@ -214,7 +214,7 @@ interface Sheet : Expr {
     /**
      * Create a new sheet with cell values changed.
      */
-    fun copy(init: SheetBuilderImpl.() -> List<NamedExpr>): Sheet {
+    fun copy(init: SheetBuilderImpl.() -> List<Expr>): Sheet {
         val sheet = toBuilder()
         init(sheet).forEach { sheet.add(it) }
         return sheet.build()
@@ -255,11 +255,11 @@ class SheetBuilderImpl(
     columnDescriptors: Map<Int, ColumnDescriptor> = mapOf(),
     rowDescriptors: Map<Int, RowDescriptor> = mapOf(),
     val sheetDescriptor: SheetDescriptor = SheetDescriptor(),
-    added: List<NamedExpr> = listOf()
+    added: List<Expr> = listOf()
 ) : SheetBuilder {
     internal val columnDescriptors: MutableMap<Int, ColumnDescriptor> = columnDescriptors.toMutableMap()
     private val rowDescriptors: MutableMap<Int, RowDescriptor> = rowDescriptors.toMutableMap()
-    private val added: MutableList<NamedExpr> = added.toMutableList()
+    private val added: MutableList<Expr> = added.toMutableList()
 
     fun getImmediateNamedExprs(): Sheet {
         val cells = mutableMapOf<Id, Expr>()
@@ -277,7 +277,7 @@ class SheetBuilderImpl(
         return immediate.build()
     }
 
-    internal fun add(vararg add: NamedExpr) {
+    internal fun add(vararg add: Expr) {
         added += add
     }
 

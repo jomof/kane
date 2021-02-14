@@ -43,6 +43,12 @@ fun NamedAlgebraicExpr.eval(
     excludeVariables: Set<Id> = setOf(),
 ) = (this as Expr).evalImpl(rangeExprProvider, reduceVariables, excludeVariables) as NamedAlgebraicExpr
 
+fun AlgebraicExpr.eval(
+    rangeExprProvider: RangeExprProvider? = null,
+    reduceVariables: Boolean = false,
+    excludeVariables: Set<Id> = setOf(),
+) = (this as Expr).evalImpl(rangeExprProvider, reduceVariables, excludeVariables) as AlgebraicExpr
+
 fun Sheet.eval(
     rangeExprProvider: RangeExprProvider? = null,
     reduceVariables: Boolean = false,

@@ -15,11 +15,18 @@ import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.collections.set
 
-private val reduceNamedMatrix = object : RewritingVisitor() {
-    override fun rewrite(expr: NamedMatrix) = expr.matrix
+private val reduceNamedExprs = object : RewritingVisitor(allowNameChange = true) {
+    override fun rewrite(expr: Expr): Expr {
+        val result = super.rewrite(expr)
+        if (result is NamedScalarVariable) return result
+        if (result is NamedMatrixVariable) return result
+        if (result is NamedScalarAssign) return result
+        if (result is NamedMatrixAssign) return result
+        return result.toUnnamed()
+    }
 }
 
-private class ReduceAlgebraicBinaryScalar : RewritingVisitor() {
+private class ReduceAlgebraicBinaryScalar : RewritingVisitor(allowNameChange = true) {
     override fun rewrite(expr: AlgebraicBinaryScalarScalarScalar): Expr {
         return when (val sub = super.rewrite(expr)) {
             is AlgebraicBinaryScalarScalarScalar -> {
@@ -29,7 +36,7 @@ private class ReduceAlgebraicBinaryScalar : RewritingVisitor() {
                     if (reduced != null && type != kaneDouble)
                         RetypeScalar(reduced, type)
                     else reduced
-                typed ?: sub
+                return (typed ?: sub)
             }
             else -> sub
         }
@@ -86,16 +93,11 @@ private val reduceAlgebraicUnaryMatrix = object : RewritingVisitor() {
 }
 private val reduceAlgebraicUnaryScalarStatistic = object : RewritingVisitor() {
     override fun rewrite(expr: AlgebraicSummaryScalarScalar): Expr {
-        return expr.op.reduceArithmetic(expr.value) ?: super.rewrite(expr)
+        return expr.op.reduceArithmetic(expr.value)?.withNameOf(expr) ?: super.rewrite(expr)
     }
 
     override fun rewrite(expr: AlgebraicSummaryMatrixScalar): Expr = with(expr) {
-        return when (expr.value) {
-            is RetypeMatrix -> error("Something to do here?")
-            else -> {
-                op.reduceArithmetic(value) ?: super.rewrite(expr)
-            }
-        }
+        return op.reduceArithmetic(value)?.withNameOf(expr) ?: super.rewrite(expr)
     }
 }
 
@@ -147,7 +149,7 @@ private class ReduceRandomVariables(
         val typed =
             if (reduced != null && type != kaneDouble) RetypeScalar(reduced, type)
             else reduced
-        return typed ?: dup(left = leftRewritten, right = rightRewritten)
+        return (typed ?: dup(left = leftRewritten, right = rightRewritten)).withNameOf(expr)
     }
 
     override fun rewrite(expr: AlgebraicUnaryScalarScalar): Expr = with(expr) {
@@ -166,7 +168,7 @@ private class ReduceNamedVariables(
     val reduceVariables: Boolean,
     val excludeVariables: Set<Id>,
     val namedVariableLookup: Cells
-) : RewritingVisitor() {
+) : RewritingVisitor(allowNameChange = true) {
     private var recursionDetected = false
 
     override fun rewrite(expr: NamedMatrix): Expr = with(expr) {
@@ -176,7 +178,7 @@ private class ReduceNamedVariables(
 
     override fun rewrite(expr: NamedScalar): Expr {
         if (excludeVariables.contains(expr.name)) return expr
-        val lookup = namedVariableLookup[expr.name] ?: return expr.scalar
+        val lookup = namedVariableLookup[expr.name] ?: return expr
         if (lookup is ScalarVariable) return constant(lookup.initial)
         return lookup
     }
@@ -416,8 +418,8 @@ private fun Expr.evalGradualSingleSample(
         val namedVariableLookup = if (last is Sheet) last.cells else Cells(mapOf())
         val reduceNamedVariables = ReduceNamedVariables(reduceVariables, excludeVariables, namedVariableLookup)
         val reducedNamedVariables = reduceNamedVariables.rewriteOrNull(last) ?: return this
-        val reducedNamedMatrix = reduceNamedMatrix(reducedNamedVariables)
-        val reducedRandomVariables = reduceRandomVariables(reducedNamedMatrix)
+        val reducedNamedExprs = reduceNamedExprs(reducedNamedVariables)
+        val reducedRandomVariables = reduceRandomVariables(reducedNamedExprs)
         val reducedAlgebraicUnaryMatrix = reduceAlgebraicUnaryMatrix(reducedRandomVariables)
         val reducedAlgebraicBinaryMatrix = reduceAlgebraicBinaryMatrix(reducedAlgebraicUnaryMatrix)
         val reducedAlgebraicUnaryScalar = reduceAlgebraicUnaryScalar(reducedAlgebraicBinaryMatrix)
@@ -429,8 +431,8 @@ private fun Expr.evalGradualSingleSample(
 
         if (reducedCoerceScalar === last) {
             if (last is CoerceMatrix) last = last.value
-            if (this is NamedExpr && last !is NamedExpr) {
-                last = last.toNamed(name)
+            if (hasName()) {
+                last = last.toUnnamed().toNamed(name)
             }
             return last
         }

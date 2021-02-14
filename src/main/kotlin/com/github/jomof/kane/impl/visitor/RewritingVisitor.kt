@@ -11,7 +11,10 @@ import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.collections.set
 
-internal open class RewritingVisitor(protected val checkIdentity: Boolean = false) {
+internal open class RewritingVisitor(
+    protected val allowNameChange: Boolean = false,
+    protected val checkIdentity: Boolean = false
+) {
     private var depth = 0
     open fun rewrite(expr: CoerceScalar): Expr = with(expr) {
         val rewritten = rewrite(value)
@@ -66,6 +69,12 @@ internal open class RewritingVisitor(protected val checkIdentity: Boolean = fals
     }
 
     open fun rewrite(expr: NamedMatrixAssign): Expr {
+        val matrix = matrix(expr.right)
+        if (matrix === expr.right) return expr
+        return expr.copy(right = matrix)
+    }
+
+    open fun rewrite(expr: MatrixAssign): Expr {
         val matrix = matrix(expr.right)
         if (matrix === expr.right) return expr
         return expr.copy(right = matrix)
@@ -147,9 +156,9 @@ internal open class RewritingVisitor(protected val checkIdentity: Boolean = fals
 
     open fun rewrite(expr: Tableau): Expr = with(expr) {
         var changed = false
-        val rewrittenElements = mutableListOf<NamedAlgebraicExpr>()
+        val rewrittenElements = mutableListOf<AlgebraicExpr>()
         for (child in children) {
-            val rewritten = named(child)
+            val rewritten = algebraic(child)
             changed = changed || (rewritten !== child)
             rewrittenElements.add(rewritten)
         }
@@ -223,6 +232,7 @@ internal open class RewritingVisitor(protected val checkIdentity: Boolean = fals
                 is MatrixVariableElement -> rewrite(expr)
                 is NamedScalarAssign -> rewrite(expr)
                 is NamedMatrixAssign -> rewrite(expr)
+                is MatrixAssign -> rewrite(expr)
                 is Tableau -> rewrite(expr)
                 is RetypeScalar -> rewrite(expr)
                 is RetypeMatrix -> rewrite(expr)
@@ -235,6 +245,11 @@ internal open class RewritingVisitor(protected val checkIdentity: Boolean = fals
                     rewrite(expr)
                     "Change for no reason"
                 }
+            }
+            if (!allowNameChange && result.hasName() != expr.hasName()) {
+                if (depth < 200)
+                    rewrite(expr)
+                error("Name changed unexpectedly")
             }
             return result
         } finally {

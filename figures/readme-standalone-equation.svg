@@ -171,38 +171,49 @@ text {
         <g class="tick" transform="translate(0.0 11.826764451502385 ) ">
           <line stroke-width="1.0" stroke="rgb(0,0,0)" stroke-opacity="1.0" x2="-6.0" y2="0.0">
           </line>
-          <g transform="translate(-9.0 0.0 ) ">
-            <text style="fill:#000000;" text-anchor="end" dy="0.35em">
-            1.0
-            </text>
-          </g>
+            <g transform="translate(-9.0 0.0 ) ">
+                <text style="fill:#000000;" text-anchor="end" dy="0.35em">
+                    1.0
+                </text>
+            </g>
         </g>
-        <line x1="0.0" y1="0.0" x2="0.0" y2="260.3333333333333" stroke-width="1.0" stroke="rgb(0,0,0)" stroke-opacity="1.0">
-        </line>
+          <line x1="0.0" y1="0.0" x2="0.0" y2="260.3333333333333" stroke-width="1.0" stroke="rgb(0,0,0)"
+                stroke-opacity="1.0">
+          </line>
       </g>
-      <g transform="translate(35.8 0.0 ) " clip-path="url(#9viQxU)"
-         clip-bounds-jfx="[rect (0.0, 0.0), (361.05, 260.3333333333333)]">
-          <defs>
-              <clipPath id="9viQxU">
-                  <rect x="0.0" y="0.0" width="361.05" height="260.3333333333333">
-                  </rect>
-              </clipPath>
-          </defs>
-          <g>
+        <g transform="translate(35.8 0.0 ) " clip-path="url(#X6VYue)"
+           clip-bounds-jfx="[rect (0.0, 0.0), (361.05, 260.3333333333333)]">
+            <defs>
+                <clipPath id="X6VYue">
+                    <rect x="0.0" y="0.0" width="361.05" height="260.3333333333333">
+                    </rect>
+                </clipPath>
+            </defs>
+            <g>
 
-              <g>
-                  <circle fill="#316a9b" stroke="#316a9b" stroke-opacity="0.0" stroke-width="0.0" cx="16.41136363636363"
-                          cy="130.16758298842907" r="2.2"/>
-            <circle fill="#316a9b" stroke="#316a9b" stroke-opacity="0.0" stroke-width="0.0" cx="17.231931818181835" cy="130.1672293643577" r="2.2" />
-            <circle fill="#316a9b" stroke="#316a9b" stroke-opacity="0.0" stroke-width="0.0" cx="18.05250000000001" cy="130.1668644603219" r="2.2" />
-            <circle fill="#316a9b" stroke="#316a9b" stroke-opacity="0.0" stroke-width="0.0" cx="18.873068181818184" cy="130.16648791651141" r="2.2" />
-            <circle fill="#316a9b" stroke="#316a9b" stroke-opacity="0.0" stroke-width="0.0" cx="19.693636363636358" cy="130.16609936163857" r="2.2" />
-            <circle fill="#316a9b" stroke="#316a9b" stroke-opacity="0.0" stroke-width="0.0" cx="20.514204545454533" cy="130.16569841257237" r="2.2" />
-            <circle fill="#316a9b" stroke="#316a9b" stroke-opacity="0.0" stroke-width="0.0" cx="21.334772727272735" cy="130.16528467396057" r="2.2" />
-            <circle fill="#316a9b" stroke="#316a9b" stroke-opacity="0.0" stroke-width="0.0" cx="22.15534090909091" cy="130.16485773783998" r="2.2" />
-            <circle fill="#316a9b" stroke="#316a9b" stroke-opacity="0.0" stroke-width="0.0" cx="22.975909090909084" cy="130.1644171832341" r="2.2" />
-            <circle fill="#316a9b" stroke="#316a9b" stroke-opacity="0.0" stroke-width="0.0" cx="23.796477272727287" cy="130.16396257573803" r="2.2" />
-            <circle fill="#316a9b" stroke="#316a9b" stroke-opacity="0.0" stroke-width="0.0" cx="24.617045454545462" cy="130.16349346709018" r="2.2" />
+                <g>
+                    <circle fill="#316a9b" stroke="#316a9b" stroke-opacity="0.0" stroke-width="0.0"
+                            cx="16.41136363636363" cy="130.16758298842907" r="2.2"/>
+                    <circle fill="#316a9b" stroke="#316a9b" stroke-opacity="0.0" stroke-width="0.0"
+                            cx="17.231931818181835" cy="130.1672293643577" r="2.2"/>
+                    <circle fill="#316a9b" stroke="#316a9b" stroke-opacity="0.0" stroke-width="0.0"
+                            cx="18.05250000000001" cy="130.1668644603219" r="2.2"/>
+                    <circle fill="#316a9b" stroke="#316a9b" stroke-opacity="0.0" stroke-width="0.0"
+                            cx="18.873068181818184" cy="130.16648791651141" r="2.2"/>
+                    <circle fill="#316a9b" stroke="#316a9b" stroke-opacity="0.0" stroke-width="0.0"
+                            cx="19.693636363636358" cy="130.16609936163857" r="2.2"/>
+                    <circle fill="#316a9b" stroke="#316a9b" stroke-opacity="0.0" stroke-width="0.0"
+                            cx="20.514204545454533" cy="130.16569841257237" r="2.2"/>
+                    <circle fill="#316a9b" stroke="#316a9b" stroke-opacity="0.0" stroke-width="0.0"
+                            cx="21.334772727272735" cy="130.16528467396057" r="2.2"/>
+                    <circle fill="#316a9b" stroke="#316a9b" stroke-opacity="0.0" stroke-width="0.0"
+                            cx="22.15534090909091" cy="130.16485773783998" r="2.2"/>
+                    <circle fill="#316a9b" stroke="#316a9b" stroke-opacity="0.0" stroke-width="0.0"
+                            cx="22.975909090909084" cy="130.1644171832341" r="2.2"/>
+                    <circle fill="#316a9b" stroke="#316a9b" stroke-opacity="0.0" stroke-width="0.0"
+                            cx="23.796477272727287" cy="130.16396257573803" r="2.2"/>
+                    <circle fill="#316a9b" stroke="#316a9b" stroke-opacity="0.0" stroke-width="0.0"
+                            cx="24.617045454545462" cy="130.16349346709018" r="2.2"/>
             <circle fill="#316a9b" stroke="#316a9b" stroke-opacity="0.0" stroke-width="0.0" cx="25.437613636363636" cy="130.16300939473018" r="2.2" />
             <circle fill="#316a9b" stroke="#316a9b" stroke-opacity="0.0" stroke-width="0.0" cx="26.25818181818181" cy="130.1625098813429" r="2.2" />
             <circle fill="#316a9b" stroke="#316a9b" stroke-opacity="0.0" stroke-width="0.0" cx="27.078750000000014" cy="130.16199443438768" r="2.2" />

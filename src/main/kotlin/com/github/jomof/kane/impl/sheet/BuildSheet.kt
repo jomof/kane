@@ -11,7 +11,7 @@ import com.github.jomof.kane.impl.visitor.visit
 
 private class LiftEmbeddedNamedExpressionsToCells : SheetRewritingVisitor() {
     override fun rewrite(expr: Expr): Expr {
-        if (expr is NamedExpr && !cellExists(expr.name)) {
+        if (expr.hasName() && !cellExists(expr.name)) {
             putCell(expr.name, expr.toUnnamed())
         }
         return super.rewrite(expr)
@@ -78,7 +78,7 @@ private class ConvertLooksLikeCellNameToUpper : SheetRewritingVisitor() {
     }
 
     override fun rewrite(expr: Expr): Expr {
-        if (expr !is NamedExpr) return super.rewrite(expr)
+        if (!expr.hasName()) return super.rewrite(expr)
         val name = expr.name
         if (name !is String) return super.rewrite(expr)
         val upper = name.toUpperCase()
@@ -160,20 +160,24 @@ private class ReplaceNamedColumnRangeRef : SheetRewritingVisitor() {
 }
 
 private class ReplaceCellNamedMatrixesWithSheetRange : SheetRewritingVisitor() {
-    override fun rewrite(expr: NamedMatrix): Expr {
-        if (expr.name !is String) return convertToRange(expr, expr.name as Coordinate)
-        val (columns, rows) = expr.tryGetDimensions(rowCount())
-        if (columns == null || rows == null) return super.rewrite(expr)
-        val upper = expr.name.toUpperCase()
-        if (looksLikeCellName(upper)) convertToRange(expr, cellNameToCoordinate(upper))
-        val column = getNamedColumnIndex(expr.name)
+    override fun rewrite(expr: Expr): Expr {
+        val result = super.rewrite(expr)
+        if (result !is MatrixExpr) return result
+        if (!result.hasName()) return result
+        val name = result.name
+        if (name !is String) return convertToRange(result, name as Coordinate)
+        val (columns, rows) = result.tryGetDimensions(rowCount())
+        if (columns == null || rows == null) return result
+        val upper = name.toUpperCase()
+        if (looksLikeCellName(upper)) convertToRange(result, cellNameToCoordinate(upper))
+        val column = getNamedColumnIndex(name)
         if (column != null) {
-            return convertToRange(expr, coordinate(column, 0))
+            return convertToRange(result, coordinate(column, 0))
         }
-        return super.rewrite(expr)
+        return result
     }
 
-    private fun convertToRange(matrix: NamedMatrix, cell: Coordinate): Expr {
+    private fun convertToRange(matrix: MatrixExpr, cell: Coordinate): Expr {
         val (columns, rows) = matrix.tryGetDimensions(rowCount())
         if (columns == null || rows == null) return super.rewrite(matrix)
         return CoerceMatrix(

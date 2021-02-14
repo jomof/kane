@@ -14,7 +14,7 @@ import com.github.jomof.kane.impl.toNamed
 fun GroupBy.aggregate(vararg aggregatables: AggregatableFunction): Sheet {
     val evaled = eval()
     return evaled.aggregate {
-        val result = mutableListOf<NamedExpr>()
+        val result = mutableListOf<Expr>()
         val functions = aggregatables.map { it as AlgebraicSummaryFunction }
         for (column in 0 until evaled.sheet.columns) {
             val columnInfo = evaled.sheet.fullColumnDescriptor(column)

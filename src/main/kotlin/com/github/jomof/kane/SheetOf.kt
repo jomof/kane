@@ -1,6 +1,5 @@
 package com.github.jomof.kane
 
-import com.github.jomof.kane.NamedExpr
 import com.github.jomof.kane.impl.convertAnyToNamedExpr
 import com.github.jomof.kane.impl.coordinate
 import com.github.jomof.kane.impl.sheet.Sheet
@@ -10,7 +9,7 @@ import com.github.jomof.kane.impl.sheet.SheetBuilderImpl
 /**
  * Builder used to construct a Sheet object.
  */
-fun sheetOf(init: SheetBuilder.() -> List<NamedExpr>): Sheet {
+fun sheetOf(init: SheetBuilder.() -> List<Expr>): Sheet {
     val builder = SheetBuilderImpl()
     init(builder as SheetBuilder).forEach { builder.add(it) }
     return builder.build()
