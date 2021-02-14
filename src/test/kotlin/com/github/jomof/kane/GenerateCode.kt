@@ -111,26 +111,23 @@ class GenerateCode {
 
             line("data class $operatorClassName(")
             line("    val op : I${operatorClassName}Function,")
-            for ((index, p) in op.parameters.withIndex()) {
-                sb.append("    val ${p.name} : ${p.kind}Expr")
-                if (index != op.parameters.size - 1) sb.append(",")
-                line()
+            for (p in op.parameters) {
+                line("    val ${p.name} : ${p.kind}Expr,")
             }
+            line("    val name : Id = anonymous")
             line(") : ${op.shape}Expr {")
             line("    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)")
             line("    override fun toString() = render()")
             sb.append("    fun dup(op : I${operatorClassName}Function = this.op, ")
-            for ((index, p) in op.parameters.withIndex()) {
-                sb.append("${p.name} : ${p.kind}Expr = this.${p.name}")
-                if (index != op.parameters.size - 1) sb.append(", ")
+            for (p in op.parameters) {
+                sb.append("${p.name} : ${p.kind}Expr = this.${p.name}, ")
             }
-            line(") : $operatorClassName {")
+            line("name : Id = this.name) : $operatorClassName {")
             sb.append("        if (op === this.op && ")
-            for ((index, p) in op.parameters.withIndex()) {
-                sb.append("${p.name} === this.${p.name}")
-                if (index != op.parameters.size - 1) sb.append(" && ")
+            for (p in op.parameters) {
+                sb.append("${p.name} === this.${p.name} && ")
             }
-            line(") return this")
+            line("name == this.name) return this")
             sb.append("        return $operatorClassName(op, ")
             for ((index, p) in op.parameters.withIndex()) {
                 sb.append(p.name)
@@ -140,7 +137,8 @@ class GenerateCode {
             line("    }")
             line("}")
             line()
-            //line("/*")
+            /*
+            line("/*")
             line("data class Named$operatorClassName(")
             line("    override val name : Id,")
             line("    val expr : $operatorClassName")
@@ -152,7 +150,8 @@ class GenerateCode {
             line("    }")
             line("}")
             line()
-            //line("*/")
+            line("*/")
+            */
         }
         output.writeText(sb.toString())
     }

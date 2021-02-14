@@ -29,5 +29,7 @@ interface MatrixExpr : AlgebraicExpr {
     operator fun getValue(thisRef: Any?, property: KProperty<*>): NamedMatrixExpr = toNamed(property.name)
 }
 
+const val anonymous = "<anon>"
+
 
 
