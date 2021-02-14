@@ -12,7 +12,8 @@ fun [count](count.md)(sheet: [Sheet](../com.github.jomof.kane.impl.sheet/-sheet/
 fun [count](count.md)(groupBy: [GroupBy](../com.github.jomof.kane.impl.sheet/-group-by/index.md)): [Sheet](../com.github.jomof.kane.impl.sheet/-sheet/index.md)  
 fun [count](count.md)(scalar: [StatisticExpr](-statistic-expr/index.md)): [ScalarExpr](-scalar-expr/index.md)  
 fun [count](count.md)(matrix: [MatrixExpr](-matrix-expr/index.md)): [ScalarExpr](-scalar-expr/index.md)  
-fun [count](count.md)(range: [SheetRange](../com.github.jomof.kane.impl.sheet/-sheet-range/index.md)): [ScalarExpr](-scalar-expr/index.md)  
+fun [count](count.md)(range: [SheetRangeExpr](../com.github.jomof.kane.impl.sheet/-sheet-range-expr/index.md)): [ScalarExpr](-scalar-expr/index.md)  
+fun [count](count.md)(range: [CellSheetRangeExpr](../com.github.jomof.kane.impl.sheet/-cell-sheet-range-expr/index.md)): [ScalarExpr](-scalar-expr/index.md)  
 val [count](count.md): [AggregatableFunction](../com.github.jomof.kane.impl.functions/-aggregatable-function/index.md)  
 
 

@@ -5,8 +5,8 @@
 # up  
 [jvm]  
 Content  
-open fun [up](up.md)(offset: [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)): [SheetRangeExpr](../-sheet-range-expr/index.md)  
-open val [up](up.md): [SheetRangeExpr](../-sheet-range-expr/index.md)  
+open fun [up](up.md)(offset: [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)): [CellSheetRangeExpr](../-cell-sheet-range-expr/index.md)  
+open val [up](up.md): [CellSheetRangeExpr](../-cell-sheet-range-expr/index.md)  
 
 
 

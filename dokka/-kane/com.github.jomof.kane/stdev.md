@@ -12,7 +12,8 @@ fun [stdev](stdev.md)(sheet: [Sheet](../com.github.jomof.kane.impl.sheet/-sheet/
 fun [stdev](stdev.md)(groupBy: [GroupBy](../com.github.jomof.kane.impl.sheet/-group-by/index.md)): [Sheet](../com.github.jomof.kane.impl.sheet/-sheet/index.md)  
 fun [stdev](stdev.md)(scalar: [StatisticExpr](-statistic-expr/index.md)): [ScalarExpr](-scalar-expr/index.md)  
 fun [stdev](stdev.md)(matrix: [MatrixExpr](-matrix-expr/index.md)): [ScalarExpr](-scalar-expr/index.md)  
-fun [stdev](stdev.md)(range: [SheetRange](../com.github.jomof.kane.impl.sheet/-sheet-range/index.md)): [ScalarExpr](-scalar-expr/index.md)  
+fun [stdev](stdev.md)(range: [SheetRangeExpr](../com.github.jomof.kane.impl.sheet/-sheet-range-expr/index.md)): [ScalarExpr](-scalar-expr/index.md)  
+fun [stdev](stdev.md)(range: [CellSheetRangeExpr](../com.github.jomof.kane.impl.sheet/-cell-sheet-range-expr/index.md)): [ScalarExpr](-scalar-expr/index.md)  
 val [stdev](stdev.md): [AggregatableFunction](../com.github.jomof.kane.impl.functions/-aggregatable-function/index.md)  
 
 

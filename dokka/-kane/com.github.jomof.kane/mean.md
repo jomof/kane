@@ -12,7 +12,8 @@ fun [mean](mean.md)(sheet: [Sheet](../com.github.jomof.kane.impl.sheet/-sheet/in
 fun [mean](mean.md)(groupBy: [GroupBy](../com.github.jomof.kane.impl.sheet/-group-by/index.md)): [Sheet](../com.github.jomof.kane.impl.sheet/-sheet/index.md)  
 fun [mean](mean.md)(scalar: [StatisticExpr](-statistic-expr/index.md)): [ScalarExpr](-scalar-expr/index.md)  
 fun [mean](mean.md)(matrix: [MatrixExpr](-matrix-expr/index.md)): [ScalarExpr](-scalar-expr/index.md)  
-fun [mean](mean.md)(range: [SheetRange](../com.github.jomof.kane.impl.sheet/-sheet-range/index.md)): [ScalarExpr](-scalar-expr/index.md)  
+fun [mean](mean.md)(range: [SheetRangeExpr](../com.github.jomof.kane.impl.sheet/-sheet-range-expr/index.md)): [ScalarExpr](-scalar-expr/index.md)  
+fun [mean](mean.md)(range: [CellSheetRangeExpr](../com.github.jomof.kane.impl.sheet/-cell-sheet-range-expr/index.md)): [ScalarExpr](-scalar-expr/index.md)  
 val [mean](mean.md): [AggregatableFunction](../com.github.jomof.kane.impl.functions/-aggregatable-function/index.md)  
 
 

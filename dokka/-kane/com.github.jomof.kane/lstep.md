@@ -19,7 +19,7 @@ Content
 fun [lstep](lstep.md)(matrix: [DataMatrix](../com.github.jomof.kane.impl/-data-matrix/index.md)): [MatrixExpr](-matrix-expr/index.md)  
 fun [lstep](lstep.md)(matrix: [MatrixExpr](-matrix-expr/index.md)): [MatrixExpr](-matrix-expr/index.md)  
 fun [lstep](lstep.md)(scalar: [ScalarExpr](-scalar-expr/index.md)): [ScalarExpr](-scalar-expr/index.md)  
-fun [lstep](lstep.md)(scalar: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)  
+fun [lstep](lstep.md)(scalar: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [ScalarExpr](-scalar-expr/index.md)  
 val [lstep](lstep.md): [AlgebraicUnaryFunction](../com.github.jomof.kane.impl.functions/-algebraic-unary-function/index.md)  
 
 
