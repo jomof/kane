@@ -153,9 +153,9 @@ text {
         <line x1="0.0" y1="0.0" x2="0.0" y2="260.3333333333333" stroke-width="1.0" stroke="rgb(0,0,0)" stroke-opacity="1.0">
         </line>
       </g>
-      <g transform="translate(29.1 0.0 ) " clip-path="url(#BSAv55)" clip-bounds-jfx="[rect (0.0, 0.0), (325.827, 260.3333333333333)]">
+      <g transform="translate(29.1 0.0 ) " clip-path="url(#5ZnguS)" clip-bounds-jfx="[rect (0.0, 0.0), (325.827, 260.3333333333333)]">
         <defs>
-          <clipPath id="BSAv55">
+          <clipPath id="5ZnguS">
             <rect x="0.0" y="0.0" width="325.827" height="260.3333333333333">
             </rect>
           </clipPath>
