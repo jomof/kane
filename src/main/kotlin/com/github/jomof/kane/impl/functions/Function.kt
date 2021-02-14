@@ -2,10 +2,7 @@ package com.github.jomof.kane.impl.functions
 
 import com.github.jomof.kane.*
 import com.github.jomof.kane.impl.*
-import com.github.jomof.kane.impl.sheet.CoerceScalar
-import com.github.jomof.kane.impl.sheet.GroupBy
-import com.github.jomof.kane.impl.sheet.Sheet
-import com.github.jomof.kane.impl.sheet.SheetRange
+import com.github.jomof.kane.impl.sheet.*
 import com.github.jomof.kane.impl.types.*
 import kotlin.reflect.KProperty
 
@@ -176,6 +173,7 @@ interface AlgebraicUnaryFunction :
 // f(scalar statistic)->scalar
 interface AggregatableFunction
 interface AlgebraicSummaryFunction :
+// IAlgebraicSummaryScalarScalarFunction,
     IAlgebraicSummaryScalarScalarFunction,
     IAlgebraicSummaryMatrixScalarFunction,
     AggregatableFunction {
@@ -208,11 +206,12 @@ interface AlgebraicSummaryFunction :
 
     operator fun invoke(expr: GroupBy): Sheet = expr.aggregate(this)
 
-    operator fun invoke(exprs: Array<out ScalarExpr>): ScalarExpr =
-        AlgebraicSummaryMatrixScalar(
-            this,
-            DataMatrix(exprs.size, 1, exprs.toList())
-        )
+    operator fun invoke(exprs: Array<out ScalarExpr>): ScalarExpr {
+        return when {
+            exprs.size == 1 -> AlgebraicSummaryScalarScalar(this, exprs[0])
+            else -> AlgebraicSummaryMatrixScalar(this, DataMatrix(exprs.size, 1, exprs.toList()))
+        }
+    }
 
     operator fun invoke(exprs: Array<out Any>): ScalarExpr =
         AlgebraicSummaryMatrixScalar(
@@ -221,22 +220,16 @@ interface AlgebraicSummaryFunction :
         )
 
     operator fun invoke(expr: SheetRange): ScalarExpr =
-        AlgebraicSummaryScalarScalar(
-            this as IAlgebraicSummaryScalarScalarFunction,
-            CoerceScalar(expr)
+        AlgebraicSummaryMatrixScalar(
+            this as IAlgebraicSummaryMatrixScalarFunction,
+            CoerceMatrix(expr)
         )
 
-    operator fun invoke(expr: Expr): Expr = when (expr) {
-        is AlgebraicExpr -> invoke(expr)
-        is SheetRange -> invoke(expr)
-        is Sheet -> invoke(expr)
-        else -> error("${expr.javaClass}")
-    }
-
     fun lookupStatistic(statistic: StreamingSamples): Double
-    fun reduceArithmetic(value: StatsiticExpr) = constant(lookupStatistic(value.statistic))
+    fun reduceArithmetic(value: StreamingSampleStatisticExpr) = constant(lookupStatistic(value.statistic))
     fun reduceArithmetic(elements: List<ScalarExpr>): ScalarExpr? {
-        if (elements.any { it is StatsiticExpr }) error("")
+        if (elements.any { it is StatisticExpr })
+            error("")
         if (elements.isEmpty()) return null
         if (!elements.all { it.canGetConstant() }) return null
 
@@ -245,24 +238,19 @@ interface AlgebraicSummaryFunction :
         elements.forEach {
             statistic.insert(it.getConstant())
         }
-        val reduced = reduceArithmetic(StatsiticExpr(statistic))
+        val reduced = reduceArithmetic(StreamingSampleStatisticExpr(statistic))
         val type = elements[0].algebraicType
         return if (type == kaneDouble) reduced
         else RetypeScalar(reduced, type)
     }
 
     override fun reduceArithmetic(value: MatrixExpr) = reduceArithmetic(value.elements)
-    fun reduceArithmetic(value: Expr) = when (value) {
-        is StatsiticExpr -> reduceArithmetic(value)
-        is MatrixExpr -> reduceArithmetic(value)
-        is ScalarExpr -> reduceArithmetic(listOf(value))
-        else ->
-            error("${value.javaClass}")
-    }
 
-    override fun reduceArithmetic(value: ScalarExpr) = when (value) {
-        is StatsiticExpr -> reduceArithmetic(value)
-        is ScalarExpr -> reduceArithmetic(listOf(value))
+    override fun reduceArithmetic(value: ScalarExpr): ScalarExpr = when (value) {
+        is StreamingSampleStatisticExpr -> reduceArithmetic(value)
+        is RetypeScalar -> RetypeScalar(reduceArithmetic(value.scalar), value.type)
+        //is StatisticExpr -> reduceArithmetic(value)
+        //is ScalarExpr -> reduceArithmetic(listOf(value))
         else ->
             error("${value.javaClass}")
     }
@@ -292,7 +280,7 @@ interface AlgebraicBinaryScalarStatisticFunction {
     operator fun invoke(left: ScalarExpr, right: Double) =
         AlgebraicBinaryScalarStatistic(this, left, constant(right))
 
-    fun reduceArithmetic(left: StatsiticExpr, right: ScalarExpr): ScalarExpr
+    fun reduceArithmetic(left: StreamingSampleStatisticExpr, right: ScalarExpr): ScalarExpr
     fun reduceArithmetic(left: List<ScalarExpr>, right: ScalarExpr): ScalarExpr?
 }
 

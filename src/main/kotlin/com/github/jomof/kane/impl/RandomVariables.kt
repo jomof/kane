@@ -2,6 +2,7 @@ package com.github.jomof.kane.impl
 
 import com.github.jomof.kane.Expr
 import com.github.jomof.kane.ScalarExpr
+import com.github.jomof.kane.StatisticExpr
 import com.github.jomof.kane.impl.types.algebraicType
 import com.github.jomof.kane.impl.visitor.visit
 import kotlin.random.Random
@@ -14,7 +15,7 @@ interface RandomVariableExpr : ScalarExpr {
 
 class DiscreteUniformRandomVariable(
     val values: List<Double>
-) : RandomVariableExpr, ScalarExpr {
+) : RandomVariableExpr, StatisticExpr {
     init {
         track()
     }
@@ -33,15 +34,16 @@ class DiscreteUniformRandomVariable(
         error("Shouldn't copy DiscreteUniformRandomVariable")
 }
 
-class StatsiticExpr(
+
+class StreamingSampleStatisticExpr(
     val statistic: StreamingSamples
-) : ScalarExpr {
+) : StatisticExpr {
     override fun toString(): String {
         return this.algebraicType.render(statistic.median)
     }
 
     fun copy(statistic: StreamingSamples = this.statistic) =
-        StatsiticExpr(statistic)
+        StreamingSampleStatisticExpr(statistic)
 }
 
 fun randomOf(range : Pair<Double, Double>, step : Double = 1.0) : DiscreteUniformRandomVariable {

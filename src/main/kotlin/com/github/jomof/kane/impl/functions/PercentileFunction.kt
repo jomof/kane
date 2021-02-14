@@ -20,10 +20,10 @@ open class PercentileFunction : AlgebraicBinaryScalarStatisticFunction {
         return ConstantScalar(statistic.percentile(right))
     }
 
-    override fun reduceArithmetic(left: StatsiticExpr, right: ScalarExpr): ScalarExpr {
+    override fun reduceArithmetic(left: StreamingSampleStatisticExpr, right: ScalarExpr): ScalarExpr {
         return when (right) {
             is ConstantScalar -> constant(left.statistic.percentile(right.value))
-            is StatsiticExpr -> constant(left.statistic.percentile(right.statistic.mean))
+            is StreamingSampleStatisticExpr -> constant(left.statistic.percentile(right.statistic.mean))
             else -> error("${left.javaClass} ${right.javaClass}")
         }
     }

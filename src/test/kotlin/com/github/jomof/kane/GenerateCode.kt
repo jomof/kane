@@ -82,12 +82,14 @@ class GenerateCode {
                 when (p.kind) {
                     Scalar -> sb.append("${p.name} : Double")
                     Matrix -> sb.append("${p.name} : List<Double>")
+                    Statistic -> sb.append("${p.name} : List<Double>")
                 }
                 if (index != op.parameters.size - 1) sb.append(", ")
             }
             when (op.shape) {
                 Scalar -> sb.append(") : Double\n")
                 Matrix -> sb.append(") : List<Double>\n")
+                Statistic -> sb.append(") : List<Double>\n")
             }
             sb.append("    fun differentiate(")
             for ((index, p) in op.parameters.withIndex()) {
@@ -177,13 +179,14 @@ class GenerateCode {
                 """
                 fun $op(vararg values : Number) : Double = ${op}Func.invoke(values)
                 fun $op(vararg values : ScalarExpr) : ScalarExpr = ${op}Func.invoke(values)
+                //fun $op(vararg values : ScalarExpr) : ScalarExpr = ${op}Func.invoke(values)
                 fun $op(vararg values : Any) : ScalarExpr = ${op}Func.invoke(values)
                 fun $op(sheet: Sheet) : Sheet = ${op}Func.invoke(sheet)
                 fun $op(groupBy: GroupBy) : Sheet = ${op}Func.invoke(groupBy)
-                fun $op(scalar : ScalarExpr) : ScalarExpr = ${op}Func.invoke(scalar)
+                fun $op(scalar : StatisticExpr) : ScalarExpr = ${op}Func.invoke(scalar)
                 fun $op(matrix : MatrixExpr) : ScalarExpr = ${op}Func.invoke(matrix)
                 fun $op(range : SheetRange) : ScalarExpr = ${op}Func.invoke(range)
-                fun $op(expr : Expr) : Expr = ${op}Func.invoke(expr)
+                //fun $op(expr : Expr) : Expr = ${op}Func.invoke(expr)
                 """.trimIndent()
             )
             sb.append("\n\n")

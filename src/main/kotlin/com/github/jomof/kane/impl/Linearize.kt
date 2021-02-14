@@ -180,7 +180,7 @@ private fun AlgebraicExpr.linearizeExpr(model: LinearModel = LinearModel(kaneDou
         is Slot -> this
         is ConstantScalar -> this
         is RetypeScalar -> copy(scalar = scalar.linearizeExpr(model) as ScalarExpr)
-        is AlgebraicSummaryScalarScalar -> copy(value = value.linearizeExpr(model) as ScalarExpr)
+        is AlgebraicSummaryScalarScalar -> copy(value = value.linearizeExpr(model) as StatisticExpr)
         is AlgebraicSummaryMatrixScalar -> copy(value = value.linearizeExpr(model) as MatrixExpr)
         is AlgebraicBinaryScalarStatistic -> copy(
             left = left.linearizeExpr(model) as ScalarExpr,

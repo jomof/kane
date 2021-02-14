@@ -6,6 +6,7 @@ import com.github.jomof.kane.impl.functions.*
 
 private fun AlgebraicExpr.expandNamedCells(lookup: Cells): AlgebraicExpr {
     fun ScalarExpr.self() = expandNamedCells(lookup) as ScalarExpr
+    fun StatisticExpr.self() = expandNamedCells(lookup) as StatisticExpr
     fun MatrixExpr.self() = expandNamedCells(lookup) as MatrixExpr
     return when (this) {
         is NamedScalarVariable -> this

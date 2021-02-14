@@ -207,6 +207,12 @@ data class DataMatrix(
     val rows: Int,
     val elements: List<ScalarExpr>
 ) : MatrixExpr {
+    init {
+        assert(!elements.any { it is StatisticExpr }) {
+            "unexpected"
+        }
+    }
+
     override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = render()
 }

@@ -49,7 +49,7 @@ internal open class RewritingVisitor(protected val checkIdentity: Boolean = fals
         else copy(sheet = rewritten)
     }
 
-    open fun rewrite(expr: StatsiticExpr): Expr = expr
+    open fun rewrite(expr: StreamingSampleStatisticExpr): Expr = expr
     open fun rewrite(expr: ConstantScalar): Expr = expr
     open fun rewrite(expr: DiscreteUniformRandomVariable): Expr = expr
     open fun rewrite(expr: SheetRangeExpr): Expr = expr
@@ -215,6 +215,7 @@ internal open class RewritingVisitor(protected val checkIdentity: Boolean = fals
     }
 
     open fun sheet(expr: Sheet) = rewrite(expr) as Sheet
+    open fun statistic(expr: StatisticExpr) = rewrite(expr) as StatisticExpr
     open fun matrix(expr: MatrixExpr) = rewrite(expr) as MatrixExpr
     open fun range(expr: SheetRange): SheetRange {
         val result = rewrite(expr)
@@ -238,7 +239,7 @@ internal open class RewritingVisitor(protected val checkIdentity: Boolean = fals
             val result = when (expr) {
                 is ConstantScalar -> rewrite(expr)
                 is DiscreteUniformRandomVariable -> rewrite(expr)
-                is StatsiticExpr -> rewrite(expr)
+                is StreamingSampleStatisticExpr -> rewrite(expr)
                 is AlgebraicBinaryMatrixMatrixMatrix -> rewrite(expr)
                 is AlgebraicBinaryMatrixScalarMatrix -> rewrite(expr)
                 is AlgebraicBinaryScalarScalarScalar -> rewrite(expr)

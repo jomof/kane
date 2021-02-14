@@ -146,7 +146,7 @@ class GradualEvaluatorTest {
             """
             A   B     C    D  
           ---- --- ------ --- 
-        1 1974 14% 1973.5 14% 
+        1 1974 14% 1973.5 12% 
         """.trimIndent()
         )
     }

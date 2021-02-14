@@ -15,9 +15,10 @@ interface AlgebraicExpr : Expr
 interface ScalarExpr : AlgebraicExpr {
     operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
 }
+
+interface StatisticExpr : ScalarExpr {
+}
+
 interface MatrixExpr : AlgebraicExpr {
-//    val columns: Int
-//    val rows: Int
-//    operator fun get(column: Int, row: Int): ScalarExpr = getMatrixElement(column, row)
-operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
 }
