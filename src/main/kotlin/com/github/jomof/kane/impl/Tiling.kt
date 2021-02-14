@@ -1,6 +1,7 @@
 package com.github.jomof.kane.impl
 
 import com.github.jomof.kane.Expr
+import com.github.jomof.kane.NamedExpr
 import com.github.jomof.kane.TypedExpr
 import com.github.jomof.kane.impl.types.KaneType
 import com.github.jomof.kane.impl.types.kaneType

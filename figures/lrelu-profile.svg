@@ -198,19 +198,17 @@ text {
         <line x1="0.0" y1="0.0" x2="0.0" y2="260.3333333333333" stroke-width="1.0" stroke="rgb(0,0,0)" stroke-opacity="1.0">
         </line>
       </g>
-      <g transform="translate(15.7 0.0 ) " clip-path="url(#hAukvK)"
-         clip-bounds-jfx="[rect (0.0, 0.0), (339.22700000000003, 260.3333333333333)]">
+      <g transform="translate(15.7 0.0 ) " clip-path="url(#wdLL0a)" clip-bounds-jfx="[rect (0.0, 0.0), (339.22700000000003, 260.3333333333333)]">
         <defs>
-          <clipPath id="hAukvK">
+          <clipPath id="wdLL0a">
             <rect x="0.0" y="0.0" width="339.22700000000003" height="260.3333333333333">
             </rect>
           </clipPath>
         </defs>
         <g>
-
-          <g>
-            <circle fill="#132a42" stroke="#132a42" stroke-opacity="0.0" stroke-width="0.0" cx="15.419409090909085"
-                    cy="248.49999999999994" r="2.2"/>
+          
+          <g >
+            <circle fill="#132a42" stroke="#132a42" stroke-opacity="0.0" stroke-width="0.0" cx="15.419409090909085" cy="248.49999999999994" r="2.2" />
             <circle fill="#132a42" stroke="#132a42" stroke-opacity="0.0" stroke-width="0.0" cx="16.190379545454533" cy="248.3924242424242" r="2.2" />
             <circle fill="#132a42" stroke="#132a42" stroke-opacity="0.0" stroke-width="0.0" cx="16.96134999999998" cy="248.28484848484845" r="2.2" />
             <circle fill="#132a42" stroke="#132a42" stroke-opacity="0.0" stroke-width="0.0" cx="17.73232045454546" cy="248.17727272727268" r="2.2" />

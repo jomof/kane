@@ -1,6 +1,6 @@
 package com.github.jomof.kane
 
-import com.github.jomof.kane.impl.NamedExpr
+import com.github.jomof.kane.NamedExpr
 import com.github.jomof.kane.impl.convertAnyToNamedExpr
 import com.github.jomof.kane.impl.coordinate
 import com.github.jomof.kane.impl.sheet.Sheet

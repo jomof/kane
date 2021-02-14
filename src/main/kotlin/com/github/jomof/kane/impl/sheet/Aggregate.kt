@@ -3,7 +3,7 @@ package com.github.jomof.kane.impl.sheet
 import com.github.jomof.kane.Expr
 import com.github.jomof.kane.eval
 import com.github.jomof.kane.get
-import com.github.jomof.kane.impl.NamedExpr
+import com.github.jomof.kane.NamedExpr
 import com.github.jomof.kane.impl.coordinate
 import com.github.jomof.kane.impl.toNamed
 import com.github.jomof.kane.sheetOf

@@ -19,13 +19,6 @@ interface VariableExpr : AlgebraicExpr
 interface ScalarVariableExpr : ScalarExpr, VariableExpr
 interface MatrixVariableExpr : MatrixExpr, VariableExpr
 
-interface NamedExpr : Expr {
-    val name: Id
-}
-
-interface NamedAlgebraicExpr : NamedExpr, AlgebraicExpr
-interface NamedScalarExpr : NamedAlgebraicExpr, ScalarExpr
-interface NamedMatrixExpr : NamedAlgebraicExpr, MatrixExpr
 data class UnaryOp(val op: String = "", val simpleName: String = "") {
     operator fun getValue(nothing: Nothing?, property: KProperty<*>) =
         (if (op.isBlank()) copy(op = property.name.toLowerCase())

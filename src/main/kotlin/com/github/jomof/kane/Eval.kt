@@ -25,6 +25,18 @@ fun NamedScalar.eval(
     excludeVariables: Set<Id> = setOf(),
 ) = (this as Expr).evalImpl(rangeExprProvider, reduceVariables, excludeVariables) as NamedScalar
 
+fun NamedScalarExpr.eval(
+    rangeExprProvider: RangeExprProvider? = null,
+    reduceVariables: Boolean = false,
+    excludeVariables: Set<Id> = setOf(),
+) = (this as Expr).evalImpl(rangeExprProvider, reduceVariables, excludeVariables) as NamedScalarExpr
+
+fun NamedMatrixExpr.eval(
+    rangeExprProvider: RangeExprProvider? = null,
+    reduceVariables: Boolean = false,
+    excludeVariables: Set<Id> = setOf(),
+) = (this as Expr).evalImpl(rangeExprProvider, reduceVariables, excludeVariables) as NamedMatrixExpr
+
 fun NamedAlgebraicExpr.eval(
     rangeExprProvider: RangeExprProvider? = null,
     reduceVariables: Boolean = false,
