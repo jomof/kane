@@ -5,7 +5,7 @@
 # tableauOf  
 [jvm]  
 Content  
-fun [tableauOf](tableau-of.md)(vararg elements: [NamedAlgebraicExpr](-named-algebraic-expr/index.md)): [Tableau](-tableau/index.md)  
+fun [tableauOf](tableau-of.md)(vararg elements: [NamedAlgebraicExpr](../com.github.jomof.kane/-named-algebraic-expr/index.md)): [Tableau](-tableau/index.md)  
 
 
 
