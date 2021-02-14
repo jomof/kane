@@ -1,14 +1,16 @@
 package com.github.jomof.kane
 
 import com.github.jomof.kane.impl.*
+import com.github.jomof.kane.impl.sheet.*
 import com.github.jomof.kane.impl.types.*
 import kotlin.reflect.KProperty
 
 
 interface IAlgebraicSummaryScalarScalarFunction {
     val meta : SummaryOp
-    operator fun invoke(value : ScalarExpr) : ScalarExpr = AlgebraicSummaryScalarScalar(this, value)
-    fun reduceArithmetic(value : ScalarExpr) : ScalarExpr?
+    operator fun invoke(value: ScalarExpr): ScalarExpr = AlgebraicSummaryScalarScalar(this, value)
+    operator fun invoke(value: Double): ScalarExpr = AlgebraicSummaryScalarScalar(this, ConstantScalar(value))
+    fun reduceArithmetic(value: ScalarExpr): ScalarExpr?
     fun doubleOp(value : Double) : Double
     fun differentiate(value : ScalarExpr, valued : ScalarExpr, variable : ScalarExpr) : ScalarExpr
     fun type(value : AlgebraicType) : AlgebraicType
@@ -34,6 +36,7 @@ data class AlgebraicSummaryScalarScalar(
 interface IAlgebraicSummaryMatrixScalarFunction {
     val meta: SummaryOp
     operator fun invoke(value: MatrixExpr): ScalarExpr = AlgebraicSummaryMatrixScalar(this, value)
+    operator fun invoke(value: SheetRangeExpr): ScalarExpr = AlgebraicSummaryMatrixScalar(this, CoerceMatrix(value))
     fun reduceArithmetic(value: MatrixExpr): ScalarExpr?
     fun doubleOp(value: List<Double>): Double
     fun differentiate(value: MatrixExpr, valued: MatrixExpr, variable: ScalarExpr): ScalarExpr
@@ -60,6 +63,7 @@ data class AlgebraicSummaryMatrixScalar(
 interface IAlgebraicUnaryScalarScalarFunction {
     val meta: UnaryOp
     operator fun invoke(value: ScalarExpr): ScalarExpr = AlgebraicUnaryScalarScalar(this, value)
+    operator fun invoke(value: Double): ScalarExpr = AlgebraicUnaryScalarScalar(this, ConstantScalar(value))
     fun reduceArithmetic(value: ScalarExpr): ScalarExpr?
     fun doubleOp(value: Double): Double
     fun differentiate(value: ScalarExpr, valued: ScalarExpr, variable: ScalarExpr): ScalarExpr
@@ -86,6 +90,7 @@ data class AlgebraicUnaryScalarScalar(
 interface IAlgebraicUnaryMatrixMatrixFunction {
     val meta: UnaryOp
     operator fun invoke(value: MatrixExpr): MatrixExpr = AlgebraicUnaryMatrixMatrix(this, value)
+    operator fun invoke(value: SheetRangeExpr): MatrixExpr = AlgebraicUnaryMatrixMatrix(this, CoerceMatrix(value))
     fun reduceArithmetic(value: MatrixExpr): MatrixExpr?
     fun doubleOp(value: List<Double>): List<Double>
     fun differentiate(value: MatrixExpr, valued: MatrixExpr, variable: ScalarExpr): MatrixExpr
@@ -113,6 +118,15 @@ interface IAlgebraicBinaryScalarScalarScalarFunction {
     val meta: BinaryOp
     operator fun invoke(left: ScalarExpr, right: ScalarExpr): ScalarExpr =
         AlgebraicBinaryScalarScalarScalar(this, left, right)
+
+    operator fun invoke(left: ScalarExpr, right: Double): ScalarExpr =
+        AlgebraicBinaryScalarScalarScalar(this, left, ConstantScalar(right))
+
+    operator fun invoke(left: Double, right: ScalarExpr): ScalarExpr =
+        AlgebraicBinaryScalarScalarScalar(this, ConstantScalar(left), right)
+
+    operator fun invoke(left: Double, right: Double): ScalarExpr =
+        AlgebraicBinaryScalarScalarScalar(this, ConstantScalar(left), ConstantScalar(right))
 
     fun reduceArithmetic(left: ScalarExpr, right: ScalarExpr): ScalarExpr?
     fun doubleOp(left: Double, right: Double): Double
@@ -151,6 +165,15 @@ interface IAlgebraicBinaryScalarMatrixMatrixFunction {
     operator fun invoke(left: ScalarExpr, right: MatrixExpr): MatrixExpr =
         AlgebraicBinaryScalarMatrixMatrix(this, left, right)
 
+    operator fun invoke(left: ScalarExpr, right: SheetRangeExpr): MatrixExpr =
+        AlgebraicBinaryScalarMatrixMatrix(this, left, CoerceMatrix(right))
+
+    operator fun invoke(left: Double, right: MatrixExpr): MatrixExpr =
+        AlgebraicBinaryScalarMatrixMatrix(this, ConstantScalar(left), right)
+
+    operator fun invoke(left: Double, right: SheetRangeExpr): MatrixExpr =
+        AlgebraicBinaryScalarMatrixMatrix(this, ConstantScalar(left), CoerceMatrix(right))
+
     fun reduceArithmetic(left: ScalarExpr, right: MatrixExpr): MatrixExpr?
     fun doubleOp(left: Double, right: List<Double>): List<Double>
     fun differentiate(
@@ -187,6 +210,15 @@ interface IAlgebraicBinaryMatrixScalarMatrixFunction {
     val meta: BinaryOp
     operator fun invoke(left: MatrixExpr, right: ScalarExpr): MatrixExpr =
         AlgebraicBinaryMatrixScalarMatrix(this, left, right)
+
+    operator fun invoke(left: MatrixExpr, right: Double): MatrixExpr =
+        AlgebraicBinaryMatrixScalarMatrix(this, left, ConstantScalar(right))
+
+    operator fun invoke(left: SheetRangeExpr, right: ScalarExpr): MatrixExpr =
+        AlgebraicBinaryMatrixScalarMatrix(this, CoerceMatrix(left), right)
+
+    operator fun invoke(left: SheetRangeExpr, right: Double): MatrixExpr =
+        AlgebraicBinaryMatrixScalarMatrix(this, CoerceMatrix(left), ConstantScalar(right))
 
     fun reduceArithmetic(left: MatrixExpr, right: ScalarExpr): MatrixExpr?
     fun doubleOp(left: List<Double>, right: Double): List<Double>
@@ -225,6 +257,15 @@ interface IAlgebraicBinaryMatrixMatrixMatrixFunction {
     operator fun invoke(left: MatrixExpr, right: MatrixExpr): MatrixExpr =
         AlgebraicBinaryMatrixMatrixMatrix(this, left, right)
 
+    operator fun invoke(left: MatrixExpr, right: SheetRangeExpr): MatrixExpr =
+        AlgebraicBinaryMatrixMatrixMatrix(this, left, CoerceMatrix(right))
+
+    operator fun invoke(left: SheetRangeExpr, right: MatrixExpr): MatrixExpr =
+        AlgebraicBinaryMatrixMatrixMatrix(this, CoerceMatrix(left), right)
+
+    operator fun invoke(left: SheetRangeExpr, right: SheetRangeExpr): MatrixExpr =
+        AlgebraicBinaryMatrixMatrixMatrix(this, CoerceMatrix(left), CoerceMatrix(right))
+
     fun reduceArithmetic(left: MatrixExpr, right: MatrixExpr): MatrixExpr?
     fun doubleOp(left: List<Double>, right: List<Double>): List<Double>
     fun differentiate(
@@ -262,6 +303,15 @@ interface IAlgebraicBinarySummaryScalarScalarScalarFunction {
     operator fun invoke(left: ScalarExpr, right: ScalarExpr): ScalarExpr =
         AlgebraicBinarySummaryScalarScalarScalar(this, left, right)
 
+    operator fun invoke(left: ScalarExpr, right: Double): ScalarExpr =
+        AlgebraicBinarySummaryScalarScalarScalar(this, left, ConstantScalar(right))
+
+    operator fun invoke(left: Double, right: ScalarExpr): ScalarExpr =
+        AlgebraicBinarySummaryScalarScalarScalar(this, ConstantScalar(left), right)
+
+    operator fun invoke(left: Double, right: Double): ScalarExpr =
+        AlgebraicBinarySummaryScalarScalarScalar(this, ConstantScalar(left), ConstantScalar(right))
+
     fun reduceArithmetic(left: ScalarExpr, right: ScalarExpr): ScalarExpr?
     fun doubleOp(left: Double, right: Double): Double
     fun differentiate(
@@ -298,6 +348,15 @@ interface IAlgebraicBinarySummaryMatrixScalarScalarFunction {
     val meta: BinarySummaryOp
     operator fun invoke(left: MatrixExpr, right: ScalarExpr): ScalarExpr =
         AlgebraicBinarySummaryMatrixScalarScalar(this, left, right)
+
+    operator fun invoke(left: MatrixExpr, right: Double): ScalarExpr =
+        AlgebraicBinarySummaryMatrixScalarScalar(this, left, ConstantScalar(right))
+
+    operator fun invoke(left: SheetRangeExpr, right: ScalarExpr): ScalarExpr =
+        AlgebraicBinarySummaryMatrixScalarScalar(this, CoerceMatrix(left), right)
+
+    operator fun invoke(left: SheetRangeExpr, right: Double): ScalarExpr =
+        AlgebraicBinarySummaryMatrixScalarScalar(this, CoerceMatrix(left), ConstantScalar(right))
 
     fun reduceArithmetic(left: MatrixExpr, right: ScalarExpr): ScalarExpr?
     fun doubleOp(left: List<Double>, right: Double): Double

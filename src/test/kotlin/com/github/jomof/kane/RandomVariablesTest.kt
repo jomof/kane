@@ -102,7 +102,7 @@ class RandomVariablesTest {
     fun `sheet with accumulated step`() {
         val sample = StreamingSamples()
         for (i in 1928..2019) {
-            sample.insert(sp500(i.toDouble()))
+            sample.insert(sp500.doubleOp(i.toDouble()))
         }
         println("mean=${sample.mean}")
         println("median=${sample.median}")

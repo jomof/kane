@@ -26,44 +26,6 @@ interface AlgebraicBinaryFunction :
         TODO("Not yet implemented")
     }
 
-    operator fun invoke(p1: Double, p2: Double) = doubleOp(p1, p2)
-
-    operator fun invoke(p1: SheetRange, p2: ScalarExpr): ScalarExpr =
-        AlgebraicBinaryScalarScalarScalar(this, CoerceScalar(p1), p2)
-
-    operator fun invoke(p1: SheetRange, p2: SheetRange): ScalarExpr =
-        AlgebraicBinaryScalarScalarScalar(this, CoerceScalar(p1), CoerceScalar(p2))
-
-    operator fun invoke(p1: ScalarExpr, p2: SheetRange): ScalarExpr =
-        AlgebraicBinaryScalarScalarScalar(this, p1, CoerceScalar(p2))
-
-    operator fun invoke(p1: SheetRange, p2: Double): ScalarExpr =
-        AlgebraicBinaryScalarScalarScalar(this, CoerceScalar(p1), constant(p2))
-
-    operator fun invoke(p1: Double, p2: SheetRange): ScalarExpr =
-        AlgebraicBinaryScalarScalarScalar(this, constant(p1), CoerceScalar(p2))
-
-    operator fun invoke(p1: Double, p2: MatrixExpr): MatrixExpr =
-        AlgebraicBinaryScalarMatrixMatrix(this, constant(p1), p2)
-
-    override fun invoke(p1: MatrixExpr, p2: MatrixExpr): MatrixExpr =
-        AlgebraicBinaryMatrixMatrixMatrix(this, p1, p2)
-
-    operator fun invoke(p1: MatrixExpr, p2: Double): MatrixExpr =
-        AlgebraicBinaryMatrixScalarMatrix(this, p1, constant(p2))
-
-    operator fun invoke(p1: Double, p2: ScalarExpr): ScalarExpr =
-        invoke(constant(p1), p2)
-
-    operator fun invoke(p1: ScalarExpr, p2: Double): ScalarExpr =
-        invoke(p1, constant(p2))
-
-    operator fun invoke(p1: MatrixExpr, p2: SheetRange): MatrixExpr =
-        AlgebraicBinaryMatrixScalarMatrix(this, p1, CoerceScalar(p2))
-
-    operator fun invoke(p1: SheetRange, p2: MatrixExpr): MatrixExpr =
-        AlgebraicBinaryScalarMatrixMatrix(this, CoerceScalar(p1), p2)
-
     override fun type(left: AlgebraicType, right: AlgebraicType): AlgebraicType {
         return when {
             left == DollarAlgebraicType.kaneType -> DollarAlgebraicType.kaneType
@@ -142,7 +104,7 @@ interface AlgebraicUnaryFunction :
         return RetypeMatrix(expr, type!!)
     }
 
-    operator fun invoke(value: Double) = doubleOp(value)
+    //operator fun invoke(value: Double) = doubleOp(value)
     override fun doubleOp(value: Double): Double
     override fun doubleOp(value: List<Double>): List<Double> {
         TODO("Not yet implemented")
@@ -173,11 +135,12 @@ interface AlgebraicUnaryFunction :
 // f(scalar statistic)->scalar
 interface AggregatableFunction
 interface AlgebraicSummaryFunction :
-// IAlgebraicSummaryScalarScalarFunction,
     IAlgebraicSummaryScalarScalarFunction,
     IAlgebraicSummaryMatrixScalarFunction,
     AggregatableFunction {
     override val meta: SummaryOp
+
+    override fun type(value: AlgebraicType) = value
 
     override fun doubleOp(value: Double): Double {
         TODO("Not yet implemented")
@@ -186,8 +149,6 @@ interface AlgebraicSummaryFunction :
     override fun doubleOp(value: List<Double>): Double {
         TODO("Not yet implemented")
     }
-
-    override fun type(value: AlgebraicType) = value
 
     operator fun invoke(values: Array<out Number>): Double {
         val statistic = StreamingSamples()
@@ -219,12 +180,6 @@ interface AlgebraicSummaryFunction :
             DataMatrix(exprs.size, 1, exprs.toList().map { convertAnyToScalarExpr(it) })
         )
 
-    operator fun invoke(expr: SheetRange): ScalarExpr =
-        AlgebraicSummaryMatrixScalar(
-            this as IAlgebraicSummaryMatrixScalarFunction,
-            CoerceMatrix(expr)
-        )
-
     fun lookupStatistic(statistic: StreamingSamples): Double
     fun reduceArithmetic(value: StreamingSampleStatisticExpr) = constant(lookupStatistic(value.statistic))
     fun reduceArithmetic(elements: List<ScalarExpr>): ScalarExpr? {
@@ -249,8 +204,6 @@ interface AlgebraicSummaryFunction :
     override fun reduceArithmetic(value: ScalarExpr): ScalarExpr = when (value) {
         is StreamingSampleStatisticExpr -> reduceArithmetic(value)
         is RetypeScalar -> RetypeScalar(reduceArithmetic(value.scalar), value.type)
-        //is StatisticExpr -> reduceArithmetic(value)
-        //is ScalarExpr -> reduceArithmetic(listOf(value))
         is NamedScalar -> value.copy(scalar = reduceArithmetic(value.scalar))
         else ->
             error("${value.javaClass}")
@@ -281,15 +234,6 @@ interface AlgebraicBinarySummaryFunction :
     override fun doubleOp(left: List<Double>, right: Double): Double {
         TODO("Not yet implemented")
     }
-
-    operator fun invoke(left: MatrixExpr, right: Double) =
-        AlgebraicBinarySummaryMatrixScalarScalar(this, left, constant(right))
-
-    override fun invoke(left: ScalarExpr, right: ScalarExpr) =
-        AlgebraicBinarySummaryScalarScalarScalar(this, left, right)
-
-    operator fun invoke(left: ScalarExpr, right: Double) =
-        AlgebraicBinarySummaryScalarScalarScalar(this, left, constant(right))
 
     fun reduceArithmetic(left: StreamingSampleStatisticExpr, right: ScalarExpr): ScalarExpr
     fun reduceArithmetic(left: List<ScalarExpr>, right: ScalarExpr): ScalarExpr?

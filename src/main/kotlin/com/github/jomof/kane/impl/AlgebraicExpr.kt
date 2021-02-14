@@ -4,10 +4,7 @@ package com.github.jomof.kane.impl
 
 import com.github.jomof.kane.*
 import com.github.jomof.kane.impl.functions.*
-import com.github.jomof.kane.impl.sheet.CoerceMatrix
-import com.github.jomof.kane.impl.sheet.CoerceScalar
-import com.github.jomof.kane.impl.sheet.NamedSheetRangeExpr
-import com.github.jomof.kane.impl.sheet.SheetRangeExpr
+import com.github.jomof.kane.impl.sheet.*
 import com.github.jomof.kane.impl.types.AlgebraicType
 import com.github.jomof.kane.impl.types.KaneType
 import com.github.jomof.kane.impl.types.StringKaneType
@@ -474,6 +471,9 @@ fun differentiate(expr: AlgebraicExpr): AlgebraicExpr {
     }
 }
 
+fun differentiate(expr: AlgebraicUnaryScalarScalar): AlgebraicUnaryScalarScalar =
+    (differentiate(expr as AlgebraicExpr)).eval() as AlgebraicUnaryScalarScalar
+
 fun differentiate(expr: ScalarExpr): ScalarExpr = (differentiate(expr as AlgebraicExpr) as ScalarExpr).eval()
 fun differentiate(expr: MatrixExpr): MatrixExpr = (differentiate(expr as AlgebraicExpr) as MatrixExpr).eval()
 
@@ -687,6 +687,7 @@ fun Expr.render(entryPoint: Boolean = true, outerType: AlgebraicType? = null): S
         is CoerceScalar -> value.self()
         is CoerceMatrix -> value.self()
         is SheetRangeExpr -> rangeRef.toString()
+        is CellSheetRangeExpr -> rangeRef.toString()
         is RetypeScalar -> scalar.render(entryPoint, outerType ?: this.type)
         is RetypeMatrix -> matrix.render(entryPoint, outerType ?: this.type)
         is Slot -> "\$$slot"

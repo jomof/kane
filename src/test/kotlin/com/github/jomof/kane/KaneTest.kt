@@ -64,9 +64,9 @@ class KaneTest {
 
     @Test
     fun `check tanh`() {
-        tanh(0.0).assertString("0.0")
-        tanh(0.1).assertString("0.09966799462495583")
-        tanh(-0.1).assertString("-0.09966799462495585")
+        tanh(0.0).toDouble().assertString("0.0")
+        tanh(0.1).toDouble().assertString("0.09966799462495583")
+        tanh(-0.1).toDouble().assertString("-0.09966799462495585")
     }
 
     @Test
@@ -217,7 +217,7 @@ class KaneTest {
         for(i in 0 until 100) {
             (-5 until 5).forEach { point ->
                 xSlot.set(point.toDouble())
-                val t = relu(10.0 * point.toDouble() + 0.2)
+                val t = relu.doubleOp(10.0 * point.toDouble() + 0.2)
                 targetSlot.set(t)
                 model.eval(space)
             }
@@ -272,18 +272,18 @@ class KaneTest {
 
     @Test
     fun `check relu and steps`() {
-        assert(lrelu(-5.0)==-0.5)
-        assert(lrelu(5.0)==5.0)
-        assert(lrelu(0.0)==0.0)
-        assert(relu(-5.0)==0.0)
-        assert(relu(5.0)==5.0)
-        assert(relu(0.0)==0.0)
-        assert(lstep(-5.0)==0.1)
-        assert(lstep(5.0)==1.0)
-        assert(lstep(0.0)==1.0)
-        assert(step(-5.0)==0.0)
-        assert(step(5.0)==1.0)
-        assert(step(0.0)==1.0)
+        assert(lrelu.doubleOp(-5.0) == -0.5)
+        assert(lrelu.doubleOp(5.0) == 5.0)
+        assert(lrelu.doubleOp(0.0) == 0.0)
+        assert(relu.doubleOp(-5.0) == 0.0)
+        assert(relu.doubleOp(5.0) == 5.0)
+        assert(relu.doubleOp(0.0) == 0.0)
+        assert(lstep.doubleOp(-5.0) == 0.1)
+        assert(lstep.doubleOp(5.0) == 1.0)
+        assert(lstep.doubleOp(0.0) == 1.0)
+        assert(step.doubleOp(-5.0) == 0.0)
+        assert(step.doubleOp(5.0) == 1.0)
+        assert(step.doubleOp(0.0) == 1.0)
     }
 
     @Test

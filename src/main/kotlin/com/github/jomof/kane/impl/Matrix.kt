@@ -52,17 +52,17 @@ fun MutableMatrix.set(value: Matrix) {
 }
 
 operator fun MutableMatrix.divAssign(value: Double) {
-    mapAssign { div(it, value) }
+    mapAssign { div.doubleOp(it, value) }
 }
 
 operator fun MutableMatrix.timesAssign(value: Double) {
-    mapAssign { times(it, value) }
+    mapAssign { times.doubleOp(it, value) }
 }
 
 operator fun MutableMatrix.minusAssign(value: Matrix) {
     for (column in 0 until columns) {
         for (row in 0 until rows) {
-            this[column, row] = minus(this[column, row], value[column, row])
+            this[column, row] = minus.doubleOp(this[column, row], value[column, row])
         }
     }
 }

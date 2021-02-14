@@ -1,6 +1,7 @@
 package com.github.jomof.kane
 
 import com.github.jomof.kane.GenerateCode.Shape.*
+import com.github.jomof.kane.impl.cartesianOf
 import org.junit.Test
 import java.io.File
 
@@ -38,6 +39,19 @@ class GenerateCode {
         Operator("BinarySummary", Scalar, listOf(Parameter("left", Matrix), Parameter("right", Scalar))),
     )
 
+    data class Coercion(val otherType: String, val coercionMethod: String)
+
+    private val coercions = mapOf(
+        Scalar to listOf(
+            Coercion("ScalarExpr", "Identity"),
+            Coercion("Double", "ConstantScalar")
+        ),
+        Matrix to listOf(
+            Coercion("MatrixExpr", "Identity"),
+            Coercion("SheetRangeExpr", "CoerceMatrix")
+        )
+    )
+
     /**
      *
      */
@@ -50,6 +64,7 @@ class GenerateCode {
             package com.github.jomof.kane
 
             import com.github.jomof.kane.impl.*
+            import com.github.jomof.kane.impl.sheet.*
             import com.github.jomof.kane.impl.types.*
             import kotlin.reflect.KProperty
             
@@ -62,17 +77,44 @@ class GenerateCode {
             val operatorClassName = "Algebraic${op.name}$inputShape${op.shape}"
             line("interface I${operatorClassName}Function {")
             line("    val meta : ${op.name}Op")
-            sb.append("    operator fun invoke(")
-            for ((index, p) in op.parameters.withIndex()) {
-                sb.append("${p.name} : ${p.kind}Expr")
-                if (index != op.parameters.size - 1) sb.append(", ")
+//            sb.append("    operator fun invoke(")
+//            for ((index, p) in op.parameters.withIndex()) {
+//                sb.append("${p.name} : ${p.kind}Expr")
+//                if (index != op.parameters.size - 1) sb.append(", ")
+//            }
+//            sb.append(") : ${op.shape}Expr = Algebraic${op.name}$inputShape${op.shape}(this, ")
+//            for ((index, p) in op.parameters.withIndex()) {
+//                sb.append(p.name)
+//                if (index != op.parameters.size - 1) sb.append(", ")
+//            }
+//            line(")")
+
+            //line("/*")
+            val coercions = op.parameters.map { coercions.getValue(it.kind) }
+            cartesianOf(coercions) {
+                val mappings = it.filterIsInstance<Coercion>()
+                sb.append("    operator fun invoke(")
+                for (index in op.parameters.indices) {
+                    val p = op.parameters[index]
+                    val m = mappings[index]
+                    sb.append("${p.name} : ${m.otherType}")
+                    if (index != op.parameters.size - 1) sb.append(", ")
+                }
+                if (mappings.all { mapping -> mapping.coercionMethod == "Identity" }) {
+
+                }
+                sb.append(") : ${op.shape}Expr = Algebraic${op.name}$inputShape${op.shape}(this, ")
+                for (index in op.parameters.indices) {
+                    val p = op.parameters[index]
+                    val m = mappings[index]
+                    if (m.coercionMethod == "Identity") sb.append(p.name)
+                    else sb.append("${m.coercionMethod}(${p.name})")
+                    if (index != op.parameters.size - 1) sb.append(", ")
+                }
+                line(")")
             }
-            sb.append(") : ${op.shape}Expr = Algebraic${op.name}$inputShape${op.shape}(this, ")
-            for ((index, p) in op.parameters.withIndex()) {
-                sb.append(p.name)
-                if (index != op.parameters.size - 1) sb.append(", ")
-            }
-            line(")")
+            //line("*/")
+
             sb.append("    fun reduceArithmetic(")
             for ((index, p) in op.parameters.withIndex()) {
                 sb.append("${p.name} : ${p.kind}Expr")
@@ -180,22 +222,22 @@ class GenerateCode {
                 // $op typesafe infix operators
                 operator fun Number.$op(right: ScalarExpr) = $op(this.toDouble(), right)
                 operator fun Number.$op(right: MatrixExpr) = $op(this.toDouble(), right)                
-                operator fun Number.$op(right: SheetRange) = $op(this.toDouble(), right)
+                operator fun Number.$op(right: SheetRangeExpr) = $op(this.toDouble(), right)
 
                 operator fun ScalarExpr.$op(right: Number) = $op(this, right.toDouble())
                 operator fun ScalarExpr.$op(right: ScalarExpr) = $op(this, right)
                 operator fun ScalarExpr.$op(right: MatrixExpr) = $op(this, right)
-                operator fun ScalarExpr.$op(right: SheetRange) = $op(this, right)
+                operator fun ScalarExpr.$op(right: SheetRangeExpr) = $op(this, right)
                 
                 operator fun MatrixExpr.$op(right: Number) = $op(this, right.toDouble())
                 operator fun MatrixExpr.$op(right: ScalarExpr) = $op(this, right)
                 operator fun MatrixExpr.$op(right: MatrixExpr) = $op(this, right)
-                operator fun MatrixExpr.$op(right: SheetRange) = $op(this, right)
+                operator fun MatrixExpr.$op(right: SheetRangeExpr) = $op(this, right)
                 
-                operator fun SheetRange.$op(right: Number) = $op(this, right.toDouble())
-                operator fun SheetRange.$op(right: ScalarExpr) = $op(this, right)
-                operator fun SheetRange.$op(right: MatrixExpr) = $op(this, right)
-                operator fun SheetRange.$op(right: SheetRange) = $op(this, right)
+                operator fun SheetRangeExpr.$op(right: Number) = $op(this, right.toDouble())
+                operator fun SheetRangeExpr.$op(right: ScalarExpr) = $op(this, right)
+                operator fun SheetRangeExpr.$op(right: MatrixExpr) = $op(this, right)
+                operator fun SheetRangeExpr.$op(right: SheetRangeExpr) = $op(this, right)
                 """.trimIndent()
             )
             sb.append("\n\n")
@@ -217,7 +259,8 @@ class GenerateCode {
                 fun $op(groupBy: GroupBy) : Sheet = ${op}Func.invoke(groupBy)
                 fun $op(scalar : StatisticExpr) : ScalarExpr = ${op}Func.invoke(scalar)
                 fun $op(matrix : MatrixExpr) : ScalarExpr = ${op}Func.invoke(matrix)
-                fun $op(range : SheetRange) : ScalarExpr = ${op}Func.invoke(range)
+                fun $op(range : SheetRangeExpr) : ScalarExpr = ${op}Func.invoke(range)
+                fun $op(range : CellSheetRangeExpr) : ScalarExpr = ${op}Func.invoke(range)
                 //fun $op(expr : Expr) : Expr = ${op}Func.invoke(expr)
                 """.trimIndent()
             )
@@ -240,7 +283,7 @@ class GenerateCode {
                 fun $op(matrix : DataMatrix) : MatrixExpr = ${op}Func(matrix as MatrixExpr)
                 fun $op(matrix : MatrixExpr) : MatrixExpr = ${op}Func(matrix)
                 fun $op(scalar : ScalarExpr) : ScalarExpr = ${op}Func(scalar)
-                fun $op(scalar : Double) : Double = ${op}Func(scalar)
+                fun $op(scalar : Double) : ScalarExpr = ${op}Func(scalar)
                 
                 
                 """.trimIndent()

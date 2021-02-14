@@ -16,6 +16,7 @@ internal fun Expr.visit(f: (expr: Expr) -> Unit) {
         is ValueExpr<*>,
         is NamedValueExpr<*>,
         is SheetRangeExpr,
+        is CellSheetRangeExpr,
         is DiscreteUniformRandomVariable,
         is NamedScalarVariable -> {
         }

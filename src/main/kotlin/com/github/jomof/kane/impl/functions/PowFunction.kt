@@ -23,7 +23,7 @@ internal class PowFunction : AlgebraicBinaryFunction {
             rightIsConst && p2.getConstant() == 1.0 -> p1
             rightIsConst && p2.getConstant() == 0.0 -> ConstantScalar(1.0)
             rightIsConst && p2.getConstant() == -0.0 -> ConstantScalar(1.0)
-            leftIsConst && rightIsConst -> constant(invoke(p1.getConstant(), p2.getConstant()))
+            leftIsConst && rightIsConst -> constant(p1.getConstant().pow(p2.getConstant()))
             p1 is AlgebraicBinaryScalarScalarScalar && p1.op == pow ->
                 pow(p1.left, p2 * p1.right)
             else -> null

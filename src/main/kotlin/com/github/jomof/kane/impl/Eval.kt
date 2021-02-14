@@ -26,7 +26,7 @@ private val reduceNamedExprs = object : RewritingVisitor(allowNameChange = true)
     }
 }
 
-private class ReduceAlgebraicBinaryScalar : RewritingVisitor(allowNameChange = true) {
+private class ReduceAlgebraicBinaryScalar : RewritingVisitor(allowNameChange = true, checkIdentity = true) {
     override fun rewrite(expr: AlgebraicBinaryScalarScalarScalar): Expr {
         return when (val sub = super.rewrite(expr)) {
             is AlgebraicBinaryScalarScalarScalar -> {
@@ -43,7 +43,7 @@ private class ReduceAlgebraicBinaryScalar : RewritingVisitor(allowNameChange = t
     }
 }
 
-private class ReduceAlgebraicUnaryScalar : RewritingVisitor() {
+private class ReduceAlgebraicUnaryScalar : RewritingVisitor(checkIdentity = true) {
     override fun rewrite(expr: AlgebraicUnaryScalarScalar): Expr {
         return when (val sub = super.rewrite(expr)) {
             is AlgebraicUnaryScalarScalar -> when (sub.value) {
@@ -61,14 +61,19 @@ private class ReduceAlgebraicUnaryScalar : RewritingVisitor() {
     override fun rewrite(expr: RetypeScalar): Expr {
         return when (val scalar = scalar(expr.scalar)) {
             is CoerceScalar -> when (scalar.value) {
-                is SheetRangeExpr -> expr
+                is SheetRangeExpr ->
+                    expr
                 else ->
                     error("${scalar.value.javaClass}")
             }
             is ConstantScalar ->
                 if (expr.scalar === scalar) return expr
                 else expr.copy(scalar = scalar)
-            else -> if (scalar === expr.scalar) return expr else expr.copy(scalar = scalar)
+            else ->
+                if (scalar === expr.scalar)
+                    expr
+                else
+                    expr.copy(scalar = scalar)
         }
     }
 }

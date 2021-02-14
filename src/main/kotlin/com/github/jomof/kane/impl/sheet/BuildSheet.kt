@@ -99,6 +99,7 @@ private class InsertCellNamedExpressions(val literalOnly: Boolean) : SheetRewrit
             val id = cellNameToCoordinate(upper)
             when (expr) {
                 is ValueExpr<*>,
+                is CellSheetRangeExpr,
                 is SheetRangeExpr,
                 is ScalarExpr -> {
                     removeCell(name)
@@ -253,6 +254,11 @@ private class IndexCellsWithNonMoveableCoordinates : SheetRewritingVisitor() {
     private fun needsIndexing(expr: Expr): Boolean {
         var needsIndexing = false
         expr.visit {
+            if (!needsIndexing && it is CellSheetRangeExpr) {
+                val range = it.rangeRef
+                if (range.column !is MoveableIndex) needsIndexing = true
+                if (range.row !is MoveableIndex) needsIndexing = true
+            }
             if (!needsIndexing && it is SheetRangeExpr) {
                 val range = it.rangeRef
                 if (range is CellRangeRef) {
@@ -288,6 +294,51 @@ private class CollapseCellIndexedScalar : SheetRewritingVisitor() {
         }
     }
 
+    override fun rewrite(expr: CellSheetRangeExpr): Expr {
+        return collapseCellRangeRef(expr.rangeRef) ?: expr
+    }
+
+    private fun collapseCellRangeRef(range: CellRangeRef): Expr? {
+        return when {
+            range.column is MoveableIndex && range.row is MoveableIndex -> null
+            range.column is RelativeIndex && range.row is RelativeIndex -> {
+                val result = CoerceScalar(
+                    SheetRangeExpr(
+                        CellRangeRef(
+                            MoveableIndex(indexes[0].column + range.column.index),
+                            MoveableIndex(indexes[0].row + range.row.index)
+                        )
+                    )
+                )
+                result
+            }
+            range.column is MoveableIndex && range.row is FixedIndex -> {
+                val result = CoerceScalar(
+                    SheetRangeExpr(
+                        CellRangeRef(
+                            MoveableIndex(indexes[0].column + range.column.index - 1),
+                            MoveableIndex(range.row.index)
+                        )
+                    )
+                )
+                result
+            }
+            range.column is FixedIndex && range.row is MoveableIndex -> {
+                val result = CoerceScalar(
+                    SheetRangeExpr(
+                        CellRangeRef(
+                            MoveableIndex(range.column.index),
+                            MoveableIndex(indexes[0].row + range.row.index - 1)
+                        )
+                    )
+                )
+                result
+            }
+            else ->
+                error("$range")
+        }
+    }
+
     override fun rewrite(expr: SheetRangeExpr): Expr {
         return when (val range = expr.rangeRef) {
             is ColumnRangeRef -> when {
@@ -305,44 +356,7 @@ private class CollapseCellIndexedScalar : SheetRewritingVisitor() {
                 else -> error("${range.first}")
             }
             is RectangleRangeRef -> expr
-            is CellRangeRef -> when {
-                range.column is MoveableIndex && range.row is MoveableIndex -> expr
-                range.column is RelativeIndex && range.row is RelativeIndex -> {
-                    val result = CoerceScalar(
-                        SheetRangeExpr(
-                            CellRangeRef(
-                                MoveableIndex(indexes[0].column + range.column.index),
-                                MoveableIndex(indexes[0].row + range.row.index)
-                            )
-                        )
-                    )
-                    result
-                }
-                range.column is MoveableIndex && range.row is FixedIndex -> {
-                    val result = CoerceScalar(
-                        SheetRangeExpr(
-                            CellRangeRef(
-                                MoveableIndex(indexes[0].column + range.column.index - 1),
-                                MoveableIndex(range.row.index)
-                            )
-                        )
-                    )
-                    result
-                }
-                range.column is FixedIndex && range.row is MoveableIndex -> {
-                    val result = CoerceScalar(
-                        SheetRangeExpr(
-                            CellRangeRef(
-                                MoveableIndex(range.column.index),
-                                MoveableIndex(indexes[0].row + range.row.index - 1)
-                            )
-                        )
-                    )
-                    result
-                }
-                else ->
-                    error("$range")
-            }
+            is CellRangeRef -> collapseCellRangeRef(range) ?: expr
             else -> error("${range.javaClass}")
         }
     }

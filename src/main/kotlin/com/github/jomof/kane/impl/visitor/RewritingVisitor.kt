@@ -56,6 +56,7 @@ internal open class RewritingVisitor(
     open fun rewrite(expr: ConstantScalar): Expr = expr
     open fun rewrite(expr: DiscreteUniformRandomVariable): Expr = expr
     open fun rewrite(expr: SheetRangeExpr): Expr = expr
+    open fun rewrite(expr: CellSheetRangeExpr): Expr = expr
     open fun rewrite(expr: Tiling<*>): Expr = expr
     open fun rewrite(expr: ValueExpr<*>): Expr = expr
     open fun rewrite(expr: NamedScalarVariable): Expr = expr
@@ -225,6 +226,7 @@ internal open class RewritingVisitor(
                 is NamedSheetRangeExpr -> rewrite(expr)
                 is NamedMatrix -> rewrite(expr)
                 is SheetRangeExpr -> rewrite(expr)
+                is CellSheetRangeExpr -> rewrite(expr)
                 is Tiling<*> -> rewrite(expr)
                 is ValueExpr<*> -> rewrite(expr)
                 is Sheet -> rewrite(expr)
@@ -241,9 +243,10 @@ internal open class RewritingVisitor(
                 else -> error("${expr.javaClass}")
             }
             if (checkIdentity && result !== expr) {
-                assert(result != expr) {
-                    rewrite(expr)
-                    "Change for no reason"
+                if (result == expr) {
+                    if (depth < 200)
+                        rewrite(expr)
+                    error("Change for no reason")
                 }
             }
             if (!allowNameChange && result.hasName() != expr.hasName()) {

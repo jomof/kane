@@ -33,6 +33,16 @@ data class SheetRangeExpr(val rangeRef: SheetRangeRef) :
     override fun toString() = render()
 }
 
+data class CellSheetRangeExpr(val rangeRef: CellRangeRef, val name: Id = anonymous) :
+    SheetRange, ScalarExpr {
+    override fun up(move: Int) = copy(rangeRef = rangeRef.up(move))
+    override fun down(move: Int) = copy(rangeRef = rangeRef.down(move))
+    override fun left(move: Int) = copy(rangeRef = rangeRef.left(move))
+    override fun right(move: Int) = copy(rangeRef = rangeRef.right(move))
+    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    override fun toString() = render()
+}
+
 data class NamedSheetRangeExpr(
     override val name: Id,
     val range: SheetRange

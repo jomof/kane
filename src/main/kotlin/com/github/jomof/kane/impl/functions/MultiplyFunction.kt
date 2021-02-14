@@ -15,7 +15,7 @@ private class MultiplyFunction : AlgebraicBinaryFunction {
         val rightIsConst = p2.canGetConstant()
 
         val result = when {
-            leftIsConst && rightIsConst -> constant(invoke(p1.getConstant(), p2.getConstant()))
+            leftIsConst && rightIsConst -> constant(p1.getConstant() * p2.getConstant())
             p1 == p2 && p1 is AlgebraicUnaryScalarScalar && p1.op == negate -> pow(p1.value, 2.0)
             p1 == p2 -> pow(p1, 2.0)
             rightIsConst && p2.getConstant() == 0.0 -> p2

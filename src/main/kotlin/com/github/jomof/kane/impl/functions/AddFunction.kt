@@ -19,7 +19,7 @@ private class AddFunction : AlgebraicBinaryFunction {
             rightIsConst && p2.getConstant() == 0.0 -> p1
             rightIsConst && p2.getConstant() == -0.0 -> p1
             leftIsConst && !rightIsConst -> p2 + p1
-            leftIsConst && rightIsConst -> constant(invoke(p1.getConstant(), p2.getConstant()))
+            leftIsConst && rightIsConst -> constant(p1.getConstant() + p2.getConstant())
             leftIsConst && p2 is AlgebraicBinaryScalarScalarScalar && p2.op == plus && p2.left is ConstantScalar && p2.right !is ConstantScalar -> {
                 p2.right + (p1.getConstant() + p2.left)
             }
