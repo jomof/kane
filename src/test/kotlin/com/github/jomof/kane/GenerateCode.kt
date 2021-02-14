@@ -26,7 +26,6 @@ class GenerateCode {
 
     private val operators = listOf(
         Operator("Summary", Scalar, listOf(Parameter("value", Scalar))),
-        //Operator("Summary", Scalar, listOf(Parameter("value", Statistic))),
         Operator("Summary", Scalar, listOf(Parameter("value", Matrix))),
         Operator("Unary", Scalar, listOf(Parameter("value", Scalar))),
         Operator("Unary", Matrix, listOf(Parameter("value", Matrix))),
@@ -34,6 +33,9 @@ class GenerateCode {
         Operator("Binary", Matrix, listOf(Parameter("left", Scalar), Parameter("right", Matrix))),
         Operator("Binary", Matrix, listOf(Parameter("left", Matrix), Parameter("right", Scalar))),
         Operator("Binary", Matrix, listOf(Parameter("left", Matrix), Parameter("right", Matrix))),
+
+        Operator("BinarySummary", Scalar, listOf(Parameter("left", Scalar), Parameter("right", Scalar))),
+        Operator("BinarySummary", Scalar, listOf(Parameter("left", Matrix), Parameter("right", Scalar))),
     )
 
     /**

@@ -15,7 +15,7 @@ private fun AlgebraicExpr.expandNamedCells(lookup: Cells): AlgebraicExpr {
         is NamedMatrix -> copy(matrix = matrix.self())
         is AlgebraicSummaryScalarScalar -> copy(value = value.self())
         is AlgebraicSummaryMatrixScalar -> copy(value = value.self())
-        is AlgebraicBinaryScalarStatistic -> copy(left = left.self(), right = right.self())
+        is AlgebraicBinarySummaryScalarScalarScalar -> copy(left = left.self(), right = right.self())
         is AlgebraicUnaryScalarScalar -> copy(value = value.self())
         is AlgebraicBinaryScalarScalarScalar -> {
             val changed = copy(left = left.self(), right = right.self())

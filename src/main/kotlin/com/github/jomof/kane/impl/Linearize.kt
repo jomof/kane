@@ -101,7 +101,7 @@ class LinearModel(val type : AlgebraicType) {
     fun computeSlot(expr : ScalarExpr, compute:(ScalarExpr) -> ScalarExpr) : Slot {
         assert(expr !is AlgebraicSummaryScalarScalar)
         assert(expr !is AlgebraicSummaryMatrixScalar)
-        assert(expr !is AlgebraicBinaryScalarStatistic)
+        assert(expr !is AlgebraicBinarySummaryScalarScalarScalar)
         if (map.containsKey(expr)) return map.getValue(expr)
         val computed = compute(expr)
         if (computed is Slot) return computed
@@ -182,7 +182,7 @@ private fun AlgebraicExpr.linearizeExpr(model: LinearModel = LinearModel(kaneDou
         is RetypeScalar -> copy(scalar = scalar.linearizeExpr(model) as ScalarExpr)
         is AlgebraicSummaryScalarScalar -> copy(value = value.linearizeExpr(model) as StatisticExpr)
         is AlgebraicSummaryMatrixScalar -> copy(value = value.linearizeExpr(model) as MatrixExpr)
-        is AlgebraicBinaryScalarStatistic -> copy(
+        is AlgebraicBinarySummaryScalarScalarScalar -> copy(
             left = left.linearizeExpr(model) as ScalarExpr,
             right = right.linearizeExpr(model) as ScalarExpr,
         )
@@ -198,7 +198,7 @@ private fun AlgebraicExpr.linearizeExpr(model: LinearModel = LinearModel(kaneDou
         }
         is DataMatrix -> map { it.linearizeExpr(model) as ScalarExpr }
         is NamedScalar -> {
-            if (scalar !is AlgebraicBinaryScalarStatistic
+            if (scalar !is AlgebraicBinarySummaryScalarScalarScalar
                 && scalar !is AlgebraicSummaryScalarScalar
                 && scalar !is AlgebraicSummaryMatrixScalar
             ) {
@@ -368,7 +368,7 @@ private fun AlgebraicExpr.stripNames() : AlgebraicExpr {
             if (this.value !== value) copy(value = value)
             else this
         }
-        is AlgebraicBinaryScalarStatistic -> copy(left = left, right = right)
+        is AlgebraicBinarySummaryScalarScalarScalar -> copy(left = left, right = right)
         is AlgebraicBinaryScalarScalarScalar -> copy(left = left, right = right)
         is DataMatrix -> map { it.self() }
         is Tableau -> copy(children= children.map { child ->

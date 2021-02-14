@@ -265,47 +265,60 @@ interface AlgebraicSummaryFunction :
 }
 
 // f(scalar statistic, scalar)->scalar
-interface AlgebraicBinaryScalarStatisticFunction {
-    val meta: BinaryOp
+interface AlgebraicBinarySummaryFunction :
+    IAlgebraicBinarySummaryScalarScalarScalarFunction,
+    IAlgebraicBinarySummaryMatrixScalarScalarFunction {
+    override val meta: BinarySummaryOp
+    override fun type(left: AlgebraicType, right: AlgebraicType): AlgebraicType {
+        TODO("Not yet implemented")
+    }
 
-    operator fun invoke(left: MatrixExpr, right: ScalarExpr) =
-        AlgebraicBinaryMatrixScalarStatistic(this, left, right)
+    override fun doubleOp(left: Double, right: Double): Double {
+        TODO("Not yet implemented")
+    }
+
+    override fun doubleOp(left: List<Double>, right: Double): Double {
+        TODO("Not yet implemented")
+    }
 
     operator fun invoke(left: MatrixExpr, right: Double) =
-        AlgebraicBinaryMatrixScalarStatistic(this, left, constant(right))
+        AlgebraicBinarySummaryMatrixScalarScalar(this, left, constant(right))
 
-    operator fun invoke(left: ScalarExpr, right: ScalarExpr) =
-        AlgebraicBinaryScalarStatistic(this, left, right)
+    override fun invoke(left: ScalarExpr, right: ScalarExpr) =
+        AlgebraicBinarySummaryScalarScalarScalar(this, left, right)
 
     operator fun invoke(left: ScalarExpr, right: Double) =
-        AlgebraicBinaryScalarStatistic(this, left, constant(right))
+        AlgebraicBinarySummaryScalarScalarScalar(this, left, constant(right))
 
     fun reduceArithmetic(left: StreamingSampleStatisticExpr, right: ScalarExpr): ScalarExpr
     fun reduceArithmetic(left: List<ScalarExpr>, right: ScalarExpr): ScalarExpr?
-}
-
-data class AlgebraicBinaryScalarStatistic(
-    val op: AlgebraicBinaryScalarStatisticFunction,
-    val left: ScalarExpr,
-    val right: ScalarExpr
-) : ScalarExpr {
-    init {
-        track()
-    }
-    override fun toString() = render()
-}
-
-data class AlgebraicBinaryMatrixScalarStatistic(
-    val op: AlgebraicBinaryScalarStatisticFunction,
-    val left: MatrixExpr,
-    val right: ScalarExpr
-) : ScalarExpr {
-    init {
-        track()
+    override fun reduceArithmetic(left: ScalarExpr, right: ScalarExpr): ScalarExpr? = when {
+        left is StreamingSampleStatisticExpr -> reduceArithmetic(left, right)
+        else -> error("${left.javaClass} ${right.javaClass}")
     }
 
-    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
-    override fun toString() = render()
+    override fun reduceArithmetic(left: MatrixExpr, right: ScalarExpr): ScalarExpr? =
+        reduceArithmetic(left.elements, right)
+
+    override fun differentiate(
+        left: ScalarExpr,
+        leftd: ScalarExpr,
+        right: ScalarExpr,
+        rightd: ScalarExpr,
+        variable: ScalarExpr
+    ): ScalarExpr {
+        TODO("Not yet implemented")
+    }
+
+    override fun differentiate(
+        left: MatrixExpr,
+        leftd: MatrixExpr,
+        right: ScalarExpr,
+        rightd: ScalarExpr,
+        variable: ScalarExpr
+    ): ScalarExpr {
+        TODO("Not yet implemented")
+    }
 }
 
 // f(matrix)->scalar

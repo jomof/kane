@@ -49,6 +49,17 @@ data class BinaryOp(
         else this
 }
 
+data class BinarySummaryOp(
+    val op: String = "",
+    val precedence: Int,
+    val associative: Boolean = false,
+    val infix: Boolean = false
+) {
+    operator fun getValue(nothing: Nothing?, property: KProperty<*>) =
+        if (op.isBlank()) copy(op = property.name.toLowerCase())
+        else this
+}
+
 data class ConstantScalar(
     val value: Double
 ) : ScalarExpr {
@@ -650,6 +661,12 @@ fun Expr.render(entryPoint: Boolean = true, outerType: AlgebraicType? = null): S
             op.infix -> "${left.self()}${op.op}${right.self(true)}"
             else -> "${op.op}(${left.self()},${right.self()})"
         }
+
+    fun binary(op: BinarySummaryOp, left: Expr, right: Expr): String =
+        when {
+            op.infix -> "${left.self()}${op.op}${right.self(true)}"
+            else -> "${op.op}(${left.self()},${right.self()})"
+        }
     return when (this) {
         is CoerceScalar -> value.self()
         is CoerceMatrix -> value.self()
@@ -677,7 +694,7 @@ fun Expr.render(entryPoint: Boolean = true, outerType: AlgebraicType? = null): S
                             value is AlgebraicBinaryMatrixMatrixMatrix && value.op == times) -> "${op.meta.op}${value.self()}"
             else -> "${op.meta.op}(${value.self()})"
         }
-        is AlgebraicBinaryScalarStatistic -> {
+        is AlgebraicBinarySummaryScalarScalarScalar -> {
             when (op) {
                 pow -> {
                     val rightSuper = tryConvertToSuperscript(right.self())
@@ -710,7 +727,7 @@ fun Expr.render(entryPoint: Boolean = true, outerType: AlgebraicType? = null): S
                 else -> binary(op.meta, left, right)
             }
         }
-        is AlgebraicBinaryMatrixScalarStatistic -> {
+        is AlgebraicBinarySummaryMatrixScalarScalar -> {
             when (op) {
                 pow -> {
                     val rightSuper = tryConvertToSuperscript(right.self())

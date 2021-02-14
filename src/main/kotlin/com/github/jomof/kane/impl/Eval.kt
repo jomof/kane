@@ -100,16 +100,16 @@ private val reduceAlgebraicUnaryScalarStatistic = object : RewritingVisitor() {
 }
 
 private val reduceAlgebraicBinaryScalarStatistic = object : RewritingVisitor() {
-    override fun rewrite(expr: AlgebraicBinaryScalarStatistic): Expr = with(expr) {
+    override fun rewrite(expr: AlgebraicBinarySummaryScalarScalarScalar): Expr = with(expr) {
 
         return when {
-            left is StreamingSampleStatisticExpr -> op.reduceArithmetic(left, right)
+            left is StreamingSampleStatisticExpr -> op.reduceArithmetic(left, right)!!
             left is NamedScalar && left.scalar is StreamingSampleStatisticExpr -> op.reduceArithmetic(
                 left.scalar,
                 right
-            )
+            )!!
             left is RetypeScalar && left.scalar is StreamingSampleStatisticExpr -> {
-                val result = left.copy(scalar = op.reduceArithmetic(left.scalar, right))
+                val result = left.copy(scalar = op.reduceArithmetic(left.scalar, right)!!)
                 result
             }
             else ->
@@ -117,10 +117,10 @@ private val reduceAlgebraicBinaryScalarStatistic = object : RewritingVisitor() {
         }
     }
 
-    override fun rewrite(expr: AlgebraicBinaryMatrixScalarStatistic): Expr = with(expr) {
+    override fun rewrite(expr: AlgebraicBinarySummaryMatrixScalarScalar): Expr = with(expr) {
 
         return when {
-            left is DataMatrix -> expr.op.reduceArithmetic(expr.left.elements, expr.right) ?: expr
+            left is DataMatrix -> expr.op.reduceArithmetic(expr.left, expr.right) ?: expr
             else ->
                 error("${left.javaClass}")
         }
@@ -239,12 +239,16 @@ private val reduceRetypeOfRetype = object : RewritingVisitor() {
 
 private fun Expr.expandSheetCells(sheet: Sheet, excludeVariables: Set<Id>): Expr {
     return object : RewritingVisitor() {
-        override fun rewrite(expr: AlgebraicBinaryMatrixScalarStatistic): Expr = with(expr) {
+        override fun rewrite(expr: AlgebraicBinarySummaryMatrixScalarScalar): Expr = with(expr) {
             val leftRewritten = rewrite(left)
             val rightRewritten = scalar(right)
             if (leftRewritten === left && rightRewritten == right) return this
             return when (leftRewritten) {
-                is ScalarExpr -> AlgebraicBinaryScalarStatistic(expr.op, left = leftRewritten, right = right)
+                is ScalarExpr -> AlgebraicBinarySummaryScalarScalarScalar(
+                    expr.op as AlgebraicBinarySummaryFunction,
+                    left = leftRewritten,
+                    right = right
+                )
                 is DataMatrix -> copy(left = leftRewritten, right = rightRewritten)
                 else ->
                     error("${leftRewritten.javaClass}")
@@ -367,7 +371,7 @@ private fun Expr.accumulateStatistics(incoming: Expr) {
             this.left.accumulateStatistics(incoming.left)
             this.right.accumulateStatistics(incoming.right)
         }
-        this is AlgebraicBinaryScalarStatistic && incoming is AlgebraicBinaryScalarStatistic -> {
+        this is AlgebraicBinarySummaryScalarScalarScalar && incoming is AlgebraicBinarySummaryScalarScalarScalar -> {
             this.left.accumulateStatistics(incoming.left)
             this.right.accumulateStatistics(incoming.right)
         }

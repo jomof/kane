@@ -3,11 +3,11 @@ package com.github.jomof.kane.impl.functions
 import com.github.jomof.kane.ScalarExpr
 import com.github.jomof.kane.impl.*
 
-private val PERCENTILE by BinaryOp(precedence = 7)
+private val PERCENTILE by BinarySummaryOp(precedence = 7)
 private val PERCENTILE25 by SummaryOp("25%")
 private val PERCENTILE75 by SummaryOp("75%")
 
-open class PercentileFunction : AlgebraicBinaryScalarStatisticFunction {
+open class PercentileFunction : AlgebraicBinarySummaryFunction {
     override val meta = PERCENTILE
     override fun reduceArithmetic(left: List<ScalarExpr>, right: ScalarExpr): ScalarExpr? {
         if (!right.canGetConstant()) return null

@@ -36,11 +36,11 @@ internal fun Expr.visit(f: (expr: Expr) -> Unit) {
             left.visit(f)
             right.visit(f)
         }
-        is AlgebraicBinaryScalarStatistic -> {
+        is AlgebraicBinarySummaryScalarScalarScalar -> {
             left.visit(f)
             right.visit(f)
         }
-        is AlgebraicBinaryMatrixScalarStatistic -> {
+        is AlgebraicBinarySummaryMatrixScalarScalar -> {
             left.visit(f)
             right.visit(f)
         }
