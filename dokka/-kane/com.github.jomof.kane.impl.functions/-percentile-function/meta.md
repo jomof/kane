@@ -5,7 +5,7 @@
 # meta  
 [jvm]  
 Content  
-open override val [meta](meta.md): [BinaryOp](../../com.github.jomof.kane.impl/-binary-op/index.md)  
+open override val [meta](meta.md): [BinarySummaryOp](../../com.github.jomof.kane.impl/-binary-summary-op/index.md)  
 
 
 
