@@ -2,7 +2,6 @@ package com.github.jomof.kane.impl.sheet
 
 import com.github.jomof.kane.*
 import com.github.jomof.kane.impl.*
-import com.github.jomof.kane.impl.functions.*
 
 private fun AlgebraicExpr.expandNamedCells(lookup: Cells): AlgebraicExpr {
     fun ScalarExpr.self() = expandNamedCells(lookup) as ScalarExpr
@@ -13,12 +12,12 @@ private fun AlgebraicExpr.expandNamedCells(lookup: Cells): AlgebraicExpr {
         is DataMatrix -> map { it.self() }
         is RetypeScalar -> copy(scalar = scalar.self())
         is NamedMatrix -> copy(matrix = matrix.self())
-        is AlgebraicSummaryScalarScalar -> copy(value = value.self())
-        is AlgebraicSummaryMatrixScalar -> copy(value = value.self())
-        is AlgebraicBinarySummaryScalarScalarScalar -> copy(left = left.self(), right = right.self())
-        is AlgebraicUnaryScalarScalar -> copy(value = value.self())
+        is AlgebraicSummaryScalarScalar -> dup(value = value.self())
+        is AlgebraicSummaryMatrixScalar -> dup(value = value.self())
+        is AlgebraicBinarySummaryScalarScalarScalar -> dup(left = left.self(), right = right.self())
+        is AlgebraicUnaryScalarScalar -> dup(value = value.self())
         is AlgebraicBinaryScalarScalarScalar -> {
-            val changed = copy(left = left.self(), right = right.self())
+            val changed = dup(left = left.self(), right = right.self())
             if (changed !== this) changed.eval()
             else this
         }

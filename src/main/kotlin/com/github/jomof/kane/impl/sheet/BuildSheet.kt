@@ -378,7 +378,7 @@ private class CollapseCellIndexedScalar : SheetRewritingVisitor() {
                 leftRewritten,
                 rightRewritten
             )
-            is MatrixExpr -> expr.copy(left = leftRewritten, right = rightRewritten)
+            is MatrixExpr -> expr.dup(left = leftRewritten, right = rightRewritten)
             else -> error("${rightRewritten.javaClass}")
         }
     }
@@ -393,7 +393,7 @@ private class CollapseCellIndexedScalar : SheetRewritingVisitor() {
                 leftRewritten,
                 rightRewritten
             )
-            is MatrixExpr -> expr.copy(left = leftRewritten, right = rightRewritten)
+            is MatrixExpr -> expr.dup(left = leftRewritten, right = rightRewritten)
             else -> error("${leftRewritten.javaClass}")
         }
     }

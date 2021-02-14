@@ -180,18 +180,18 @@ private fun AlgebraicExpr.linearizeExpr(model: LinearModel = LinearModel(kaneDou
         is Slot -> this
         is ConstantScalar -> this
         is RetypeScalar -> copy(scalar = scalar.linearizeExpr(model) as ScalarExpr)
-        is AlgebraicSummaryScalarScalar -> copy(value = value.linearizeExpr(model) as StatisticExpr)
-        is AlgebraicSummaryMatrixScalar -> copy(value = value.linearizeExpr(model) as MatrixExpr)
-        is AlgebraicBinarySummaryScalarScalarScalar -> copy(
+        is AlgebraicSummaryScalarScalar -> dup(value = value.linearizeExpr(model) as StatisticExpr)
+        is AlgebraicSummaryMatrixScalar -> dup(value = value.linearizeExpr(model) as MatrixExpr)
+        is AlgebraicBinarySummaryScalarScalarScalar -> dup(
             left = left.linearizeExpr(model) as ScalarExpr,
             right = right.linearizeExpr(model) as ScalarExpr,
         )
         is MatrixVariableElement -> model.slotOfExistingMatrixVariableElement(this)
         is NamedScalarVariable -> model.slotOfExistingNamedScalarVariable(this)
         is RandomVariableExpr -> model.slotOfExistingRandomVariable(this)
-        is AlgebraicUnaryScalarScalar -> model.computeSlot(this) { copy(value = value.linearizeExpr(model) as ScalarExpr) }
+        is AlgebraicUnaryScalarScalar -> model.computeSlot(this) { dup(value = value.linearizeExpr(model) as ScalarExpr) }
         is AlgebraicBinaryScalarScalarScalar -> model.computeSlot(this) {
-            copy(
+            dup(
                 left = left.linearizeExpr(model) as ScalarExpr,
                 right = right.linearizeExpr(model) as ScalarExpr
             )
@@ -362,17 +362,17 @@ private fun AlgebraicExpr.stripNames() : AlgebraicExpr {
         is RetypeScalar -> scalar.self()
         is NamedMatrix -> matrix.self()
         is NamedScalar -> scalar.self()
-        is AlgebraicSummaryScalarScalar -> copy(value = value)
+        is AlgebraicSummaryScalarScalar -> dup(value = value)
         is AlgebraicUnaryScalarScalar -> {
             val value = value.self()
-            if (this.value !== value) copy(value = value)
+            if (this.value !== value) dup(value = value)
             else this
         }
-        is AlgebraicBinarySummaryScalarScalarScalar -> copy(left = left, right = right)
-        is AlgebraicBinaryScalarScalarScalar -> copy(left = left, right = right)
+        is AlgebraicBinarySummaryScalarScalarScalar -> dup(left = left, right = right)
+        is AlgebraicBinaryScalarScalarScalar -> dup(left = left, right = right)
         is DataMatrix -> map { it.self() }
-        is Tableau -> copy(children= children.map { child ->
-            when(child) {
+        is Tableau -> copy(children = children.map { child ->
+            when (child) {
                 is NamedScalar -> child.copy(scalar = child.scalar.self())
                 is NamedScalarVariable -> child
                 is NamedMatrixVariable -> child

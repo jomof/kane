@@ -147,7 +147,7 @@ private class ReduceRandomVariables(
         val typed =
             if (reduced != null && type != kaneDouble) RetypeScalar(reduced, type)
             else reduced
-        return typed ?: copy(left = leftRewritten, right = rightRewritten)
+        return typed ?: dup(left = leftRewritten, right = rightRewritten)
     }
 
     override fun rewrite(expr: AlgebraicUnaryScalarScalar): Expr = with(expr) {
@@ -158,7 +158,7 @@ private class ReduceRandomVariables(
         val typed =
             if (reduced != null && type != kaneDouble) RetypeScalar(reduced, type)
             else reduced
-        return typed ?: copy(value = rewritten)
+        return typed ?: dup(value = rewritten)
     }
 }
 
@@ -249,7 +249,7 @@ private fun Expr.expandSheetCells(sheet: Sheet, excludeVariables: Set<Id>): Expr
                     left = leftRewritten,
                     right = right
                 )
-                is DataMatrix -> copy(left = leftRewritten, right = rightRewritten)
+                is DataMatrix -> dup(left = leftRewritten, right = rightRewritten)
                 else ->
                     error("${leftRewritten.javaClass}")
             }
@@ -259,7 +259,7 @@ private fun Expr.expandSheetCells(sheet: Sheet, excludeVariables: Set<Id>): Expr
             val leftRewritten = scalar(left)
             val rightRewritten = scalar(right)
             if (leftRewritten === left && rightRewritten === right) return this
-            val op = copy(
+            val op = dup(
                 left = leftRewritten,
                 right = rightRewritten
             )

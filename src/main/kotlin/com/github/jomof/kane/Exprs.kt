@@ -20,6 +20,13 @@ data class AlgebraicSummaryScalarScalar(
 ) : ScalarExpr {
     override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = render()
+    fun dup(
+        op: IAlgebraicSummaryScalarScalarFunction = this.op,
+        value: ScalarExpr = this.value
+    ): AlgebraicSummaryScalarScalar {
+        if (op === this.op && value == this.value) return this
+        return AlgebraicSummaryScalarScalar(op, value)
+    }
 }
 
 interface IAlgebraicSummaryMatrixScalarFunction {
@@ -37,6 +44,13 @@ data class AlgebraicSummaryMatrixScalar(
 ) : ScalarExpr {
     override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = render()
+    fun dup(
+        op: IAlgebraicSummaryMatrixScalarFunction = this.op,
+        value: MatrixExpr = this.value
+    ): AlgebraicSummaryMatrixScalar {
+        if (op === this.op && value == this.value) return this
+        return AlgebraicSummaryMatrixScalar(op, value)
+    }
 }
 
 interface IAlgebraicUnaryScalarScalarFunction {
@@ -54,6 +68,13 @@ data class AlgebraicUnaryScalarScalar(
 ) : ScalarExpr {
     override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = render()
+    fun dup(
+        op: IAlgebraicUnaryScalarScalarFunction = this.op,
+        value: ScalarExpr = this.value
+    ): AlgebraicUnaryScalarScalar {
+        if (op === this.op && value == this.value) return this
+        return AlgebraicUnaryScalarScalar(op, value)
+    }
 }
 
 interface IAlgebraicUnaryMatrixMatrixFunction {
@@ -71,6 +92,13 @@ data class AlgebraicUnaryMatrixMatrix(
 ) : MatrixExpr {
     override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = render()
+    fun dup(
+        op: IAlgebraicUnaryMatrixMatrixFunction = this.op,
+        value: MatrixExpr = this.value
+    ): AlgebraicUnaryMatrixMatrix {
+        if (op === this.op && value == this.value) return this
+        return AlgebraicUnaryMatrixMatrix(op, value)
+    }
 }
 
 interface IAlgebraicBinaryScalarScalarScalarFunction {
@@ -89,6 +117,14 @@ data class AlgebraicBinaryScalarScalarScalar(
 ) : ScalarExpr {
     override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = render()
+    fun dup(
+        op: IAlgebraicBinaryScalarScalarScalarFunction = this.op,
+        left: ScalarExpr = this.left,
+        right: ScalarExpr = this.right
+    ): AlgebraicBinaryScalarScalarScalar {
+        if (op === this.op && left == this.left && right == this.right) return this
+        return AlgebraicBinaryScalarScalarScalar(op, left, right)
+    }
 }
 
 interface IAlgebraicBinaryScalarMatrixMatrixFunction {
@@ -107,6 +143,14 @@ data class AlgebraicBinaryScalarMatrixMatrix(
 ) : MatrixExpr {
     override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = render()
+    fun dup(
+        op: IAlgebraicBinaryScalarMatrixMatrixFunction = this.op,
+        left: ScalarExpr = this.left,
+        right: MatrixExpr = this.right
+    ): AlgebraicBinaryScalarMatrixMatrix {
+        if (op === this.op && left == this.left && right == this.right) return this
+        return AlgebraicBinaryScalarMatrixMatrix(op, left, right)
+    }
 }
 
 interface IAlgebraicBinaryMatrixScalarMatrixFunction {
@@ -125,6 +169,14 @@ data class AlgebraicBinaryMatrixScalarMatrix(
 ) : MatrixExpr {
     override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = render()
+    fun dup(
+        op: IAlgebraicBinaryMatrixScalarMatrixFunction = this.op,
+        left: MatrixExpr = this.left,
+        right: ScalarExpr = this.right
+    ): AlgebraicBinaryMatrixScalarMatrix {
+        if (op === this.op && left == this.left && right == this.right) return this
+        return AlgebraicBinaryMatrixScalarMatrix(op, left, right)
+    }
 }
 
 interface IAlgebraicBinaryMatrixMatrixMatrixFunction {
@@ -143,6 +195,14 @@ data class AlgebraicBinaryMatrixMatrixMatrix(
 ) : MatrixExpr {
     override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = render()
+    fun dup(
+        op: IAlgebraicBinaryMatrixMatrixMatrixFunction = this.op,
+        left: MatrixExpr = this.left,
+        right: MatrixExpr = this.right
+    ): AlgebraicBinaryMatrixMatrixMatrix {
+        if (op === this.op && left == this.left && right == this.right) return this
+        return AlgebraicBinaryMatrixMatrixMatrix(op, left, right)
+    }
 }
 
 interface IAlgebraicBinarySummaryScalarScalarScalarFunction {
@@ -161,6 +221,14 @@ data class AlgebraicBinarySummaryScalarScalarScalar(
 ) : ScalarExpr {
     override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = render()
+    fun dup(
+        op: IAlgebraicBinarySummaryScalarScalarScalarFunction = this.op,
+        left: ScalarExpr = this.left,
+        right: ScalarExpr = this.right
+    ): AlgebraicBinarySummaryScalarScalarScalar {
+        if (op === this.op && left == this.left && right == this.right) return this
+        return AlgebraicBinarySummaryScalarScalarScalar(op, left, right)
+    }
 }
 
 interface IAlgebraicBinarySummaryMatrixScalarScalarFunction {
@@ -179,5 +247,13 @@ data class AlgebraicBinarySummaryMatrixScalarScalar(
 ) : ScalarExpr {
     override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = render()
+    fun dup(
+        op: IAlgebraicBinarySummaryMatrixScalarScalarFunction = this.op,
+        left: MatrixExpr = this.left,
+        right: ScalarExpr = this.right
+    ): AlgebraicBinarySummaryMatrixScalarScalar {
+        if (op === this.op && left == this.left && right == this.right) return this
+        return AlgebraicBinarySummaryMatrixScalarScalar(op, left, right)
+    }
 }
 

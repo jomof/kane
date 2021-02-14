@@ -109,71 +109,27 @@ internal open class RewritingVisitor(protected val checkIdentity: Boolean = fals
         else this
     }
 
-    open fun rewrite(expr: AlgebraicUnaryScalarScalar): Expr = with(expr) {
-        val rewritten = scalar(value)
-        return if (rewritten === value) this
-        else copy(value = rewritten)
-    }
+    open fun rewrite(expr: AlgebraicUnaryScalarScalar): Expr = expr.dup(value = scalar(expr.value))
+    open fun rewrite(expr: AlgebraicSummaryScalarScalar): Expr = expr.dup(value = scalar(expr.value))
+    open fun rewrite(expr: AlgebraicSummaryMatrixScalar): Expr = expr.dup(value = matrix(expr.value))
+    open fun rewrite(expr: AlgebraicUnaryMatrixMatrix): Expr = expr.dup(value = matrix(expr.value))
+    open fun rewrite(expr: AlgebraicBinaryMatrixMatrixMatrix): Expr =
+        expr.dup(left = matrix(expr.left), right = matrix(expr.right))
 
-    open fun rewrite(expr: AlgebraicSummaryScalarScalar): Expr = with(expr) {
-        val rewritten = scalar(value)
-        return if (rewritten === value) this
-        else copy(value = rewritten)
-    }
+    open fun rewrite(expr: AlgebraicBinaryMatrixScalarMatrix): Expr =
+        expr.dup(left = matrix(expr.left), right = scalar(expr.right))
 
-    open fun rewrite(expr: AlgebraicSummaryMatrixScalar): Expr = with(expr) {
-        val rewritten = matrix(value)
-        return if (rewritten === value) this
-        else copy(value = rewritten)
-    }
+    open fun rewrite(expr: AlgebraicBinaryScalarScalarScalar): Expr =
+        expr.dup(left = scalar(expr.left), right = scalar(expr.right))
 
-    open fun rewrite(expr: AlgebraicUnaryMatrixMatrix): Expr = with(expr) {
-        val rewritten = matrix(value)
-        return if (rewritten === value) this
-        else copy(value = rewritten)
-    }
+    open fun rewrite(expr: AlgebraicBinaryScalarMatrixMatrix): Expr =
+        expr.dup(left = scalar(expr.left), right = matrix(expr.right))
 
-    open fun rewrite(expr: AlgebraicBinaryMatrixMatrixMatrix): Expr = with(expr) {
-        val leftRewritten = matrix(left)
-        val rightRewritten = matrix(right)
-        if (leftRewritten === left && rightRewritten === right) return this
-        return copy(left = leftRewritten, right = rightRewritten)
-    }
+    open fun rewrite(expr: AlgebraicBinarySummaryScalarScalarScalar): Expr =
+        expr.dup(left = scalar(expr.left), right = scalar(expr.right))
 
-    open fun rewrite(expr: AlgebraicBinaryMatrixScalarMatrix): Expr = with(expr) {
-        val leftRewritten = matrix(left)
-        val rightRewritten = scalar(right)
-        if (leftRewritten === left && rightRewritten === right) return this
-        return copy(left = leftRewritten, right = rightRewritten)
-    }
-
-    open fun rewrite(expr: AlgebraicBinaryScalarScalarScalar): Expr = with(expr) {
-        val leftRewritten = scalar(left)
-        val rightRewritten = scalar(right)
-        if (leftRewritten === left && rightRewritten === right) return this
-        return copy(left = leftRewritten, right = rightRewritten)
-    }
-
-    open fun rewrite(expr: AlgebraicBinaryScalarMatrixMatrix): Expr = with(expr) {
-        val leftRewritten = scalar(left)
-        val rightRewritten = matrix(right)
-        if (leftRewritten === left && rightRewritten === right) return this
-        return copy(left = leftRewritten, right = rightRewritten)
-    }
-
-    open fun rewrite(expr: AlgebraicBinarySummaryScalarScalarScalar): Expr = with(expr) {
-        val leftRewritten = scalar(left)
-        val rightRewritten = scalar(right)
-        if (leftRewritten === left && rightRewritten === right) return this
-        return copy(left = leftRewritten, right = rightRewritten)
-    }
-
-    open fun rewrite(expr: AlgebraicBinarySummaryMatrixScalarScalar): Expr = with(expr) {
-        val leftRewritten = matrix(left)
-        val rightRewritten = scalar(right)
-        if (leftRewritten === left && rightRewritten === right) return this
-        return copy(left = leftRewritten, right = rightRewritten)
-    }
+    open fun rewrite(expr: AlgebraicBinarySummaryMatrixScalarScalar): Expr =
+        expr.dup(left = matrix(expr.left), right = scalar(expr.right))
 
     open fun rewrite(expr: Sheet): Expr = with(expr) {
         var changed = false

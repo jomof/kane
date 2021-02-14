@@ -449,22 +449,18 @@ fun differentiate(expr: AlgebraicExpr): AlgebraicExpr {
                     else this
                 }
             }
-            is AlgebraicUnaryScalarScalar -> {
-                val value = value.self()
-                if (this.value !== value) copy(value = value)
-                else this
-            }
+            is AlgebraicUnaryScalarScalar -> dup(value = value.self())
             is AlgebraicBinaryScalarScalarScalar -> {
-                diffOr() ?: copy(left = left, right = right)
+                diffOr() ?: dup(left = left, right = right)
             }
             is AlgebraicBinaryMatrixMatrixMatrix -> {
-                diffOr() ?: copy(left = left, right = right)
+                diffOr() ?: dup(left = left, right = right)
             }
             is AlgebraicBinaryScalarMatrixMatrix -> {
                 diffOr() ?: run {
                     val left = left.self()
                     val right = right.self()
-                    if (this.left !== left || this.right !== right) copy(left = left, right = right)
+                    if (this.left !== left || this.right !== right) dup(left = left, right = right)
                     else this
                 }
             }

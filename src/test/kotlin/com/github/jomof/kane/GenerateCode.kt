@@ -119,6 +119,25 @@ class GenerateCode {
             line(") : ${op.shape}Expr {")
             line("    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)")
             line("    override fun toString() = render()")
+            sb.append("    fun dup(op : I${operatorClassName}Function = this.op, ")
+            for ((index, p) in op.parameters.withIndex()) {
+                sb.append("${p.name} : ${p.kind}Expr = this.${p.name}")
+                if (index != op.parameters.size - 1) sb.append(", ")
+            }
+            line(") : $operatorClassName {")
+            sb.append("        if (op === this.op && ")
+            for ((index, p) in op.parameters.withIndex()) {
+                sb.append("${p.name} == this.${p.name}")
+                if (index != op.parameters.size - 1) sb.append(" && ")
+            }
+            line(") return this")
+            sb.append("        return $operatorClassName(op, ")
+            for ((index, p) in op.parameters.withIndex()) {
+                sb.append(p.name)
+                if (index != op.parameters.size - 1) sb.append(", ")
+            }
+            line(")")
+            line("    }")
             line("}")
             line()
         }

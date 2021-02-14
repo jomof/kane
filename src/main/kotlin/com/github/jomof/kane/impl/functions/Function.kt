@@ -321,13 +321,6 @@ interface AlgebraicBinarySummaryFunction :
     }
 }
 
-// f(matrix)->scalar
-interface AlgebraicUnaryMatrixScalarFunction :
-    IAlgebraicUnaryScalarScalarFunction,
-    IAlgebraicUnaryMatrixMatrixFunction {
-    override val meta: UnaryOp
-}
-
 // f(expr, expr) -> matrix
 data class AlgebraicDeferredDataMatrix(
     val op: BinaryOp,
