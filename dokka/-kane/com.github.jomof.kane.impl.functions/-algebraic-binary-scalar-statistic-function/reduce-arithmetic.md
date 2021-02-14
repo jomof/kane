@@ -5,7 +5,7 @@
 # reduceArithmetic  
 [jvm]  
 Content  
-abstract fun [reduceArithmetic](reduce-arithmetic.md)(left: [StatsiticExpr](../../com.github.jomof.kane.impl/-statsitic-expr/index.md), right: [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md)): [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md)  
+abstract fun [reduceArithmetic](reduce-arithmetic.md)(left: [StreamingSampleStatisticExpr](../../com.github.jomof.kane.impl/-streaming-sample-statistic-expr/index.md), right: [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md)): [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md)  
 abstract fun [reduceArithmetic](reduce-arithmetic.md)(left: [List](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)<[ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md)>, right: [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md)): [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md)?  
 
 

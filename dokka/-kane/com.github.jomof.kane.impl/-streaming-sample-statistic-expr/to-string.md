@@ -1,4 +1,4 @@
-//[Kane](../../index.md)/[com.github.jomof.kane.impl](../index.md)/[StatsiticExpr](index.md)/[toString](to-string.md)
+//[Kane](../../index.md)/[com.github.jomof.kane.impl](../index.md)/[StreamingSampleStatisticExpr](index.md)/[toString](to-string.md)
 
 
 
