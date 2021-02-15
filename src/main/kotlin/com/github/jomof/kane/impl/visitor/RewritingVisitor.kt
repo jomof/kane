@@ -87,12 +87,6 @@ internal open class RewritingVisitor(
         else copy(scalar = rewritten)
     }
 
-    open fun rewrite(expr: NamedSheetRangeExpr): Expr = with(expr) {
-        val rewritten = range(range)
-        return if (rewritten === range) this
-        else copy(range = rewritten)
-    }
-
     open fun rewrite(expr: NamedMatrix): Expr = with(expr) {
         val rewritten = matrix(matrix)
         return if (rewritten === matrix) this
@@ -223,7 +217,6 @@ internal open class RewritingVisitor(
                 is NamedScalar -> rewrite(expr)
                 is NamedScalarVariable -> rewrite(expr)
                 is NamedMatrixVariable -> rewrite(expr)
-                is NamedSheetRangeExpr -> rewrite(expr)
                 is NamedMatrix -> rewrite(expr)
                 is SheetRangeExpr -> rewrite(expr)
                 is CellSheetRangeExpr -> rewrite(expr)

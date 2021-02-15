@@ -318,125 +318,134 @@ val sin: AlgebraicUnaryFunction = sinFunc
  * [![](https://jomof.github.io/kane/figures/sin-profile.svg)]
  */
 fun sin(matrix: NamedMatrix): MatrixExpr = sinFunc(matrix as MatrixExpr)
-fun sin(matrix : DataMatrix) : MatrixExpr = sinFunc(matrix as MatrixExpr)
-fun sin(matrix : MatrixExpr) : MatrixExpr = sinFunc(matrix)
+fun sin(matrix: DataMatrix): MatrixExpr = sinFunc(matrix as MatrixExpr)
+fun sin(matrix: MatrixExpr): MatrixExpr = sinFunc(matrix)
 fun sin(scalar: ScalarExpr): ScalarExpr = sinFunc(scalar)
 fun sin(scalar: Double): ScalarExpr = sinFunc(scalar)
 
 // typesafe cos
 private val cosFunc = CosFunction()
-val cos : AlgebraicUnaryFunction = cosFunc
+val cos: AlgebraicUnaryFunction = cosFunc
+
 /**
  * cos function
  * [![](https://jomof.github.io/kane/figures/cos-profile.svg)]
  */
-fun cos(matrix : NamedMatrix) : MatrixExpr = cosFunc(matrix as MatrixExpr)
-fun cos(matrix : DataMatrix) : MatrixExpr = cosFunc(matrix as MatrixExpr)
-fun cos(matrix : MatrixExpr) : MatrixExpr = cosFunc(matrix)
+fun cos(matrix: NamedMatrix): MatrixExpr = cosFunc(matrix as MatrixExpr)
+fun cos(matrix: DataMatrix): MatrixExpr = cosFunc(matrix as MatrixExpr)
+fun cos(matrix: MatrixExpr): MatrixExpr = cosFunc(matrix)
 fun cos(scalar: ScalarExpr): ScalarExpr = cosFunc(scalar)
 fun cos(scalar: Double): ScalarExpr = cosFunc(scalar)
 
 // typesafe lrelu
 private val lreluFunc = LreluFunction()
-val lrelu : AlgebraicUnaryFunction = lreluFunc
+val lrelu: AlgebraicUnaryFunction = lreluFunc
+
 /**
  * lrelu function
  * [![](https://jomof.github.io/kane/figures/lrelu-profile.svg)]
  */
-fun lrelu(matrix : NamedMatrix) : MatrixExpr = lreluFunc(matrix as MatrixExpr)
-fun lrelu(matrix : DataMatrix) : MatrixExpr = lreluFunc(matrix as MatrixExpr)
-fun lrelu(matrix : MatrixExpr) : MatrixExpr = lreluFunc(matrix)
+fun lrelu(matrix: NamedMatrix): MatrixExpr = lreluFunc(matrix as MatrixExpr)
+fun lrelu(matrix: DataMatrix): MatrixExpr = lreluFunc(matrix as MatrixExpr)
+fun lrelu(matrix: MatrixExpr): MatrixExpr = lreluFunc(matrix)
 fun lrelu(scalar: ScalarExpr): ScalarExpr = lreluFunc(scalar)
 fun lrelu(scalar: Double): ScalarExpr = lreluFunc(scalar)
 
 // typesafe lstep
 private val lstepFunc = LstepFunction()
-val lstep : AlgebraicUnaryFunction = lstepFunc
+val lstep: AlgebraicUnaryFunction = lstepFunc
+
 /**
  * lstep function
  * [![](https://jomof.github.io/kane/figures/lstep-profile.svg)]
  */
-fun lstep(matrix : NamedMatrix) : MatrixExpr = lstepFunc(matrix as MatrixExpr)
-fun lstep(matrix : DataMatrix) : MatrixExpr = lstepFunc(matrix as MatrixExpr)
-fun lstep(matrix : MatrixExpr) : MatrixExpr = lstepFunc(matrix)
+fun lstep(matrix: NamedMatrix): MatrixExpr = lstepFunc(matrix as MatrixExpr)
+fun lstep(matrix: DataMatrix): MatrixExpr = lstepFunc(matrix as MatrixExpr)
+fun lstep(matrix: MatrixExpr): MatrixExpr = lstepFunc(matrix)
 fun lstep(scalar: ScalarExpr): ScalarExpr = lstepFunc(scalar)
 fun lstep(scalar: Double): ScalarExpr = lstepFunc(scalar)
 
 // typesafe logit
 private val logitFunc = LogitFunction()
-val logit : AlgebraicUnaryFunction = logitFunc
+val logit: AlgebraicUnaryFunction = logitFunc
+
 /**
  * logit function
  * [![](https://jomof.github.io/kane/figures/logit-profile.svg)]
  */
-fun logit(matrix : NamedMatrix) : MatrixExpr = logitFunc(matrix as MatrixExpr)
-fun logit(matrix : DataMatrix) : MatrixExpr = logitFunc(matrix as MatrixExpr)
-fun logit(matrix : MatrixExpr) : MatrixExpr = logitFunc(matrix)
+fun logit(matrix: NamedMatrix): MatrixExpr = logitFunc(matrix as MatrixExpr)
+fun logit(matrix: DataMatrix): MatrixExpr = logitFunc(matrix as MatrixExpr)
+fun logit(matrix: MatrixExpr): MatrixExpr = logitFunc(matrix)
 fun logit(scalar: ScalarExpr): ScalarExpr = logitFunc(scalar)
 fun logit(scalar: Double): ScalarExpr = logitFunc(scalar)
 
 // typesafe exp
 private val expFunc = ExpFunction()
-val exp : AlgebraicUnaryFunction = expFunc
+val exp: AlgebraicUnaryFunction = expFunc
+
 /**
  * exp function
  * [![](https://jomof.github.io/kane/figures/exp-profile.svg)]
  */
-fun exp(matrix : NamedMatrix) : MatrixExpr = expFunc(matrix as MatrixExpr)
-fun exp(matrix : DataMatrix) : MatrixExpr = expFunc(matrix as MatrixExpr)
-fun exp(matrix : MatrixExpr) : MatrixExpr = expFunc(matrix)
+fun exp(matrix: NamedMatrix): MatrixExpr = expFunc(matrix as MatrixExpr)
+fun exp(matrix: DataMatrix): MatrixExpr = expFunc(matrix as MatrixExpr)
+fun exp(matrix: MatrixExpr): MatrixExpr = expFunc(matrix)
 fun exp(scalar: ScalarExpr): ScalarExpr = expFunc(scalar)
 fun exp(scalar: Double): ScalarExpr = expFunc(scalar)
 
 // typesafe relu
 private val reluFunc = ReluFunction()
-val relu : AlgebraicUnaryFunction = reluFunc
+val relu: AlgebraicUnaryFunction = reluFunc
+
 /**
  * relu function
  * [![](https://jomof.github.io/kane/figures/relu-profile.svg)]
  */
-fun relu(matrix : NamedMatrix) : MatrixExpr = reluFunc(matrix as MatrixExpr)
-fun relu(matrix : DataMatrix) : MatrixExpr = reluFunc(matrix as MatrixExpr)
-fun relu(matrix : MatrixExpr) : MatrixExpr = reluFunc(matrix)
+fun relu(matrix: NamedMatrix): MatrixExpr = reluFunc(matrix as MatrixExpr)
+fun relu(matrix: DataMatrix): MatrixExpr = reluFunc(matrix as MatrixExpr)
+fun relu(matrix: MatrixExpr): MatrixExpr = reluFunc(matrix)
 fun relu(scalar: ScalarExpr): ScalarExpr = reluFunc(scalar)
 fun relu(scalar: Double): ScalarExpr = reluFunc(scalar)
 
 // typesafe tanh
 private val tanhFunc = TanhFunction()
-val tanh : AlgebraicUnaryFunction = tanhFunc
+val tanh: AlgebraicUnaryFunction = tanhFunc
+
 /**
  * tanh function
  * [![](https://jomof.github.io/kane/figures/tanh-profile.svg)]
  */
-fun tanh(matrix : NamedMatrix) : MatrixExpr = tanhFunc(matrix as MatrixExpr)
-fun tanh(matrix : DataMatrix) : MatrixExpr = tanhFunc(matrix as MatrixExpr)
-fun tanh(matrix : MatrixExpr) : MatrixExpr = tanhFunc(matrix)
+fun tanh(matrix: NamedMatrix): MatrixExpr = tanhFunc(matrix as MatrixExpr)
+fun tanh(matrix: DataMatrix): MatrixExpr = tanhFunc(matrix as MatrixExpr)
+fun tanh(matrix: MatrixExpr): MatrixExpr = tanhFunc(matrix)
 fun tanh(scalar: ScalarExpr): ScalarExpr = tanhFunc(scalar)
 fun tanh(scalar: Double): ScalarExpr = tanhFunc(scalar)
 
 // typesafe step
 private val stepFunc = StepFunction()
-val step : AlgebraicUnaryFunction = stepFunc
+val step: AlgebraicUnaryFunction = stepFunc
+
 /**
  * step function
  * [![](https://jomof.github.io/kane/figures/step-profile.svg)]
  */
-fun step(matrix : NamedMatrix) : MatrixExpr = stepFunc(matrix as MatrixExpr)
-fun step(matrix : DataMatrix) : MatrixExpr = stepFunc(matrix as MatrixExpr)
-fun step(matrix : MatrixExpr) : MatrixExpr = stepFunc(matrix)
+fun step(matrix: NamedMatrix): MatrixExpr = stepFunc(matrix as MatrixExpr)
+fun step(matrix: DataMatrix): MatrixExpr = stepFunc(matrix as MatrixExpr)
+fun step(matrix: MatrixExpr): MatrixExpr = stepFunc(matrix)
 fun step(scalar: ScalarExpr): ScalarExpr = stepFunc(scalar)
 fun step(scalar: Double): ScalarExpr = stepFunc(scalar)
 
 // typesafe negate
 private val negateFunc = NegateFunction()
-val negate : AlgebraicUnaryFunction = negateFunc
+val negate: AlgebraicUnaryFunction = negateFunc
+
 /**
  * negate function
  * [![](https://jomof.github.io/kane/figures/negate-profile.svg)]
  */
-fun negate(matrix : NamedMatrix) : MatrixExpr = negateFunc(matrix as MatrixExpr)
-fun negate(matrix : DataMatrix) : MatrixExpr = negateFunc(matrix as MatrixExpr)
-fun negate(matrix : MatrixExpr) : MatrixExpr = negateFunc(matrix)
+fun negate(matrix: NamedMatrix): MatrixExpr = negateFunc(matrix as MatrixExpr)
+fun negate(matrix: DataMatrix): MatrixExpr = negateFunc(matrix as MatrixExpr)
+fun negate(matrix: MatrixExpr): MatrixExpr = negateFunc(matrix)
 fun negate(scalar: ScalarExpr): ScalarExpr = negateFunc(scalar)
 fun negate(scalar: Double): ScalarExpr = negateFunc(scalar)
 

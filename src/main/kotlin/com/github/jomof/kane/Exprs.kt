@@ -7,13 +7,13 @@ import kotlin.reflect.KProperty
 
 
 interface IAlgebraicSummaryScalarScalarFunction {
-    val meta : SummaryOp
+    val meta: SummaryOp
     operator fun invoke(value: ScalarExpr): ScalarExpr = AlgebraicSummaryScalarScalar(this, value)
     operator fun invoke(value: Double): ScalarExpr = AlgebraicSummaryScalarScalar(this, ConstantScalar(value))
     fun reduceArithmetic(value: ScalarExpr): ScalarExpr?
-    fun doubleOp(value : Double) : Double
-    fun differentiate(value : ScalarExpr, valued : ScalarExpr, variable : ScalarExpr) : ScalarExpr
-    fun type(value : AlgebraicType) : AlgebraicType
+    fun doubleOp(value: Double): Double
+    fun differentiate(value: ScalarExpr, valued: ScalarExpr, variable: ScalarExpr): ScalarExpr
+    fun type(value: AlgebraicType): AlgebraicType
 }
 
 data class AlgebraicSummaryScalarScalar(

@@ -63,7 +63,8 @@ data class ConstantScalar(
 
 data class ValueExpr<E : Any>(
     val value: E,
-    override val type: KaneType<E>
+    override val type: KaneType<E>,
+    val name: Id = anonymous
 ) : TypedExpr<E> {
     init {
         assert(value !is Expr) {
@@ -73,23 +74,18 @@ data class ValueExpr<E : Any>(
     }
 
     override fun toString() = type.render(value)
-    operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
-    fun toNamedValueExpr(name: Id) = NamedValueExpr(name, value, type)
-}
-
-data class NamedValueExpr<E : Any>(
-    override val name: Id,
-    val value: E,
-    override val type: KaneType<E>
-) : NamedExpr, TypedExpr<E> {
-    init {
-        Identifier.validate(name)
-        assert(value !is Expr)
-        track()
+    operator fun getValue(thisRef: Any?, property: KProperty<*>): ValueExpr<E> {
+        val result = dup(name = property.name)
+        assert(result.hasName()) {
+            "expected named"
+        }
+        return result
     }
 
-    fun toUnnamedValueExpr() = ValueExpr(value, type)
-    override fun toString() = type.render(value)
+    fun dup(value: E = this.value, type: KaneType<E> = this.type, name: Id = this.name): ValueExpr<E> {
+        if (value === this.value && type == this.type && name == this.name) return this
+        return copy(value = value, type = type, name = name)
+    }
 }
 
 data class ScalarVariable(
@@ -692,7 +688,6 @@ fun Expr.render(entryPoint: Boolean = true, outerType: AlgebraicType? = null): S
         is RetypeMatrix -> matrix.render(entryPoint, outerType ?: this.type)
         is Slot -> "\$$slot"
         is NamedScalarVariable -> Identifier.string(name)
-        is NamedSheetRangeExpr -> range.self()
         is ScalarVariable ->
             (outerType ?: kaneDouble).render(initial)
         is AlgebraicUnaryMatrixMatrix -> when {

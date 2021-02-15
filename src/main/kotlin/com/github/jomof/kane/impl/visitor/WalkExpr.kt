@@ -14,13 +14,11 @@ internal fun Expr.visit(f: (expr: Expr) -> Unit) {
         is ScalarVariable,
         is ConstantScalar,
         is ValueExpr<*>,
-        is NamedValueExpr<*>,
         is SheetRangeExpr,
         is CellSheetRangeExpr,
         is DiscreteUniformRandomVariable,
         is NamedScalarVariable -> {
         }
-        is NamedSheetRangeExpr -> range.visit(f)
         is AlgebraicBinaryScalarScalarScalar -> {
             left.visit(f)
             right.visit(f)

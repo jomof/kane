@@ -40,32 +40,13 @@ interface SheetBuilder {
     val right get() = right(1)
 }
 
-internal fun parseAndNameValue(name: String, value: String): NamedExpr {
+internal fun parseAndNameValue(name: String, value: String): Expr {
     val admissibleType = analyzeDataType(value)
     return when (val parsed = analyzeDataType(value).parseToExpr(value)) {
-        is ScalarExpr -> NamedScalar(name, parsed)
-        is ValueExpr<*> -> NamedValueExpr(name, value, admissibleType.type as KaneType<Any>)
+        is ScalarExpr -> parsed.toNamed(name)
+        is ValueExpr<*> -> ValueExpr(value, admissibleType.type as KaneType<Any>, name)
         else -> error("${parsed.javaClass}")
     }
 }
 
-private data class SheetBuilderRange(
-    private val builder: SheetBuilder,
-    val rangeRef: SheetRangeRef
-) : SheetRange {
-    operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
-    fun toNamed(name: String): NamedSheetRangeExpr {
-        if (rangeRef is ColumnRangeRef && rangeRef.first == rangeRef.second) {
-            builder.nameColumn(rangeRef.first.index, name)
-        }
-        return NamedSheetRangeExpr(name, SheetRangeExpr(rangeRef))
-    }
-
-    override fun toString() = "BUILDER[$rangeRef]"
-
-    override fun up(move: Int) = copy(rangeRef = rangeRef.up(move))
-    override fun down(move: Int) = copy(rangeRef = rangeRef.down(move))
-    override fun left(move: Int) = copy(rangeRef = rangeRef.left(move))
-    override fun right(move: Int) = copy(rangeRef = rangeRef.right(move))
-}
 

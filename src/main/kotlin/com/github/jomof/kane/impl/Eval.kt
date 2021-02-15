@@ -15,7 +15,7 @@ import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.collections.set
 
-private val reduceNamedExprs = object : RewritingVisitor(allowNameChange = true) {
+private val reduceNamedExprs = object : RewritingVisitor(allowNameChange = true, checkIdentity = true) {
     override fun rewrite(expr: Expr): Expr {
         val result = super.rewrite(expr)
         if (result is NamedScalarVariable) return result
@@ -329,7 +329,7 @@ private fun Expr.expandSheetCells(sheet: Sheet, excludeVariables: Set<Id>): Expr
 private class ReduceProvidedSheetRangeExprs(val rangeExprProvider: RangeExprProvider) :
     RewritingVisitor() {
     override fun rewrite(expr: SheetRangeExpr): Expr {
-        return rangeExprProvider.range(expr)
+        return rangeExprProvider.range(expr).withNameOf(expr)
     }
 
 }

@@ -23,7 +23,7 @@ interface SheetRange : Expr {
     val right get() = right(1)
 }
 
-data class SheetRangeExpr(val rangeRef: SheetRangeRef) :
+data class SheetRangeExpr(val rangeRef: SheetRangeRef, val name: Id = anonymous) :
     SheetRange {
     override fun up(move: Int) = copy(rangeRef = rangeRef.up(move))
     override fun down(move: Int) = copy(rangeRef = rangeRef.down(move))
@@ -31,6 +31,11 @@ data class SheetRangeExpr(val rangeRef: SheetRangeRef) :
     override fun right(move: Int) = copy(rangeRef = rangeRef.right(move))
     operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = render()
+
+    fun dup(rangeRef: SheetRangeRef = this.rangeRef, name: Id = this.name): SheetRangeExpr {
+        if (rangeRef === this.rangeRef && name == this.name) return this
+        return copy(rangeRef = rangeRef, name = name)
+    }
 }
 
 data class CellSheetRangeExpr(val rangeRef: CellRangeRef, val name: Id = anonymous) :
@@ -41,19 +46,11 @@ data class CellSheetRangeExpr(val rangeRef: CellRangeRef, val name: Id = anonymo
     override fun right(move: Int) = copy(rangeRef = rangeRef.right(move))
     override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = render()
-}
 
-data class NamedSheetRangeExpr(
-    override val name: Id,
-    val range: SheetRange
-) : SheetRange, NamedExpr {
-
-    override fun toString() = render()
-
-    override fun up(move: Int) = range.up(move)
-    override fun down(move: Int) = range.down(move)
-    override fun left(move: Int) = range.left(move)
-    override fun right(move: Int) = range.right(move)
+    fun dup(rangeRef: CellRangeRef = this.rangeRef, name: Id = this.name): CellSheetRangeExpr {
+        if (rangeRef === this.rangeRef && name == this.name) return this
+        return copy(rangeRef = rangeRef, name = name)
+    }
 }
 
 /**
@@ -288,13 +285,18 @@ class SheetBuilderImpl(
     }
 
     internal fun add(vararg add: Expr) {
+        add.forEach { expr ->
+            assert(expr.hasName()) {
+                "Expected named"
+            }
+        }
         added += add
     }
 
     fun set(cell: Id, value: Any, type: KaneType<*>) {
         add(
-            if (value is Double) NamedScalar(cell, constant(value))
-            else NamedValueExpr(cell, value, type as KaneType<Any>)
+            if (value is Double) constant(value).toNamed(cell)
+            else ValueExpr(value, type as KaneType<Any>, cell)
         )
     }
 
