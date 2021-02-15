@@ -5,6 +5,7 @@ import com.github.jomof.kane.*
 import com.github.jomof.kane.impl.*
 import com.github.jomof.kane.impl.types.KaneType
 import com.github.jomof.kane.impl.visitor.RewritingVisitor
+import com.github.jomof.kane.impl.visitor.SheetRewritingVisitor
 import java.lang.Integer.max
 import kotlin.collections.component1
 import kotlin.collections.component2
@@ -53,6 +54,18 @@ data class CellSheetRangeExpr(val rangeRef: CellRangeRef, val name: Id = anonymo
     }
 }
 
+data class ExogenousSheetScalar(
+    val lookup: Id,
+    val sheet: Sheet,
+    val name: Id = anonymous
+) : ScalarExpr {
+    override fun toString() = sheet.cells[lookup].toString()
+    fun dup(name: Id = this.name): ExogenousSheetScalar {
+        if (name == this.name) return this
+        return copy(name = name)
+    }
+}
+
 /**
  * Turn an expression into a ScalarExpr based on context.
  */
@@ -65,6 +78,11 @@ data class CoerceMatrix(
     }
 
     override fun toString() = render()
+
+    fun dup(value: Expr = this.value): CoerceMatrix {
+        if (value === this.value) return this
+        return CoerceMatrix(value)
+    }
 }
 
 /**
@@ -84,6 +102,10 @@ data class CoerceScalar(
     }
 
     override fun toString() = render()
+    fun dup(value: Expr = this.value): CoerceScalar {
+        if (value === this.value) return this
+        return CoerceScalar(value)
+    }
 }
 
 data class ColumnDescriptor(val name: Id, val type: AdmissibleDataType<*>?)
@@ -332,7 +354,13 @@ internal fun Sheet.namedVariableOf(cell: Id): NamedScalarVariable {
 }
 
 internal fun Sheet.replaceNamesWithVariables(variables: Map<Id, NamedScalarVariable>): Sheet {
-    return object : RewritingVisitor() {
+    return object : SheetRewritingVisitor() {
+        override fun cell(name: Id, expr: Expr): Pair<Id, Expr> {
+            val variable = variables[name]
+            if (variable != null) return name to variable
+            return super.cell(name, expr)
+        }
+
         override fun rewrite(expr: NamedScalar): Expr {
             return variables[expr.name] ?: super.rewrite(expr)
         }

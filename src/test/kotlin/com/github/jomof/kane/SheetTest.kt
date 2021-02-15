@@ -95,6 +95,17 @@ class SheetTest {
     }
 
     @Test
+    fun `repro ref deref issue`() {
+        val sheet = sheetOf {
+            val a1 by constant(1)
+            val a2 by a1 + 1
+            listOf(a1, a2)
+        }
+        println(sheet)
+        sheet["A2"].assertString("A1+1")
+    }
+
+    @Test
     fun `don't expand constants initially`() {
         val sheet = sheetOf {
             val a1 by constant(1)
@@ -1309,6 +1320,16 @@ class SheetTest {
         2 1 1 
         """.trimIndent()
         )
+    }
+
+    @Test
+    fun `repro change cell value`() {
+        val sheet = sheetOf {
+            val a1 by 1.0
+            val a2 by a1 + a1
+            listOf(a2)
+        }
+        val copied = sheet.copy("A1" to 2.0)
     }
 
     @Test

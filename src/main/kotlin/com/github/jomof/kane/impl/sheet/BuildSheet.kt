@@ -6,6 +6,7 @@ import com.github.jomof.kane.ScalarExpr
 import com.github.jomof.kane.impl.*
 import com.github.jomof.kane.impl.ComputableIndex.*
 import com.github.jomof.kane.impl.functions.*
+import com.github.jomof.kane.impl.visitor.DifferenceVisitor
 import com.github.jomof.kane.impl.visitor.SheetRewritingVisitor
 import com.github.jomof.kane.impl.visitor.visit
 
@@ -192,11 +193,16 @@ private class ReplaceCellNamedMatrixesWithSheetRange : SheetRewritingVisitor() {
     }
 }
 
-internal data class CellIndexedScalar(
+data class CellIndexedScalar(
     val cell: Coordinate,
     val expr: Expr
 ) : ScalarExpr {
     override fun toString() = "($expr)[${coordinateToCellName(cell)}]"
+
+    fun dup(cell: Coordinate = this.cell, expr: Expr = this.expr): CellIndexedScalar {
+        if (cell === this.cell && expr === this.expr) return this
+        return CellIndexedScalar(cell, expr)
+    }
 }
 
 private class ExpandMatrixElementsIntoSheetCells : SheetRewritingVisitor() {
@@ -525,6 +531,32 @@ private val replaceCellNamedMatrixesWithSheetRange = ReplaceCellNamedMatrixesWit
 private val removeNamesOfMatrixes = RemoveNamesOfMatrixes()
 private val checkVerboten = CheckVerboten()
 
+private fun Sheet.checkRefDeref(): Sheet {
+    val ref = makeReferenced()
+    val deref = makeDereferenced()
+    val check = object : DifferenceVisitor() {
+        override fun missingCellLeft(name: Id, e1: Sheet, e2: Sheet): Expr {
+            return e2.cells[name]!!
+        }
+    }
+    val wasRef = this === ref
+    val wasDeref = this === deref
+    assert(wasDeref || wasRef) {
+        "ref deref was not idempotent"
+    }
+    if (wasRef) {
+        val phase1 = deref
+        val phase2 = phase1.makeReferenced()
+        check.visit(this, phase2)
+    }
+    if (wasDeref) {
+        val phase1 = ref
+        val phase2 = phase1.makeDereferenced()
+        check.visit(this, phase2)
+    }
+    return this
+}
+
 fun Sheet.build(): Sheet {
     var maxIterations = 10000
     var last = this
@@ -545,10 +577,8 @@ fun Sheet.build(): Sheet {
         val removedNamesOfMatrixes = removeNamesOfMatrixes(indexedCellsWithNonMoveableCoordinates)
 
         if (last == removedNamesOfMatrixes) {
-            //val reducedCoerceMatrix = reduceCoerceMatrix(expandedMatrixElementsIntoSheetCells)
-            // val result = removeMatrixCells(reducedCoerceMatrix)
             checkVerboten(last)
-            return last
+            return last.makeReferenced()
         }
         last = removedNamesOfMatrixes
     }

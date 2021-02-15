@@ -10,7 +10,10 @@ import com.github.jomof.kane.impl.sheet.Sheet
 fun Sheet.toDouble(): Double {
     val cell = single()
     if (cell.canGetConstant()) return cell.getConstant()
-    return cell.eval().getConstant()
+    val evaled = cell.eval()
+    if (evaled.canGetConstant()) return evaled.getConstant()
+    cell.eval()
+    error("Could not convert to double")
 }
 
 /**

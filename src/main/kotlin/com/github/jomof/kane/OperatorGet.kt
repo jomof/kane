@@ -1,12 +1,10 @@
 package com.github.jomof.kane
 
-import com.github.jomof.kane.impl.cellNameToCoordinate
-import com.github.jomof.kane.impl.coordinate
-import com.github.jomof.kane.impl.looksLikeCellName
+import com.github.jomof.kane.impl.*
+import com.github.jomof.kane.impl.sheet.ExogenousSheetScalar
 import com.github.jomof.kane.impl.sheet.Sheet
 import com.github.jomof.kane.impl.sheet.ordinalColumns
 import com.github.jomof.kane.impl.sheet.tryConvertToColumnIndex
-import com.github.jomof.kane.impl.toNamed
 
 /**
  * Return a subsection of a sheet.
@@ -14,9 +12,10 @@ import com.github.jomof.kane.impl.toNamed
 operator fun Sheet.get(vararg ranges: String): Sheet {
     val first = ranges[0]
     if (ranges.size == 1 && looksLikeCellName(first)) {
-        val coordinate = cellNameToCoordinate(first)
-        val value = cells.getValue(coordinate)
-        return sheetOf { listOf(value.toNamed(coordinate(0, 0))) }
+        val sheet = this
+        return sheetOf {
+            listOf(ExogenousSheetScalar(cellNameToCoordinate(first), sheet).toNamed(coordinate(0, 0)))
+        }
     }
     val asColumnIndices = tryConvertToColumnIndex(ranges.toList())
     if (asColumnIndices != null) return ordinalColumns(asColumnIndices)
@@ -29,3 +28,6 @@ operator fun Sheet.get(vararg ranges: String): Sheet {
 operator fun Sheet.get(column: Int, row: Int): Expr {
     return cells.getValue(coordinate(column, row))
 }
+
+operator fun NamedMatrixVariable.get(column: Int, row: Int): MatrixVariableElement = getMatrixElement(column, row)
+operator fun MatrixExpr.get(column: Int, row: Int): ScalarExpr = getMatrixElement(column, row)

@@ -14,6 +14,8 @@ fun ScalarExpr.toNamed(name: Id): ScalarExpr = when (this) {
     is AlgebraicSummaryScalarScalar -> toNamed(name)
     is AlgebraicUnaryScalarScalar -> toNamed(name)
     is AlgebraicSummaryMatrixScalar -> toNamed(name)
+    is ExogenousSheetScalar -> toNamed(name)
+    is NamedScalar,
     is ConstantScalar,
     is StreamingSampleStatisticExpr,
     is RetypeScalar,
@@ -43,6 +45,7 @@ fun AlgebraicUnaryScalarScalar.toNamed(name: Id) = dup(name = name)
 fun AlgebraicSummaryScalarScalar.toNamed(name: Id) = dup(name = name)
 fun AlgebraicBinaryScalarScalarScalar.toNamed(name: Id) = dup(name = name)
 fun AlgebraicSummaryMatrixScalar.toNamed(name: Id) = dup(name = name)
+fun ExogenousSheetScalar.toNamed(name: Id) = dup(name = name)
 fun AlgebraicUnaryMatrixMatrix.toNamed(name: Id) = dup(name = name)
 fun AlgebraicBinaryScalarMatrixMatrix.toNamed(name: Id) = dup(name = name)
 fun AlgebraicBinaryMatrixScalarMatrix.toNamed(name: Id) = dup(name = name)
@@ -103,10 +106,12 @@ fun Expr.toUnnamed(): Expr {
         is AlgebraicBinaryScalarMatrixMatrix -> dup(name = anonymous)
         is AlgebraicBinarySummaryScalarScalarScalar -> dup(name = anonymous)
         is AlgebraicBinarySummaryMatrixScalarScalar -> dup(name = anonymous)
+        is ExogenousSheetScalar -> dup(name = anonymous)
         is CellSheetRangeExpr -> dup(name = anonymous)
         is SheetRangeExpr -> dup(name = anonymous)
         is ValueExpr<*> -> dup(name = anonymous)
-        else -> error("$javaClass")
+        else ->
+            error("$javaClass")
     }
 }
 
@@ -121,6 +126,7 @@ val Expr.name: Id
             is NamedMatrixAssign -> name
             is NamedMatrixVariable -> name
             is NamedScalarAssign -> name
+            is ScalarReference -> name
             is AlgebraicBinaryScalarScalarScalar -> name
             is AlgebraicSummaryScalarScalar -> name
             is AlgebraicSummaryMatrixScalar -> name
@@ -131,6 +137,7 @@ val Expr.name: Id
             is AlgebraicBinaryMatrixMatrixMatrix -> name
             is AlgebraicBinarySummaryScalarScalarScalar -> name
             is AlgebraicBinarySummaryMatrixScalarScalar -> name
+            is ExogenousSheetScalar -> name
             is CellSheetRangeExpr -> name
             is SheetRangeExpr -> name
             is ValueExpr<*> -> name
@@ -169,6 +176,8 @@ fun Expr.hasName(): Boolean = when (this) {
     is GroupBy -> false
     is Slot -> false
     is CellIndexedScalar -> false
+    is ScalarReference -> true
+    is MatrixReference -> true
     is AlgebraicBinaryScalarScalarScalar -> name != anonymous
     is AlgebraicUnaryScalarScalar -> name != anonymous
     is AlgebraicSummaryScalarScalar -> name != anonymous
@@ -180,6 +189,7 @@ fun Expr.hasName(): Boolean = when (this) {
     is AlgebraicBinaryScalarMatrixMatrix -> name != anonymous
     is AlgebraicBinarySummaryMatrixScalarScalar -> name != anonymous
     is CellSheetRangeExpr -> name != anonymous
+    is ExogenousSheetScalar -> name != anonymous
     is SheetRangeExpr -> name != anonymous
     is ValueExpr<*> -> name != anonymous
     else -> error("$javaClass")

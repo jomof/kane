@@ -140,10 +140,18 @@ data class NamedScalar(
         if (scalar is NamedScalar && scalar.name == name) {
             error("Nested named scalar?")
         }
+        if (name == "m" && scalar is ConstantScalar) {
+            "hello"
+        }
         Identifier.validate(name)
     }
 
     override fun toString() = render()
+
+    fun dup(scalar: ScalarExpr = this.scalar, name: Id = this.name): NamedScalar {
+        if (scalar === this.scalar && name == this.name) return this
+        return NamedScalar(name, scalar)
+    }
 }
 
 data class NamedMatrix(
@@ -159,6 +167,11 @@ data class NamedMatrix(
 
     override fun getValue(thisRef: Any?, property: KProperty<*>) = NamedMatrix(property.name, matrix)
     override fun toString() = render()
+
+    fun dup(matrix: MatrixExpr = this.matrix, name: Id = this.name): NamedMatrix {
+        if (matrix === this.matrix && name == this.name) return this
+        return NamedMatrix(name, matrix)
+    }
 }
 
 data class MatrixVariableElement(
@@ -182,6 +195,11 @@ data class MatrixVariableElement(
         if (row != other.row) return false
         return true
     }
+
+    fun dup(matrix: NamedMatrixVariable = this.matrix): MatrixVariableElement {
+        if (matrix === this.matrix) return this
+        return MatrixVariableElement(column, row, matrix, initial)
+    }
 }
 
 /**
@@ -196,6 +214,11 @@ data class RetypeScalar(
     }
 
     override fun toString() = render()
+
+    fun dup(scalar: ScalarExpr = this.scalar, type: AlgebraicType = this.type): RetypeScalar {
+        if (scalar === this.scalar && type === this.type) return this
+        return RetypeScalar(scalar, type)
+    }
 }
 
 /**
@@ -206,6 +229,10 @@ data class RetypeMatrix(
     val type: AlgebraicType
 ) : MatrixExpr {
     override fun toString() = render()
+    fun dup(matrix: MatrixExpr = this.matrix, type: AlgebraicType = this.type): RetypeMatrix {
+        if (matrix === this.matrix && type === this.type) return this
+        return RetypeMatrix(matrix, type)
+    }
 }
 
 data class DataMatrix(
@@ -815,7 +842,7 @@ fun Expr.render(entryPoint: Boolean = true, outerType: AlgebraicType? = null): S
                 "$sb"
             }
         }
-        else -> error("$javaClass")
+        else -> toString()
     }
     if (entryPoint && hasName())
         return Identifier.string(name) + "=$result"

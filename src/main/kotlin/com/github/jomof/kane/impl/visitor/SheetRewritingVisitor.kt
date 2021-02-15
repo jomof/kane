@@ -1,9 +1,7 @@
 package com.github.jomof.kane.impl.visitor
 
 import com.github.jomof.kane.Expr
-import com.github.jomof.kane.impl.Coordinate
-import com.github.jomof.kane.impl.Id
-import com.github.jomof.kane.impl.RectangleRangeRef
+import com.github.jomof.kane.impl.*
 import com.github.jomof.kane.impl.sheet.*
 import kotlin.math.max
 
@@ -12,9 +10,10 @@ internal open class SheetRewritingVisitor(
     checkIdentity: Boolean = false
 ) : RewritingVisitor(allowNameChange, checkIdentity) {
     private val columnDescriptorStack = mutableListOf<MutableMap<Int, ColumnDescriptor>>()
-    private val cellsStack = mutableListOf<MutableMap<Id, Expr>>()
+    private val cellsStack = mutableListOf<Lazy<MutableMap<Id, Expr>>>()
     private val columnDescriptors: MutableMap<Int, ColumnDescriptor> get() = columnDescriptorStack[0]
-    protected val cells: MutableMap<Id, Expr> get() = cellsStack[0]
+    protected val cells: MutableMap<Id, Expr> get() = cellsStack[0].value
+    protected fun inSheet() = cellsStack.isNotEmpty()
     protected fun columnNameExists(name: Id) = columnDescriptors.any { it.value.name == name }
     protected fun columnIndexOfName(name: Id): Int {
         if (name is Coordinate) return name.column
@@ -47,6 +46,9 @@ internal open class SheetRewritingVisitor(
 
     protected fun cellExists(name: Id) = cells.containsKey(name)
     protected fun putCell(name: Id, expr: Expr) {
+        assert(expr !is ScalarReference || name !== expr.name) {
+            "Self reference inside cell"
+        }
         cells[name] = expr
     }
 
@@ -79,12 +81,18 @@ internal open class SheetRewritingVisitor(
     override fun rewrite(expr: Sheet): Expr {
         try {
             columnDescriptorStack.add(0, expr.columnDescriptors.toMutableMap())
-            cellsStack.add(0, expr.cells.toMutableMap())
+            val sheetCells = lazy {
+                expr.cells.toMutableMap()
+            }
+            cellsStack.add(0, sheetCells)
             var changed = false
             for (cell in expr.cells) {
                 val (name, cellExpr) = cell
                 val (rewrittenName, rewrittenCell) = cell(name, cellExpr)
-                val cellWasChangedInternally = name == rewrittenName && cellExpr != cellsStack[0][name]
+                val cellWasChangedInternally =
+                    name == rewrittenName &&
+                            sheetCells.isInitialized() &&
+                            cellExpr != cells[name]
                 changed = changed || (rewrittenCell !== cellExpr)
                 changed = changed || (rewrittenName !== name)
                 changed = changed || cellWasChangedInternally

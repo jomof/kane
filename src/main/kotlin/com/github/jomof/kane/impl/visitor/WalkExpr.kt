@@ -17,6 +17,9 @@ internal fun Expr.visit(f: (expr: Expr) -> Unit) {
         is SheetRangeExpr,
         is CellSheetRangeExpr,
         is DiscreteUniformRandomVariable,
+        is ExogenousSheetScalar,
+        is ScalarReference,
+        is MatrixReference,
         is NamedScalarVariable -> {
         }
         is AlgebraicBinaryScalarScalarScalar -> {

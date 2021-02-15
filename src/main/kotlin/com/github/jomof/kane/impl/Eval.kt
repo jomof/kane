@@ -243,6 +243,12 @@ private val reduceRetypeOfRetype = object : RewritingVisitor() {
     }
 }
 
+private val expandExogenousSheetCells = object : RewritingVisitor() {
+    override fun rewrite(expr: ExogenousSheetScalar): Expr {
+        return expr.sheet.cells.getValue(expr.lookup)
+    }
+}
+
 
 private fun Expr.expandSheetCells(sheet: Sheet, excludeVariables: Set<Id>): Expr {
     return object : RewritingVisitor() {
@@ -411,7 +417,7 @@ private fun Expr.evalGradualSingleSample(
     randomVariableValues: Map<RandomVariableExpr, ConstantScalar>
 ): Expr {
     excludeVariables.forEach { Identifier.validate(it) }
-    var last = this
+    var last = this.makeDereferenced()
     var allowedReductions = 10000
     val reduceRandomVariables = ReduceRandomVariables(randomVariableValues)
     val expandSheetCells = ExpandSheetCells(excludeVariables)
@@ -432,14 +438,15 @@ private fun Expr.evalGradualSingleSample(
         val reducedProvidedSheetRangeExprs = reduceProvidedSheetRangeExprs(reducedAlgebraicBinaryScalar)
         val expandedSheetCells = expandSheetCells(reducedProvidedSheetRangeExprs)
         val reducedRetypeOfRetype = reduceRetypeOfRetype(expandedSheetCells)
-        val reducedCoerceScalar = reduceCoerceScalar(reducedRetypeOfRetype)
+        val expandedExogenousSheetCells = expandExogenousSheetCells(reducedRetypeOfRetype)
+        val reducedCoerceScalar = reduceCoerceScalar(expandedExogenousSheetCells)
 
         if (reducedCoerceScalar === last) {
             if (last is CoerceMatrix) last = last.value
             if (hasName()) {
                 last = last.toUnnamed().toNamed(name)
             }
-            return last
+            return last.makeReferenced()
         }
         last = reducedCoerceScalar
     }
@@ -450,7 +457,7 @@ private fun Expr.evalGradualReduceStatistics(
     reduceVariables: Boolean,
     excludeVariables: Set<Id>
 ): Expr {
-    var last = this
+    var last = this.makeDereferenced()
     var allowedReductions = 10000
     while (true) {
         if (--allowedReductions == 0) error("Reduction took too long")
@@ -460,7 +467,7 @@ private fun Expr.evalGradualReduceStatistics(
             reduceAlgebraicUnaryScalarStatistic(reducedAlgebraicBinaryScalarStatistic)
         val reducedNakedScalarStatistic = reduceNakedScalarStatistic(reducedAlgebraicUnaryScalarStatistic)
         if (reducedNakedScalarStatistic == last) {
-            return last
+            return last.makeReferenced()
         }
         last = reducedNakedScalarStatistic
     }

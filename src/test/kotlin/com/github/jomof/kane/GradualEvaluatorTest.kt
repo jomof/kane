@@ -128,6 +128,43 @@ class GradualEvaluatorTest {
     }
 
     @Test
+    fun `repro random issue`() {
+        val sheet = sheetOf {
+            val a1 by randomOf(1928.0 to 2019.0)
+            val b2 by a1
+            listOf(b2)
+        }
+        // I expect B2 to change to just 'A1'
+        sheet.assertString(
+            """
+                      A             B 
+          ------------------------ -- 
+        1 random(1928.0 to 2019.0)    
+        2                          A1 
+        """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `repro random issue 2`() {
+        val sheet = sheetOf {
+            val a1 by randomOf(1928.0 to 2019.0)
+            val a2 by sp500(a1)
+            val a3 by mean(a2)
+            listOf(a3)
+        }
+        sheet.assertString(
+            """
+                          A            
+              ------------------------ 
+            1 random(1928.0 to 2019.0) 
+            2                sp500(A1) 
+            3                 mean(A2) 
+        """.trimIndent()
+        )
+    }
+
+    @Test
     fun `basic sheet`() {
         val sheet = sheetOf {
             val a1 by randomOf(1928.0 to 2019.0)
@@ -150,6 +187,21 @@ class GradualEvaluatorTest {
         1 1974 14% 1973.5 12% 
         """.trimIndent()
         )
+    }
+
+    @Test
+    fun `repro NamedMatrix issue`() {
+        val sheet = sheetOfCsv(
+            """
+            A,B
+            1.0,-0.5
+            """
+        )
+            .copy {
+                val x by column("A")
+                val error by x - x
+                listOf(error)
+            }
     }
 
     @Test

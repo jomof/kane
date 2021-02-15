@@ -15,7 +15,8 @@ internal open class RewritingVisitor(
     protected val allowNameChange: Boolean = false,
     protected val checkIdentity: Boolean = false
 ) {
-    private var depth = 0
+    protected var depth = 0
+    private val stack = mutableListOf<Expr>()
     open fun rewrite(expr: CoerceScalar): Expr = with(expr) {
         val rewritten = rewrite(value)
         return if (rewritten === value) this
@@ -52,6 +53,9 @@ internal open class RewritingVisitor(
         else copy(sheet = rewritten)
     }
 
+    open fun rewrite(expr: ScalarReference): Expr = expr
+    open fun rewrite(expr: MatrixReference): Expr = expr
+    open fun rewrite(expr: ExogenousSheetScalar): Expr = expr
     open fun rewrite(expr: StreamingSampleStatisticExpr): Expr = expr
     open fun rewrite(expr: ConstantScalar): Expr = expr
     open fun rewrite(expr: DiscreteUniformRandomVariable): Expr = expr
@@ -194,10 +198,12 @@ internal open class RewritingVisitor(
     open fun rewrite(expr: Expr): Expr {
         try {
             ++depth
+            stack.add(0, expr)
             beginRewrite(expr, depth)
-
             val result = when (expr) {
                 is ConstantScalar -> rewrite(expr)
+                is ScalarReference -> rewrite(expr)
+                is MatrixReference -> rewrite(expr)
                 is DiscreteUniformRandomVariable -> rewrite(expr)
                 is StreamingSampleStatisticExpr -> rewrite(expr)
                 is AlgebraicBinaryMatrixMatrixMatrix -> rewrite(expr)
@@ -233,6 +239,7 @@ internal open class RewritingVisitor(
                 is RetypeMatrix -> rewrite(expr)
                 is GroupBy -> rewrite(expr)
                 is CellIndexedScalar -> rewrite(expr)
+                is ExogenousSheetScalar -> rewrite(expr)
                 else -> error("${expr.javaClass}")
             }
             if (checkIdentity && result !== expr) {
@@ -250,6 +257,7 @@ internal open class RewritingVisitor(
             return result
         } finally {
             endRewrite(expr, depth)
+            stack.removeAt(0)
             --depth
         }
     }

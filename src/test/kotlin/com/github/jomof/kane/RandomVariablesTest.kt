@@ -156,22 +156,22 @@ class RandomVariablesTest {
             """
                  A           B       C    
           --------------- ------- ------- 
-        1          random    1975    1974 
-        2         s&p 500     15%      1% 
+        1          random    1974    1975 
+        2         s&p 500     14%      1% 
         3            mean     12%      1% 
-        4          median     15%      1% 
+        4          median     14%      1% 
         5        positive 0.72826 0.60421 
-        6  5th percentile  (-22%)   (-5%) 
-        7 50th percentile     15%      1% 
-        8 95th percentile     44%     10% 
+        6  5th percentile  (-25%)   (-5%) 
+        7 50th percentile     14%      1% 
+        8 95th percentile     47%     10% 
         """.trimIndent()
         )
         eval["B3"].assertString("12%")
-        eval["B4"].assertString("15%")
+        eval["B4"].assertString("14%")
         eval["B5"].assertString("0.72826")
-        eval["B6"].assertString("(-22%)")
-        eval["B7"].assertString("15%")
-        eval["B8"].assertString("44%")
+        eval["B6"].assertString("(-25%)")
+        eval["B7"].assertString("14%")
+        eval["B8"].assertString("47%")
     }
 
     @Test

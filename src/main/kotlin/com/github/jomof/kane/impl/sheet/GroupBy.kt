@@ -10,7 +10,7 @@ import com.github.jomof.kane.impl.*
  */
 data class GroupBy(
     val sheet: Sheet,
-    private val keySelector: List<Expr>
+    val keySelector: List<Expr>
 ) : Expr {
     private val groups by lazy { createGroups() }
 

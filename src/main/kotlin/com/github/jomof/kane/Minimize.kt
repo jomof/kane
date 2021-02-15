@@ -15,14 +15,15 @@ fun Sheet.minimize(
 ): Sheet {
     val resolvedVariables = mutableMapOf<Id, NamedScalarVariable>()
     val variableIds = variables.map { Identifier.normalizeUserInput(it) }
+    val deref = makeDereferenced()
 
     // Turn each 'variable' into a NamedScalarVariable
     variableIds.forEach { cell ->
-        resolvedVariables[cell] = namedVariableOf(cell)
+        resolvedVariables[cell] = deref.namedVariableOf(cell)
     }
 
     // Replace names with variables
-    val namesReplaced = replaceNamesWithVariables(resolvedVariables)
+    val namesReplaced = deref.replaceNamesWithVariables(resolvedVariables)
 
     // Follow all expressions from 'target'
     val reducedArithmetic = namesReplaced.eval(
