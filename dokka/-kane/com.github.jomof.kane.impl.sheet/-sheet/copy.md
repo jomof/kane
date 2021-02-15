@@ -10,7 +10,7 @@ open fun [copy](copy.md)(columnDescriptors: [Map](https://kotlinlang.org/api/lat
 
 [jvm]  
 Content  
-open fun [copy](copy.md)(vararg assignments: [Pair](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html)<[Id](../../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1088004483), [Any](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)>): [Sheet](index.md)  
+open fun [copy](copy.md)(vararg assignments: [Pair](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html)<[Id](../../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1537345690), [Any](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)>): [Sheet](index.md)  
 open fun [copy](copy.md)(init: [SheetBuilderImpl](../-sheet-builder-impl/index.md).() -> [List](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)<[Expr](../../com.github.jomof.kane/-expr/index.md)>): [Sheet](index.md)  
 More info  
 
