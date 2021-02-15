@@ -14,4 +14,5 @@
 | <a name="com.github.jomof.kane.impl.functions////PointingToDeclaration/"></a>[com.github.jomof.kane.impl.functions](com.github.jomof.kane.impl.functions/index.md) | 
 | <a name="com.github.jomof.kane.impl.sheet////PointingToDeclaration/"></a>[com.github.jomof.kane.impl.sheet](com.github.jomof.kane.impl.sheet/index.md) | 
 | <a name="com.github.jomof.kane.impl.types////PointingToDeclaration/"></a>[com.github.jomof.kane.impl.types](com.github.jomof.kane.impl.types/index.md) | 
+| <a name="com.github.jomof.kane.impl.visitor////PointingToDeclaration/"></a>[com.github.jomof.kane.impl.visitor](com.github.jomof.kane.impl.visitor/index.md) | 
 

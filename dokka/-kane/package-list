@@ -6,4 +6,5 @@ com.github.jomof.kane.impl
 com.github.jomof.kane.impl.functions
 com.github.jomof.kane.impl.sheet
 com.github.jomof.kane.impl.types
+com.github.jomof.kane.impl.visitor
 
