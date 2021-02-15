@@ -302,10 +302,6 @@ private fun Expr.expandSheetCells(sheet: Sheet, excludeVariables: Set<Id>): Expr
         override fun rewrite(expr: SheetRangeExpr): Expr = with(expr) {
             if (expr.rangeRef is CellRangeRef && excludeVariables.contains(expr.rangeRef.toCoordinate()))
                 return this
-            if (checkIdentity && excludeVariables.contains(expr.rangeRef.toString())) {
-                excludeVariables.contains(expr.rangeRef.toString())
-                error("Invalid range lookup")
-            }
             if (expr.rangeRef is CellRangeRef && expr.rangeRef.column is MoveableIndex && expr.rangeRef.row is MoveableIndex) {
                 val coordinate = expr.rangeRef.toCoordinate()
                 return when (val result = sheet.cells[coordinate]) {

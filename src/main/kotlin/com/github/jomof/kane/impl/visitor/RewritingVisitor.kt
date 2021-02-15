@@ -12,10 +12,11 @@ import kotlin.collections.component2
 import kotlin.collections.set
 
 internal open class RewritingVisitor(
-    protected val allowNameChange: Boolean = false,
-    protected val checkIdentity: Boolean = false
+    private val allowNameChange: Boolean = false,
+    private val checkIdentity: Boolean = false
 ) {
-    protected var depth = 0
+    private var depth = 0
+    private val enableDiagnostics = false
     private val stack = mutableListOf<Expr>()
     open fun rewrite(expr: CoerceScalar): Expr = with(expr) {
         val rewritten = rewrite(value)
@@ -198,7 +199,7 @@ internal open class RewritingVisitor(
     open fun rewrite(expr: Expr): Expr {
         try {
             ++depth
-            stack.add(0, expr)
+            if (enableDiagnostics) stack.add(0, expr)
             beginRewrite(expr, depth)
             val result = when (expr) {
                 is ConstantScalar -> rewrite(expr)
@@ -242,14 +243,14 @@ internal open class RewritingVisitor(
                 is ExogenousSheetScalar -> rewrite(expr)
                 else -> error("${expr.javaClass}")
             }
-            if (checkIdentity && result !== expr) {
+            if (enableDiagnostics && checkIdentity && result !== expr) {
                 if (result == expr) {
                     if (depth < 200)
                         rewrite(expr)
                     error("Change for no reason")
                 }
             }
-            if (!allowNameChange && result.hasName() != expr.hasName()) {
+            if (enableDiagnostics && !allowNameChange && result.hasName() != expr.hasName()) {
                 if (depth < 200)
                     rewrite(expr)
                 error("Name changed unexpectedly")
@@ -257,7 +258,7 @@ internal open class RewritingVisitor(
             return result
         } finally {
             endRewrite(expr, depth)
-            stack.removeAt(0)
+            if (enableDiagnostics) stack.removeAt(0)
             --depth
         }
     }

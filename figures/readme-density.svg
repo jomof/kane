@@ -127,15 +127,15 @@ text {
             </text>
           </g>
         </g>
-        <g class="tick" transform="translate(0.0 92.29159041323183 ) ">
-          <line stroke-width="1.0" stroke="rgb(0,0,0)" stroke-opacity="1.0" x2="-6.0" y2="0.0">
-          </line>
-          <g transform="translate(-9.0 0.0 ) ">
-            <text style="fill:#000000;" text-anchor="end" dy="0.35em">
-            0.2
-            </text>
+          <g class="tick" transform="translate(0.0 92.29159041323183 ) ">
+              <line stroke-width="1.0" stroke="rgb(0,0,0)" stroke-opacity="1.0" x2="-6.0" y2="0.0">
+              </line>
+              <g transform="translate(-9.0 0.0 ) ">
+                  <text style="fill:#000000;" text-anchor="end" dy="0.35em">
+                      0.2
+                  </text>
+              </g>
           </g>
-        </g>
           <g class="tick" transform="translate(0.0 37.9373856198477 ) ">
               <line stroke-width="1.0" stroke="rgb(0,0,0)" stroke-opacity="1.0" x2="-6.0" y2="0.0">
               </line>
@@ -148,10 +148,10 @@ text {
           <line x1="0.0" y1="0.0" x2="0.0" y2="201.0" stroke-width="1.0" stroke="rgb(0,0,0)" stroke-opacity="1.0">
           </line>
       </g>
-        <g transform="translate(29.1 0.0 ) " clip-path="url(#rzJnGD)"
+        <g transform="translate(29.1 0.0 ) " clip-path="url(#8zu0Mg)"
            clip-bounds-jfx="[rect (0.0, 0.0), (386.328, 201.0)]">
             <defs>
-                <clipPath id="rzJnGD">
+                <clipPath id="8zu0Mg">
                     <rect x="0.0" y="0.0" width="386.328" height="201.0">
                     </rect>
                 </clipPath>

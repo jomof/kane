@@ -141,13 +141,14 @@ data class NamedScalar(
     val scalar: ScalarExpr
 ) : NamedScalarExpr {
     init {
-        track()
-        if (scalar is NamedScalar && scalar.name == name) {
-            error("Nested named scalar?")
-        }
-        assert(scalar !is ConstantScalar)
-
         Identifier.validate(name)
+        if (scalar !is DiscreteUniformRandomVariable) {
+            if (scalar is NamedScalar && scalar.name == name) {
+                error("Nested named scalar?")
+            }
+            assert(scalar !is ConstantScalar)
+            assert(scalar !is RetypeScalar)
+        }
     }
 
     override fun toString() = render()
@@ -211,17 +212,19 @@ data class MatrixVariableElement(
  */
 data class RetypeScalar(
     val scalar: ScalarExpr,
-    val type: AlgebraicType
+    val type: AlgebraicType,
+    val name: Id = anonymous
 ) : ScalarExpr {
     init {
         track()
     }
 
     override fun toString() = render()
+    override fun getValue(thisRef: Any?, property: KProperty<*>) = dup(name = property.name)
 
-    fun dup(scalar: ScalarExpr = this.scalar, type: AlgebraicType = this.type): RetypeScalar {
-        if (scalar === this.scalar && type === this.type) return this
-        return RetypeScalar(scalar, type)
+    fun dup(scalar: ScalarExpr = this.scalar, type: AlgebraicType = this.type, name: Id = this.name): RetypeScalar {
+        if (scalar === this.scalar && type === this.type && name === this.name) return this
+        return RetypeScalar(scalar, type, name)
     }
 }
 

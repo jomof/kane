@@ -17,8 +17,8 @@ fun ScalarExpr.toNamed(name: Id): ScalarExpr = when (this) {
     is ExogenousSheetScalar -> toNamed(name)
     is ConstantScalar -> toNamed(name)
     is StreamingSampleStatisticExpr -> toNamed(name)
+    is RetypeScalar -> toNamed(name)
     is NamedScalar,
-    is RetypeScalar,
     is MatrixVariableElement,
     is CoerceScalar,
     is Slot,
@@ -39,6 +39,7 @@ fun MatrixExpr.toNamed(name: Id): MatrixExpr = when (this) {
     else -> error("$javaClass")
 }
 
+fun RetypeScalar.toNamed(name: Id) = dup(name = name)
 fun StreamingSampleStatisticExpr.toNamed(name: Id) = dup(name = name)
 fun ConstantScalar.toNamed(name: Id) = dup(name = name)
 fun SheetRangeExpr.toNamed(name: Id) = dup(name = name)
@@ -75,7 +76,6 @@ fun Expr.toNamed(name: Id): Expr {
 
 fun Expr.toUnnamed(): Expr {
     return when (this) {
-        is RetypeScalar,
         is DiscreteUniformRandomVariable,
         is MatrixVariableElement,
         is AlgebraicDeferredDataMatrix,
@@ -112,6 +112,7 @@ fun Expr.toUnnamed(): Expr {
         is SheetRangeExpr -> dup(name = anonymous)
         is ValueExpr<*> -> dup(name = anonymous)
         is StreamingSampleStatisticExpr -> dup(name = anonymous)
+        is RetypeScalar -> dup(name = anonymous)
         else ->
             error("$javaClass")
     }
@@ -145,6 +146,7 @@ val Expr.name: Id
             is SheetRangeExpr -> name
             is ConstantScalar -> name
             is ValueExpr<*> -> name
+            is RetypeScalar -> name
             else ->
                 error("$javaClass")
         }
@@ -169,7 +171,6 @@ fun Expr.hasName(): Boolean = when (this) {
     is CoerceScalar -> false
     is MatrixVariableElement -> false
     is DataMatrix -> false
-    is RetypeScalar -> false
     is AlgebraicDeferredDataMatrix -> false
     is Sheet -> false
     is CoerceMatrix -> false
@@ -196,6 +197,7 @@ fun Expr.hasName(): Boolean = when (this) {
     is SheetRangeExpr -> name != anonymous
     is ValueExpr<*> -> name != anonymous
     is StreamingSampleStatisticExpr -> name != anonymous
+    is RetypeScalar -> name != anonymous
     else -> error("$javaClass")
 }
 
