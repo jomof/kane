@@ -140,11 +140,11 @@ private val reduceNakedScalarStatistic = object : RewritingVisitor() {
 }
 
 private class ReduceRandomVariables(
-    val variables: Map<RandomVariableExpr, ConstantScalar>
+    val variables: Map<Any, ConstantScalar>
 ) :
     RewritingVisitor() {
     override fun rewrite(expr: DiscreteUniformRandomVariable) =
-        variables[expr] ?: expr
+        variables[expr.identity]?.withNameOf(expr) ?: expr
 
     override fun rewrite(expr: AlgebraicBinaryScalarScalarScalar): Expr = with(expr) {
         val leftRewritten = scalar(left)
@@ -411,7 +411,7 @@ private fun Expr.evalGradualSingleSample(
     rangeExprProvider: RangeExprProvider,
     reduceVariables: Boolean,
     excludeVariables: Set<Id>,
-    randomVariableValues: Map<RandomVariableExpr, ConstantScalar>
+    randomVariableValues: Map<Any, ConstantScalar>
 ): Expr {
     excludeVariables.forEach { Identifier.validate(it) }
     var last = this.makeDereferenced()
@@ -489,7 +489,7 @@ internal fun Expr.evalImpl(
     )
     var stats: Expr? = null
     val randomVariableElements = randomVariables.map { variable ->
-        (variable as DiscreteUniformRandomVariable).values.map { value -> constant(value) }
+        variable.values.map { value -> constant(value) }
     }
 
     val reduced = evalGradualSingleSample(
@@ -500,7 +500,7 @@ internal fun Expr.evalImpl(
     )
 //    val model = reduced.linearize()
     cartesianOf(randomVariableElements) { randomVariableValues ->
-        val variableValues: Map<RandomVariableExpr, ConstantScalar> = (randomVariables zip randomVariableValues)
+        val variableValues: Map<Any, ConstantScalar> = (randomVariables.map { it.identity } zip randomVariableValues)
             .map { (variable, value) -> variable to (value as ConstantScalar) }
             .toMap()
         val sample =

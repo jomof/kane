@@ -58,7 +58,7 @@ data class ConstantScalar(
         track()
     }
 
-    override fun getValue(thisRef: Any?, property: KProperty<*>) = dup(name = property.name)
+    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = render()
     fun dup(name: Id = this.name): ConstantScalar {
         if (name === this.name) return this
@@ -142,13 +142,9 @@ data class NamedScalar(
 ) : NamedScalarExpr {
     init {
         Identifier.validate(name)
-        if (scalar !is DiscreteUniformRandomVariable) {
-            if (scalar is NamedScalar && scalar.name == name) {
-                error("Nested named scalar?")
-            }
-            assert(scalar !is ConstantScalar)
-            assert(scalar !is RetypeScalar)
-        }
+        assert(scalar !is ConstantScalar || scalar.hasName())
+        assert(scalar !is RetypeScalar || scalar.hasName())
+        assert(scalar !is DiscreteUniformRandomVariable || scalar.hasName())
     }
 
     override fun toString() = render()
@@ -220,7 +216,7 @@ data class RetypeScalar(
     }
 
     override fun toString() = render()
-    override fun getValue(thisRef: Any?, property: KProperty<*>) = dup(name = property.name)
+    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(name = property.name)
 
     fun dup(scalar: ScalarExpr = this.scalar, type: AlgebraicType = this.type, name: Id = this.name): RetypeScalar {
         if (scalar === this.scalar && type === this.type && name === this.name) return this
@@ -786,7 +782,7 @@ fun Expr.render(entryPoint: Boolean = true, outerType: AlgebraicType? = null): S
         is DiscreteUniformRandomVariable -> {
             val min = values.minByOrNull { it } ?: 0.0
             val max = values.maxByOrNull { it } ?: 0.0
-            return "random($min to $max)"
+            "random($min to $max)"
         }
         is MatrixVariableElement -> "${matrix.name}[$column,$row]"
         is ConstantScalar -> (outerType ?: kaneDouble).render(value)

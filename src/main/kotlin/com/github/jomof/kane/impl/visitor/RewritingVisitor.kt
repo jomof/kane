@@ -13,7 +13,7 @@ import kotlin.collections.set
 
 internal open class RewritingVisitor(
     private val allowNameChange: Boolean = false,
-    private val checkIdentity: Boolean = false
+    private val checkIdentity: Boolean = true
 ) {
     private var depth = 0
     private val enableDiagnostics = false

@@ -21,6 +21,15 @@ class RandomVariablesTest {
     }
 
     @Test
+    fun canary() {
+        val roll by randomOf(1.0 to 6.0)
+        val mean by mean(roll)
+        roll.assertString("roll=random(1.0 to 6.0)")
+        mean.assertString("mean=mean(roll)")
+        mean.eval().assertString("mean=3.5")
+    }
+
+    @Test
     fun `same variable multiple times`() {
         val roll by randomOf(1.0 to 6.0)
         val health by roll + roll + roll + roll + roll
@@ -199,6 +208,6 @@ class RandomVariablesTest {
         val d6 by randomOf(1.0 to 6.0)
         val d6b by randomOf(1.0 to 6.0)
         val health by d6 + d6 + d6b
-        health.findRandomVariables().assertString("[random(1.0 to 6.0), random(1.0 to 6.0)]")
+        health.findRandomVariables().assertString("[d6=random(1.0 to 6.0), d6b=random(1.0 to 6.0)]")
     }
 }

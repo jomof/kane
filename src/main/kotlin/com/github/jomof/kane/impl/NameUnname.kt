@@ -18,11 +18,11 @@ fun ScalarExpr.toNamed(name: Id): ScalarExpr = when (this) {
     is ConstantScalar -> toNamed(name)
     is StreamingSampleStatisticExpr -> toNamed(name)
     is RetypeScalar -> toNamed(name)
+    is DiscreteUniformRandomVariable -> toNamed(name)
     is NamedScalar,
     is MatrixVariableElement,
     is CoerceScalar,
-    is Slot,
-    is DiscreteUniformRandomVariable -> NamedScalar(name, this)
+    is Slot -> NamedScalar(name, this)
     else -> error("$javaClass")
 }
 
@@ -39,22 +39,25 @@ fun MatrixExpr.toNamed(name: Id): MatrixExpr = when (this) {
     else -> error("$javaClass")
 }
 
-fun RetypeScalar.toNamed(name: Id) = dup(name = name)
-fun StreamingSampleStatisticExpr.toNamed(name: Id) = dup(name = name)
-fun ConstantScalar.toNamed(name: Id) = dup(name = name)
+private fun ScalarExpr.nameOrNull(name: Id) = if (hasName()) NamedScalar(name, this) else null
+
+fun DiscreteUniformRandomVariable.toNamed(name: Id) = nameOrNull(name) ?: dup(name = name)
+fun RetypeScalar.toNamed(name: Id) = nameOrNull(name) ?: dup(name = name)
+fun StreamingSampleStatisticExpr.toNamed(name: Id) = nameOrNull(name) ?: dup(name = name)
+fun ConstantScalar.toNamed(name: Id) = nameOrNull(name) ?: dup(name = name)
 fun SheetRangeExpr.toNamed(name: Id) = dup(name = name)
-fun CellSheetRangeExpr.toNamed(name: Id) = dup(name = name)
-fun AlgebraicUnaryScalarScalar.toNamed(name: Id) = dup(name = name)
-fun AlgebraicSummaryScalarScalar.toNamed(name: Id) = dup(name = name)
-fun AlgebraicBinaryScalarScalarScalar.toNamed(name: Id) = dup(name = name)
-fun AlgebraicSummaryMatrixScalar.toNamed(name: Id) = dup(name = name)
-fun ExogenousSheetScalar.toNamed(name: Id) = dup(name = name)
+fun CellSheetRangeExpr.toNamed(name: Id) = nameOrNull(name) ?: dup(name = name)
+fun AlgebraicUnaryScalarScalar.toNamed(name: Id) = nameOrNull(name) ?: dup(name = name)
+fun AlgebraicSummaryScalarScalar.toNamed(name: Id) = nameOrNull(name) ?: dup(name = name)
+fun AlgebraicBinaryScalarScalarScalar.toNamed(name: Id) = nameOrNull(name) ?: dup(name = name)
+fun AlgebraicSummaryMatrixScalar.toNamed(name: Id) = nameOrNull(name) ?: dup(name = name)
+fun ExogenousSheetScalar.toNamed(name: Id) = nameOrNull(name) ?: dup(name = name)
 fun AlgebraicUnaryMatrixMatrix.toNamed(name: Id) = dup(name = name)
 fun AlgebraicBinaryScalarMatrixMatrix.toNamed(name: Id) = dup(name = name)
 fun AlgebraicBinaryMatrixScalarMatrix.toNamed(name: Id) = dup(name = name)
 fun AlgebraicBinaryMatrixMatrixMatrix.toNamed(name: Id) = dup(name = name)
-fun AlgebraicBinarySummaryScalarScalarScalar.toNamed(name: Id) = dup(name = name)
-fun AlgebraicBinarySummaryMatrixScalarScalar.toNamed(name: Id) = dup(name = name)
+fun AlgebraicBinarySummaryScalarScalarScalar.toNamed(name: Id) = nameOrNull(name) ?: dup(name = name)
+fun AlgebraicBinarySummaryMatrixScalarScalar.toNamed(name: Id) = nameOrNull(name) ?: dup(name = name)
 fun AlgebraicExpr.toNamed(name: Id) = (this as Expr).toNamed(name) as NamedAlgebraicExpr
 fun <E : Any> ValueExpr<E>.toNamed(name: Id) = dup(name = name)
 fun <E : Any> Tiling<E>.toNamed(name: Id) = toNamedTilingExpr(name)
@@ -76,7 +79,6 @@ fun Expr.toNamed(name: Id): Expr {
 
 fun Expr.toUnnamed(): Expr {
     return when (this) {
-        is DiscreteUniformRandomVariable,
         is MatrixVariableElement,
         is AlgebraicDeferredDataMatrix,
         is ScalarVariable,
@@ -113,6 +115,7 @@ fun Expr.toUnnamed(): Expr {
         is ValueExpr<*> -> dup(name = anonymous)
         is StreamingSampleStatisticExpr -> dup(name = anonymous)
         is RetypeScalar -> dup(name = anonymous)
+        is DiscreteUniformRandomVariable -> dup(name = anonymous)
         else ->
             error("$javaClass")
     }
@@ -147,6 +150,7 @@ val Expr.name: Id
             is ConstantScalar -> name
             is ValueExpr<*> -> name
             is RetypeScalar -> name
+            is DiscreteUniformRandomVariable -> name
             else ->
                 error("$javaClass")
         }
@@ -167,7 +171,6 @@ fun Expr.hasName(): Boolean = when (this) {
     is MatrixAssign -> false
     is RetypeMatrix -> false
     is Tableau -> false
-    is DiscreteUniformRandomVariable -> false
     is CoerceScalar -> false
     is MatrixVariableElement -> false
     is DataMatrix -> false
@@ -198,6 +201,7 @@ fun Expr.hasName(): Boolean = when (this) {
     is ValueExpr<*> -> name != anonymous
     is StreamingSampleStatisticExpr -> name != anonymous
     is RetypeScalar -> name != anonymous
+    is DiscreteUniformRandomVariable -> name != anonymous
     else -> error("$javaClass")
 }
 

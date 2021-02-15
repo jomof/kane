@@ -14,8 +14,10 @@ interface RandomVariableExpr : ScalarExpr {
     fun sample(random : Random) : ConstantScalar
 }
 
-class DiscreteUniformRandomVariable(
-    val values: List<Double>
+data class DiscreteUniformRandomVariable(
+    val values: List<Double>,
+    val identity: Any = Any(),
+    val name: Id = anonymous
 ) : RandomVariableExpr, StatisticExpr {
     init {
         track()
@@ -31,8 +33,10 @@ class DiscreteUniformRandomVariable(
 
     override fun toString() = render()
 
-    fun copy(values: List<Double> = this.values): Nothing =
-        error("Shouldn't copy DiscreteUniformRandomVariable")
+    fun dup(values: List<Double> = this.values, name: Id = this.name): DiscreteUniformRandomVariable {
+        if (values === this.values && name == this.name) return this
+        return DiscreteUniformRandomVariable(values, identity, name)
+    }
 }
 
 
@@ -62,10 +66,10 @@ fun randomOf(range : Pair<Double, Double>, step : Double = 1.0) : DiscreteUnifor
 }
 
 
-fun Expr.findRandomVariables() : Set<RandomVariableExpr> {
-    val result = mutableSetOf<RandomVariableExpr>()
+fun Expr.findRandomVariables(): Set<DiscreteUniformRandomVariable> {
+    val result = mutableSetOf<DiscreteUniformRandomVariable>()
     visit {
-        if (it is RandomVariableExpr) result.add(it)
+        if (it is DiscreteUniformRandomVariable) result.add(it)
     }
     return result
 }

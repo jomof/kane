@@ -44,6 +44,7 @@ class GradualEvaluatorTest {
         val roll1 by randomOf(1.0 to 6.0)
         val roll2 by randomOf(1.0 to 6.0)
         val roll3 by randomOf(1.0 to 6.0)
+        val x = roll1
         roll1.assertString("roll1=random(1.0 to 6.0)")
         val health by roll1 + roll2 + roll3
         health.assertString("health=roll1+roll2+roll3")
@@ -132,9 +133,9 @@ class GradualEvaluatorTest {
         val sheet = sheetOf {
             val a1 by randomOf(1928.0 to 2019.0)
             val b2 by a1
+            val x = b2
             listOf(b2)
         }
-        // I expect B2 to change to just 'A1'
         sheet.assertString(
             """
                       A             B 
