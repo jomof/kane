@@ -5,7 +5,7 @@
 # ColumnDescriptor  
 [jvm]  
 Content  
-fun [ColumnDescriptor](-column-descriptor.md)(name: [Id](../../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1584398989), type: [AdmissibleDataType](../-admissible-data-type/index.md)<*>?)  
+fun [ColumnDescriptor](-column-descriptor.md)(name: [Id](../../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-723507148), type: [AdmissibleDataType](../-admissible-data-type/index.md)<*>?)  
 
 
 

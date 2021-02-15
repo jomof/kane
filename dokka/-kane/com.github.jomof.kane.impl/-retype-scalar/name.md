@@ -1,4 +1,4 @@
-//[Kane](../../index.md)/[com.github.jomof.kane.impl](../index.md)/[ConstantScalar](index.md)/[name](name.md)
+//[Kane](../../index.md)/[com.github.jomof.kane.impl](../index.md)/[RetypeScalar](index.md)/[name](name.md)
 
 
 
