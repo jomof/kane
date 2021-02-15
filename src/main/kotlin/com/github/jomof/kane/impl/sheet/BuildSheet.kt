@@ -453,14 +453,14 @@ private class CollapseCellIndexedScalar : SheetRewritingVisitor() {
                 rewrite(expr.expr)
                 "Did not rewrite CellIndexedScalar"
             }
-            return result
+            return result.withNameOf(expr)
         } finally {
             indexes.removeAt(0)
         }
     }
 }
 
-private class RemoveNamesOfMatrixes : SheetRewritingVisitor() {
+private class RemoveNamesOfMatrixes : SheetRewritingVisitor(allowNameChange = true) {
     override fun cell(name: Id, expr: Expr): Pair<Id, Expr> {
         if (expr is CoerceMatrix && expr.value is SheetRangeExpr) removeCell(name)
         return super.cell(name, expr)

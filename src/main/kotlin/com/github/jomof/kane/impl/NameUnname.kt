@@ -168,6 +168,7 @@ fun Expr.hasName(): Boolean = when (this) {
     is ScalarVariable -> false
     is GroupBy -> false
     is Slot -> false
+    is CellIndexedScalar -> false
     is AlgebraicBinaryScalarScalarScalar -> name != anonymous
     is AlgebraicUnaryScalarScalar -> name != anonymous
     is AlgebraicSummaryScalarScalar -> name != anonymous

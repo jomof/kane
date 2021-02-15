@@ -7,10 +7,13 @@ import com.github.jomof.kane.impl.RectangleRangeRef
 import com.github.jomof.kane.impl.sheet.*
 import kotlin.math.max
 
-internal open class SheetRewritingVisitor : RewritingVisitor(true) { // TODO set to false
-    protected val columnDescriptorStack = mutableListOf<MutableMap<Int, ColumnDescriptor>>()
-    protected val cellsStack = mutableListOf<MutableMap<Id, Expr>>()
-    protected val columnDescriptors: MutableMap<Int, ColumnDescriptor> get() = columnDescriptorStack[0]
+internal open class SheetRewritingVisitor(
+    allowNameChange: Boolean = false,
+    checkIdentity: Boolean = false
+) : RewritingVisitor(allowNameChange, checkIdentity) {
+    private val columnDescriptorStack = mutableListOf<MutableMap<Int, ColumnDescriptor>>()
+    private val cellsStack = mutableListOf<MutableMap<Id, Expr>>()
+    private val columnDescriptors: MutableMap<Int, ColumnDescriptor> get() = columnDescriptorStack[0]
     protected val cells: MutableMap<Id, Expr> get() = cellsStack[0]
     protected fun columnNameExists(name: Id) = columnDescriptors.any { it.value.name == name }
     protected fun columnIndexOfName(name: Id): Int {
