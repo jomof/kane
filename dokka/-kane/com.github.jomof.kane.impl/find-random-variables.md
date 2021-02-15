@@ -5,7 +5,7 @@
 # findRandomVariables  
 [jvm]  
 Content  
-fun [Expr](../com.github.jomof.kane/-expr/index.md).[findRandomVariables](find-random-variables.md)(): [Set](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html)<[RandomVariableExpr](-random-variable-expr/index.md)>  
+fun [Expr](../com.github.jomof.kane/-expr/index.md).[findRandomVariables](find-random-variables.md)(): [Set](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html)<[DiscreteUniformRandomVariable](-discrete-uniform-random-variable/index.md)>  
 
 
 
