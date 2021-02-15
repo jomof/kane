@@ -13,7 +13,7 @@ operator fun String.getValue(nothing: Any?, property: KProperty<*>) =
     parseAndNameValue(property.name, this)
 
 operator fun Number.getValue(nothing: Any?, property: KProperty<*>) =
-    NamedScalar(property.name, constant(this.toDouble()))
+    ConstantScalar(this.toDouble(), property.name)
 
 operator fun <E : Number> List<E>.getValue(nothing: Any?, property: KProperty<*>) =
     NamedMatrix(property.name, DataMatrix(1, size, map { constant(it.toDouble()) }))

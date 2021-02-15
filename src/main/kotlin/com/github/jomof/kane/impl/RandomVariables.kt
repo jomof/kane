@@ -3,6 +3,7 @@ package com.github.jomof.kane.impl
 import com.github.jomof.kane.Expr
 import com.github.jomof.kane.ScalarExpr
 import com.github.jomof.kane.StatisticExpr
+import com.github.jomof.kane.anonymous
 import com.github.jomof.kane.impl.types.algebraicType
 import com.github.jomof.kane.impl.visitor.visit
 import kotlin.random.Random
@@ -36,14 +37,17 @@ class DiscreteUniformRandomVariable(
 
 
 class StreamingSampleStatisticExpr(
-    val statistic: StreamingSamples
+    val statistic: StreamingSamples,
+    val name: Id = anonymous
 ) : StatisticExpr {
     override fun toString(): String {
         return this.algebraicType.render(statistic.median)
     }
 
-    fun copy(statistic: StreamingSamples = this.statistic) =
-        StreamingSampleStatisticExpr(statistic)
+    fun dup(name: Id = this.name, statistic: StreamingSamples = this.statistic): StreamingSampleStatisticExpr {
+        if (name === this.name && statistic == this.statistic) return this
+        return StreamingSampleStatisticExpr(statistic, name)
+    }
 }
 
 fun randomOf(range : Pair<Double, Double>, step : Double = 1.0) : DiscreteUniformRandomVariable {

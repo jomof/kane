@@ -51,14 +51,19 @@ data class BinarySummaryOp(
 }
 
 data class ConstantScalar(
-    val value: Double
+    val value: Double,
+    val name: Id = anonymous
 ) : ScalarExpr {
     init {
         track()
     }
 
-    override fun getValue(thisRef: Any?, property: KProperty<*>) = NamedScalar(property.name, this)
+    override fun getValue(thisRef: Any?, property: KProperty<*>) = dup(name = property.name)
     override fun toString() = render()
+    fun dup(name: Id = this.name): ConstantScalar {
+        if (name === this.name) return this
+        return copy(name = name)
+    }
 }
 
 data class ValueExpr<E : Any>(
@@ -140,9 +145,8 @@ data class NamedScalar(
         if (scalar is NamedScalar && scalar.name == name) {
             error("Nested named scalar?")
         }
-        if (name == "m" && scalar is ConstantScalar) {
-            "hello"
-        }
+        assert(scalar !is ConstantScalar)
+
         Identifier.validate(name)
     }
 

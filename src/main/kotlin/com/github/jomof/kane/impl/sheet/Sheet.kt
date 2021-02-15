@@ -361,7 +361,8 @@ internal fun Sheet.replaceNamesWithVariables(variables: Map<Id, NamedScalarVaria
             return super.cell(name, expr)
         }
 
-        override fun rewrite(expr: NamedScalar): Expr {
+        override fun rewrite(expr: Expr): Expr {
+            if (!expr.hasName()) return super.rewrite(expr)
             return variables[expr.name] ?: super.rewrite(expr)
         }
     }.rewrite(this) as Sheet

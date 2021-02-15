@@ -135,7 +135,8 @@ private val reduceAlgebraicBinaryScalarStatistic = object : RewritingVisitor() {
 }
 
 private val reduceNakedScalarStatistic = object : RewritingVisitor() {
-    override fun rewrite(expr: StreamingSampleStatisticExpr) = constant(expr.statistic.median)
+    override fun rewrite(expr: StreamingSampleStatisticExpr) =
+        constant(expr.statistic.median).withNameOf(expr)
 }
 
 private class ReduceRandomVariables(
@@ -222,7 +223,7 @@ private val convertVariablesToStatistics = object : RewritingVisitor() {
     override fun rewrite(expr: ConstantScalar): Expr {
         val stream = StreamingSamples()
         stream.insert(expr.value)
-        return StreamingSampleStatisticExpr(stream)
+        return StreamingSampleStatisticExpr(stream).withNameOf(expr)
     }
 }
 
