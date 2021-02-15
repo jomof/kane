@@ -103,8 +103,8 @@ fun Expr.toUnnamed(): Expr {
         is AlgebraicBinaryScalarMatrixMatrix -> dup(name = anonymous)
         is AlgebraicBinarySummaryScalarScalarScalar -> dup(name = anonymous)
         is AlgebraicBinarySummaryMatrixScalarScalar -> dup(name = anonymous)
-        is CellSheetRangeExpr -> if (name == anonymous) this else copy(name = anonymous)
-        is SheetRangeExpr -> if (name == anonymous) this else copy(name = anonymous)
+        is CellSheetRangeExpr -> dup(name = anonymous)
+        is SheetRangeExpr -> dup(name = anonymous)
         is ValueExpr<*> -> dup(name = anonymous)
         else -> error("$javaClass")
     }
