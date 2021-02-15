@@ -5,7 +5,7 @@
 # convertAnyToNamedExpr  
 [jvm]  
 Content  
-fun [convertAnyToNamedExpr](convert-any-to-named-expr.md)(name: [Id](index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1032410443), any: [Any](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)): [Expr](../com.github.jomof.kane/-expr/index.md)  
+fun [convertAnyToNamedExpr](convert-any-to-named-expr.md)(name: [Id](index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-992084046), any: [Any](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)): [Expr](../com.github.jomof.kane/-expr/index.md)  
 
 
 
