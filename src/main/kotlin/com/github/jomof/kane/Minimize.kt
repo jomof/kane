@@ -92,7 +92,7 @@ fun Sheet.minimize(
     resolvedVariables.values.forEach {
         val value = model.shape(it).ref(space)
         assert(new.containsKey(it.name))
-        new[it.name] = variable(value.value)
+        new[it.name] = constant(value.value)
     }
     return copy(cells = new.toCells())
 }
