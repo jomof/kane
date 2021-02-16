@@ -5,7 +5,7 @@
 # matrix  
 [jvm]  
 Content  
-val [matrix](matrix.md): [NamedMatrixVariable](../-named-matrix-variable/index.md)  
+val [matrix](matrix.md): [MatrixVariable](../-matrix-variable/index.md)  
 
 
 

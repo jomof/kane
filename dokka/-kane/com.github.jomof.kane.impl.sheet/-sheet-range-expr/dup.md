@@ -5,7 +5,7 @@
 # dup  
 [jvm]  
 Content  
-fun [dup](dup.md)(rangeRef: [SheetRangeRef](../../com.github.jomof.kane.impl/-sheet-range-ref/index.md) = this.rangeRef, name: [Id](../../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-392968366) = this.name): [SheetRangeExpr](index.md)  
+fun [dup](dup.md)(rangeRef: [SheetRangeRef](../../com.github.jomof.kane.impl/-sheet-range-ref/index.md) = this.rangeRef, name: [Id](../../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1356131440) = this.name): [SheetRangeExpr](index.md)  
 
 
 

@@ -5,7 +5,7 @@
 # component3  
 [jvm]  
 Content  
-operator fun [component3](component3.md)(): [NamedMatrixVariable](../-named-matrix-variable/index.md)  
+operator fun [component3](component3.md)(): [MatrixVariable](../-matrix-variable/index.md)  
 
 
 

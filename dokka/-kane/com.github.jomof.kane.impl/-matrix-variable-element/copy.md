@@ -5,7 +5,7 @@
 # copy  
 [jvm]  
 Content  
-fun [copy](copy.md)(column: [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html), row: [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html), matrix: [NamedMatrixVariable](../-named-matrix-variable/index.md), initial: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [MatrixVariableElement](index.md)  
+fun [copy](copy.md)(column: [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html), row: [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html), matrix: [MatrixVariable](../-matrix-variable/index.md), initial: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [MatrixVariableElement](index.md)  
 
 
 

@@ -5,7 +5,7 @@
 # dup  
 [jvm]  
 Content  
-fun [dup](dup.md)(matrix: [NamedMatrixVariable](../-named-matrix-variable/index.md) = this.matrix): [MatrixVariableElement](index.md)  
+fun [dup](dup.md)(matrix: [MatrixVariable](../-matrix-variable/index.md) = this.matrix): [MatrixVariableElement](index.md)  
 
 
 

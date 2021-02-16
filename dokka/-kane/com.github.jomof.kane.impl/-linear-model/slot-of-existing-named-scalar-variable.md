@@ -5,7 +5,7 @@
 # slotOfExistingNamedScalarVariable  
 [jvm]  
 Content  
-fun [slotOfExistingNamedScalarVariable](slot-of-existing-named-scalar-variable.md)(expr: [NamedScalarVariable](../-named-scalar-variable/index.md)): [Slot](../-slot/index.md)  
+fun [slotOfExistingNamedScalarVariable](slot-of-existing-named-scalar-variable.md)(expr: [ScalarVariable](../-scalar-variable/index.md)): [Slot](../-slot/index.md)  
 
 
 

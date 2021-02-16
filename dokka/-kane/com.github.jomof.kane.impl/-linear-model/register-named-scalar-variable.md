@@ -5,7 +5,7 @@
 # registerNamedScalarVariable  
 [jvm]  
 Content  
-fun [registerNamedScalarVariable](register-named-scalar-variable.md)(expr: [NamedScalarVariable](../-named-scalar-variable/index.md)): [Slot](../-slot/index.md)  
+fun [registerNamedScalarVariable](register-named-scalar-variable.md)(expr: [ScalarVariable](../-scalar-variable/index.md)): [Slot](../-slot/index.md)  
 
 
 

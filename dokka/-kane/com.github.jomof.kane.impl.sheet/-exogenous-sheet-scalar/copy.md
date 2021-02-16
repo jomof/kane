@@ -5,7 +5,7 @@
 # copy  
 [jvm]  
 Content  
-fun [copy](copy.md)(lookup: [Id](../../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-392968366), sheet: [Sheet](../-sheet/index.md), name: [Id](../../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-392968366) = anonymous): [ExogenousSheetScalar](index.md)  
+fun [copy](copy.md)(lookup: [Id](../../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1356131440), sheet: [Sheet](../-sheet/index.md), name: [Id](../../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1356131440) = anonymous): [ExogenousSheetScalar](index.md)  
 
 
 

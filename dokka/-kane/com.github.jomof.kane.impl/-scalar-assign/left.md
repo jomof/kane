@@ -5,7 +5,7 @@
 # left  
 [jvm]  
 Content  
-val [left](left.md): [NamedScalarVariable](../-named-scalar-variable/index.md)  
+val [left](left.md): [ScalarVariable](../-scalar-variable/index.md)  
 
 
 

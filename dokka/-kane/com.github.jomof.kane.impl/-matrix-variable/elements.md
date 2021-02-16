@@ -1,4 +1,4 @@
-//[Kane](../../index.md)/[com.github.jomof.kane.impl](../index.md)/[NamedMatrixVariable](index.md)/[elements](elements.md)
+//[Kane](../../index.md)/[com.github.jomof.kane.impl](../index.md)/[MatrixVariable](index.md)/[elements](elements.md)
 
 
 
