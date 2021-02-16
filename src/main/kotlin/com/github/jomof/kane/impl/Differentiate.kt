@@ -161,9 +161,10 @@ internal data class UserDefinedFunction(
     operator fun getValue(nothing: Nothing?, property: KProperty<*>) =
         copy(
             meta = UnaryOp(
-                "${property.name}:($variable)->$function",
-                "${property.name}"
-            )
+                property.name,
+                "($variable)->$function",
+
+                )
         )
 
     override fun toString() = meta.simpleName

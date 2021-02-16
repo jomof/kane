@@ -14,7 +14,6 @@ import kotlin.reflect.KProperty
 
 interface VariableExpr : AlgebraicExpr
 interface ScalarVariableExpr : ScalarExpr, VariableExpr
-interface MatrixVariableExpr : MatrixExpr, VariableExpr
 
 data class UnaryOp(val op: String = "", val simpleName: String = "") {
     operator fun getValue(nothing: Nothing?, property: KProperty<*>) =
