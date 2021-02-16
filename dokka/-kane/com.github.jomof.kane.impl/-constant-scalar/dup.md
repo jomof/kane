@@ -5,7 +5,7 @@
 # dup  
 [jvm]  
 Content  
-fun [dup](dup.md)(name: [Id](../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1913698542) = this.name): [ConstantScalar](index.md)  
+fun [dup](dup.md)(name: [Id](../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1187754638) = this.name): [ConstantScalar](index.md)  
 
 
 
