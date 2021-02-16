@@ -275,35 +275,33 @@ data class Slot(
 
 data class ScalarAssign(
     val left: NamedScalarVariable,
-    val right: ScalarExpr
-) : Expr {
-    init {
-        track()
+    val right: ScalarExpr,
+    override val name: Id = anonymous,
+) : AlgebraicExpr, INameable {
+    fun dup(left: NamedScalarVariable = this.left, right: ScalarExpr = this.right, name: Id = this.name): ScalarAssign {
+        if (left === this.left && right === this.right && name == this.name) return this
+        return ScalarAssign(left, right, name)
     }
 
     operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    override fun toNamed(name: Id) = dup(name = name)
+    override fun toUnnamed() = dup(name = anonymous)
+    override fun toString() = render()
 }
 
 data class MatrixAssign(
     val left: NamedMatrixVariable,
-    val right: MatrixExpr
-) : Expr {
+    val right: MatrixExpr,
+    override val name: Id = anonymous,
+) : AlgebraicExpr, INameable {
+    fun dup(left: NamedMatrixVariable = this.left, right: MatrixExpr = this.right, name: Id = this.name): MatrixAssign {
+        if (left === this.left && right === this.right && name == this.name) return this
+        return MatrixAssign(left, right, name)
+    }
+
     operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
-}
-
-data class NamedScalarAssign(
-    override val name: Id,
-    val left: NamedScalarVariable,
-    val right: ScalarExpr
-) : NamedAlgebraicExpr {
-    override fun toString() = render()
-}
-
-data class NamedMatrixAssign(
-    override val name: Id,
-    val left: NamedMatrixVariable,
-    val right: MatrixExpr
-) : NamedAlgebraicExpr {
+    override fun toNamed(name: Id) = dup(name = name)
+    override fun toUnnamed() = dup(name = anonymous)
     override fun toString() = render()
 }
 
@@ -445,14 +443,14 @@ fun differentiate(expr: AlgebraicExpr): AlgebraicExpr {
     fun MatrixExpr.self() = differentiate(this)
     with(expr) {
         val result = when (this) {
-            is NamedScalarAssign -> {
+            is ScalarAssign -> {
                 val right = right.self()
-                if (this.right !== right) copy(right = right)
+                if (this.right !== right) dup(right = right)
                 else expr
             }
-            is NamedMatrixAssign -> {
+            is MatrixAssign -> {
                 val right = right.self()
-                if (this.right !== right) copy(right = right)
+                if (this.right !== right) dup(right = right)
                 else this
             }
             is NamedMatrix -> {
@@ -701,10 +699,10 @@ fun Expr.render(entryPoint: Boolean = true, outerType: AlgebraicType? = null): S
     if (this is NamedScalarVariable || this is NamedMatrixVariable) {
         return Identifier.string(name)
     }
-    if (this is NamedScalarAssign) {
+    if (this is ScalarAssign) {
         return "${left.self()} <- ${right.self()}"
     }
-    if (this is NamedMatrixAssign) {
+    if (this is MatrixAssign) {
         return "${left.self()} <- ${right.self()}"
     }
     val result = when (this) {

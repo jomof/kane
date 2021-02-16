@@ -20,8 +20,8 @@ private val reduceNamedExprs = object : RewritingVisitor(allowNameChange = true,
         val result = super.rewrite(expr)
         if (result is NamedScalarVariable) return result
         if (result is NamedMatrixVariable) return result
-        if (result is NamedScalarAssign) return result
-        if (result is NamedMatrixAssign) return result
+        if (result is ScalarAssign) return result
+        if (result is MatrixAssign) return result
         return result.toUnnamed()
     }
 }

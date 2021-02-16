@@ -204,7 +204,7 @@ class KaneTest {
         val target by variable()
         val error by pow(target - y, 2.0)
         val ds by s - 0.1 * differentiate(d(error) / d(s))
-        val ass: NamedAlgebraicExpr by assign(ds to s)
+        val ass by assign(ds to s)
         val tab = tableauOf(m, b, ass)
         val model = tab.linearize()
         val space = model.allocateSpace()

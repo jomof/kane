@@ -7,8 +7,6 @@ import com.github.jomof.kane.impl.sheet.*
 
 fun ScalarVariable.toNamed(name: Id) = NamedScalarVariable(name, initial)
 fun MatrixVariable.toNamed(name: Id) = NamedMatrixVariable(name, columns, initial)
-fun ScalarAssign.toNamed(name: Id) = NamedScalarAssign(name, left, right)
-fun MatrixAssign.toNamed(name: Id) = NamedMatrixAssign(name, left, right)
 fun ScalarExpr.toNamed(name: Id): ScalarExpr = when (this) {
     is INameableScalar -> toNamed(name)
     is NamedScalar,
@@ -63,8 +61,6 @@ fun Expr.toUnnamed(): Expr {
         is NamedScalar -> scalar
         is NamedMatrix -> matrix
         is NamedTiling<*> -> tiling
-        is NamedScalarAssign -> ScalarAssign(left, right)
-        is NamedMatrixAssign -> MatrixAssign(left, right)
         is NamedScalarVariable -> ScalarVariable(initial)
         is NamedMatrixVariable -> MatrixVariable(columns, rows, initial)
         is NamedSheet -> sheet
@@ -82,9 +78,7 @@ val Expr.name: Id
             is NamedTiling<*> -> name
             is NamedMatrix -> name
             is NamedScalarVariable -> name
-            is NamedMatrixAssign -> name
             is NamedMatrixVariable -> name
-            is NamedScalarAssign -> name
             is ScalarReference -> name
             else ->
                 error("$javaClass")
@@ -99,10 +93,8 @@ fun Expr.hasName(): Boolean = when (this) {
     is INameable -> hasName()
     is NamedMatrixVariable -> true
     is NamedScalar -> true
-    is NamedMatrixAssign -> true
     is NamedTiling<*> -> true
     is NamedMatrix -> true
-    is NamedScalarAssign -> true
     is NamedScalarVariable -> true
     is MatrixAssign -> false
     is RetypeMatrix -> false

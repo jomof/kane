@@ -56,8 +56,8 @@ internal fun Expr.visit(f: (expr: Expr) -> Unit) {
         is CellIndexedScalar -> expr.visit(f)
         is RetypeMatrix -> matrix.visit(f)
         is NamedScalar -> scalar.visit(f)
-        is NamedScalarAssign -> right.visit(f)
-        is NamedMatrixAssign -> right.visit(f)
+        is ScalarAssign -> right.visit(f)
+        is MatrixAssign -> right.visit(f)
         is NamedMatrix -> matrix.visit(f)
         is GroupBy -> sheet.visit(f)
         is DataMatrix -> elements.forEach { it.visit(f) }

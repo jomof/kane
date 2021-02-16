@@ -262,9 +262,9 @@ private fun AlgebraicExpr.linearizeExpr(model: LinearModel = LinearModel(kaneDou
                         }
                         it.copy(matrix = matrix)
                     }
-                    it is NamedScalarAssign ->
-                        it.copy(right = it.right.linearizeExpr(model) as ScalarExpr)
-                    it is NamedMatrixAssign -> {
+                    it is ScalarAssign ->
+                        it.dup(right = it.right.linearizeExpr(model) as ScalarExpr)
+                    it is MatrixAssign -> {
                         it.right.elements.forEach { element ->
                             model.computeSlot(element) { element.linearizeExpr(model) as ScalarExpr }
                         }
@@ -281,14 +281,15 @@ private fun AlgebraicExpr.linearizeExpr(model: LinearModel = LinearModel(kaneDou
                     is NamedScalar -> { }
                     is NamedMatrix -> { }
                     is NamedScalarVariable -> { }
-                    is NamedMatrixVariable -> { }
-                    is NamedScalarAssign -> {
-                        when(it.right) {
+                    is NamedMatrixVariable -> {
+                    }
+                    is ScalarAssign -> {
+                        when (it.right) {
                             is ConstantScalar -> model.assignBack(it.left.name, it.right)
                             else -> model.assignBack(it.left.name, model.knownSlot(it.right))
                         }
                     }
-                    is NamedMatrixAssign -> {
+                    is MatrixAssign -> {
                         (it.left.elements zip it.right.elements).forEach { (left, right) ->
                             model.assignBack("$left", model.knownSlot(right))
                         }
@@ -314,7 +315,7 @@ private fun AlgebraicExpr.linearizeExpr(model: LinearModel = LinearModel(kaneDou
 private fun AlgebraicExpr.claimScalarVariables(model: LinearModel = LinearModel(kaneDouble)) {
     visit {
         when (it) {
-            is NamedScalarAssign -> model.registerNamedScalarVariable(it.left)
+            is ScalarAssign -> model.registerNamedScalarVariable(it.left)
             is NamedScalarVariable -> model.registerNamedScalarVariable(it)
             is RandomVariableExpr -> model.registerRandomVariable(it)
         }
@@ -328,7 +329,7 @@ private fun AlgebraicExpr.claimMatrixVariables(model: LinearModel = LinearModel(
         if (it is MatrixVariableElement) {
             model.registerMatrixVariableElement(it)
         }
-        if (it is NamedMatrixAssign) {
+        if (it is MatrixAssign) {
             if (!seen.contains(it.name)) {
                 seen += it.name
                 it.left.elements.forEach { element ->
@@ -400,7 +401,6 @@ private fun AlgebraicExpr.stripNames() : AlgebraicExpr {
         }
         is AlgebraicBinaryScalarScalarScalar -> dup(left = left, right = right)
         is AlgebraicBinarySummaryScalarScalarScalar -> dup(left = left, right = right)
-        is AlgebraicBinaryScalarScalarScalar -> dup(left = left, right = right)
         is DataMatrix -> map { it.self() }
         is Tableau -> copy(children = children.map { child ->
             when (child) {
@@ -408,8 +408,8 @@ private fun AlgebraicExpr.stripNames() : AlgebraicExpr {
                 is NamedScalarVariable -> child
                 is NamedMatrixVariable -> child
                 is NamedMatrix -> child.copy(matrix = child.matrix.self())
-                is NamedMatrixAssign -> child.copy(right = child.right.self())
-                is NamedScalarAssign -> child.copy(right = child.right.self())
+                is MatrixAssign -> child.copy(right = child.right.self())
+                is ScalarAssign -> child.dup(right = child.right.self())
                 is ScalarExpr -> child.self().withNameOf(child)
                 is MatrixExpr -> child.self().withNameOf(child)
                 else ->

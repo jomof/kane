@@ -51,10 +51,10 @@ fun Sheet.minimize(
 
     // Assign back variables updated by a delta of their respective derivative
     val assignBacks = (resolvedVariables.values zip diffs).map { (variable, diff) ->
-        NamedScalarAssign(
-            "update(${variable.name})",
+        ScalarAssign(
             variable,
-            variable - times(learningRate, diff)
+            variable - times(learningRate, diff),
+            "update(${variable.name})"
         ).eval()
     }
 

@@ -68,16 +68,10 @@ internal open class RewritingVisitor(
     open fun rewrite(expr: NamedMatrixVariable): Expr = expr
     open fun rewrite(expr: ScalarVariable): Expr = expr
     open fun rewrite(expr: MatrixVariableElement): Expr = expr
-    open fun rewrite(expr: NamedScalarAssign): Expr {
+    open fun rewrite(expr: ScalarAssign): Expr {
         val scalar = scalar(expr.right)
         if (scalar === expr.right) return expr
         return expr.copy(right = scalar)
-    }
-
-    open fun rewrite(expr: NamedMatrixAssign): Expr {
-        val matrix = matrix(expr.right)
-        if (matrix === expr.right) return expr
-        return expr.copy(right = matrix)
     }
 
     open fun rewrite(expr: MatrixAssign): Expr {
@@ -232,8 +226,7 @@ internal open class RewritingVisitor(
                 is Sheet -> rewrite(expr)
                 is ScalarVariable -> rewrite(expr)
                 is MatrixVariableElement -> rewrite(expr)
-                is NamedScalarAssign -> rewrite(expr)
-                is NamedMatrixAssign -> rewrite(expr)
+                is ScalarAssign -> rewrite(expr)
                 is MatrixAssign -> rewrite(expr)
                 is Tableau -> rewrite(expr)
                 is RetypeScalar -> rewrite(expr)
