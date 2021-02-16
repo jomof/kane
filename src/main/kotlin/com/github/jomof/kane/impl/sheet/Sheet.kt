@@ -29,7 +29,7 @@ data class SheetRangeExpr(
 ) :
     SheetRange, INameable {
     init {
-        //   assert(rangeRef !is CellRangeRef)
+        assert(rangeRef !is CellRangeRef)
     }
 
     override fun up(move: Int) = copy(rangeRef = rangeRef.up(move))

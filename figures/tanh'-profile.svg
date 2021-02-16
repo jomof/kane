@@ -153,10 +153,10 @@ text {
         <line x1="0.0" y1="0.0" x2="0.0" y2="260.3333333333333" stroke-width="1.0" stroke="rgb(0,0,0)" stroke-opacity="1.0">
         </line>
       </g>
-      <g transform="translate(29.1 0.0 ) " clip-path="url(#cAhgyi)"
+      <g transform="translate(29.1 0.0 ) " clip-path="url(#0z5TfJ)"
          clip-bounds-jfx="[rect (0.0, 0.0), (325.827, 260.3333333333333)]">
         <defs>
-          <clipPath id="cAhgyi">
+          <clipPath id="0z5TfJ">
             <rect x="0.0" y="0.0" width="325.827" height="260.3333333333333">
             </rect>
           </clipPath>
@@ -206,16 +206,26 @@ text {
                     cy="248.49240829241762" r="2.2"/>
             <circle fill="#132a42" stroke="#132a42" stroke-opacity="0.0" stroke-width="0.0" cx="29.62063636363638"
                     cy="248.49170191765705" r="2.2"/>
-            <circle fill="#132a42" stroke="#132a42" stroke-opacity="0.0" stroke-width="0.0" cx="30.36115227272728" cy="248.49094973838402" r="2.2" />
-            <circle fill="#132a42" stroke="#132a42" stroke-opacity="0.0" stroke-width="0.0" cx="31.101668181818184" cy="248.49014878458826" r="2.2" />
-            <circle fill="#132a42" stroke="#132a42" stroke-opacity="0.0" stroke-width="0.0" cx="31.842184090909086" cy="248.48929589370238" r="2.2" />
-            <circle fill="#132a42" stroke="#132a42" stroke-opacity="0.0" stroke-width="0.0" cx="32.58270000000002" cy="248.4883876981209" r="2.2" />
-            <circle fill="#132a42" stroke="#132a42" stroke-opacity="0.0" stroke-width="0.0" cx="33.32321590909092" cy="248.48742061190998" r="2.2" />
-            <circle fill="#132a42" stroke="#132a42" stroke-opacity="0.0" stroke-width="0.0" cx="34.06373181818185" cy="248.4863908166562" r="2.2" />
-            <circle fill="#132a42" stroke="#132a42" stroke-opacity="0.0" stroke-width="0.0" cx="34.80424772727275" cy="248.4852942463998" r="2.2" />
-            <circle fill="#132a42" stroke="#132a42" stroke-opacity="0.0" stroke-width="0.0" cx="35.54476363636364" cy="248.48412657159002" r="2.2" />
-            <circle fill="#132a42" stroke="#132a42" stroke-opacity="0.0" stroke-width="0.0" cx="36.28527954545456" cy="248.48288318200278" r="2.2" />
-            <circle fill="#132a42" stroke="#132a42" stroke-opacity="0.0" stroke-width="0.0" cx="37.02579545454546" cy="248.48155916855148" r="2.2" />
+            <circle fill="#132a42" stroke="#132a42" stroke-opacity="0.0" stroke-width="0.0" cx="30.36115227272728"
+                    cy="248.49094973838402" r="2.2"/>
+            <circle fill="#132a42" stroke="#132a42" stroke-opacity="0.0" stroke-width="0.0" cx="31.101668181818184"
+                    cy="248.49014878458826" r="2.2"/>
+            <circle fill="#132a42" stroke="#132a42" stroke-opacity="0.0" stroke-width="0.0" cx="31.842184090909086"
+                    cy="248.48929589370238" r="2.2"/>
+            <circle fill="#132a42" stroke="#132a42" stroke-opacity="0.0" stroke-width="0.0" cx="32.58270000000002"
+                    cy="248.4883876981209" r="2.2"/>
+            <circle fill="#132a42" stroke="#132a42" stroke-opacity="0.0" stroke-width="0.0" cx="33.32321590909092"
+                    cy="248.48742061190998" r="2.2"/>
+            <circle fill="#132a42" stroke="#132a42" stroke-opacity="0.0" stroke-width="0.0" cx="34.06373181818185"
+                    cy="248.4863908166562" r="2.2"/>
+            <circle fill="#132a42" stroke="#132a42" stroke-opacity="0.0" stroke-width="0.0" cx="34.80424772727275"
+                    cy="248.4852942463998" r="2.2"/>
+            <circle fill="#132a42" stroke="#132a42" stroke-opacity="0.0" stroke-width="0.0" cx="35.54476363636364"
+                    cy="248.48412657159002" r="2.2"/>
+            <circle fill="#132a42" stroke="#132a42" stroke-opacity="0.0" stroke-width="0.0" cx="36.28527954545456"
+                    cy="248.48288318200278" r="2.2"/>
+            <circle fill="#132a42" stroke="#132a42" stroke-opacity="0.0" stroke-width="0.0" cx="37.02579545454546"
+                    cy="248.48155916855148" r="2.2"/>
             <circle fill="#132a42" stroke="#132a42" stroke-opacity="0.0" stroke-width="0.0" cx="37.76631136363636" cy="248.48014930391977" r="2.2" />
             <circle fill="#132a42" stroke="#132a42" stroke-opacity="0.0" stroke-width="0.0" cx="38.506827272727264" cy="248.47864802194013" r="2.2" />
             <circle fill="#132a42" stroke="#132a42" stroke-opacity="0.0" stroke-width="0.0" cx="39.24734318181817" cy="248.47704939563735" r="2.2" />

@@ -267,10 +267,7 @@ private class IndexCellsWithNonMoveableCoordinates : SheetRewritingVisitor() {
             }
             if (!needsIndexing && it is SheetRangeExpr) {
                 val range = it.rangeRef
-                if (range is CellRangeRef) {
-                    if (range.column !is MoveableIndex) needsIndexing = true
-                    if (range.row !is MoveableIndex) needsIndexing = true
-                }
+                if (range is CellRangeRef) error("")
                 if (range is RectangleRangeRef) {
                     if (range.first.column !is MoveableIndex) needsIndexing = true
                     if (range.first.row !is MoveableIndex) needsIndexing = true
@@ -308,62 +305,37 @@ private class CollapseCellIndexedScalar : SheetRewritingVisitor() {
         return when {
             range.column is MoveableIndex && range.row is MoveableIndex -> null
             range.column is RelativeIndex && range.row is RelativeIndex -> {
-                val result = CoerceScalar(
-                    SheetRangeExpr(
+                val result =
+                    CellSheetRangeExpr(
                         CellRangeRef(
                             MoveableIndex(indexes[0].column + range.column.index),
                             MoveableIndex(indexes[0].row + range.row.index)
                         )
                     )
-                )
                 result
             }
             range.column is MoveableIndex && range.row is FixedIndex -> {
-                val result = CoerceScalar(
-                    SheetRangeExpr(
+                val result =
+                    CellSheetRangeExpr(
                         CellRangeRef(
                             MoveableIndex(indexes[0].column + range.column.index - 1),
                             MoveableIndex(range.row.index)
                         )
                     )
-                )
                 result
             }
             range.column is FixedIndex && range.row is MoveableIndex -> {
-                val result = CoerceScalar(
-                    SheetRangeExpr(
+                val result =
+                    CellSheetRangeExpr(
                         CellRangeRef(
                             MoveableIndex(range.column.index),
                             MoveableIndex(indexes[0].row + range.row.index - 1)
                         )
                     )
-                )
                 result
             }
             else ->
                 error("$range")
-        }
-    }
-
-    override fun rewrite(expr: SheetRangeExpr): Expr {
-        return when (val range = expr.rangeRef) {
-            is ColumnRangeRef -> when {
-                range.first is MoveableIndex -> {
-                    val result = CoerceScalar(
-                        SheetRangeExpr(
-                            CellRangeRef(
-                                MoveableIndex(range.first.index),
-                                MoveableIndex(indexes[0].row)
-                            )
-                        )
-                    )
-                    result
-                }
-                else -> error("${range.first}")
-            }
-            is RectangleRangeRef -> expr
-            is CellRangeRef -> collapseCellRangeRef(range) ?: expr
-            else -> error("${range.javaClass}")
         }
     }
 
@@ -478,17 +450,19 @@ private class RemoveNamesOfMatrixes : SheetRewritingVisitor(allowNameChange = tr
 }
 
 private class CheckVerboten : SheetRewritingVisitor() {
-    override fun rewrite(expr: SheetRangeExpr): Expr {
-        fun ComputableIndex.assertMoveable() = assert(this is MoveableIndex) {
-            "$javaClass"
-        }
+    private fun ComputableIndex.assertMoveable() = assert(this is MoveableIndex) {
+        "$javaClass"
+    }
 
+    override fun rewrite(expr: CellSheetRangeExpr): Expr {
+        expr.rangeRef.column.assertMoveable()
+        expr.rangeRef.row.assertMoveable()
+        return expr
+    }
+
+    override fun rewrite(expr: SheetRangeExpr): Expr {
         val range = expr.rangeRef
-        if (range is CellRangeRef) {
-            range.column.assertMoveable()
-            range.row.assertMoveable()
-            return expr
-        }
+        if (range is CellRangeRef) error("")
         if (range is RectangleRangeRef) {
             range.first.column.assertMoveable()
             range.first.row.assertMoveable()

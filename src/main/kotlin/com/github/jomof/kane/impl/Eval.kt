@@ -300,42 +300,44 @@ private fun Expr.expandSheetCells(sheet: Sheet, excludeVariables: Set<Id>): Expr
             }
         }
 
-        override fun rewrite(expr: SheetRangeExpr): Expr = with(expr) {
-            if (expr.rangeRef is CellRangeRef && excludeVariables.contains(expr.rangeRef.toCoordinate()))
-                return this
-            if (expr.rangeRef is CellRangeRef && expr.rangeRef.column is MoveableIndex && expr.rangeRef.row is MoveableIndex) {
-                val coordinate = expr.rangeRef.toCoordinate()
+        private fun rewrite(rangeRef: SheetRangeRef): Expr? {
+            if (rangeRef is CellRangeRef && excludeVariables.contains(rangeRef.toCoordinate()))
+                return null
+            if (rangeRef is CellRangeRef && rangeRef.column is MoveableIndex && rangeRef.row is MoveableIndex) {
+                val coordinate = rangeRef.toCoordinate()
                 return when (val result = sheet.cells[coordinate]) {
-                    null -> expr
-                    // is ScalarExpr -> return result
+                    null -> null
                     is ConstantScalar -> result
                     is ScalarVariable -> constant(result.initial)
-                    is RetypeScalar -> if (result.canGetConstant()) result else this
-                    else -> this
+                    is RetypeScalar -> if (result.canGetConstant()) result else null
+                    else -> null
                 }
             }
             val list = sheet.cells.toMap().filter { rangeRef.contains(it.key) }.map {
                 val result = when (val value = it.value) {
                     is ConstantScalar -> value
                     is ScalarVariable -> constant(value.initial)
-                    else ->
-                        return this
+                    else -> return null
                 }
                 result
             }
-            if (list.isEmpty()) return this
+            if (list.isEmpty()) return null
             return DataMatrix(list.size, 1, list)
-
         }
+
+        override fun rewrite(expr: CellSheetRangeExpr) = rewrite(expr.rangeRef) ?: expr
+        override fun rewrite(expr: SheetRangeExpr) = rewrite(expr.rangeRef) ?: expr
     }.rewrite(this)
 }
 
 private class ReduceProvidedSheetRangeExprs(val rangeExprProvider: RangeExprProvider) :
     RewritingVisitor() {
+    //    override fun rewrite(expr: CellSheetRangeExpr): Expr {
+//        return rangeExprProvider.range(expr).withNameOf(expr)
+//    }
     override fun rewrite(expr: SheetRangeExpr): Expr {
         return rangeExprProvider.range(expr).withNameOf(expr)
     }
-
 }
 
 private class ExpandSheetCells(val excludeVariables: Set<Id>) : RewritingVisitor() {

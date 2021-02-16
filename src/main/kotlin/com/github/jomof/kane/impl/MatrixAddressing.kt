@@ -5,10 +5,7 @@ import com.github.jomof.kane.MatrixExpr
 import com.github.jomof.kane.ScalarExpr
 import com.github.jomof.kane.impl.ComputableIndex.MoveableIndex
 import com.github.jomof.kane.impl.functions.*
-import com.github.jomof.kane.impl.sheet.CoerceMatrix
-import com.github.jomof.kane.impl.sheet.CoerceScalar
-import com.github.jomof.kane.impl.sheet.Sheet
-import com.github.jomof.kane.impl.sheet.SheetRangeExpr
+import com.github.jomof.kane.impl.sheet.*
 import kotlin.math.min
 
 internal fun MatrixVariable.getMatrixElement(column: Int, row: Int): MatrixVariableElement {
@@ -60,14 +57,14 @@ internal fun CoerceMatrix.getMatrixElement(column: Int, row: Int): ScalarExpr {
             is ColumnRangeRef -> when {
                 ref.first is MoveableIndex && ref.second is MoveableIndex -> {
                     val coordinate = coordinate(ref.first.index + column, row)
-                    val cell = CoerceScalar(SheetRangeExpr(coordinate.toComputableCoordinate()))
+                    val cell = CellSheetRangeExpr(coordinate.toComputableCoordinate())
                     cell
                 }
                 else -> error("$ref")
             }
             is RectangleRangeRef -> {
                 val coordinate = coordinate(ref.first.column.index + column, ref.first.row.index + row)
-                val cell = CoerceScalar(SheetRangeExpr(coordinate.toComputableCoordinate()))
+                val cell = CellSheetRangeExpr(coordinate.toComputableCoordinate())
                 cell
             }
             else -> error("${ref.javaClass}")

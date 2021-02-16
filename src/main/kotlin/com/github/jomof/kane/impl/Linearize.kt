@@ -2,6 +2,7 @@ package com.github.jomof.kane.impl
 
 import com.github.jomof.kane.*
 import com.github.jomof.kane.impl.ComputableIndex.MoveableIndex
+import com.github.jomof.kane.impl.sheet.CellSheetRangeExpr
 import com.github.jomof.kane.impl.sheet.CoerceScalar
 import com.github.jomof.kane.impl.sheet.Sheet
 import com.github.jomof.kane.impl.sheet.SheetRangeExpr
@@ -454,26 +455,14 @@ fun AlgebraicExpr.rollUpCommonSubexpressions(model : LinearModel) : AlgebraicExp
         override fun rewrite(expr: RetypeScalar): Expr {
             return super.rewrite(expr.scalar)
         }
-
-        override fun rewrite(expr: SheetRangeExpr): Expr {
-            return when (expr.rangeRef) {
-                is CellRangeRef -> {
-                    // done = false
-                    expr
-                }
-                else ->
-                    error("${expr.rangeRef.javaClass}")
-            }
-        }
     }.algebraic(this)
 }
 
 fun Expr.replaceSheetRanges(): Expr {
     return object : RewritingVisitor() {
         override fun rewrite(expr: CoerceScalar): Expr {
-            if (expr.value is SheetRangeExpr) {
+            if (expr.value is CellSheetRangeExpr) {
                 if (
-                    expr.value.rangeRef is CellRangeRef &&
                     expr.value.rangeRef.column is MoveableIndex &&
                     expr.value.rangeRef.row is MoveableIndex
                 ) {

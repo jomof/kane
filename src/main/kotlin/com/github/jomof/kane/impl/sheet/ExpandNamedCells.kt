@@ -5,18 +5,10 @@ import com.github.jomof.kane.impl.*
 import com.github.jomof.kane.impl.visitor.RewritingVisitor
 
 internal class ExpandNamedCells(private val lookup: Cells) : RewritingVisitor() {
-    override fun rewrite(expr: CoerceScalar): Expr = with(expr) {
-        return when (value) {
-            is ScalarVariable -> constant(value.initial)
-            is ScalarExpr -> rewrite(value)
-            is SheetRangeExpr -> {
-                if (value.rangeRef !is CellRangeRef) error("")
-                val ref = value.rangeRef.toCoordinate()
-                val result = (lookup[ref] ?: constant(0.0)) as ScalarExpr
-                rewrite(result)
-            }
-            else -> error("${value.javaClass}")
-        }
+    override fun rewrite(expr: CellSheetRangeExpr): Expr {
+        val ref = expr.rangeRef.toCoordinate()
+        val result = (lookup[ref] ?: constant(0.0)) as ScalarExpr
+        return rewrite(result).withNameOf(expr)
     }
 }
 
