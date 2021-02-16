@@ -1,8 +1,11 @@
 package com.github.jomof.kane
 
-import com.github.jomof.kane.impl.differentiate
+import com.github.jomof.kane.impl.*
+import com.github.jomof.kane.impl.functions.AlgebraicUnaryFunction
 import com.github.jomof.kane.impl.functions.d
-import com.github.jomof.kane.impl.variable
+import com.github.jomof.kane.impl.types.AlgebraicType
+import com.github.jomof.kane.impl.types.kaneDouble
+import com.github.jomof.kane.impl.visitor.RewritingVisitor
 import jetbrains.letsPlot.export.ggsave
 import jetbrains.letsPlot.geom.geom_density
 import jetbrains.letsPlot.geom.geom_point
@@ -59,10 +62,22 @@ class FiguresTest {
     @Test
     fun `derivative unary function plots`() {
         for (func in Kane.unaryFunctions) {
-            val x by variable()
-            val y by func(x)
-            val d by differentiate(d(y) / d(x))
-            println("$y -> $d")
+            val v by variable()
+            val derivative by differentiate(func(v), v)
+
+            val x by (-200..200).map { (PI * it) / 100.0 }
+            val y by derivative(x)
+            val op = func.meta.simpleName + "'"
+            val map = y.toMap()
+            val p = lets_plot(map) +
+                    geom_point { this.x = "x"; this.y = "y"; color = "y" } +
+                    labs(
+                        title = "$y profile",
+                        x = "$op argument",
+                        y = "$op value",
+                        color = "$op value"
+                    )
+            ggsave(p, "$op-profile.svg", path = images)
         }
     }
 

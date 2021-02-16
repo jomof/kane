@@ -45,8 +45,8 @@ fun Sheet.minimize(
     println("Differentiating target expression $target with respect to change variables: ${variableIds.joinToString(" ")}")
     val diffs = resolvedVariables.map { (_, variable) ->
         val name = "d$target/d${variable.name}"
-        val derivative = differentiate(d(namedTarget) / d(variable)).eval()
-        NamedScalar(name, derivative)
+        val derivative = differentiate(d(namedTarget) / d(variable))
+        derivative.toNamed(name)
     }
 
     // Assign back variables updated by a delta of their respective derivative
@@ -55,7 +55,7 @@ fun Sheet.minimize(
             variable,
             variable - times(learningRate, diff),
             "update(${variable.name})"
-        ).eval()
+        )
     }
 
     // Create the model, allocate space for it, and iterate. Break when the target didn't move much

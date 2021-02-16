@@ -938,7 +938,5 @@ class KaneTest {
         val gradientW0 by d(error) / d(w0)
         differentiate(gradientW0)
     }
-
-
 }
 
