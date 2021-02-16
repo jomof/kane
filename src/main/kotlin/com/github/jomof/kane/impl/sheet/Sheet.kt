@@ -4,14 +4,12 @@ package com.github.jomof.kane.impl.sheet
 import com.github.jomof.kane.*
 import com.github.jomof.kane.impl.*
 import com.github.jomof.kane.impl.types.KaneType
-import com.github.jomof.kane.impl.visitor.RewritingVisitor
 import com.github.jomof.kane.impl.visitor.SheetRewritingVisitor
 import java.lang.Integer.max
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.collections.set
 import kotlin.math.min
-import kotlin.random.Random
 import kotlin.reflect.KProperty
 
 interface SheetRange : Expr {
@@ -359,20 +357,20 @@ class SheetBuilderImpl(
 }
 
 
-internal fun Sheet.namedVariableOf(cell: Id): NamedScalarVariable {
+internal fun Sheet.namedVariableOf(cell: Id): ScalarVariable {
     val reduced = when (val value = cells.getValue(cell)) {
         is AlgebraicExpr -> value.eval()
         else ->
             error("${value.javaClass}")
     }
     return when (reduced) {
-        is ConstantScalar -> NamedScalarVariable(cell, reduced.value)
-        is ScalarVariable -> NamedScalarVariable(cell, reduced.initial)
+        is ConstantScalar -> ScalarVariable(reduced.value, cell)
+        is ScalarVariable -> ScalarVariable(reduced.initial, cell)
         else -> error("$cell (${cells.getValue(cell)}) is not a constant")
     }
 }
 
-internal fun Sheet.replaceNamesWithVariables(variables: Map<Id, NamedScalarVariable>): Sheet {
+internal fun Sheet.replaceNamesWithVariables(variables: Map<Id, ScalarVariable>): Sheet {
     return object : SheetRewritingVisitor() {
         override fun cell(name: Id, expr: Expr): Pair<Id, Expr> {
             val variable = variables[name]

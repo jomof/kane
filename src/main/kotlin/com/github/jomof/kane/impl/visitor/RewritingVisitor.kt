@@ -64,8 +64,7 @@ internal open class RewritingVisitor(
     open fun rewrite(expr: CellSheetRangeExpr): Expr = expr
     open fun rewrite(expr: Tiling<*>): Expr = expr
     open fun rewrite(expr: ValueExpr<*>): Expr = expr
-    open fun rewrite(expr: NamedScalarVariable): Expr = expr
-    open fun rewrite(expr: NamedMatrixVariable): Expr = expr
+    open fun rewrite(expr: MatrixVariable): Expr = expr
     open fun rewrite(expr: ScalarVariable): Expr = expr
     open fun rewrite(expr: MatrixVariableElement): Expr = expr
     open fun rewrite(expr: ScalarAssign): Expr {
@@ -216,8 +215,7 @@ internal open class RewritingVisitor(
                 is DataMatrix -> rewrite(expr)
                 is AlgebraicDeferredDataMatrix -> rewrite(expr)
                 is NamedScalar -> rewrite(expr)
-                is NamedScalarVariable -> rewrite(expr)
-                is NamedMatrixVariable -> rewrite(expr)
+                is MatrixVariable -> rewrite(expr)
                 is NamedMatrix -> rewrite(expr)
                 is SheetRangeExpr -> rewrite(expr)
                 is CellSheetRangeExpr -> rewrite(expr)

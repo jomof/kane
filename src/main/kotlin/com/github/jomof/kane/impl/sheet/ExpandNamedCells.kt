@@ -8,7 +8,7 @@ private fun AlgebraicExpr.expandNamedCells(lookup: Cells): AlgebraicExpr {
     fun StatisticExpr.self() = expandNamedCells(lookup) as StatisticExpr
     fun MatrixExpr.self() = expandNamedCells(lookup) as MatrixExpr
     return when (this) {
-        is NamedScalarVariable -> this
+        is ScalarVariable -> this
         is DataMatrix -> map { it.self() }
         is RetypeScalar -> copy(scalar = scalar.self())
         is NamedMatrix -> copy(matrix = matrix.self())

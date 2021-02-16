@@ -20,7 +20,7 @@ private class MakeReferenced : SheetRewritingVisitor() {
         val result = super.rewrite(expr)
         if (result is ScalarReference) return result
         if (result is MatrixReference) return result
-        if (result is NamedScalarVariable) return result
+        if (result is ScalarVariable) return result
         if (!inSheet()) return result
         if (result.hasName()) {
             val name = result.name

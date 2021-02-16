@@ -13,7 +13,7 @@ fun Sheet.minimize(
     variables: List<String>,
     learningRate: Double = 0.001
 ): Sheet {
-    val resolvedVariables = mutableMapOf<Id, NamedScalarVariable>()
+    val resolvedVariables = mutableMapOf<Id, ScalarVariable>()
     val variableIds = variables.map { Identifier.normalizeUserInput(it) }
     val deref = makeDereferenced()
 

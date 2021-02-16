@@ -11,7 +11,7 @@ import com.github.jomof.kane.impl.sheet.Sheet
 import com.github.jomof.kane.impl.sheet.SheetRangeExpr
 import kotlin.math.min
 
-internal fun NamedMatrixVariable.getMatrixElement(column: Int, row: Int): MatrixVariableElement {
+internal fun MatrixVariable.getMatrixElement(column: Int, row: Int): MatrixVariableElement {
     fun coordinateToIndex(column: Int, row: Int) = row * columns + column
     return MatrixVariableElement(column, row, this, initial[coordinateToIndex(column, row)])
 }
@@ -79,7 +79,7 @@ internal fun CoerceMatrix.getMatrixElement(column: Int, row: Int): ScalarExpr {
 
 internal fun Expr.getMatrixElement(column: Int, row: Int): ScalarExpr {
     return when (this) {
-        is NamedMatrixVariable -> getMatrixElement(column, row)
+        is MatrixVariable -> getMatrixElement(column, row)
         is NamedMatrix -> getMatrixElement(column, row)
         is DataMatrix -> getMatrixElement(column, row)
         is AlgebraicUnaryMatrixMatrix -> getMatrixElement(column, row)
@@ -125,7 +125,7 @@ internal fun MatrixExpr.tryGetDimensions(sheetRowCount: Int? = null): Pair<Int?,
                 error("${value.javaClass}")
         }
         is NamedMatrix -> matrix.tryGetDimensions(sheetRowCount)
-        is NamedMatrixVariable -> columns to rows
+        is MatrixVariable -> columns to rows
         is DataMatrix -> columns to rows
         is RetypeMatrix -> matrix.tryGetDimensions(sheetRowCount)
         is AlgebraicUnaryMatrixMatrix -> value.tryGetDimensions(sheetRowCount)

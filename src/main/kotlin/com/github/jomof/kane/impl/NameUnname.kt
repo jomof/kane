@@ -5,8 +5,6 @@ import com.github.jomof.kane.impl.functions.AlgebraicDeferredDataMatrix
 import com.github.jomof.kane.impl.sheet.*
 
 
-fun ScalarVariable.toNamed(name: Id) = NamedScalarVariable(name, initial)
-fun MatrixVariable.toNamed(name: Id) = NamedMatrixVariable(name, columns, initial)
 fun ScalarExpr.toNamed(name: Id): ScalarExpr = when (this) {
     is INameableScalar -> toNamed(name)
     is NamedScalar,
@@ -21,7 +19,7 @@ fun MatrixExpr.toNamed(name: Id): MatrixExpr = when (this) {
     is AlgebraicDeferredDataMatrix,
     is CoerceMatrix,
     is RetypeMatrix,
-    is NamedMatrixVariable,
+    is MatrixVariable,
     is DataMatrix -> NamedMatrix(name, this)
     else -> error("$javaClass")
 }
@@ -61,8 +59,6 @@ fun Expr.toUnnamed(): Expr {
         is NamedScalar -> scalar
         is NamedMatrix -> matrix
         is NamedTiling<*> -> tiling
-        is NamedScalarVariable -> ScalarVariable(initial)
-        is NamedMatrixVariable -> MatrixVariable(columns, rows, initial)
         is NamedSheet -> sheet
         else ->
             error("$javaClass")
@@ -77,8 +73,6 @@ val Expr.name: Id
             is NamedScalar -> name
             is NamedTiling<*> -> name
             is NamedMatrix -> name
-            is NamedScalarVariable -> name
-            is NamedMatrixVariable -> name
             is ScalarReference -> name
             else ->
                 error("$javaClass")
@@ -91,11 +85,9 @@ val Expr.name: Id
 
 fun Expr.hasName(): Boolean = when (this) {
     is INameable -> hasName()
-    is NamedMatrixVariable -> true
     is NamedScalar -> true
     is NamedTiling<*> -> true
     is NamedMatrix -> true
-    is NamedScalarVariable -> true
     is MatrixAssign -> false
     is RetypeMatrix -> false
     is Tableau -> false

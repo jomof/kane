@@ -13,7 +13,7 @@ import com.github.jomof.kane.impl.visitor.visit
 
 class LinearModel(val type : AlgebraicType) {
     private val map = mutableMapOf<ScalarExpr, Slot>()
-    private val namedScalarVariables = mutableMapOf<Id, NamedScalarVariable>()
+    private val namedScalarVariables = mutableMapOf<Id, ScalarVariable>()
     private val namedMatrixVariableElements = mutableMapOf<Id, MatrixVariableElement>()
     private val namedMatrixShapes = mutableMapOf<Id, MatrixShape>()
     private val namedScalars = mutableMapOf<Id, Slot>()
@@ -32,13 +32,13 @@ class LinearModel(val type : AlgebraicType) {
         return map.getValue(expr)
     }
 
-    fun registerNamedScalarVariable(expr : NamedScalarVariable) : Slot {
+    fun registerNamedScalarVariable(expr: ScalarVariable): Slot {
         val slot = namedScalars[expr.name]
         if (slot != null) return slot
         namedScalarVariables[expr.name] = expr
         val result = allocateSlot(expr, expr.toString())
         namedScalars[expr.name] = result
-        return  result
+        return result
     }
 
     fun registerRandomVariable(expr : RandomVariableExpr) : Slot {
@@ -49,7 +49,7 @@ class LinearModel(val type : AlgebraicType) {
         return  result
     }
 
-    fun slotOfExistingNamedScalarVariable(expr : NamedScalarVariable) : Slot {
+    fun slotOfExistingNamedScalarVariable(expr: ScalarVariable): Slot {
         return namedScalars.getValue(expr.name)
     }
 
@@ -159,7 +159,7 @@ class LinearModel(val type : AlgebraicType) {
     fun shape(expr: ScalarExpr) =
         EmbeddedScalarShape(namedScalars.getValue(expr.name).slot)
 
-    fun shape(expr: NamedMatrixVariable) = namedMatrixShapes.getValue(expr.name)
+    fun shape(expr: MatrixVariable) = namedMatrixShapes.getValue(expr.name)
     fun shape(expr: MatrixExpr) = namedMatrixShapes.getValue(expr.name)
     fun slotCount(): Int = slots.size
 
@@ -192,7 +192,7 @@ private fun AlgebraicExpr.linearizeExpr(model: LinearModel = LinearModel(kaneDou
             right = right.linearizeExpr(model) as ScalarExpr,
         )
         this is MatrixVariableElement -> model.slotOfExistingMatrixVariableElement(this)
-        this is NamedScalarVariable -> model.slotOfExistingNamedScalarVariable(this)
+        this is ScalarVariable -> model.slotOfExistingNamedScalarVariable(this)
         this is RandomVariableExpr -> model.slotOfExistingRandomVariable(this)
         this is AlgebraicUnaryScalarScalar -> model.computeSlot(this) { dup(value = value.linearizeExpr(model) as ScalarExpr) }
         this is AlgebraicBinaryScalarScalarScalar -> model.computeSlot(this) {
@@ -270,18 +270,21 @@ private fun AlgebraicExpr.linearizeExpr(model: LinearModel = LinearModel(kaneDou
                         }
                         it
                     }
-                    it is NamedScalarVariable -> it
-                    it is NamedMatrixVariable -> it
+                    it is ScalarVariable -> it
+                    it is MatrixVariable -> it
                     else -> error("${it.javaClass}")
                 }
             })
             // Assignments after everything else
             children.forEach {
-                when(it) {
-                    is NamedScalar -> { }
-                    is NamedMatrix -> { }
-                    is NamedScalarVariable -> { }
-                    is NamedMatrixVariable -> {
+                when (it) {
+                    is NamedScalar -> {
+                    }
+                    is NamedMatrix -> {
+                    }
+                    is ScalarVariable -> {
+                    }
+                    is MatrixVariable -> {
                     }
                     is ScalarAssign -> {
                         when (it.right) {
@@ -316,7 +319,7 @@ private fun AlgebraicExpr.claimScalarVariables(model: LinearModel = LinearModel(
     visit {
         when (it) {
             is ScalarAssign -> model.registerNamedScalarVariable(it.left)
-            is NamedScalarVariable -> model.registerNamedScalarVariable(it)
+            is ScalarVariable -> model.registerNamedScalarVariable(it)
             is RandomVariableExpr -> model.registerRandomVariable(it)
         }
     }
@@ -337,7 +340,7 @@ private fun AlgebraicExpr.claimMatrixVariables(model: LinearModel = LinearModel(
                 }
             }
         }
-        if (it is NamedMatrixVariable) {
+        if (it is MatrixVariable) {
             if (!seen.contains(it.name)) {
                 seen += it.name
                 it.elements.forEach { element ->
@@ -384,11 +387,11 @@ private fun Expr.gatherNamedExprs(): Set<AlgebraicExpr> {
 private fun AlgebraicExpr.stripNames() : AlgebraicExpr {
     fun ScalarExpr.self() = stripNames() as ScalarExpr
     fun MatrixExpr.self() = toDataMatrix().stripNames() as MatrixExpr
-    return when(this) {
+    return when (this) {
         is ConstantScalar -> this
         is MatrixVariableElement -> this
-        is NamedScalarVariable -> this
-        is NamedMatrixVariable -> this
+        is ScalarVariable -> this
+        is MatrixVariable -> this
         is DiscreteUniformRandomVariable -> this
         is RetypeScalar -> scalar.self()
         is NamedMatrix -> matrix.self()
@@ -405,8 +408,8 @@ private fun AlgebraicExpr.stripNames() : AlgebraicExpr {
         is Tableau -> copy(children = children.map { child ->
             when (child) {
                 is NamedScalar -> child.copy(scalar = child.scalar.self())
-                is NamedScalarVariable -> child
-                is NamedMatrixVariable -> child
+                is ScalarVariable -> child
+                is MatrixVariable -> child
                 is NamedMatrix -> child.copy(matrix = child.matrix.self())
                 is MatrixAssign -> child.copy(right = child.right.self())
                 is ScalarAssign -> child.dup(right = child.right.self())
@@ -424,7 +427,7 @@ private fun AlgebraicExpr.stripNames() : AlgebraicExpr {
 private fun Expr.terminal(): Boolean =
     canGetConstant() || when (this) {
         is Slot -> true
-        is NamedScalarVariable -> true
+        is ScalarVariable -> true
         is MatrixVariableElement -> true
         is DiscreteUniformRandomVariable -> true
         is AlgebraicBinaryScalarScalarScalar -> false
@@ -474,9 +477,9 @@ fun Expr.replaceSheetRanges(): Expr {
                     expr.value.rangeRef.column is MoveableIndex &&
                     expr.value.rangeRef.row is MoveableIndex
                 ) {
-                    return NamedScalarVariable(
-                        expr.value.rangeRef.toCoordinate(),
-                        0.0
+                    return ScalarVariable(
+                        0.0,
+                        expr.value.rangeRef.toCoordinate()
                     )
                 }
                 error("${expr.value.rangeRef.javaClass}")
@@ -500,7 +503,7 @@ fun Expr.linearize(): LinearModel {
     }
 }
 
-fun ScalarExpr.toFunc(v1: NamedScalarVariable): (Double) -> Double {
+fun ScalarExpr.toFunc(v1: ScalarVariable): (Double) -> Double {
     val model = linearize()
     val space = model.allocateSpace()
     val v1ref = model.shape(v1).ref(space)

@@ -9,9 +9,8 @@ internal fun Expr.visit(f: (expr: Expr) -> Unit) {
     f(this)
     when (this) {
         is Slot,
-        is NamedMatrixVariable,
+        is MatrixVariable,
         is MatrixVariableElement,
-        is ScalarVariable,
         is ConstantScalar,
         is ValueExpr<*>,
         is SheetRangeExpr,
@@ -20,7 +19,7 @@ internal fun Expr.visit(f: (expr: Expr) -> Unit) {
         is ExogenousSheetScalar,
         is ScalarReference,
         is MatrixReference,
-        is NamedScalarVariable -> {
+        is ScalarVariable -> {
         }
         is AlgebraicBinaryScalarScalarScalar -> {
             left.visit(f)

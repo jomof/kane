@@ -13,7 +13,7 @@ private class SubtractFunction : AlgebraicBinaryFunction {
     override fun doubleOp(p1: Double, p2: Double) = p1 - p2
 
     override fun reduceArithmetic(p1: ScalarExpr, p2: ScalarExpr): ScalarExpr? {
-        if (p1 is NamedScalarVariable && p2 is NamedScalarVariable) return null
+        if (p1 is ScalarVariable && p2 is ScalarVariable) return null
         val leftIsConst = p1.canGetConstant()
         val rightIsConst = p2.canGetConstant()
         return when {

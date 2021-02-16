@@ -803,15 +803,15 @@ class KaneTest {
         ((a - a) - b).assertString("a-a-b")
         (a - (a - b)).assertString("a-(a-b)")
 //        (a - -b).evalGradual().assertString("a+b")
-        val m : MatrixExpr by matrixVariable(5, 2)
-        val n : MatrixExpr by matrixVariable(3, 5)
+        val m: MatrixExpr by matrixVariable(5, 2)
+        val n: MatrixExpr by matrixVariable(3, 5)
         m.assertString("m")
         n.assertString("n")
         val z by m
-        z.assertString("z=m")
-        val element by z[0,1]
-        element.assertString("element=m[0,1]")
-        z[1,0].assertString("m[1,0]")
+        z.assertString("z")
+        val element by z[0, 1]
+        element.assertString("element=z[0,1]")
+        z[1, 0].assertString("z[1,0]")
         val mult by m cross n
         mult.assertString("mult=m cross n")
         (m cross n).assertString("m cross n")

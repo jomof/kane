@@ -91,47 +91,53 @@ data class ValueExpr<E : Any>(
 }
 
 data class ScalarVariable(
-    val initial: Double
-) : AlgebraicExpr {
-    init {
-        track()
-    }
-
-    operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    val initial: Double,
+    override val name: Id = anonymous
+) : AlgebraicExpr, INameableScalar {
+    override fun toNamed(name: Id) = dup(name = name)
+    override fun toUnnamed() = dup(name = anonymous)
+    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = render()
+    fun dup(initial: Double = this.initial, name: Id = this.name): ScalarVariable {
+        if (initial == this.initial && name == this.name) return this
+        return copy(initial = initial, name = name)
+    }
 }
 
-data class NamedScalarVariable(
-    override val name: Id,
-    val initial: Double
-) : ScalarVariableExpr, NamedScalarExpr {
-    init {
-        track()
-        Identifier.validate(name)
-    }
-
-    override fun toString() = render()
-}
 
 data class MatrixVariable(
     val columns: Int,
     val rows: Int,
-    val initial: List<Double>
-) : AlgebraicExpr {
-    operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
-    override fun toString() = "matrixVariable(${columns}x$rows)"
-}
-
-data class NamedMatrixVariable(
-    override val name: Id,
-    val columns: Int,
-    val initial: List<Double>
-) : MatrixVariableExpr, NamedMatrixExpr {
+    val initial: List<Double>,
+    override val name: Id = anonymous
+) : AlgebraicExpr, INameableMatrix {
+    override fun toNamed(name: Id) = dup(name = name)
+    override fun toUnnamed() = dup(name = anonymous)
+    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    override fun toString() = render()
     fun get(coordinate: Coordinate) = get(coordinate.column, coordinate.row)
     val elements get() = coordinates.map { get(it) }
-    val rows get() = initial.size / columns
-    override fun toString() = render()
+    fun dup(
+        columns: Int = this.columns,
+        rows: Int = this.rows,
+        initial: List<Double> = this.initial,
+        name: Id = this.name
+    ): MatrixVariable {
+        if (columns == this.columns && rows == this.rows && initial === this.initial && name == this.name) return this
+        return copy(initial = initial, name = name)
+    }
 }
+
+//data class NamedMatrixVariable(
+//    override val name: Id,
+//    val columns: Int,
+//    val initial: List<Double>
+//) : MatrixVariableExpr, NamedMatrixExpr {
+//    fun get(coordinate: Coordinate) = get(coordinate.column, coordinate.row)
+//    val elements get() = coordinates.map { get(it) }
+//    val rows get() = initial.size / columns
+//    override fun toString() = render()
+//}
 
 data class NamedScalar(
     override val name: Id,
@@ -175,7 +181,7 @@ data class NamedMatrix(
 data class MatrixVariableElement(
     val column: Int,
     val row: Int,
-    val matrix: NamedMatrixVariable,
+    val matrix: MatrixVariable,
     val initial: Double
 ) : ScalarExpr {
     init {
@@ -194,7 +200,7 @@ data class MatrixVariableElement(
         return true
     }
 
-    fun dup(matrix: NamedMatrixVariable = this.matrix): MatrixVariableElement {
+    fun dup(matrix: MatrixVariable = this.matrix): MatrixVariableElement {
         if (matrix === this.matrix) return this
         return MatrixVariableElement(column, row, matrix, initial)
     }
@@ -274,11 +280,11 @@ data class Slot(
 }
 
 data class ScalarAssign(
-    val left: NamedScalarVariable,
+    val left: ScalarVariable,
     val right: ScalarExpr,
     override val name: Id = anonymous,
 ) : AlgebraicExpr, INameable {
-    fun dup(left: NamedScalarVariable = this.left, right: ScalarExpr = this.right, name: Id = this.name): ScalarAssign {
+    fun dup(left: ScalarVariable = this.left, right: ScalarExpr = this.right, name: Id = this.name): ScalarAssign {
         if (left === this.left && right === this.right && name == this.name) return this
         return ScalarAssign(left, right, name)
     }
@@ -290,11 +296,11 @@ data class ScalarAssign(
 }
 
 data class MatrixAssign(
-    val left: NamedMatrixVariable,
+    val left: MatrixVariable,
     val right: MatrixExpr,
     override val name: Id = anonymous,
 ) : AlgebraicExpr, INameable {
-    fun dup(left: NamedMatrixVariable = this.left, right: MatrixExpr = this.right, name: Id = this.name): MatrixAssign {
+    fun dup(left: MatrixVariable = this.left, right: MatrixExpr = this.right, name: Id = this.name): MatrixAssign {
         if (left === this.left && right === this.right && name == this.name) return this
         return MatrixAssign(left, right, name)
     }
@@ -306,8 +312,8 @@ data class MatrixAssign(
 }
 
 // Assign
-fun assign(assignment: Pair<ScalarExpr, NamedScalarVariable>) = ScalarAssign(assignment.second, assignment.first)
-fun assign(assignment: Pair<MatrixExpr, NamedMatrixVariable>) = MatrixAssign(assignment.second, assignment.first)
+fun assign(assignment: Pair<ScalarExpr, ScalarVariable>) = ScalarAssign(assignment.second, assignment.first)
+fun assign(assignment: Pair<MatrixExpr, MatrixVariable>) = MatrixAssign(assignment.second, assignment.first)
 
 // Variables
 fun matrixVariable(columns: Int, rows: Int) =
@@ -379,6 +385,7 @@ fun diff(expr: ScalarExpr, variable: ScalarExpr): ScalarExpr {
         is MatrixVariableElement -> ConstantScalar(0.0)
         is ScalarVariableExpr -> ConstantScalar(0.0)
         is ConstantScalar -> ConstantScalar(0.0)
+        is ScalarVariable -> ConstantScalar(0.0)
         is AlgebraicUnaryScalarScalar -> {
             val reduced = expr.op.reduceArithmetic(expr.value)
             if (reduced != null) diff(reduced, variable)
@@ -696,7 +703,7 @@ fun Expr.render(entryPoint: Boolean = true, outerType: AlgebraicType? = null): S
             else -> "$name=${matrix.self()}"
         }
     }
-    if (this is NamedScalarVariable || this is NamedMatrixVariable) {
+    if ((this is ScalarVariable && hasName()) || (this is MatrixVariable && hasName())) {
         return Identifier.string(name)
     }
     if (this is ScalarAssign) {
@@ -706,6 +713,7 @@ fun Expr.render(entryPoint: Boolean = true, outerType: AlgebraicType? = null): S
         return "${left.self()} <- ${right.self()}"
     }
     val result = when (this) {
+        is ScalarVariable -> kaneDouble.render(initial)
         is CoerceScalar -> value.self()
         is CoerceMatrix -> value.self()
         is SheetRangeExpr -> rangeRef.toString()
@@ -713,18 +721,15 @@ fun Expr.render(entryPoint: Boolean = true, outerType: AlgebraicType? = null): S
         is RetypeScalar -> scalar.render(entryPoint, outerType ?: this.type)
         is RetypeMatrix -> matrix.render(entryPoint, outerType ?: this.type)
         is Slot -> "\$$slot"
-        is NamedScalarVariable -> Identifier.string(name)
-        is ScalarVariable ->
-            (outerType ?: kaneDouble).render(initial)
         is AlgebraicUnaryMatrixMatrix -> when {
             op == exp -> {
                 val rightSuper = tryConvertToSuperscript(value.self())
                 if (rightSuper == null) "${op.meta.op}(${value.self()})"
                 else "e$rightSuper"
             }
-            op == d && value is NamedMatrixVariable -> "${op.meta.op}${value.self()}"
+            op == d && value is MatrixVariable -> "${op.meta.op}${value.self()}"
             op == negate &&
-                    (value is NamedMatrixVariable ||
+                    (value is MatrixVariable ||
                             value is AlgebraicBinaryMatrixMatrixMatrix && value.op == times) -> "${op.meta.op}${value.self()}"
             else -> "${op.meta.op}(${value.self()})"
         }
@@ -790,13 +795,13 @@ fun Expr.render(entryPoint: Boolean = true, outerType: AlgebraicType? = null): S
                 if (rightSuper == null) "${op.meta.op}(${value.self()})"
                 else "e$rightSuper"
             }
-            op == d && value is NamedScalarVariable -> "${op.meta.op}${value.self()}"
+            op == d && value is ScalarVariable -> "${op.meta.op}${value.self()}"
             op == negate &&
-                    (value is NamedScalarVariable ||
+                    (value is ScalarVariable ||
                             value is AlgebraicBinaryScalarScalarScalar && value.op == times) -> "${op.meta.op}${value.self()}"
             else -> "${op.meta.op}(${value.self()})"
         }
-        is NamedMatrixVariable -> Identifier.string(name)
+        is MatrixVariable -> "matrixVariable(${columns}x$rows)"
         is ValueExpr<*> -> toString()
         is Tableau -> {
             val sb = StringBuilder()

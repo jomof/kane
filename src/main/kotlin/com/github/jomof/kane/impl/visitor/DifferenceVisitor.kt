@@ -96,7 +96,7 @@ open class DifferenceVisitor {
         if (e1.column != e2.column) return different(e1, e2)
         if (e1.row != e2.row) return different(e1, e2)
         if (e1.initial != e2.initial) return different(e1, e2)
-        val matrix = visit(e1.matrix, e2.matrix) as NamedMatrixVariable
+        val matrix = visit(e1.matrix, e2.matrix) as MatrixVariable
         return e1.dup(matrix = matrix)
     }
 
@@ -204,10 +204,10 @@ open class DifferenceVisitor {
             return when (e1) {
                 is ConstantScalar,
                 is SheetRangeExpr,
-                is NamedScalarVariable,
+                is ScalarVariable,
                 is ScalarAssign,
                 is MatrixAssign,
-                is NamedMatrixVariable,
+                is MatrixVariable,
                 is ValueExpr<*>,
                 is Tiling<*>,
                 is StreamingSampleStatisticExpr,

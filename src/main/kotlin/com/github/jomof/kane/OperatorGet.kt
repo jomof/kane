@@ -29,5 +29,5 @@ operator fun Sheet.get(column: Int, row: Int): Expr {
     return cells.getValue(coordinate(column, row))
 }
 
-operator fun NamedMatrixVariable.get(column: Int, row: Int): MatrixVariableElement = getMatrixElement(column, row)
+operator fun MatrixVariable.get(column: Int, row: Int): MatrixVariableElement = getMatrixElement(column, row)
 operator fun MatrixExpr.get(column: Int, row: Int): ScalarExpr = getMatrixElement(column, row)

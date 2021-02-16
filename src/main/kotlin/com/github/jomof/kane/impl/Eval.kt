@@ -18,8 +18,8 @@ import kotlin.collections.set
 private val reduceNamedExprs = object : RewritingVisitor(allowNameChange = true, checkIdentity = true) {
     override fun rewrite(expr: Expr): Expr {
         val result = super.rewrite(expr)
-        if (result is NamedScalarVariable) return result
-        if (result is NamedMatrixVariable) return result
+        if (result is ScalarVariable) return result
+        if (result is MatrixVariable) return result
         if (result is ScalarAssign) return result
         if (result is MatrixAssign) return result
         return result.toUnnamed()
@@ -189,7 +189,7 @@ private class ReduceNamedVariables(
         return lookup
     }
 
-    override fun rewrite(expr: NamedScalarVariable): Expr {
+    override fun rewrite(expr: ScalarVariable): Expr {
         if (!reduceVariables) return expr
         if (excludeVariables.contains(expr.name)) return expr
         val lookup = namedVariableLookup[expr.name] ?: return constant(expr.initial)
@@ -392,7 +392,7 @@ private fun Expr.accumulateStatistics(incoming: Expr) {
         }
         this is SheetRangeExpr && incoming is SheetRangeExpr -> {
         }
-        this is NamedScalarVariable && incoming is NamedScalarVariable -> {
+        this is ScalarVariable && incoming is ScalarVariable -> {
         }
         this is CoerceScalar && incoming is CoerceScalar -> value.accumulateStatistics(incoming.value)
         this is DataMatrix && incoming is DataMatrix -> {
