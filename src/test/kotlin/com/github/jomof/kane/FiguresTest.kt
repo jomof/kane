@@ -70,7 +70,7 @@ class FiguresTest {
             val op = func.meta.simpleName + "'"
             val map = y.toMap()
             val p = lets_plot(map) +
-                    geom_point { this.x = "x"; this.y = "y"; color = "y" } +
+                    geom_point { this.x = "n"; this.y = "y"; color = "y" } +
                     labs(
                         title = "${derivative.function} profile",
                         x = "$op argument",
