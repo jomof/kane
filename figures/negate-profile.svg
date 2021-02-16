@@ -162,9 +162,9 @@ text {
         <line x1="0.0" y1="0.0" x2="0.0" y2="260.3333333333333" stroke-width="1.0" stroke="rgb(0,0,0)" stroke-opacity="1.0">
         </line>
       </g>
-      <g transform="translate(22.4 0.0 ) " clip-path="url(#wDskJa)" clip-bounds-jfx="[rect (0.0, 0.0), (323.884, 260.3333333333333)]">
+      <g transform="translate(22.4 0.0 ) " clip-path="url(#qKUXzi)" clip-bounds-jfx="[rect (0.0, 0.0), (323.884, 260.3333333333333)]">
         <defs>
-          <clipPath id="wDskJa">
+          <clipPath id="qKUXzi">
             <rect x="0.0" y="0.0" width="323.884" height="260.3333333333333">
             </rect>
           </clipPath>
