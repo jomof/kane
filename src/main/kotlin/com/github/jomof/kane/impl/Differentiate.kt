@@ -153,18 +153,15 @@ internal data class UserDefinedFunction(
         }
     }
 
-    private fun replace(replacement: ScalarExpr) = Replacer(variable, replacement).scalar(function)
-
-    override fun reduceArithmetic(value: ScalarExpr) = replace(value)
-    override fun doubleOp(value: Double) = replace(constant(value)).eval().getConstant()
+    override fun reduceArithmetic(value: ScalarExpr) = Replacer(variable, value).scalar(function)
+    override fun doubleOp(value: Double) = reduceArithmetic(constant(value)).eval().getConstant()
     override fun differentiate(expr: ScalarExpr, exprd: ScalarExpr, variable: ScalarExpr) = TODO()
     operator fun getValue(nothing: Nothing?, property: KProperty<*>) =
         copy(
             meta = UnaryOp(
                 property.name,
                 "($variable)->$function",
-
-                )
+            )
         )
 
     override fun toString() = meta.simpleName

@@ -159,12 +159,22 @@ open class DifferenceVisitor {
     fun visit(e1: DataMatrix, e2: DataMatrix): Expr {
         if (e1.columns != e2.columns) return different(e1, e2)
         if (e1.rows != e2.rows) return different(e1, e2)
+        var allSame = true
+        for (index in e1.elements.indices) {
+            if (e1.elements[index] !== e2.elements[index]) {
+                allSame = false
+                break
+            }
+        }
+        if (allSame) error("")
+        error("")
         val elements = (e1.elements zip e2.elements).map { (l, r) -> scalar(l, r) }
         return DataMatrix(e1.columns, e1.rows, elements)
     }
 
     fun visit(e1: AlgebraicDeferredDataMatrix, e2: AlgebraicDeferredDataMatrix): Expr {
         if (e1.op != e2.op) return different(e1, e2)
+        if (e1 == e2) return e1
         return AlgebraicDeferredDataMatrix(
             op = e1.op,
             left = algebraic(e1.left, e2.left),

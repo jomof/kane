@@ -8,6 +8,7 @@ import com.github.jomof.kane.impl.functions.*
 import com.github.jomof.kane.impl.sheet.*
 import com.github.jomof.kane.impl.types.algebraicType
 import com.github.jomof.kane.impl.types.kaneDouble
+import com.github.jomof.kane.impl.visitor.DifferenceVisitor
 import com.github.jomof.kane.impl.visitor.RewritingVisitor
 import com.github.jomof.kane.impl.visitor.SheetRewritingVisitor
 import com.github.jomof.kane.map
@@ -352,57 +353,20 @@ private class ExpandSheetCells(val excludeVariables: Set<Id>) : RewritingVisitor
     }
 }
 
-private fun Expr.accumulateStatistics(incoming: Expr) {
-    when {
-        this is NamedScalar && incoming is NamedScalar -> {
-            assert(name == incoming.name)
-            scalar.accumulateStatistics(incoming.scalar)
-        }
-        this is NamedMatrix && incoming is NamedMatrix -> {
-            assert(name == incoming.name)
-            matrix.accumulateStatistics(incoming.matrix)
-        }
-        this is StreamingSampleStatisticExpr && incoming is ConstantScalar -> {
-            statistic.insert(incoming.value)
-        }
-        this is AlgebraicSummaryScalarScalar && incoming is AlgebraicSummaryScalarScalar -> {
-            value.accumulateStatistics(incoming.value)
-        }
-        this is AlgebraicSummaryMatrixScalar && incoming is AlgebraicSummaryMatrixScalar -> {
-            value.accumulateStatistics(incoming.value)
-        }
-        this is RetypeScalar && incoming is RetypeScalar -> {
-            this.scalar.accumulateStatistics(incoming.scalar)
-        }
-        this is AlgebraicUnaryScalarScalar && incoming is AlgebraicUnaryScalarScalar -> {
-            this.value.accumulateStatistics(incoming.value)
-        }
-        this is AlgebraicBinaryScalarScalarScalar && incoming is AlgebraicBinaryScalarScalarScalar -> {
-            this.left.accumulateStatistics(incoming.left)
-            this.right.accumulateStatistics(incoming.right)
-        }
-        this is AlgebraicBinarySummaryScalarScalarScalar && incoming is AlgebraicBinarySummaryScalarScalarScalar -> {
-            this.left.accumulateStatistics(incoming.left)
-            this.right.accumulateStatistics(incoming.right)
-        }
-        this is Sheet && incoming is Sheet -> {
-            cells.forEach { (name, expr) ->
-                expr.accumulateStatistics(incoming.cells.getValue(name))
+private class AccumulateStatistics : DifferenceVisitor() {
+    override fun different(e1: Expr, e2: Expr): Expr {
+        when {
+            e1 is StreamingSampleStatisticExpr && e2 is ConstantScalar -> {
+                e1.statistic.insert(e2.value)
+                return e1
             }
         }
-        this is SheetRangeExpr && incoming is SheetRangeExpr -> {
-        }
-        this is ScalarVariable && incoming is ScalarVariable -> {
-        }
-        this is CoerceScalar && incoming is CoerceScalar -> value.accumulateStatistics(incoming.value)
-        this is DataMatrix && incoming is DataMatrix -> {
-            (elements zip incoming.elements).forEach { (left, incoming) -> left.accumulateStatistics(incoming) }
-        }
-        this is ValueExpr<*> && incoming is ValueExpr<*> -> {
-        }
-        else ->
-            error("$javaClass : ${incoming.javaClass}")
+        error("Unhandled difference '$e1' '$e2'")
     }
+}
+
+private fun Expr.accumulateStatistics(incoming: Expr) {
+    AccumulateStatistics().visit(this, incoming)
 }
 
 private class NopRangeExprProvider : RangeExprProvider
