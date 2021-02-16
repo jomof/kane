@@ -5,7 +5,7 @@
 # NamedTiling  
 [jvm]  
 Content  
-fun <[E](index.md) : [Any](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)> [NamedTiling](-named-tiling.md)(name: [Id](../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1222266375), tiling: [Tiling](../-tiling/index.md)<[E](index.md)>)  
+fun <[E](index.md) : [Any](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)> [NamedTiling](-named-tiling.md)(name: [Id](../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1913698542), tiling: [Tiling](../-tiling/index.md)<[E](index.md)>)  
 
 
 

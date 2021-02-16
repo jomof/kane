@@ -5,7 +5,7 @@
 # toNamed  
 [jvm]  
 Content  
-open override fun [toNamed](to-named.md)(name: [Id](../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1222266375)): [MatrixVariable](index.md)  
+open override fun [toNamed](to-named.md)(name: [Id](../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1913698542)): [MatrixVariable](index.md)  
 
 
 
