@@ -62,17 +62,17 @@ class FiguresTest {
     @Test
     fun `derivative unary function plots`() {
         for (func in Kane.unaryFunctions) {
-            val v by variable()
-            val derivative by differentiate(func(v), v)
+            val x by variable()
+            val derivative by differentiate(func(x), x)
 
-            val x by (-200..200).map { (PI * it) / 100.0 }
-            val y by derivative(x)
+            val n by (-200..200).map { (PI * it) / 100.0 }
+            val y by derivative(n)
             val op = func.meta.simpleName + "'"
             val map = y.toMap()
             val p = lets_plot(map) +
                     geom_point { this.x = "x"; this.y = "y"; color = "y" } +
                     labs(
-                        title = "$y profile",
+                        title = "${derivative.function} profile",
                         x = "$op argument",
                         y = "$op value",
                         color = "$op value"
