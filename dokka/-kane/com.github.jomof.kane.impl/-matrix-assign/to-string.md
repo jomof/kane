@@ -1,4 +1,4 @@
-//[Kane](../../index.md)/[com.github.jomof.kane.impl](../index.md)/[NamedMatrixAssign](index.md)/[toString](to-string.md)
+//[Kane](../../index.md)/[com.github.jomof.kane.impl](../index.md)/[MatrixAssign](index.md)/[toString](to-string.md)
 
 
 

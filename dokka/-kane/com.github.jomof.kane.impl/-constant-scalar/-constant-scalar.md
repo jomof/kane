@@ -5,7 +5,7 @@
 # ConstantScalar  
 [jvm]  
 Content  
-fun [ConstantScalar](-constant-scalar.md)(value: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), name: [Id](../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-704583245) = anonymous)  
+fun [ConstantScalar](-constant-scalar.md)(value: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), name: [Id](../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-392968366) = anonymous)  
 
 
 

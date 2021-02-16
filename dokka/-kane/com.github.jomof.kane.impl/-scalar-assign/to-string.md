@@ -1,4 +1,4 @@
-//[Kane](../../index.md)/[com.github.jomof.kane.impl](../index.md)/[NamedScalarAssign](index.md)/[toString](to-string.md)
+//[Kane](../../index.md)/[com.github.jomof.kane.impl](../index.md)/[ScalarAssign](index.md)/[toString](to-string.md)
 
 
 
