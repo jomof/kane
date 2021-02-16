@@ -19,9 +19,17 @@ interface IAlgebraicSummaryScalarScalarFunction {
 data class AlgebraicSummaryScalarScalar(
     val op : IAlgebraicSummaryScalarScalarFunction,
     val value : ScalarExpr,
-    val name : Id = anonymous
-) : ScalarExpr {
+    override val name : Id = anonymous
+) : ScalarExpr, INameableScalar {
     override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    override fun toNamed(name : Id) : ScalarExpr {
+        if(this.name === anonymous) return dup(name = name)
+        return NamedScalar(name, this)
+    }
+    override fun toUnnamed() : AlgebraicSummaryScalarScalar {
+        return dup(name = anonymous)
+    }
+    override fun hasName() : Boolean = name !== anonymous
     override fun toString() = render()
     fun dup(op : IAlgebraicSummaryScalarScalarFunction = this.op, value : ScalarExpr = this.value, name : Id = this.name) : AlgebraicSummaryScalarScalar {
         if (op === this.op && value === this.value && name == this.name) return this
@@ -42,9 +50,17 @@ interface IAlgebraicSummaryMatrixScalarFunction {
 data class AlgebraicSummaryMatrixScalar(
     val op : IAlgebraicSummaryMatrixScalarFunction,
     val value : MatrixExpr,
-    val name : Id = anonymous
-) : ScalarExpr {
+    override val name : Id = anonymous
+) : ScalarExpr, INameableScalar {
     override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    override fun toNamed(name : Id) : ScalarExpr {
+        if(this.name === anonymous) return dup(name = name)
+        return NamedScalar(name, this)
+    }
+    override fun toUnnamed() : AlgebraicSummaryMatrixScalar {
+        return dup(name = anonymous)
+    }
+    override fun hasName() : Boolean = name !== anonymous
     override fun toString() = render()
     fun dup(op : IAlgebraicSummaryMatrixScalarFunction = this.op, value : MatrixExpr = this.value, name : Id = this.name) : AlgebraicSummaryMatrixScalar {
         if (op === this.op && value === this.value && name == this.name) return this
@@ -65,9 +81,17 @@ interface IAlgebraicUnaryScalarScalarFunction {
 data class AlgebraicUnaryScalarScalar(
     val op : IAlgebraicUnaryScalarScalarFunction,
     val value : ScalarExpr,
-    val name : Id = anonymous
-) : ScalarExpr {
+    override val name : Id = anonymous
+) : ScalarExpr, INameableScalar {
     override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    override fun toNamed(name : Id) : ScalarExpr {
+        if(this.name === anonymous) return dup(name = name)
+        return NamedScalar(name, this)
+    }
+    override fun toUnnamed() : AlgebraicUnaryScalarScalar {
+        return dup(name = anonymous)
+    }
+    override fun hasName() : Boolean = name !== anonymous
     override fun toString() = render()
     fun dup(op : IAlgebraicUnaryScalarScalarFunction = this.op, value : ScalarExpr = this.value, name : Id = this.name) : AlgebraicUnaryScalarScalar {
         if (op === this.op && value === this.value && name == this.name) return this
@@ -88,9 +112,17 @@ interface IAlgebraicUnaryMatrixMatrixFunction {
 data class AlgebraicUnaryMatrixMatrix(
     val op : IAlgebraicUnaryMatrixMatrixFunction,
     val value : MatrixExpr,
-    val name : Id = anonymous
-) : MatrixExpr {
+    override val name : Id = anonymous
+) : MatrixExpr, INameableMatrix {
     override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    override fun toNamed(name : Id) : MatrixExpr {
+        if(this.name === anonymous) return dup(name = name)
+        return NamedMatrix(name, this)
+    }
+    override fun toUnnamed() : AlgebraicUnaryMatrixMatrix {
+        return dup(name = anonymous)
+    }
+    override fun hasName() : Boolean = name !== anonymous
     override fun toString() = render()
     fun dup(op : IAlgebraicUnaryMatrixMatrixFunction = this.op, value : MatrixExpr = this.value, name : Id = this.name) : AlgebraicUnaryMatrixMatrix {
         if (op === this.op && value === this.value && name == this.name) return this
@@ -114,9 +146,17 @@ data class AlgebraicBinaryScalarScalarScalar(
     val op : IAlgebraicBinaryScalarScalarScalarFunction,
     val left : ScalarExpr,
     val right : ScalarExpr,
-    val name : Id = anonymous
-) : ScalarExpr {
+    override val name : Id = anonymous
+) : ScalarExpr, INameableScalar {
     override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    override fun toNamed(name : Id) : ScalarExpr {
+        if(this.name === anonymous) return dup(name = name)
+        return NamedScalar(name, this)
+    }
+    override fun toUnnamed() : AlgebraicBinaryScalarScalarScalar {
+        return dup(name = anonymous)
+    }
+    override fun hasName() : Boolean = name !== anonymous
     override fun toString() = render()
     fun dup(op : IAlgebraicBinaryScalarScalarScalarFunction = this.op, left : ScalarExpr = this.left, right : ScalarExpr = this.right, name : Id = this.name) : AlgebraicBinaryScalarScalarScalar {
         if (op === this.op && left === this.left && right === this.right && name == this.name) return this
@@ -140,9 +180,17 @@ data class AlgebraicBinaryScalarMatrixMatrix(
     val op : IAlgebraicBinaryScalarMatrixMatrixFunction,
     val left : ScalarExpr,
     val right : MatrixExpr,
-    val name : Id = anonymous
-) : MatrixExpr {
+    override val name : Id = anonymous
+) : MatrixExpr, INameableMatrix {
     override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    override fun toNamed(name : Id) : MatrixExpr {
+        if(this.name === anonymous) return dup(name = name)
+        return NamedMatrix(name, this)
+    }
+    override fun toUnnamed() : AlgebraicBinaryScalarMatrixMatrix {
+        return dup(name = anonymous)
+    }
+    override fun hasName() : Boolean = name !== anonymous
     override fun toString() = render()
     fun dup(op : IAlgebraicBinaryScalarMatrixMatrixFunction = this.op, left : ScalarExpr = this.left, right : MatrixExpr = this.right, name : Id = this.name) : AlgebraicBinaryScalarMatrixMatrix {
         if (op === this.op && left === this.left && right === this.right && name == this.name) return this
@@ -166,9 +214,17 @@ data class AlgebraicBinaryMatrixScalarMatrix(
     val op : IAlgebraicBinaryMatrixScalarMatrixFunction,
     val left : MatrixExpr,
     val right : ScalarExpr,
-    val name : Id = anonymous
-) : MatrixExpr {
+    override val name : Id = anonymous
+) : MatrixExpr, INameableMatrix {
     override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    override fun toNamed(name : Id) : MatrixExpr {
+        if(this.name === anonymous) return dup(name = name)
+        return NamedMatrix(name, this)
+    }
+    override fun toUnnamed() : AlgebraicBinaryMatrixScalarMatrix {
+        return dup(name = anonymous)
+    }
+    override fun hasName() : Boolean = name !== anonymous
     override fun toString() = render()
     fun dup(op : IAlgebraicBinaryMatrixScalarMatrixFunction = this.op, left : MatrixExpr = this.left, right : ScalarExpr = this.right, name : Id = this.name) : AlgebraicBinaryMatrixScalarMatrix {
         if (op === this.op && left === this.left && right === this.right && name == this.name) return this
@@ -192,9 +248,17 @@ data class AlgebraicBinaryMatrixMatrixMatrix(
     val op : IAlgebraicBinaryMatrixMatrixMatrixFunction,
     val left : MatrixExpr,
     val right : MatrixExpr,
-    val name : Id = anonymous
-) : MatrixExpr {
+    override val name : Id = anonymous
+) : MatrixExpr, INameableMatrix {
     override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    override fun toNamed(name : Id) : MatrixExpr {
+        if(this.name === anonymous) return dup(name = name)
+        return NamedMatrix(name, this)
+    }
+    override fun toUnnamed() : AlgebraicBinaryMatrixMatrixMatrix {
+        return dup(name = anonymous)
+    }
+    override fun hasName() : Boolean = name !== anonymous
     override fun toString() = render()
     fun dup(op : IAlgebraicBinaryMatrixMatrixMatrixFunction = this.op, left : MatrixExpr = this.left, right : MatrixExpr = this.right, name : Id = this.name) : AlgebraicBinaryMatrixMatrixMatrix {
         if (op === this.op && left === this.left && right === this.right && name == this.name) return this
@@ -218,9 +282,17 @@ data class AlgebraicBinarySummaryScalarScalarScalar(
     val op : IAlgebraicBinarySummaryScalarScalarScalarFunction,
     val left : ScalarExpr,
     val right : ScalarExpr,
-    val name : Id = anonymous
-) : ScalarExpr {
+    override val name : Id = anonymous
+) : ScalarExpr, INameableScalar {
     override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    override fun toNamed(name : Id) : ScalarExpr {
+        if(this.name === anonymous) return dup(name = name)
+        return NamedScalar(name, this)
+    }
+    override fun toUnnamed() : AlgebraicBinarySummaryScalarScalarScalar {
+        return dup(name = anonymous)
+    }
+    override fun hasName() : Boolean = name !== anonymous
     override fun toString() = render()
     fun dup(op : IAlgebraicBinarySummaryScalarScalarScalarFunction = this.op, left : ScalarExpr = this.left, right : ScalarExpr = this.right, name : Id = this.name) : AlgebraicBinarySummaryScalarScalarScalar {
         if (op === this.op && left === this.left && right === this.right && name == this.name) return this
@@ -244,9 +316,17 @@ data class AlgebraicBinarySummaryMatrixScalarScalar(
     val op : IAlgebraicBinarySummaryMatrixScalarScalarFunction,
     val left : MatrixExpr,
     val right : ScalarExpr,
-    val name : Id = anonymous
-) : ScalarExpr {
+    override val name : Id = anonymous
+) : ScalarExpr, INameableScalar {
     override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    override fun toNamed(name : Id) : ScalarExpr {
+        if(this.name === anonymous) return dup(name = name)
+        return NamedScalar(name, this)
+    }
+    override fun toUnnamed() : AlgebraicBinarySummaryMatrixScalarScalar {
+        return dup(name = anonymous)
+    }
+    override fun hasName() : Boolean = name !== anonymous
     override fun toString() = render()
     fun dup(op : IAlgebraicBinarySummaryMatrixScalarScalarFunction = this.op, left : MatrixExpr = this.left, right : ScalarExpr = this.right, name : Id = this.name) : AlgebraicBinarySummaryMatrixScalarScalar {
         if (op === this.op && left === this.left && right === this.right && name == this.name) return this

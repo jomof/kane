@@ -1,8 +1,6 @@
 package com.github.jomof.kane.impl
 
-import com.github.jomof.kane.Expr
-import com.github.jomof.kane.ScalarExpr
-import com.github.jomof.kane.StatisticExpr
+import com.github.jomof.kane.*
 import com.github.jomof.kane.anonymous
 import com.github.jomof.kane.impl.types.algebraicType
 import com.github.jomof.kane.impl.visitor.visit
@@ -17,8 +15,8 @@ interface RandomVariableExpr : ScalarExpr {
 data class DiscreteUniformRandomVariable(
     val values: List<Double>,
     val identity: Any = Any(),
-    val name: Id = anonymous
-) : RandomVariableExpr, StatisticExpr {
+    override val name: Id = anonymous
+) : RandomVariableExpr, StatisticExpr, INameableScalar {
     init {
         track()
     }
@@ -29,7 +27,12 @@ data class DiscreteUniformRandomVariable(
         return ConstantScalar(sample)
     }
 
-    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    override fun toNamed(name: Id): ScalarExpr {
+        if (this.name === anonymous) return dup(name = name)
+        return NamedScalar(name, this)
+    }
+
+    override fun toUnnamed() = dup(name = anonymous)
 
     override fun toString() = render()
 
@@ -42,8 +45,15 @@ data class DiscreteUniformRandomVariable(
 
 class StreamingSampleStatisticExpr(
     val statistic: StreamingSamples,
-    val name: Id = anonymous
-) : StatisticExpr {
+    override val name: Id = anonymous
+) : StatisticExpr, INameableScalar {
+    override fun toNamed(name: Id): ScalarExpr {
+        if (this.name === anonymous) return dup(name = name)
+        return NamedScalar(name, this)
+    }
+
+    override fun toUnnamed() = dup(name = anonymous)
+
     override fun toString(): String {
         return this.algebraicType.render(statistic.median)
     }

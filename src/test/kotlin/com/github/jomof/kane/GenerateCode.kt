@@ -156,9 +156,19 @@ class GenerateCode {
             for (p in op.parameters) {
                 line("    val ${p.name} : ${p.kind}Expr,")
             }
-            line("    val name : Id = anonymous")
-            line(") : ${op.shape}Expr {")
+            line("    override val name : Id = anonymous")
+            line(") : ${op.shape}Expr, INameable${op.shape} {")
             line("    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)")
+            line("    override fun toNamed(name : Id) : ${op.shape}Expr {")
+            line("        if(this.name === anonymous) return dup(name = name)")
+            line("        return Named${op.shape}(name, this)")
+            line("    }")
+            line("    override fun toUnnamed() : $operatorClassName {")
+            line("        return dup(name = anonymous)")
+            line("    }")
+            //line("/*")
+            line("    override fun hasName() : Boolean = name !== anonymous")
+            //line("*/")
             line("    override fun toString() = render()")
             sb.append("    fun dup(op : I${operatorClassName}Function = this.op, ")
             for (p in op.parameters) {

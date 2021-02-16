@@ -11,6 +11,7 @@ import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.collections.set
 import kotlin.math.min
+import kotlin.random.Random
 import kotlin.reflect.KProperty
 
 interface SheetRange : Expr {
@@ -24,13 +25,18 @@ interface SheetRange : Expr {
     val right get() = right(1)
 }
 
-data class SheetRangeExpr(val rangeRef: SheetRangeRef, val name: Id = anonymous) :
-    SheetRange {
+data class SheetRangeExpr(
+    val rangeRef: SheetRangeRef,
+    override val name: Id = anonymous
+) :
+    SheetRange, INameable {
     override fun up(move: Int) = copy(rangeRef = rangeRef.up(move))
     override fun down(move: Int) = copy(rangeRef = rangeRef.down(move))
     override fun left(move: Int) = copy(rangeRef = rangeRef.left(move))
     override fun right(move: Int) = copy(rangeRef = rangeRef.right(move))
     operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
+    override fun toNamed(name: Id) = dup(name = name)
+    override fun toUnnamed() = dup(name = anonymous)
     override fun toString() = render()
 
     fun dup(rangeRef: SheetRangeRef = this.rangeRef, name: Id = this.name): SheetRangeExpr {
@@ -39,14 +45,20 @@ data class SheetRangeExpr(val rangeRef: SheetRangeRef, val name: Id = anonymous)
     }
 }
 
-data class CellSheetRangeExpr(val rangeRef: CellRangeRef, val name: Id = anonymous) :
-    SheetRange, ScalarExpr {
+data class CellSheetRangeExpr(val rangeRef: CellRangeRef, override val name: Id = anonymous) :
+    SheetRange, ScalarExpr, INameableScalar {
     override fun up(move: Int) = copy(rangeRef = rangeRef.up(move))
     override fun down(move: Int) = copy(rangeRef = rangeRef.down(move))
     override fun left(move: Int) = copy(rangeRef = rangeRef.left(move))
     override fun right(move: Int) = copy(rangeRef = rangeRef.right(move))
-    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = render()
+
+    override fun toNamed(name: Id): ScalarExpr {
+        if (this.name === anonymous) return dup(name = name)
+        return NamedScalar(name, this)
+    }
+
+    override fun toUnnamed() = dup(name = anonymous)
 
     fun dup(rangeRef: CellRangeRef = this.rangeRef, name: Id = this.name): CellSheetRangeExpr {
         if (rangeRef === this.rangeRef && name == this.name) return this
@@ -57,8 +69,15 @@ data class CellSheetRangeExpr(val rangeRef: CellRangeRef, val name: Id = anonymo
 data class ExogenousSheetScalar(
     val lookup: Id,
     val sheet: Sheet,
-    val name: Id = anonymous
-) : ScalarExpr {
+    override val name: Id = anonymous
+) : ScalarExpr, INameableScalar {
+    override fun toNamed(name: Id): ScalarExpr {
+        if (this.name === anonymous) return dup(name = name)
+        return NamedScalar(name, this)
+    }
+
+    override fun toUnnamed() = dup(name = anonymous)
+
     override fun toString() = sheet.cells[lookup].toString()
     fun dup(name: Id = this.name): ExogenousSheetScalar {
         if (name == this.name) return this

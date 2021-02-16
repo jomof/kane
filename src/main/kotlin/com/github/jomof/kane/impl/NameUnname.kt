@@ -10,15 +10,7 @@ fun MatrixVariable.toNamed(name: Id) = NamedMatrixVariable(name, columns, initia
 fun ScalarAssign.toNamed(name: Id) = NamedScalarAssign(name, left, right)
 fun MatrixAssign.toNamed(name: Id) = NamedMatrixAssign(name, left, right)
 fun ScalarExpr.toNamed(name: Id): ScalarExpr = when (this) {
-    is AlgebraicBinaryScalarScalarScalar -> toNamed(name)
-    is AlgebraicSummaryScalarScalar -> toNamed(name)
-    is AlgebraicUnaryScalarScalar -> toNamed(name)
-    is AlgebraicSummaryMatrixScalar -> toNamed(name)
-    is ExogenousSheetScalar -> toNamed(name)
-    is ConstantScalar -> toNamed(name)
-    is StreamingSampleStatisticExpr -> toNamed(name)
-    is RetypeScalar -> toNamed(name)
-    is DiscreteUniformRandomVariable -> toNamed(name)
+    is INameableScalar -> toNamed(name)
     is NamedScalar,
     is MatrixVariableElement,
     is CoerceScalar,
@@ -27,10 +19,7 @@ fun ScalarExpr.toNamed(name: Id): ScalarExpr = when (this) {
 }
 
 fun MatrixExpr.toNamed(name: Id): MatrixExpr = when (this) {
-    is AlgebraicBinaryScalarMatrixMatrix -> toNamed(name)
-    is AlgebraicBinaryMatrixScalarMatrix -> toNamed(name)
-    is AlgebraicBinaryMatrixMatrixMatrix -> toNamed(name)
-    is AlgebraicUnaryMatrixMatrix -> toNamed(name)
+    is INameableMatrix -> toNamed(name)
     is AlgebraicDeferredDataMatrix,
     is CoerceMatrix,
     is RetypeMatrix,
@@ -39,31 +28,12 @@ fun MatrixExpr.toNamed(name: Id): MatrixExpr = when (this) {
     else -> error("$javaClass")
 }
 
-private fun ScalarExpr.nameOrNull(name: Id) = if (hasName()) NamedScalar(name, this) else null
-
-fun DiscreteUniformRandomVariable.toNamed(name: Id) = nameOrNull(name) ?: dup(name = name)
-fun RetypeScalar.toNamed(name: Id) = nameOrNull(name) ?: dup(name = name)
-fun StreamingSampleStatisticExpr.toNamed(name: Id) = nameOrNull(name) ?: dup(name = name)
-fun ConstantScalar.toNamed(name: Id) = nameOrNull(name) ?: dup(name = name)
-fun SheetRangeExpr.toNamed(name: Id) = dup(name = name)
-fun CellSheetRangeExpr.toNamed(name: Id) = nameOrNull(name) ?: dup(name = name)
-fun AlgebraicUnaryScalarScalar.toNamed(name: Id) = nameOrNull(name) ?: dup(name = name)
-fun AlgebraicSummaryScalarScalar.toNamed(name: Id) = nameOrNull(name) ?: dup(name = name)
-fun AlgebraicBinaryScalarScalarScalar.toNamed(name: Id) = nameOrNull(name) ?: dup(name = name)
-fun AlgebraicSummaryMatrixScalar.toNamed(name: Id) = nameOrNull(name) ?: dup(name = name)
-fun ExogenousSheetScalar.toNamed(name: Id) = nameOrNull(name) ?: dup(name = name)
-fun AlgebraicUnaryMatrixMatrix.toNamed(name: Id) = dup(name = name)
-fun AlgebraicBinaryScalarMatrixMatrix.toNamed(name: Id) = dup(name = name)
-fun AlgebraicBinaryMatrixScalarMatrix.toNamed(name: Id) = dup(name = name)
-fun AlgebraicBinaryMatrixMatrixMatrix.toNamed(name: Id) = dup(name = name)
-fun AlgebraicBinarySummaryScalarScalarScalar.toNamed(name: Id) = nameOrNull(name) ?: dup(name = name)
-fun AlgebraicBinarySummaryMatrixScalarScalar.toNamed(name: Id) = nameOrNull(name) ?: dup(name = name)
 fun AlgebraicExpr.toNamed(name: Id) = (this as Expr).toNamed(name) as NamedAlgebraicExpr
-fun <E : Any> ValueExpr<E>.toNamed(name: Id) = dup(name = name)
 fun <E : Any> Tiling<E>.toNamed(name: Id) = toNamedTilingExpr(name)
 
 fun Expr.toNamed(name: Id): Expr {
     return when (this) {
+        is INameable -> toNamed(name)
         is ScalarExpr -> toNamed(name)
         is MatrixExpr -> toNamed(name)
         is SheetRange -> toNamed(name)
@@ -71,14 +41,14 @@ fun Expr.toNamed(name: Id): Expr {
         is MatrixAssign -> toNamed(name)
         is ScalarVariable -> toNamed(name)
         is MatrixVariable -> toNamed(name)
-        is ValueExpr<*> -> toNamed(name)
         is Tiling<*> -> toNamed(name)
-        else -> TODO()
+        else -> error("$javaClass")
     }
 }
 
 fun Expr.toUnnamed(): Expr {
     return when (this) {
+        is INameable -> toUnnamed()
         is MatrixVariableElement,
         is AlgebraicDeferredDataMatrix,
         is ScalarVariable,
@@ -98,24 +68,6 @@ fun Expr.toUnnamed(): Expr {
         is NamedScalarVariable -> ScalarVariable(initial)
         is NamedMatrixVariable -> MatrixVariable(columns, rows, initial)
         is NamedSheet -> sheet
-        is AlgebraicBinaryScalarScalarScalar -> dup(name = anonymous)
-        is AlgebraicUnaryScalarScalar -> dup(name = anonymous)
-        is AlgebraicSummaryScalarScalar -> dup(name = anonymous)
-        is AlgebraicSummaryMatrixScalar -> dup(name = anonymous)
-        is AlgebraicBinaryMatrixMatrixMatrix -> dup(name = anonymous)
-        is AlgebraicUnaryMatrixMatrix -> dup(name = anonymous)
-        is AlgebraicBinaryMatrixScalarMatrix -> dup(name = anonymous)
-        is AlgebraicBinaryScalarMatrixMatrix -> dup(name = anonymous)
-        is AlgebraicBinarySummaryScalarScalarScalar -> dup(name = anonymous)
-        is AlgebraicBinarySummaryMatrixScalarScalar -> dup(name = anonymous)
-        is ExogenousSheetScalar -> dup(name = anonymous)
-        is CellSheetRangeExpr -> dup(name = anonymous)
-        is ConstantScalar -> dup(name = anonymous)
-        is SheetRangeExpr -> dup(name = anonymous)
-        is ValueExpr<*> -> dup(name = anonymous)
-        is StreamingSampleStatisticExpr -> dup(name = anonymous)
-        is RetypeScalar -> dup(name = anonymous)
-        is DiscreteUniformRandomVariable -> dup(name = anonymous)
         else ->
             error("$javaClass")
     }
@@ -125,6 +77,7 @@ fun Expr.toUnnamed(): Expr {
 val Expr.name: Id
     get() : Id {
         val result = when (this) {
+            is INameable -> name
             is NamedScalar -> name
             is NamedTiling<*> -> name
             is NamedMatrix -> name
@@ -133,24 +86,6 @@ val Expr.name: Id
             is NamedMatrixVariable -> name
             is NamedScalarAssign -> name
             is ScalarReference -> name
-            is StreamingSampleStatisticExpr -> name
-            is AlgebraicBinaryScalarScalarScalar -> name
-            is AlgebraicSummaryScalarScalar -> name
-            is AlgebraicSummaryMatrixScalar -> name
-            is AlgebraicUnaryScalarScalar -> name
-            is AlgebraicUnaryMatrixMatrix -> name
-            is AlgebraicBinaryScalarMatrixMatrix -> name
-            is AlgebraicBinaryMatrixScalarMatrix -> name
-            is AlgebraicBinaryMatrixMatrixMatrix -> name
-            is AlgebraicBinarySummaryScalarScalarScalar -> name
-            is AlgebraicBinarySummaryMatrixScalarScalar -> name
-            is ExogenousSheetScalar -> name
-            is CellSheetRangeExpr -> name
-            is SheetRangeExpr -> name
-            is ConstantScalar -> name
-            is ValueExpr<*> -> name
-            is RetypeScalar -> name
-            is DiscreteUniformRandomVariable -> name
             else ->
                 error("$javaClass")
         }
@@ -161,6 +96,7 @@ val Expr.name: Id
     }
 
 fun Expr.hasName(): Boolean = when (this) {
+    is INameable -> hasName()
     is NamedMatrixVariable -> true
     is NamedScalar -> true
     is NamedMatrixAssign -> true
@@ -184,24 +120,6 @@ fun Expr.hasName(): Boolean = when (this) {
     is CellIndexedScalar -> false
     is ScalarReference -> true
     is MatrixReference -> true
-    is ConstantScalar -> name != anonymous
-    is AlgebraicBinaryScalarScalarScalar -> name != anonymous
-    is AlgebraicUnaryScalarScalar -> name != anonymous
-    is AlgebraicSummaryScalarScalar -> name != anonymous
-    is AlgebraicSummaryMatrixScalar -> name != anonymous
-    is AlgebraicBinarySummaryScalarScalarScalar -> name != anonymous
-    is AlgebraicBinaryMatrixMatrixMatrix -> name != anonymous
-    is AlgebraicUnaryMatrixMatrix -> name != anonymous
-    is AlgebraicBinaryMatrixScalarMatrix -> name != anonymous
-    is AlgebraicBinaryScalarMatrixMatrix -> name != anonymous
-    is AlgebraicBinarySummaryMatrixScalarScalar -> name != anonymous
-    is CellSheetRangeExpr -> name != anonymous
-    is ExogenousSheetScalar -> name != anonymous
-    is SheetRangeExpr -> name != anonymous
-    is ValueExpr<*> -> name != anonymous
-    is StreamingSampleStatisticExpr -> name != anonymous
-    is RetypeScalar -> name != anonymous
-    is DiscreteUniformRandomVariable -> name != anonymous
     else -> error("$javaClass")
 }
 

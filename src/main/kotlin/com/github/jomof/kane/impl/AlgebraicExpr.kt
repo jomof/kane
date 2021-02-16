@@ -52,12 +52,14 @@ data class BinarySummaryOp(
 
 data class ConstantScalar(
     val value: Double,
-    val name: Id = anonymous
-) : ScalarExpr {
-    init {
-        track()
+    override val name: Id = anonymous
+) : ScalarExpr, INameableScalar {
+    override fun toNamed(name: Id): ScalarExpr {
+        if (this.name === anonymous) return dup(name = name)
+        return NamedScalar(name, this)
     }
 
+    override fun toUnnamed() = dup(name = anonymous)
     override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = render()
     fun dup(name: Id = this.name): ConstantScalar {
@@ -69,23 +71,18 @@ data class ConstantScalar(
 data class ValueExpr<E : Any>(
     val value: E,
     override val type: KaneType<E>,
-    val name: Id = anonymous
-) : TypedExpr<E> {
+    override val name: Id = anonymous
+) : TypedExpr<E>, INameable {
     init {
         assert(value !is Expr) {
             "${value.javaClass}"
         }
-        track()
     }
 
+    override fun toNamed(name: Id) = dup(name = name)
+    override fun toUnnamed() = dup(name = anonymous)
     override fun toString() = type.render(value)
-    operator fun getValue(thisRef: Any?, property: KProperty<*>): ValueExpr<E> {
-        val result = dup(name = property.name)
-        assert(result.hasName()) {
-            "expected named"
-        }
-        return result
-    }
+    operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
 
     fun dup(value: E = this.value, type: KaneType<E> = this.type, name: Id = this.name): ValueExpr<E> {
         if (value === this.value && type == this.type && name == this.name) return this
@@ -209,14 +206,15 @@ data class MatrixVariableElement(
 data class RetypeScalar(
     val scalar: ScalarExpr,
     val type: AlgebraicType,
-    val name: Id = anonymous
-) : ScalarExpr {
-    init {
-        track()
+    override val name: Id = anonymous
+) : ScalarExpr, INameableScalar {
+    override fun toString() = render()
+    override fun toNamed(name: Id): ScalarExpr {
+        if (this.name === anonymous) return dup(name = name)
+        return NamedScalar(name, this)
     }
 
-    override fun toString() = render()
-    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(name = property.name)
+    override fun toUnnamed() = dup(name = anonymous)
 
     fun dup(scalar: ScalarExpr = this.scalar, type: AlgebraicType = this.type, name: Id = this.name): RetypeScalar {
         if (scalar === this.scalar && type === this.type && name === this.name) return this
