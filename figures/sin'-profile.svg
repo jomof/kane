@@ -60,7 +60,7 @@ text {
   <g class="plt-plot">
     <g class="plt-plot-title" transform="translate(250.0 12.0 ) ">
       <text text-anchor="middle" dy="0.35em">
-      y=derivative(x) profile
+      cos(x) profile
       </text>
     </g>
     <g transform="translate(20.0 34.0 ) ">
@@ -180,9 +180,9 @@ text {
         <line x1="0.0" y1="0.0" x2="0.0" y2="260.3333333333333" stroke-width="1.0" stroke="rgb(0,0,0)" stroke-opacity="1.0">
         </line>
       </g>
-      <g transform="translate(35.8 0.0 ) " clip-path="url(#F5NHhP)" clip-bounds-jfx="[rect (0.0, 0.0), (327.77, 260.3333333333333)]">
+      <g transform="translate(35.8 0.0 ) " clip-path="url(#b8Vyz6)" clip-bounds-jfx="[rect (0.0, 0.0), (327.77, 260.3333333333333)]">
         <defs>
-          <clipPath id="F5NHhP">
+          <clipPath id="b8Vyz6">
             <rect x="0.0" y="0.0" width="327.77" height="260.3333333333333">
             </rect>
           </clipPath>
