@@ -5,7 +5,7 @@
 # dup  
 [jvm]  
 Content  
-fun [dup](dup.md)(op: [IAlgebraicSummaryScalarScalarFunction](../-i-algebraic-summary-scalar-scalar-function/index.md) = this.op, value: [ScalarExpr](../-scalar-expr/index.md) = this.value, name: [Id](../../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1790361778) = this.name): [AlgebraicSummaryScalarScalar](index.md)  
+fun [dup](dup.md)(op: [IAlgebraicSummaryScalarScalarFunction](../-i-algebraic-summary-scalar-scalar-function/index.md) = this.op, value: [ScalarExpr](../-scalar-expr/index.md) = this.value, name: [Id](../../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-704583245) = this.name): [AlgebraicSummaryScalarScalar](index.md)  
 
 
 
