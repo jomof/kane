@@ -5,7 +5,7 @@
 # dup  
 [jvm]  
 Content  
-fun [dup](dup.md)(scalar: [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md) = this.scalar, type: [AlgebraicType](../../com.github.jomof.kane.impl.types/-algebraic-type/index.md) = this.type, name: [Id](../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1356131440) = this.name): [RetypeScalar](index.md)  
+fun [dup](dup.md)(scalar: [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md) = this.scalar, type: [AlgebraicType](../../com.github.jomof.kane.impl.types/-algebraic-type/index.md) = this.type, name: [Id](../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1222266375) = this.name): [RetypeScalar](index.md)  
 
 
 
