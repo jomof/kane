@@ -5,7 +5,7 @@
 # copy  
 [jvm]  
 Content  
-fun [copy](copy.md)(op: [IAlgebraicBinaryScalarMatrixMatrixFunction](../-i-algebraic-binary-scalar-matrix-matrix-function/index.md), left: [ScalarExpr](../-scalar-expr/index.md), right: [MatrixExpr](../-matrix-expr/index.md), name: [Id](../../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1137976118) = anonymous): [AlgebraicBinaryScalarMatrixMatrix](index.md)  
+fun [copy](copy.md)(op: [IAlgebraicBinaryScalarMatrixMatrixFunction](../-i-algebraic-binary-scalar-matrix-matrix-function/index.md), left: [ScalarExpr](../-scalar-expr/index.md), right: [MatrixExpr](../-matrix-expr/index.md), name: [Id](../../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-355281819) = anonymous): [AlgebraicBinaryScalarMatrixMatrix](index.md)  
 
 
 
