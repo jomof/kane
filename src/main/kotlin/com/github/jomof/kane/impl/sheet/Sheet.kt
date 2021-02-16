@@ -28,6 +28,10 @@ data class SheetRangeExpr(
     override val name: Id = anonymous
 ) :
     SheetRange, INameable {
+    init {
+        //   assert(rangeRef !is CellRangeRef)
+    }
+
     override fun up(move: Int) = copy(rangeRef = rangeRef.up(move))
     override fun down(move: Int) = copy(rangeRef = rangeRef.down(move))
     override fun left(move: Int) = copy(rangeRef = rangeRef.left(move))
