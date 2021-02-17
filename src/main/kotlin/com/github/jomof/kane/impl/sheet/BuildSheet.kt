@@ -198,7 +198,6 @@ data class CellIndexedScalar(
     val expr: Expr
 ) : ScalarExpr {
     override fun toString() = "($expr)[${coordinateToCellName(cell)}]"
-
     fun dup(cell: Coordinate = this.cell, expr: Expr = this.expr): CellIndexedScalar {
         if (cell === this.cell && expr === this.expr) return this
         return CellIndexedScalar(cell, expr)
@@ -339,18 +338,12 @@ private class CollapseCellIndexedScalar : SheetRewritingVisitor() {
         }
     }
 
-    override fun rewrite(expr: CoerceMatrix): Expr {
-        val rewritten = rewrite(expr.value)
-        return if (rewritten === expr.value) expr
-        else expr.copy(value = rewritten)
-    }
-
     override fun rewrite(expr: CoerceScalar): Expr {
         val rewritten = rewrite(expr.value)
         return when {
             rewritten === expr.value -> expr
             rewritten is CoerceScalar -> rewritten
-            else -> expr.copy(value = rewritten)
+            else -> expr.dup(value = rewritten)
         }
     }
 
@@ -359,7 +352,7 @@ private class CollapseCellIndexedScalar : SheetRewritingVisitor() {
         return if (rewritten === matrix) this
         else when (rewritten) {
             is ScalarExpr -> rewritten
-            is MatrixExpr -> expr.copy(matrix = rewritten)
+            is MatrixExpr -> expr.dup(matrix = rewritten)
             else -> error("${rewritten.javaClass}")
         }
     }

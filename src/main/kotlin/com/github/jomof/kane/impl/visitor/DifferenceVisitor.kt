@@ -142,7 +142,7 @@ open class DifferenceVisitor {
             val (rewrittenName, rewrittenCell) = cell(name, c1, c2)
             cells[rewrittenName] = rewrittenCell
         }
-        return e1.copy(cells = cells.toCells())
+        return e1.dup(cells = cells.toCells())
     }
 
     fun visit(e1: Tableau, e2: Tableau): Expr {

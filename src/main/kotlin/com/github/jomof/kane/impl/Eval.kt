@@ -23,6 +23,7 @@ private val reduceNamedExprs = object : RewritingVisitor(allowNameChange = true,
         if (result is MatrixVariable) return result
         if (result is ScalarAssign) return result
         if (result is MatrixAssign) return result
+        if (!result.hasName()) return result
         return result.toUnnamed()
     }
 }
@@ -51,7 +52,7 @@ private class ReduceAlgebraicUnaryScalar : RewritingVisitor(checkIdentity = true
                 is RetypeScalar -> {
                     val reduced = sub.op.reduceArithmetic(sub.value)
                     if (reduced == null) sub
-                    else sub.value.copy(scalar = reduced)
+                    else sub.value.dup(scalar = reduced)
                 }
                 else -> sub.op.reduceArithmetic(sub.value) ?: sub
             }
@@ -69,12 +70,12 @@ private class ReduceAlgebraicUnaryScalar : RewritingVisitor(checkIdentity = true
             }
             is ConstantScalar ->
                 if (expr.scalar === scalar) return expr
-                else expr.copy(scalar = scalar)
+                else expr.dup(scalar = scalar)
             else ->
                 if (scalar === expr.scalar)
                     expr
                 else
-                    expr.copy(scalar = scalar)
+                    expr.dup(scalar = scalar)
         }
     }
 }
@@ -117,7 +118,7 @@ private val reduceAlgebraicBinaryScalarStatistic = object : RewritingVisitor() {
                 right
             )!!
             left is RetypeScalar && left.scalar is StreamingSampleStatisticExpr -> {
-                val result = left.copy(scalar = op.reduceArithmetic(left.scalar, right)!!)
+                val result = left.dup(scalar = op.reduceArithmetic(left.scalar, right)!!)
                 result
             }
             else ->
@@ -350,7 +351,7 @@ private class ExpandSheetCells(val excludeVariables: Set<Id>) : RewritingVisitor
             changed = changed || (rewritten !== cellExpr)
             rewrittenElements[name] = rewritten
         }
-        return if (changed) copy(cells = rewrittenElements.toCells())
+        return if (changed) dup(cells = rewrittenElements.toCells())
         else this
     }
 }

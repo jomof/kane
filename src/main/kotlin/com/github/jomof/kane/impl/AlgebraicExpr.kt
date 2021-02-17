@@ -61,10 +61,12 @@ data class ConstantScalar(
     override fun toUnnamed() = dup(name = anonymous)
     override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toString() = render()
-    fun dup(name: Id = this.name): ConstantScalar {
-        if (name === this.name) return this
-        return copy(name = name)
+    fun dup(value: Double = this.value, name: Id = this.name): ConstantScalar {
+        if (value == this.value && name === this.name) return this
+        return ConstantScalar(value = value, name = name)
     }
+
+    fun copy(value: Double) {}
 }
 
 data class ValueExpr<E : Any>(
@@ -140,6 +142,9 @@ data class NamedScalar(
     }
 
     override fun toString() = render()
+    fun copy(scalar: ScalarExpr = this.scalar, name: Id = this.name) {
+        error("Use dup")
+    }
 
     fun dup(scalar: ScalarExpr = this.scalar, name: Id = this.name): NamedScalar {
         if (scalar === this.scalar && name == this.name) return this
@@ -160,6 +165,9 @@ data class NamedMatrix(
 
     override fun getValue(thisRef: Any?, property: KProperty<*>) = NamedMatrix(property.name, matrix)
     override fun toString() = render()
+    fun copy(matrix: MatrixExpr = this.matrix, name: Id = this.name) {
+        error("Use dup")
+    }
 
     fun dup(matrix: MatrixExpr = this.matrix, name: Id = this.name): NamedMatrix {
         if (matrix === this.matrix && name == this.name) return this
@@ -215,6 +223,8 @@ data class RetypeScalar(
         if (scalar === this.scalar && type === this.type && name === this.name) return this
         return RetypeScalar(scalar, type, name)
     }
+
+    fun copy(scalar: ScalarExpr = this.scalar, type: AlgebraicType = this.type) {}
 }
 
 /**
@@ -293,6 +303,7 @@ data class MatrixAssign(
         if (left === this.left && right === this.right && name == this.name) return this
         return MatrixAssign(left, right, name)
     }
+    //fun copy(left: MatrixVariable = this.left, right: MatrixExpr = this.right, name: Id = this.name) { }
 
     operator fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
     override fun toNamed(name: Id) = dup(name = name)

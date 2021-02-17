@@ -59,7 +59,6 @@ fun Expr.toUnnamed(): Expr {
         is NamedScalar -> scalar
         is NamedMatrix -> matrix
         is NamedTiling<*> -> tiling
-        is NamedSheet -> sheet
         else ->
             error("$javaClass")
     }

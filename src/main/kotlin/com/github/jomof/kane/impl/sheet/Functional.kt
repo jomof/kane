@@ -29,7 +29,7 @@ fun Sheet.ordinalRows(elements : List<Int>) : Sheet {
             } else null
         }
     }.toCells()
-    return copy(cells = cells, rowDescriptors = rowDescriptors)
+    return dup(cells = cells, rowDescriptors = rowDescriptors)
 }
 
 /**
@@ -63,7 +63,7 @@ fun Sheet.ordinalColumns(elements : List<Int>) : Sheet {
             } else null
         }
     }.toCells()
-    return copy(cells = cells, columnDescriptors = columnDescriptors)
+    return dup(cells = cells, columnDescriptors = columnDescriptors)
 }
 
 internal fun Sheet.columnType(column: Int): AdmissibleDataType<*> {

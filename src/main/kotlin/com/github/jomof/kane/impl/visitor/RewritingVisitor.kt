@@ -18,42 +18,6 @@ internal open class RewritingVisitor(
     private var depth = 0
     private val enableDiagnostics = false
     private val stack = mutableListOf<Expr>()
-    open fun rewrite(expr: CoerceScalar): Expr = with(expr) {
-        val rewritten = rewrite(value)
-        return if (rewritten === value) this
-        else copy(value = rewritten)
-    }
-
-    open fun rewrite(expr: CoerceMatrix): Expr = with(expr) {
-        val rewritten = rewrite(value)
-        return if (rewritten === value) this
-        else copy(value = rewritten)
-    }
-
-    open fun rewrite(expr: RetypeScalar): Expr = with(expr) {
-        val rewritten = scalar(scalar)
-        return if (rewritten === scalar) this
-        else copy(scalar = rewritten)
-    }
-
-    open fun rewrite(expr: CellIndexedScalar): Expr {
-        val rewritten = rewrite(expr.expr)
-        return if (rewritten === expr.expr) expr
-        else expr.copy(expr = rewritten)
-    }
-
-    open fun rewrite(expr: RetypeMatrix): Expr = with(expr) {
-        val rewritten = matrix(matrix)
-        return if (rewritten === matrix) this
-        else copy(matrix = rewritten)
-    }
-
-    open fun rewrite(expr: GroupBy): Expr = with(expr) {
-        val rewritten = sheet(sheet)
-        return if (rewritten === sheet) this
-        else copy(sheet = rewritten)
-    }
-
     open fun rewrite(expr: ScalarReference): Expr = expr
     open fun rewrite(expr: MatrixReference): Expr = expr
     open fun rewrite(expr: ExogenousSheetScalar): Expr = expr
@@ -67,50 +31,15 @@ internal open class RewritingVisitor(
     open fun rewrite(expr: MatrixVariable): Expr = expr
     open fun rewrite(expr: ScalarVariable): Expr = expr
     open fun rewrite(expr: MatrixVariableElement): Expr = expr
-    open fun rewrite(expr: ScalarAssign): Expr {
-        val scalar = scalar(expr.right)
-        if (scalar === expr.right) return expr
-        return expr.copy(right = scalar)
-    }
-
-    open fun rewrite(expr: MatrixAssign): Expr {
-        val matrix = matrix(expr.right)
-        if (matrix === expr.right) return expr
-        return expr.copy(right = matrix)
-    }
-
-    open fun rewrite(expr: NamedScalar): Expr = with(expr) {
-        val rewritten = scalar(scalar)
-        return if (rewritten === scalar) this
-        else copy(scalar = rewritten)
-    }
-
-    open fun rewrite(expr: NamedMatrix): Expr = with(expr) {
-        val rewritten = matrix(matrix)
-        return if (rewritten === matrix) this
-        else copy(matrix = rewritten)
-    }
-
-    open fun rewrite(expr: AlgebraicDeferredDataMatrix): Expr = with(expr) {
-        val leftRewritten = algebraic(expr.left)
-        val rightRewritten = algebraic(expr.right)
-        val dataRewritten = rewrite(expr.data) as DataMatrix
-        if (leftRewritten === left && rightRewritten === right && dataRewritten === data) return this
-        else copy(left = leftRewritten, right = rightRewritten, data = dataRewritten)
-    }
-
-    open fun rewrite(expr: DataMatrix): Expr = with(expr) {
-        var changed = false
-        val rewrittenElements = mutableListOf<ScalarExpr>()
-        for (element in elements) {
-            val rewritten = scalar(element)
-            rewrittenElements += rewritten
-            changed = changed || (rewritten !== element)
-        }
-        return if (changed) copy(elements = rewrittenElements)
-        else this
-    }
-
+    open fun rewrite(expr: CoerceScalar): Expr = expr.dup(value = rewrite(expr.value))
+    open fun rewrite(expr: CoerceMatrix): Expr = expr.dup(value = rewrite(expr.value))
+    open fun rewrite(expr: RetypeScalar): Expr = expr.dup(scalar = scalar(expr.scalar))
+    open fun rewrite(expr: CellIndexedScalar): Expr = expr.dup(expr = rewrite(expr.expr))
+    open fun rewrite(expr: RetypeMatrix): Expr = expr.dup(matrix = matrix(expr.matrix))
+    open fun rewrite(expr: ScalarAssign): Expr = expr.dup(right = scalar(expr.right))
+    open fun rewrite(expr: MatrixAssign): Expr = expr.dup(right = matrix(expr.right))
+    open fun rewrite(expr: NamedScalar): Expr = expr.dup(scalar = scalar(expr.scalar))
+    open fun rewrite(expr: NamedMatrix): Expr = expr.dup(matrix = matrix(expr.matrix))
     open fun rewrite(expr: AlgebraicUnaryScalarScalar): Expr = expr.dup(value = scalar(expr.value))
     open fun rewrite(expr: AlgebraicSummaryScalarScalar): Expr = expr.dup(value = scalar(expr.value))
     open fun rewrite(expr: AlgebraicSummaryMatrixScalar): Expr = expr.dup(value = matrix(expr.value))
@@ -133,6 +62,33 @@ internal open class RewritingVisitor(
     open fun rewrite(expr: AlgebraicBinarySummaryMatrixScalarScalar): Expr =
         expr.dup(left = matrix(expr.left), right = scalar(expr.right))
 
+    open fun rewrite(expr: GroupBy): Expr = with(expr) {
+        val rewritten = sheet(sheet)
+        return if (rewritten === sheet) this
+        else copy(sheet = rewritten)
+    }
+
+    open fun rewrite(expr: AlgebraicDeferredDataMatrix): Expr = with(expr) {
+        val leftRewritten = algebraic(expr.left)
+        val rightRewritten = algebraic(expr.right)
+        val dataRewritten = rewrite(expr.data) as DataMatrix
+        if (leftRewritten === left && rightRewritten === right && dataRewritten === data) return this
+        else copy(left = leftRewritten, right = rightRewritten, data = dataRewritten)
+    }
+
+    open fun rewrite(expr: DataMatrix): Expr = with(expr) {
+        var changed = false
+        val rewrittenElements = mutableListOf<ScalarExpr>()
+        for (element in elements) {
+            val rewritten = scalar(element)
+            rewrittenElements += rewritten
+            changed = changed || (rewritten !== element)
+        }
+        return if (changed) copy(elements = rewrittenElements)
+        else this
+    }
+
+
     open fun rewrite(expr: Sheet): Expr = with(expr) {
         var changed = false
         val rewrittenElements = mutableMapOf<Id, Expr>()
@@ -143,7 +99,7 @@ internal open class RewritingVisitor(
             changed = changed || (rewrittenName !== name)
             rewrittenElements[rewrittenName] = rewrittenCell
         }
-        return if (changed) copy(cells = rewrittenElements.toCells())
+        return if (changed) dup(cells = rewrittenElements.toCells())
         else this
     }
 
@@ -159,30 +115,14 @@ internal open class RewritingVisitor(
         else this
     }
 
-    open fun scalar(expr: ScalarExpr): ScalarExpr {
-        val result = rewrite(expr)
-        assert(result is ScalarExpr) {
-            rewrite(expr)
-            "result '${result.javaClass.simpleName}' was not ScalarExpr"
-        }
-        return result as ScalarExpr
-    }
-
     open fun cell(name: Id, expr: Expr): Pair<Id, Expr> {
         return name to rewrite(expr)
     }
 
+    open fun scalar(expr: ScalarExpr) = rewrite(expr) as ScalarExpr
     open fun sheet(expr: Sheet) = rewrite(expr) as Sheet
     open fun statistic(expr: StatisticExpr) = rewrite(expr) as StatisticExpr
     open fun matrix(expr: MatrixExpr) = rewrite(expr) as MatrixExpr
-    open fun range(expr: SheetRange): SheetRange {
-        val result = rewrite(expr)
-        assert(result is SheetRangeExpr) {
-            rewrite(expr)
-            "result '${result.javaClass.simpleName}' was not SheetRangeExpr"
-        }
-        return result as SheetRangeExpr
-    }
     open fun algebraic(expr: AlgebraicExpr) = rewrite(expr) as AlgebraicExpr
     open fun named(expr: NamedAlgebraicExpr) = rewrite(expr) as NamedAlgebraicExpr
 

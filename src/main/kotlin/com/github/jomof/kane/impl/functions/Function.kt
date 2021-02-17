@@ -203,7 +203,7 @@ interface AlgebraicSummaryFunction :
     override fun reduceArithmetic(value: ScalarExpr): ScalarExpr = when (value) {
         is StreamingSampleStatisticExpr -> reduceArithmetic(value)
         is RetypeScalar -> RetypeScalar(reduceArithmetic(value.scalar), value.type)
-        is NamedScalar -> value.copy(scalar = reduceArithmetic(value.scalar))
+        is NamedScalar -> value.dup(scalar = reduceArithmetic(value.scalar))
         else ->
             error("${value.javaClass}")
     }

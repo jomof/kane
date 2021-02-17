@@ -26,8 +26,7 @@ interface SheetRange : Expr {
 data class SheetRangeExpr(
     val rangeRef: SheetRangeRef,
     override val name: Id = anonymous
-) :
-    SheetRange, INameable {
+) : SheetRange, INameable {
     init {
         assert(rangeRef !is CellRangeRef)
     }
@@ -83,7 +82,7 @@ data class ExogenousSheetScalar(
     override fun toString() = sheet.cells[lookup].toString()
     fun dup(name: Id = this.name): ExogenousSheetScalar {
         if (name == this.name) return this
-        return copy(name = name)
+        return ExogenousSheetScalar(lookup = lookup, sheet = sheet, name = name)
     }
 }
 
@@ -151,13 +150,6 @@ data class Cells(private val map: Map<Id, Expr>) {
     }
 
     fun filter(predicate: (Map.Entry<Id, Expr>) -> Boolean) = map.filter(predicate).toCells()
-    fun mapExprs(transform: (Id, Expr) -> Expr): Cells {
-        val mutable = toMutableMap()
-        map.forEach { (id, expr) ->
-            mutable[id] = transform(id, expr)
-        }
-        return mutable.toCells()
-    }
 
     fun forEach(action: (Map.Entry<Id, Expr>) -> Unit) {
         return map.forEach(action)
@@ -184,30 +176,28 @@ data class Cells(private val map: Map<Id, Expr>) {
 fun List<Pair<Id, Expr>>.toCells() = Cells(toMap())
 fun Map<Id, Expr>.toCells() = Cells(this)
 
-data class NamedSheet(
-    override val name: String,
-    val sheet: Sheet
-) : NamedExpr
-
 data class Sheet(
     val columnDescriptors: Map<Int, ColumnDescriptor>,
     val rowDescriptors: Map<Int, RowDescriptor>,
     val cells: Cells,
     val sheetDescriptor: SheetDescriptor,
     val columns: Int,
-    val rows: Int
-) : Expr {
-
+    val rows: Int,
+    override val name: Id = anonymous
+) : Expr, INameable {
+    override fun toNamed(name: Id) = dup(name = name)
+    override fun toUnnamed() = dup(name = anonymous)
     override fun toString() = render()
 
     companion object {
 
         private val emptySheet = Sheet(mapOf(), mapOf(), Cells(mapOf()), SheetDescriptor(), 0, 0)
-        internal fun of(
+        internal fun create(
             columnDescriptors: Map<Int, ColumnDescriptor>,
             rowDescriptors: Map<Int, RowDescriptor>,
             sheetDescriptor: SheetDescriptor,
-            cells: Cells
+            cells: Cells,
+            name: Id = anonymous
         ): Sheet {
             if (cells.isEmpty() &&
                 columnDescriptors.isEmpty() &&
@@ -229,19 +219,39 @@ data class Sheet(
                 cells,
                 sheetDescriptor,
                 max(columnsFromCells, columnsColumnDescriptors) + 1,
-                rows + 1
+                rows + 1,
+                name
             )
         }
     }
 
-    operator fun getValue(nothing: Nothing?, property: KProperty<*>) = NamedSheet(property.name, this)
+    operator fun getValue(nothing: Nothing?, property: KProperty<*>) = toNamed(property.name)
 
     fun copy(
         columnDescriptors: Map<Int, ColumnDescriptor> = this.columnDescriptors,
         rowDescriptors: Map<Int, RowDescriptor> = this.rowDescriptors,
         cells: Cells = this.cells,
-        sheetDescriptor: SheetDescriptor = this.sheetDescriptor
-    ) = of(columnDescriptors, rowDescriptors, sheetDescriptor, cells)
+        sheetDescriptor: SheetDescriptor = this.sheetDescriptor,
+        name: Id = this.name
+    ) {
+        error("Use dup")
+    }
+
+    fun dup(
+        columnDescriptors: Map<Int, ColumnDescriptor> = this.columnDescriptors,
+        rowDescriptors: Map<Int, RowDescriptor> = this.rowDescriptors,
+        cells: Cells = this.cells,
+        sheetDescriptor: SheetDescriptor = this.sheetDescriptor,
+        name: Id = this.name
+    ): Sheet {
+        if (columnDescriptors === this.columnDescriptors &&
+            rowDescriptors === this.rowDescriptors &&
+            cells === this.cells &&
+            sheetDescriptor === this.sheetDescriptor &&
+            name === this.name
+        ) return this
+        return create(columnDescriptors, rowDescriptors, sheetDescriptor, cells, name)
+    }
 
     /**
      * Create a new sheet with cell values changed.
@@ -267,13 +277,13 @@ data class Sheet(
 /**
  * Limit the number of output lines when rendering the sheet
  */
-internal fun Sheet.limitOutputLines(limit: Int) = copy(sheetDescriptor = sheetDescriptor.copy(limitOutputLines = limit))
+internal fun Sheet.limitOutputLines(limit: Int) = dup(sheetDescriptor = sheetDescriptor.copy(limitOutputLines = limit))
 
 /**
  * Whether to show Excel-like column tags in the column headers
  */
 internal fun Sheet.showExcelColumnTags(show: Boolean = true) =
-    copy(sheetDescriptor = sheetDescriptor.copy(showExcelColumnTags = show))
+    dup(sheetDescriptor = sheetDescriptor.copy(showExcelColumnTags = show))
 
 internal fun GroupBy.showExcelColumnTags(show: Boolean = true) = copy(sheet = sheet.showExcelColumnTags(show))
 
@@ -281,7 +291,7 @@ internal fun GroupBy.showExcelColumnTags(show: Boolean = true) = copy(sheet = sh
  * Whether to show Excel-like column tags in the column headers
  */
 internal fun Sheet.showRowAndColumnForSingleCell(show: Boolean = true) =
-    copy(sheetDescriptor = sheetDescriptor.copy(showRowAndColumnForSingleCell = show))
+    dup(sheetDescriptor = sheetDescriptor.copy(showRowAndColumnForSingleCell = show))
 
 
 internal fun Sheet.toBuilder(): SheetBuilderImpl {
@@ -312,7 +322,7 @@ class SheetBuilderImpl(
             cells[Identifier.normalizeUserInput(namedExpr.name)] = namedExpr.toUnnamed()
         }
 
-        return Sheet.of(columnDescriptors, rowDescriptors, sheetDescriptor, cells.toCells())
+        return Sheet.create(columnDescriptors, rowDescriptors, sheetDescriptor, cells.toCells(), anonymous)
     }
 
     fun build(): Sheet {

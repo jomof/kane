@@ -16,14 +16,14 @@ fun Sheet.mapDoubles(translate: (Double) -> Double): Sheet {
         when (expr) {
             is ConstantScalar -> {
                 val result = translate(expr.value)
-                new[name] = expr.copy(value = result)
+                new[name] = expr.dup(value = result)
             }
             is ValueExpr<*> -> {
             }
             else -> error("${expr.javaClass}")
         }
     }
-    return copy(cells = new.toCells())
+    return dup(cells = new.toCells())
 }
 
 /**
@@ -32,6 +32,6 @@ fun Sheet.mapDoubles(translate: (Double) -> Double): Sheet {
 fun Expr.mapDoubles(translate: (Double) -> Double): Expr {
     return when (this) {
         is Sheet -> mapDoubles(translate)
-        else -> error("Unsupported ${javaClass}")
+        else -> error("Unsupported $javaClass")
     }
 }

@@ -93,19 +93,19 @@ internal fun differentiate(expr: AlgebraicExpr): AlgebraicExpr {
             }
             is NamedMatrix -> {
                 val diff = matrix.diffOr()
-                if (diff != null) copy(name = "${name}'", matrix = diff)
+                if (diff != null) dup(name = "${name}'", matrix = diff)
                 else {
                     val matrix = matrix.self()
-                    if (this.matrix !== matrix) copy(matrix = matrix)
+                    if (this.matrix !== matrix) dup(matrix = matrix)
                     else this
                 }
             }
             is NamedScalar -> {
                 val diff = scalar.diffOr()
-                if (diff != null) copy(name = "${name}'", scalar = diff)
+                if (diff != null) dup(name = "${name}'", scalar = diff)
                 else {
                     val scalar = scalar.self()
-                    if (this.scalar !== scalar) copy(scalar = scalar)
+                    if (this.scalar !== scalar) dup(scalar = scalar)
                     else this
                 }
             }

@@ -95,5 +95,5 @@ fun Sheet.minimize(
         assert(new.containsKey(it.name))
         new[it.name] = constant(value.value)
     }
-    return copy(cells = new.toCells())
+    return dup(cells = new.toCells())
 }

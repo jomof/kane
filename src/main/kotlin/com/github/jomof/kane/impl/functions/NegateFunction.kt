@@ -15,7 +15,7 @@ internal class NegateFunction : AlgebraicUnaryFunction {
 
     override fun reduceArithmetic(value: ScalarExpr): ScalarExpr? {
         if (value is AlgebraicUnaryScalarScalar && value.op == negate) return value.value
-        if (value is ConstantScalar) return value.copy(value = -value.value)
+        if (value is ConstantScalar) return value.dup(value = -value.value)
         return null
     }
 

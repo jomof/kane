@@ -182,10 +182,10 @@ class LinearModel(val type : AlgebraicType) {
 private fun AlgebraicExpr.linearizeExpr(model: LinearModel = LinearModel(kaneDouble)): AlgebraicExpr {
     if (this is ScalarExpr && model.contains(this)) return model.getValue(this)
 
-    val result = when {
+    val result: AlgebraicExpr = when {
         this is Slot -> this
         this is ConstantScalar -> this
-        this is RetypeScalar -> copy(scalar = scalar.linearizeExpr(model) as ScalarExpr)
+        this is RetypeScalar -> dup(scalar = scalar.linearizeExpr(model) as ScalarExpr)
         this is AlgebraicSummaryScalarScalar -> dup(value = value.linearizeExpr(model) as StatisticExpr)
         this is AlgebraicSummaryMatrixScalar -> dup(value = value.linearizeExpr(model) as MatrixExpr)
         this is AlgebraicBinarySummaryScalarScalarScalar -> dup(
@@ -211,10 +211,10 @@ private fun AlgebraicExpr.linearizeExpr(model: LinearModel = LinearModel(kaneDou
                 val result = model.computeSlot(scalar) { scalar.linearizeExpr(model) as ScalarExpr }
                 model.registerNamedScalar(name, result)
                 result
-            } else copy(scalar = scalar.linearizeExpr(model) as ScalarExpr)
+            } else dup(scalar = scalar.linearizeExpr(model) as ScalarExpr)
         }
         this is NamedMatrix -> {
-            copy(matrix = matrix.toDataMatrix().map { element ->
+            dup(matrix = matrix.toDataMatrix().map { element ->
                 val result = model.computeSlot(element) { element.linearizeExpr(model) as ScalarExpr }
                 //model.registerNamedScalar(name, result)
                 result
@@ -223,7 +223,7 @@ private fun AlgebraicExpr.linearizeExpr(model: LinearModel = LinearModel(kaneDou
         this is Tableau -> {
             val result = copy(children = children.map {
                 when {
-                    it is NamedScalar -> it.copy(scalar = it.linearizeExpr(model) as ScalarExpr)
+                    it is NamedScalar -> it.dup(scalar = it.linearizeExpr(model) as ScalarExpr)
                     it is ScalarExpr -> it.linearizeExpr(model).withNameOf(it)
                     it is DataMatrix -> {
                         val matrix = it.linearizeExpr(model) as MatrixExpr
@@ -261,7 +261,7 @@ private fun AlgebraicExpr.linearizeExpr(model: LinearModel = LinearModel(kaneDou
                                 }
                             }
                         }
-                        it.copy(matrix = matrix)
+                        it.dup(matrix = matrix)
                     }
                     it is ScalarAssign ->
                         it.dup(right = it.right.linearizeExpr(model) as ScalarExpr)
@@ -408,11 +408,11 @@ private fun AlgebraicExpr.stripNames() : AlgebraicExpr {
         is DataMatrix -> map { it.self() }
         is Tableau -> copy(children = children.map { child ->
             when (child) {
-                is NamedScalar -> child.copy(scalar = child.scalar.self())
+                is NamedScalar -> child.dup(scalar = child.scalar.self())
                 is ScalarVariable -> child
                 is MatrixVariable -> child
-                is NamedMatrix -> child.copy(matrix = child.matrix.self())
-                is MatrixAssign -> child.copy(right = child.right.self())
+                is NamedMatrix -> child.dup(matrix = child.matrix.self())
+                is MatrixAssign -> child.dup(right = child.right.self())
                 is ScalarAssign -> child.dup(right = child.right.self())
                 is ScalarExpr -> child.self().withNameOf(child)
                 is MatrixExpr -> child.self().withNameOf(child)

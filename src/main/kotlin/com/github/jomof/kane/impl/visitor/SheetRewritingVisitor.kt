@@ -104,7 +104,7 @@ internal open class SheetRewritingVisitor(
                 || columnDescriptors != expr.columnDescriptors
                 || cells != expr.cells.toMap()
             )
-                expr.copy(
+                expr.dup(
                     columnDescriptors = columnDescriptors,
                     cells = cells.toCells()
                 )

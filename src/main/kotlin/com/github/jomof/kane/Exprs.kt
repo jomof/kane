@@ -31,9 +31,17 @@ data class AlgebraicSummaryScalarScalar(
     }
     override fun hasName() : Boolean = name !== anonymous
     override fun toString() = render()
-    fun dup(op : IAlgebraicSummaryScalarScalarFunction = this.op, value : ScalarExpr = this.value, name : Id = this.name) : AlgebraicSummaryScalarScalar {
+    fun dup(
+        op: IAlgebraicSummaryScalarScalarFunction = this.op,
+        value: ScalarExpr = this.value,
+        name: Id = this.name
+    ): AlgebraicSummaryScalarScalar {
         if (op === this.op && value === this.value && name == this.name) return this
         return AlgebraicSummaryScalarScalar(op, value, name)
+    }
+
+    fun copy(value: ScalarExpr = this.value, name: Id = this.name) {
+        error("Use dup instead")
     }
 }
 
@@ -62,9 +70,17 @@ data class AlgebraicSummaryMatrixScalar(
     }
     override fun hasName() : Boolean = name !== anonymous
     override fun toString() = render()
-    fun dup(op : IAlgebraicSummaryMatrixScalarFunction = this.op, value : MatrixExpr = this.value, name : Id = this.name) : AlgebraicSummaryMatrixScalar {
+    fun dup(
+        op: IAlgebraicSummaryMatrixScalarFunction = this.op,
+        value: MatrixExpr = this.value,
+        name: Id = this.name
+    ): AlgebraicSummaryMatrixScalar {
         if (op === this.op && value === this.value && name == this.name) return this
         return AlgebraicSummaryMatrixScalar(op, value, name)
+    }
+
+    fun copy(value: MatrixExpr = this.value, name: Id = this.name) {
+        error("Use dup instead")
     }
 }
 
@@ -93,9 +109,17 @@ data class AlgebraicUnaryScalarScalar(
     }
     override fun hasName() : Boolean = name !== anonymous
     override fun toString() = render()
-    fun dup(op : IAlgebraicUnaryScalarScalarFunction = this.op, value : ScalarExpr = this.value, name : Id = this.name) : AlgebraicUnaryScalarScalar {
+    fun dup(
+        op: IAlgebraicUnaryScalarScalarFunction = this.op,
+        value: ScalarExpr = this.value,
+        name: Id = this.name
+    ): AlgebraicUnaryScalarScalar {
         if (op === this.op && value === this.value && name == this.name) return this
         return AlgebraicUnaryScalarScalar(op, value, name)
+    }
+
+    fun copy(value: ScalarExpr = this.value, name: Id = this.name) {
+        error("Use dup instead")
     }
 }
 
@@ -124,9 +148,17 @@ data class AlgebraicUnaryMatrixMatrix(
     }
     override fun hasName() : Boolean = name !== anonymous
     override fun toString() = render()
-    fun dup(op : IAlgebraicUnaryMatrixMatrixFunction = this.op, value : MatrixExpr = this.value, name : Id = this.name) : AlgebraicUnaryMatrixMatrix {
+    fun dup(
+        op: IAlgebraicUnaryMatrixMatrixFunction = this.op,
+        value: MatrixExpr = this.value,
+        name: Id = this.name
+    ): AlgebraicUnaryMatrixMatrix {
         if (op === this.op && value === this.value && name == this.name) return this
         return AlgebraicUnaryMatrixMatrix(op, value, name)
+    }
+
+    fun copy(value: MatrixExpr = this.value, name: Id = this.name) {
+        error("Use dup instead")
     }
 }
 
@@ -158,9 +190,18 @@ data class AlgebraicBinaryScalarScalarScalar(
     }
     override fun hasName() : Boolean = name !== anonymous
     override fun toString() = render()
-    fun dup(op : IAlgebraicBinaryScalarScalarScalarFunction = this.op, left : ScalarExpr = this.left, right : ScalarExpr = this.right, name : Id = this.name) : AlgebraicBinaryScalarScalarScalar {
+    fun dup(
+        op: IAlgebraicBinaryScalarScalarScalarFunction = this.op,
+        left: ScalarExpr = this.left,
+        right: ScalarExpr = this.right,
+        name: Id = this.name
+    ): AlgebraicBinaryScalarScalarScalar {
         if (op === this.op && left === this.left && right === this.right && name == this.name) return this
         return AlgebraicBinaryScalarScalarScalar(op, left, right, name)
+    }
+
+    fun copy(left: ScalarExpr = this.left, right: ScalarExpr = this.right, name: Id = this.name) {
+        error("Use dup instead")
     }
 }
 
@@ -192,9 +233,18 @@ data class AlgebraicBinaryScalarMatrixMatrix(
     }
     override fun hasName() : Boolean = name !== anonymous
     override fun toString() = render()
-    fun dup(op : IAlgebraicBinaryScalarMatrixMatrixFunction = this.op, left : ScalarExpr = this.left, right : MatrixExpr = this.right, name : Id = this.name) : AlgebraicBinaryScalarMatrixMatrix {
+    fun dup(
+        op: IAlgebraicBinaryScalarMatrixMatrixFunction = this.op,
+        left: ScalarExpr = this.left,
+        right: MatrixExpr = this.right,
+        name: Id = this.name
+    ): AlgebraicBinaryScalarMatrixMatrix {
         if (op === this.op && left === this.left && right === this.right && name == this.name) return this
         return AlgebraicBinaryScalarMatrixMatrix(op, left, right, name)
+    }
+
+    fun copy(left: ScalarExpr = this.left, right: MatrixExpr = this.right, name: Id = this.name) {
+        error("Use dup instead")
     }
 }
 
@@ -226,9 +276,18 @@ data class AlgebraicBinaryMatrixScalarMatrix(
     }
     override fun hasName() : Boolean = name !== anonymous
     override fun toString() = render()
-    fun dup(op : IAlgebraicBinaryMatrixScalarMatrixFunction = this.op, left : MatrixExpr = this.left, right : ScalarExpr = this.right, name : Id = this.name) : AlgebraicBinaryMatrixScalarMatrix {
+    fun dup(
+        op: IAlgebraicBinaryMatrixScalarMatrixFunction = this.op,
+        left: MatrixExpr = this.left,
+        right: ScalarExpr = this.right,
+        name: Id = this.name
+    ): AlgebraicBinaryMatrixScalarMatrix {
         if (op === this.op && left === this.left && right === this.right && name == this.name) return this
         return AlgebraicBinaryMatrixScalarMatrix(op, left, right, name)
+    }
+
+    fun copy(left: MatrixExpr = this.left, right: ScalarExpr = this.right, name: Id = this.name) {
+        error("Use dup instead")
     }
 }
 
@@ -260,9 +319,18 @@ data class AlgebraicBinaryMatrixMatrixMatrix(
     }
     override fun hasName() : Boolean = name !== anonymous
     override fun toString() = render()
-    fun dup(op : IAlgebraicBinaryMatrixMatrixMatrixFunction = this.op, left : MatrixExpr = this.left, right : MatrixExpr = this.right, name : Id = this.name) : AlgebraicBinaryMatrixMatrixMatrix {
+    fun dup(
+        op: IAlgebraicBinaryMatrixMatrixMatrixFunction = this.op,
+        left: MatrixExpr = this.left,
+        right: MatrixExpr = this.right,
+        name: Id = this.name
+    ): AlgebraicBinaryMatrixMatrixMatrix {
         if (op === this.op && left === this.left && right === this.right && name == this.name) return this
         return AlgebraicBinaryMatrixMatrixMatrix(op, left, right, name)
+    }
+
+    fun copy(left: MatrixExpr = this.left, right: MatrixExpr = this.right, name: Id = this.name) {
+        error("Use dup instead")
     }
 }
 
@@ -294,9 +362,18 @@ data class AlgebraicBinarySummaryScalarScalarScalar(
     }
     override fun hasName() : Boolean = name !== anonymous
     override fun toString() = render()
-    fun dup(op : IAlgebraicBinarySummaryScalarScalarScalarFunction = this.op, left : ScalarExpr = this.left, right : ScalarExpr = this.right, name : Id = this.name) : AlgebraicBinarySummaryScalarScalarScalar {
+    fun dup(
+        op: IAlgebraicBinarySummaryScalarScalarScalarFunction = this.op,
+        left: ScalarExpr = this.left,
+        right: ScalarExpr = this.right,
+        name: Id = this.name
+    ): AlgebraicBinarySummaryScalarScalarScalar {
         if (op === this.op && left === this.left && right === this.right && name == this.name) return this
         return AlgebraicBinarySummaryScalarScalarScalar(op, left, right, name)
+    }
+
+    fun copy(left: ScalarExpr = this.left, right: ScalarExpr = this.right, name: Id = this.name) {
+        error("Use dup instead")
     }
 }
 
@@ -328,9 +405,18 @@ data class AlgebraicBinarySummaryMatrixScalarScalar(
     }
     override fun hasName() : Boolean = name !== anonymous
     override fun toString() = render()
-    fun dup(op : IAlgebraicBinarySummaryMatrixScalarScalarFunction = this.op, left : MatrixExpr = this.left, right : ScalarExpr = this.right, name : Id = this.name) : AlgebraicBinarySummaryMatrixScalarScalar {
+    fun dup(
+        op: IAlgebraicBinarySummaryMatrixScalarScalarFunction = this.op,
+        left: MatrixExpr = this.left,
+        right: ScalarExpr = this.right,
+        name: Id = this.name
+    ): AlgebraicBinarySummaryMatrixScalarScalar {
         if (op === this.op && left === this.left && right === this.right && name == this.name) return this
         return AlgebraicBinarySummaryMatrixScalarScalar(op, left, right, name)
+    }
+
+    fun copy(left: MatrixExpr = this.left, right: ScalarExpr = this.right, name: Id = this.name) {
+        error("Use dup instead")
     }
 }
 

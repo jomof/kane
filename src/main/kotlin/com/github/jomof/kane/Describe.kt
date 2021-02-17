@@ -22,7 +22,7 @@ fun Sheet.describe(): Sheet {
             cells[coordinate(column, row)] = constant(result)
         }
     }
-    return copy(cells = cells.toCells(), rowDescriptors = rowDescriptors)
+    return dup(cells = cells.toCells(), rowDescriptors = rowDescriptors)
         .ordinalColumns(relevantColumns)
         .limitOutputLines(Kane.unaryStatisticsFunctions.size)
         .showExcelColumnTags(false)
@@ -72,7 +72,7 @@ fun DataMatrix.describe(name: Id = "matrix"): Sheet {
         val result = Kane.unaryStatisticsFunctions[row].lookupStatistic(statistic)
         cells[coordinate(0, row)] = constant(result)
     }
-    return Sheet.of(
+    return Sheet.create(
         cells = cells.toCells(),
         rowDescriptors = rowDescriptors,
         columnDescriptors = columnDescriptors,
