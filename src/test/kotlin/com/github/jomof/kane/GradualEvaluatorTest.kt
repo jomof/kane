@@ -248,7 +248,7 @@ class GradualEvaluatorTest {
             val bmi by column("weight") / pow(column("height"), 2.0)
             listOf(bmi)
         }
-        val expected = bmi.eval().filterRows { row -> row["gender"] == "male" }
+        val expected = bmi.eval().filter { row -> row["gender"] == "male" }
         expected.assertString(
             """
                   date     height    weight  gender   bmi   
@@ -261,7 +261,7 @@ class GradualEvaluatorTest {
             10 2000-01-10 45.30612 177.54092   male 0.08649
             """.trimIndent()
         )
-        val filtered = bmi.filterRows { row -> row["gender"] == "male" }
+        val filtered = bmi.filter { row -> row["gender"] == "male" }
         filtered.assertString(
             """
                 date [A]  height [B] weight [C] gender [D] bmi [E] 

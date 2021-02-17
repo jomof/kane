@@ -204,9 +204,9 @@ class DocumentationTest {
         println(tutorial["B", "D"])
 
         /**
-         * Kane doesn't overload indexing operator to filter rows. Instead, you can use [filterRows]
+         * Kane doesn't overload indexing operator to filter rows. Instead, you can use [filter]
          */
-        println(tutorial.filterRows { row ->
+        println(tutorial.filter { row ->
             row["source"] == "SEO"
         })
 
@@ -368,7 +368,7 @@ class DocumentationTest {
          * (2) Check filter for rows where 'wgt' != "NaN"
          */
         count(sheet["wgt"]).assertString("32283")
-        sheet.filterRows { row -> row["wgt"] != "NaN" }.rows.assertString("35549")
+        sheet.filter { row -> row["wgt"] != "NaN" }.rows.assertString("35549")
 
         /**
          * It's better to explicitly specify a value to be used when NaN.

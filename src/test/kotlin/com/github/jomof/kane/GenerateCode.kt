@@ -10,18 +10,17 @@ class GenerateCode {
 
     private enum class Shape {
         Scalar,
-        Matrix,
-        Statistic
+        Matrix
     }
 
     private data class Parameter(
         val name: String,
-        val kind: Shape
+        val shape: Shape
     )
 
     private data class Operator(
         val name: String,
-        val shape: Shape,
+        val resultShape: Shape,
         val parameters: List<Parameter>
     )
 
@@ -73,8 +72,8 @@ class GenerateCode {
         sb.append("\n\n")
         fun line(s: String = "") = sb.append("$s\n")
         for (op in operators) {
-            val inputShape = op.parameters.joinToString("") { it.kind.toString() }
-            val operatorClassName = "Algebraic${op.name}$inputShape${op.shape}"
+            val inputShape = op.parameters.joinToString("") { it.shape.toString() }
+            val operatorClassName = "Algebraic${op.name}$inputShape${op.resultShape}"
             line("interface I${operatorClassName}Function {")
             line("    val meta : ${op.name}Op")
 //            sb.append("    operator fun invoke(")
@@ -90,7 +89,7 @@ class GenerateCode {
 //            line(")")
 
             //line("/*")
-            val coercions = op.parameters.map { coercions.getValue(it.kind) }
+            val coercions = op.parameters.map { coercions.getValue(it.shape) }
             cartesianOf(coercions) {
                 val mappings = it.filterIsInstance<Coercion>()
                 sb.append("    operator fun invoke(")
@@ -103,7 +102,7 @@ class GenerateCode {
                 if (mappings.all { mapping -> mapping.coercionMethod == "Identity" }) {
 
                 }
-                sb.append(") : ${op.shape}Expr = Algebraic${op.name}$inputShape${op.shape}(this, ")
+                sb.append(") : ${op.resultShape}Expr = Algebraic${op.name}$inputShape${op.resultShape}(this, ")
                 for (index in op.parameters.indices) {
                     val p = op.parameters[index]
                     val m = mappings[index]
@@ -117,31 +116,31 @@ class GenerateCode {
 
             sb.append("    fun reduceArithmetic(")
             for ((index, p) in op.parameters.withIndex()) {
-                sb.append("${p.name} : ${p.kind}Expr")
+                sb.append("${p.name} : ${p.shape}Expr")
                 if (index != op.parameters.size - 1) sb.append(", ")
             }
-            sb.append(") : ${op.shape}Expr?\n")
+            sb.append(") : ${op.resultShape}Expr?\n")
             sb.append("    fun doubleOp(")
             for ((index, p) in op.parameters.withIndex()) {
-                when (p.kind) {
+                when (p.shape) {
                     Scalar -> sb.append("${p.name} : Double")
                     Matrix -> sb.append("${p.name} : List<Double>")
-                    Statistic -> sb.append("${p.name} : List<Double>")
+                    //          Statistic -> sb.append("${p.name} : List<Double>")
                 }
                 if (index != op.parameters.size - 1) sb.append(", ")
             }
-            when (op.shape) {
+            when (op.resultShape) {
                 Scalar -> sb.append(") : Double\n")
                 Matrix -> sb.append(") : List<Double>\n")
-                Statistic -> sb.append(") : List<Double>\n")
+                //          Statistic -> sb.append(") : List<Double>\n")
             }
             sb.append("    fun differentiate(")
             for (p in op.parameters) {
-                sb.append("${p.name} : ${p.kind}Expr, ")
-                sb.append("${p.name}d : ${p.kind}Expr, ")
+                sb.append("${p.name} : ${p.shape}Expr, ")
+                sb.append("${p.name}d : ${p.shape}Expr, ")
             }
             sb.append("variable : ScalarExpr")
-            sb.append(") : ${op.shape}Expr\n")
+            sb.append(") : ${op.resultShape}Expr\n")
             sb.append("    fun type(")
             for ((index, p) in op.parameters.withIndex()) {
                 sb.append("${p.name} : AlgebraicType")
@@ -154,14 +153,14 @@ class GenerateCode {
             line("data class $operatorClassName(")
             line("    val op : I${operatorClassName}Function,")
             for (p in op.parameters) {
-                line("    val ${p.name} : ${p.kind}Expr,")
+                line("    val ${p.name} : ${p.shape}Expr,")
             }
             line("    override val name : Id = anonymous")
-            line(") : ${op.shape}Expr, INameable${op.shape} {")
+            line(") : ${op.resultShape}Expr, INameable${op.resultShape} {")
             line("    override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)")
-            line("    override fun toNamed(name : Id) : ${op.shape}Expr {")
+            line("    override fun toNamed(name : Id) : ${op.resultShape}Expr {")
             line("        if(this.name === anonymous) return dup(name = name)")
-            line("        return Named${op.shape}(name, this)")
+            line("        return Named${op.resultShape}(name, this)")
             line("    }")
             line("    override fun toUnnamed() : $operatorClassName {")
             line("        return dup(name = anonymous)")
@@ -172,7 +171,7 @@ class GenerateCode {
             line("    override fun toString() = render()")
             sb.append("    fun dup(op : I${operatorClassName}Function = this.op, ")
             for (p in op.parameters) {
-                sb.append("${p.name} : ${p.kind}Expr = this.${p.name}, ")
+                sb.append("${p.name} : ${p.shape}Expr = this.${p.name}, ")
             }
             line("name : Id = this.name) : $operatorClassName {")
             sb.append("        if (op === this.op && ")

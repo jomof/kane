@@ -130,7 +130,7 @@ class FunctionalTest {
     @Test
     fun `filtering rows`() {
         val zoo = readCsv("data/zoo.csv")
-        val filtered = zoo.filterRows { row ->
+        val filtered = zoo.filter { row ->
             row["uniq_id"] == "1005"
         }
         filtered.assertString(

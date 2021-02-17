@@ -4,7 +4,6 @@ import com.github.jomof.kane.*
 import com.github.jomof.kane.impl.*
 import com.github.jomof.kane.impl.sheet.*
 import com.github.jomof.kane.impl.types.*
-import kotlin.reflect.KProperty
 
 // f(scalar,scalar)->scalar (extended to matrix 1<->1 mapping)
 interface AlgebraicBinaryFunction :
@@ -159,7 +158,7 @@ interface AlgebraicSummaryFunction :
     }
 
     operator fun invoke(value: Sheet): Sheet {
-        val filtered = value.describe().filterRows { row -> "$row" == meta.op }
+        val filtered = value.describe().filter { row -> "$row" == meta.op }
         if (filtered.columns == 1)
             return filtered["A1"]
         return filtered

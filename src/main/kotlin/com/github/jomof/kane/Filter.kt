@@ -7,7 +7,7 @@ import com.github.jomof.kane.impl.sheet.ordinalRows
 /**
  * Filter rows of a Sheet with a predicate function.
  */
-fun Sheet.filterRows(predicate: (RowView) -> Boolean): Sheet {
+fun Sheet.filter(predicate: (RowView) -> Boolean): Sheet {
     val rows = (1..rows).filter {
         predicate(RowView(this, it - 1))
     }
