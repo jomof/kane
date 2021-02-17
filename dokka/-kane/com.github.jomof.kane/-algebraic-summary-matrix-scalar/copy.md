@@ -5,7 +5,7 @@
 # copy  
 [jvm]  
 Content  
-fun [copy](copy.md)(op: [IAlgebraicSummaryMatrixScalarFunction](../-i-algebraic-summary-matrix-scalar-function/index.md), value: [MatrixExpr](../-matrix-expr/index.md), name: [Id](../../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-355281819) = anonymous): [AlgebraicSummaryMatrixScalar](index.md)  
+fun [copy](copy.md)(op: [IAlgebraicSummaryMatrixScalarFunction](../-i-algebraic-summary-matrix-scalar-function/index.md), value: [MatrixExpr](../-matrix-expr/index.md), name: [Id](../../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1691848896) = anonymous): [AlgebraicSummaryMatrixScalar](index.md)  
 
 
 
