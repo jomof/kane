@@ -5,7 +5,7 @@
 # columns  
 [jvm]  
 Content  
-abstract val [columns](columns.md): [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)  
+val [columns](columns.md): [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)  
 
 
 

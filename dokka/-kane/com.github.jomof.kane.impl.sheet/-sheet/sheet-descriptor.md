@@ -5,7 +5,7 @@
 # sheetDescriptor  
 [jvm]  
 Content  
-abstract val [sheetDescriptor](sheet-descriptor.md): [SheetDescriptor](../-sheet-descriptor/index.md)  
+val [sheetDescriptor](sheet-descriptor.md): [SheetDescriptor](../-sheet-descriptor/index.md)  
 
 
 

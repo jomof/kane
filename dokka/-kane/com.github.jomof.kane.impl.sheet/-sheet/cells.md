@@ -5,7 +5,7 @@
 # cells  
 [jvm]  
 Content  
-abstract val [cells](cells.md): [Cells](../-cells/index.md)  
+val [cells](cells.md): [Cells](../-cells/index.md)  
 
 
 

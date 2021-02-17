@@ -5,7 +5,7 @@
 # columnDescriptors  
 [jvm]  
 Content  
-abstract val [columnDescriptors](column-descriptors.md): [Map](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html)<[Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html), [ColumnDescriptor](../-column-descriptor/index.md)>  
+val [columnDescriptors](column-descriptors.md): [Map](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html)<[Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html), [ColumnDescriptor](../-column-descriptor/index.md)>  
 
 
 
