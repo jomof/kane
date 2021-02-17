@@ -189,27 +189,20 @@ data class NamedSheet(
     val sheet: Sheet
 ) : NamedExpr
 
-interface Sheet : Expr {
-    val columnDescriptors: Map<Int, ColumnDescriptor>
-    val rowDescriptors: Map<Int, RowDescriptor>
-    val cells: Cells
-    val sheetDescriptor: SheetDescriptor
-    val columns: Int
+data class Sheet(
+    val columnDescriptors: Map<Int, ColumnDescriptor>,
+    val rowDescriptors: Map<Int, RowDescriptor>,
+    val cells: Cells,
+    val sheetDescriptor: SheetDescriptor,
+    val columns: Int,
     val rows: Int
+) : Expr {
+
+    override fun toString() = render()
 
     companion object {
-        private data class SheetImpl(
-            override val columnDescriptors: Map<Int, ColumnDescriptor>,
-            override val rowDescriptors: Map<Int, RowDescriptor>,
-            override val cells: Cells,
-            override val sheetDescriptor: SheetDescriptor,
-            override val columns: Int,
-            override val rows: Int
-        ) : Sheet {
-            override fun toString() = render()
-        }
 
-        private val emptySheet = SheetImpl(mapOf(), mapOf(), Cells(mapOf()), SheetDescriptor(), 0, 0)
+        private val emptySheet = Sheet(mapOf(), mapOf(), Cells(mapOf()), SheetDescriptor(), 0, 0)
         internal fun of(
             columnDescriptors: Map<Int, ColumnDescriptor>,
             rowDescriptors: Map<Int, RowDescriptor>,
@@ -221,7 +214,7 @@ interface Sheet : Expr {
                 rowDescriptors.isEmpty() &&
                 sheetDescriptor == SheetDescriptor()
             ) return emptySheet
-            if (cells.isEmpty()) return SheetImpl(columnDescriptors, rowDescriptors, cells, sheetDescriptor, 0, 0)
+            if (cells.isEmpty()) return Sheet(columnDescriptors, rowDescriptors, cells, sheetDescriptor, 0, 0)
             val coordinateCells = cells
                 .keys
                 .filterIsInstance<Coordinate>()
@@ -230,7 +223,7 @@ interface Sheet : Expr {
             val columnsColumnDescriptors: Int = columnDescriptors.map { it.key }.maxOrNull() ?: 0
             val rowsIndexes = coordinateCells.map { it.row }
             val rows = rowsIndexes.maxOrNull() ?: 0
-            return SheetImpl(
+            return Sheet(
                 columnDescriptors,
                 rowDescriptors,
                 cells,
