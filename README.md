@@ -1,4 +1,12 @@
-[![](https://jitpack.io/v/jomof/kane.svg)](https://jitpack.io/#jomof/kane)
+
+<p>
+  <img alt="Version" src="https://jitpack.io/v/jomof/kane.svg" />
+    
+  <a href="https://github.com/jomof/kane/blob/master/LICENSE">
+    <img alt="License: Apache License 2.0" src="https://img.shields.io/badge/License-Apache License 2.0-green.svg" target="_blank" />
+  </a>
+</p>
+
 
 # Introduction
 Kane exists at the intersection of conventional data frame libraries like Pandas, formula sheets like Excel, and Kotlin style functional programming. Data and formulas coexist in sheet cells alongside each other. Formulas are written in Kotlin. Kane is designed to be used in a Kotlin Kernel of a Jupyter notebook.
