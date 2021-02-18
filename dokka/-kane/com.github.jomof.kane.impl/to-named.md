@@ -5,11 +5,11 @@
 # toNamed  
 [jvm]  
 Content  
-fun [ScalarExpr](../com.github.jomof.kane/-scalar-expr/index.md).[toNamed](to-named.md)(name: [Id](index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1712679262)): [ScalarExpr](../com.github.jomof.kane/-scalar-expr/index.md)  
-fun [MatrixExpr](../com.github.jomof.kane/-matrix-expr/index.md).[toNamed](to-named.md)(name: [Id](index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1712679262)): [MatrixExpr](../com.github.jomof.kane/-matrix-expr/index.md)  
-fun [AlgebraicExpr](../com.github.jomof.kane/-algebraic-expr/index.md).[toNamed](to-named.md)(name: [Id](index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1712679262)): [NamedAlgebraicExpr](../com.github.jomof.kane/-named-algebraic-expr/index.md)  
-fun <[E](to-named.md) : [Any](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)> [Tiling](-tiling/index.md)<[E](to-named.md)>.[toNamed](to-named.md)(name: [Id](index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1712679262)): [NamedTiling](-named-tiling/index.md)<[E](to-named.md)>  
-fun [Expr](../com.github.jomof.kane/-expr/index.md).[toNamed](to-named.md)(name: [Id](index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1712679262)): [Expr](../com.github.jomof.kane/-expr/index.md)  
+fun [ScalarExpr](../com.github.jomof.kane/-scalar-expr/index.md).[toNamed](to-named.md)(name: [Id](index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1671738535)): [ScalarExpr](../com.github.jomof.kane/-scalar-expr/index.md)  
+fun [MatrixExpr](../com.github.jomof.kane/-matrix-expr/index.md).[toNamed](to-named.md)(name: [Id](index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1671738535)): [MatrixExpr](../com.github.jomof.kane/-matrix-expr/index.md)  
+fun [AlgebraicExpr](../com.github.jomof.kane/-algebraic-expr/index.md).[toNamed](to-named.md)(name: [Id](index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1671738535)): [NamedAlgebraicExpr](../com.github.jomof.kane/-named-algebraic-expr/index.md)  
+fun <[E](to-named.md) : [Any](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)> [Tiling](-tiling/index.md)<[E](to-named.md)>.[toNamed](to-named.md)(name: [Id](index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1671738535)): [NamedTiling](-named-tiling/index.md)<[E](to-named.md)>  
+fun [Expr](../com.github.jomof.kane/-expr/index.md).[toNamed](to-named.md)(name: [Id](index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1671738535)): [Expr](../com.github.jomof.kane/-expr/index.md)  
 
 
 
