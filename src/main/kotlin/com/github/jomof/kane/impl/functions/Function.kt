@@ -158,7 +158,7 @@ interface AlgebraicSummaryFunction :
     }
 
     operator fun invoke(value: Sheet): Sheet {
-        val filtered = value.describe().filter { row -> "$row" == meta.op }
+        val filtered = value.describe().filter { row -> "$row" == meta.op }.toSheet()
         if (filtered.columns == 1)
             return filtered["A1"]
         return filtered

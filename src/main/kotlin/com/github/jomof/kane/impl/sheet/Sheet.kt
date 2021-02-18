@@ -181,21 +181,22 @@ data class Sheet(
     val rowDescriptors: Map<Int, RowDescriptor>,
     val cells: Cells,
     val sheetDescriptor: SheetDescriptor,
-    val columns: Int,
-    val rows: Int,
+    override val columns: Int,
+    override val rows: Int,
     override val name: Id = anonymous
-) : Expr, INameable {
+) : Expr, INameable, Sequence<Row>, CountableColumns, CountableRows, ProvidesToSheet {
     override fun toNamed(name: Id) = dup(name = name)
     override fun toUnnamed() = dup(name = anonymous)
+    override fun toSheet() = this
     override fun toString() = render()
 
     companion object {
 
-        private val emptySheet = Sheet(mapOf(), mapOf(), Cells(mapOf()), SheetDescriptor(), 0, 0)
+        val empty = Sheet(mapOf(), mapOf(), Cells(mapOf()), SheetDescriptor(), 0, 0)
         internal fun create(
-            columnDescriptors: Map<Int, ColumnDescriptor>,
-            rowDescriptors: Map<Int, RowDescriptor>,
-            sheetDescriptor: SheetDescriptor,
+            columnDescriptors: Map<Int, ColumnDescriptor> = mapOf(),
+            rowDescriptors: Map<Int, RowDescriptor> = mapOf(),
+            sheetDescriptor: SheetDescriptor = SheetDescriptor(),
             cells: Cells,
             name: Id = anonymous
         ): Sheet {
@@ -203,7 +204,7 @@ data class Sheet(
                 columnDescriptors.isEmpty() &&
                 rowDescriptors.isEmpty() &&
                 sheetDescriptor == SheetDescriptor()
-            ) return emptySheet
+            ) return empty
             if (cells.isEmpty()) return Sheet(columnDescriptors, rowDescriptors, cells, sheetDescriptor, 0, 0)
             val coordinateCells = cells
                 .keys
@@ -271,6 +272,13 @@ data class Sheet(
         val sheet = toBuilder()
         init(sheet).forEach { sheet.add(it) }
         return sheet.build()
+    }
+
+    override fun iterator() = object : Iterator<Row> {
+        val sheet: Sheet = this@Sheet
+        var row = 0
+        override fun hasNext() = row < rows
+        override fun next() = RowView(sheet, row++)
     }
 }
 

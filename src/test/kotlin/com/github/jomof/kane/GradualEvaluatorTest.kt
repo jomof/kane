@@ -1,6 +1,7 @@
 package com.github.jomof.kane
 
 import com.github.jomof.kane.impl.constant
+import com.github.jomof.kane.impl.eval
 import com.github.jomof.kane.impl.functions.percentile
 import com.github.jomof.kane.impl.functions.sp500
 import com.github.jomof.kane.impl.functions.unaryMinus
