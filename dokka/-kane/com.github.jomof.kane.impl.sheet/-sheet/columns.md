@@ -5,7 +5,7 @@
 # columns  
 [jvm]  
 Content  
-val [columns](columns.md): [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)  
+open override val [columns](columns.md): [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)  
 
 
 

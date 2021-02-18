@@ -5,7 +5,7 @@
 # rows  
 [jvm]  
 Content  
-val [rows](rows.md): [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)  
+open override val [rows](rows.md): [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)  
 
 
 

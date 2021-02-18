@@ -5,8 +5,8 @@
 # copy  
 [jvm]  
 Content  
-fun [copy](copy.md)(scalar: [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md) = this.scalar, name: [Id](../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1671738535) = this.name)  
-fun [copy](copy.md)(name: [Id](../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1671738535), scalar: [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md)): [NamedScalar](index.md)  
+fun [copy](copy.md)(scalar: [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md) = this.scalar, name: [Id](../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-943712717) = this.name)  
+fun [copy](copy.md)(name: [Id](../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-943712717), scalar: [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md)): [NamedScalar](index.md)  
 
 
 
