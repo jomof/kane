@@ -1,4 +1,5 @@
 [![](https://jitpack.io/v/jomof/kane.svg)](https://jitpack.io/#jomof/kane)
+
 [![](https://img.shields.io/badge/License-Apache License 2.0-yellow.svg)](https://github.com/jomof/kane/blob/master/LICENSE)
 
 # Introduction
