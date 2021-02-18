@@ -1,7 +1,7 @@
 [![](https://jitpack.io/v/jomof/kane.svg)](https://jitpack.io/#jomof/kane)
 <p>
   <a href="https://jitpack.io/#jomof/kane">
-    <img src="https://jitpack.io/v/jomof/kane.svg)" target="_blank" />
+    <img alt="" src="https://jitpack.io/v/jomof/kane.svg)" target="_blank" />
   </a>
   <a href="https://github.com/jomof/kane/blob/master/LICENSE">
     <img alt="License: Apache License 2.0" src="https://img.shields.io/badge/License-Apache License 2.0-yellow.svg" target="_blank" />
