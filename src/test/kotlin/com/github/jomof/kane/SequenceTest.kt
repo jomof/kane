@@ -420,6 +420,66 @@ class SequenceTest {
             .assertString(expected2)
     }
 
+
+    @Test
+    fun `check parition`() {
+        val sheet = {
+            sheetOfCsv(
+                """
+                weight,gender
+                157.500553,male
+                174.094104,female
+                177.540920,male
+                """
+            ).copy {
+                val bmi by column("weight") + 1.0
+                listOf(bmi)
+            }
+        }
+        val (male, female) = sheet().partition { row -> row["gender"] == "male" }
+        male.assertString(
+            """
+              weight [A] gender [B] bmi [C] 
+              ---------- ---------- ------- 
+            1  157.50055       male    A1+1 
+            3  177.54092       male    A2+1 
+        """.trimIndent()
+        )
+        female.assertString(
+            """
+              weight [A] gender [B] bmi [C] 
+              ---------- ---------- ------- 
+            2   174.0941     female    A1+1 
+        """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `check distinct`() {
+        val sheet = {
+            sheetOfCsv(
+                """
+                weight,gender
+                157.500553,male
+                174.094104,female
+                177.540920,male
+                """
+            ).copy {
+                val bmi by column("weight") + 1.0
+                listOf(bmi)
+            }
+        }
+        val result = sheet()["gender"].distinct()
+        result.assertString(
+            """
+              gender [A] 
+              ---------- 
+            1       male 
+            2     female 
+        """.trimIndent()
+        )
+    }
+
     @Test
     fun `repro lost row name`() {
         val sheet = {

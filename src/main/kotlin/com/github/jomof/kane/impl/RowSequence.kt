@@ -6,6 +6,41 @@ import kotlin.random.Random
 
 internal const val forceSheetInstantiation = false
 
+class RowDistinctSequence<K>(
+    private val sequence: Sequence<Row>,
+    private val selector: (Row) -> K
+) : Sequence<Row>, ProvidesToSheet, CountableColumns {
+    private val sheet by lazy { toSheet(iterator()) }
+
+    init {
+        if (forceSheetInstantiation) sheet.rows
+    }
+
+    override fun iterator(): Iterator<Row> = RowDistinctIterator(sequence.iterator(), selector)
+    override val columns: Int get() = sheet.columns
+    override fun toString() = sheet.toString()
+    override fun toSheet(): Sheet = sheet
+}
+
+private class RowDistinctIterator<T, K>(private val source: Iterator<T>, private val keySelector: (T) -> K) :
+    AbstractIterator<T>() {
+    private val observed = HashSet<K>()
+
+    override fun computeNext() {
+        while (source.hasNext()) {
+            val next = source.next()
+            val key = keySelector(next)
+
+            if (observed.add(key)) {
+                setNext(next)
+                return
+            }
+        }
+
+        done()
+    }
+}
+
 class ColumnFilteringSequence(
     private val sequence: Sequence<Row>,
     private val predicate: (Int, ColumnDescriptor?) -> Boolean
@@ -49,7 +84,7 @@ class ColumnFilteringSequence(
                 }
             }
             val thiz = this
-            return object : Row {
+            return object : Row() {
                 override val columnCount get() = thiz.columnCount
                 override val columnDescriptors get() = thiz.columnDescriptors
                 override val rowOrdinal get() = oldRow.rowOrdinal

@@ -332,7 +332,7 @@ val sin: AlgebraicUnaryFunction = sinFunc
  * [![](https://jomof.github.io/kane/figures/sin-profile.svg)]
  */
 fun sin(matrix: NamedMatrix): MatrixExpr = sinFunc(matrix as MatrixExpr)
-fun sin(matrix : DataMatrix) : MatrixExpr = sinFunc(matrix as MatrixExpr)
+fun sin(matrix: DataMatrix): MatrixExpr = sinFunc(matrix as MatrixExpr)
 fun sin(matrix : MatrixExpr) : MatrixExpr = sinFunc(matrix)
 fun sin(scalar : ScalarExpr) : ScalarExpr = sinFunc(scalar)
 fun sin(scalar : Double) : ScalarExpr = sinFunc(scalar)

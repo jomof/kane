@@ -10,7 +10,7 @@ interface RangeExprProvider {
     fun range(range: SheetRangeExpr): Expr = range
 }
 
-class RowView(private val sheet: Sheet, private val row: Int) : Row, RangeExprProvider {
+class RowView(private val sheet: Sheet, private val row: Int) : Row(), RangeExprProvider {
     override val rowDescriptor: RowDescriptor? get() = sheet.rowDescriptors[row + 1]
     override val sheetDescriptor: SheetDescriptor get() = sheet.sheetDescriptor
     override val columnCount: Int get() = sheet.columns
@@ -37,5 +37,5 @@ class RowView(private val sheet: Sheet, private val row: Int) : Row, RangeExprPr
         }
     }
 
-    override fun toString() = rowDescriptor?.name?.joinToString(" ") ?: "#${rowOrdinal}"
+
 }

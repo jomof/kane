@@ -52,14 +52,33 @@ interface INameableMatrix : MatrixExpr, INameable {
     override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
 }
 
-interface Row {
-    val columnCount: Int
-    val columnDescriptors: Map<Int, ColumnDescriptor>
-    val rowOrdinal: Int
-    val rowDescriptor: RowDescriptor?
-    val sheetDescriptor: SheetDescriptor
-    operator fun get(column: Int): Any?
-    operator fun get(column: String): Any?
+abstract class Row {
+    abstract val columnCount: Int
+    abstract val columnDescriptors: Map<Int, ColumnDescriptor>
+    abstract val rowOrdinal: Int
+    abstract val rowDescriptor: RowDescriptor?
+    abstract val sheetDescriptor: SheetDescriptor
+    abstract operator fun get(column: Int): Any?
+    abstract operator fun get(column: String): Any?
+    override fun toString() = rowDescriptor?.name?.joinToString(" ") ?: "#${rowOrdinal}"
+    override fun equals(other: Any?): Boolean {
+        if (other !is Row) return false
+        if (this === other) return true
+        if (columnCount != other.columnCount) return false
+        for (i in 0 until columnCount) {
+            if (get(i) != other[i]) return false
+        }
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = columnCount
+        for (i in 0 until columnCount) {
+            result = 31 * get(i).hashCode()
+        }
+        return result
+    }
+
 }
 
 interface CountableColumns {
