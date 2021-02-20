@@ -5,7 +5,7 @@
 # rowDescriptor  
 [jvm]  
 Content  
-open override val [rowDescriptor](row-descriptor.md): [RowDescriptor](../-row-descriptor/index.md)  
+open override val [rowDescriptor](row-descriptor.md): [RowDescriptor](../-row-descriptor/index.md)?  
 
 
 

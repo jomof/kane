@@ -7,8 +7,8 @@
 Content  
 fun [min](min.md)(vararg values: [Number](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-number/index.html)): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)  
 fun [min](min.md)(vararg values: [ScalarExpr](-scalar-expr/index.md)): [ScalarExpr](-scalar-expr/index.md)  
-fun [min](min.md)(vararg values: [Any](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)): [ScalarExpr](-scalar-expr/index.md)  
-fun [min](min.md)(sheet: [Sheet](../com.github.jomof.kane.impl.sheet/-sheet/index.md)): [Sheet](../com.github.jomof.kane.impl.sheet/-sheet/index.md)  
+fun [min](min.md)(v1: [Any](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html), v2: [Any](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html), vararg values: [Any](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)): [ScalarExpr](-scalar-expr/index.md)  
+fun [min](min.md)(sheet: [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/-sequence/index.html)<[Row](-row/index.md)>): [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/-sequence/index.html)<[Row](-row/index.md)>  
 fun [min](min.md)(groupBy: [GroupBy](../com.github.jomof.kane.impl.sheet/-group-by/index.md)): [Sheet](../com.github.jomof.kane.impl.sheet/-sheet/index.md)  
 fun [min](min.md)(scalar: [StatisticExpr](-statistic-expr/index.md)): [ScalarExpr](-scalar-expr/index.md)  
 fun [min](min.md)(matrix: [MatrixExpr](-matrix-expr/index.md)): [ScalarExpr](-scalar-expr/index.md)  

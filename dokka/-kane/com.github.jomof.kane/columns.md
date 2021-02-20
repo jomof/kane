@@ -5,7 +5,7 @@
 # columns  
 [jvm]  
 Content  
-fun [Sheet](../com.github.jomof.kane.impl.sheet/-sheet/index.md).[columns](columns.md)(vararg columns: [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)): [Sheet](../com.github.jomof.kane.impl.sheet/-sheet/index.md)  
+fun [Sheet](../com.github.jomof.kane.impl.sheet/-sheet/index.md).[columns](columns.md)(vararg columns: [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)): [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/-sequence/index.html)<[Row](-row/index.md)>  
 More info  
 
 

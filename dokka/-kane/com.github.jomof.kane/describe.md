@@ -17,8 +17,13 @@ Return a new sheet with columns summarized into statistics
 
 [jvm]  
 Content  
+fun [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/-sequence/index.html)<[Row](-row/index.md)>.[describe](describe.md)(): [Sheet](../com.github.jomof.kane.impl.sheet/-sheet/index.md)  
+
+
+[jvm]  
+Content  
 fun [Expr](-expr/index.md).[describe](describe.md)(): [Sheet](../com.github.jomof.kane.impl.sheet/-sheet/index.md)  
-fun [MatrixExpr](-matrix-expr/index.md).[describe](describe.md)(name: [Id](../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-943712717) = "matrix"): [Sheet](../com.github.jomof.kane.impl.sheet/-sheet/index.md)  
+fun [MatrixExpr](-matrix-expr/index.md).[describe](describe.md)(name: [Id](../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-2059381145) = "matrix"): [Sheet](../com.github.jomof.kane.impl.sheet/-sheet/index.md)  
 More info  
 
 
@@ -30,7 +35,7 @@ Return a  sheet with data summarized into statistics
 [jvm]  
 Content  
 fun [NamedMatrix](../com.github.jomof.kane.impl/-named-matrix/index.md).[describe](describe.md)(): [Sheet](../com.github.jomof.kane.impl.sheet/-sheet/index.md)  
-fun [DataMatrix](../com.github.jomof.kane.impl/-data-matrix/index.md).[describe](describe.md)(name: [Id](../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-943712717) = "matrix"): [Sheet](../com.github.jomof.kane.impl.sheet/-sheet/index.md)  
+fun [DataMatrix](../com.github.jomof.kane.impl/-data-matrix/index.md).[describe](describe.md)(name: [Id](../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-2059381145) = "matrix"): [Sheet](../com.github.jomof.kane.impl.sheet/-sheet/index.md)  
 More info  
 
 

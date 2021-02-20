@@ -5,7 +5,7 @@
 # copy  
 [jvm]  
 Content  
-fun [copy](copy.md)(values: [List](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)<[Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)>, identity: [Any](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html) = Any(), name: [Id](../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-943712717) = anonymous): [DiscreteUniformRandomVariable](index.md)  
+fun [copy](copy.md)(values: [List](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)<[Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)>, identity: [Any](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html) = Any(), name: [Id](../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-2059381145) = anonymous): [DiscreteUniformRandomVariable](index.md)  
 
 
 

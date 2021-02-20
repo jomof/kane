@@ -5,7 +5,7 @@
 # toNamed  
 [jvm]  
 Content  
-open override fun [toNamed](to-named.md)(name: [Id](../../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-943712717)): [ScalarExpr](../-scalar-expr/index.md)  
+open override fun [toNamed](to-named.md)(name: [Id](../../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-2059381145)): [ScalarExpr](../-scalar-expr/index.md)  
 
 
 

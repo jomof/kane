@@ -36,4 +36,15 @@ Convert a [ScalarExpr](-scalar-expr/index.md) to [Int](https://kotlinlang.org/ap
   
 
 
+[jvm]  
+Content  
+fun [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/-sequence/index.html)<[Row](-row/index.md)>.[toInt](to-int.md)(): [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)  
+More info  
+
+
+Convert a row sequence to [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)
+
+  
+
+
 

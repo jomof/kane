@@ -36,4 +36,15 @@ Convert a [ScalarExpr](-scalar-expr/index.md) to [Double](https://kotlinlang.org
   
 
 
+[jvm]  
+Content  
+fun [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/-sequence/index.html)<[Row](-row/index.md)>.[toDouble](to-double.md)(): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)  
+More info  
+
+
+Convert a row sequence to [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
+
+  
+
+
 
