@@ -157,10 +157,13 @@ interface AlgebraicSummaryFunction :
         return lookupStatistic(statistic)
     }
 
-    operator fun invoke(value: Sheet): Sheet {
-        val filtered = value.describe().filter { row -> "$row" == meta.op }.toSheet()
-        if (filtered.columns == 1)
-            return filtered["A1"]
+    operator fun invoke(value: Sequence<Row>): Sequence<Row> {
+        val filtered = value.describe().filter { row ->
+            "$row" == meta.op
+        }
+        if (filtered.columns == 1) {
+            return filtered.toSheet()["A1"]
+        }
         return filtered
     }
 
@@ -177,6 +180,12 @@ interface AlgebraicSummaryFunction :
         AlgebraicSummaryMatrixScalar(
             this,
             DataMatrix(exprs.size, 1, exprs.toList().map { convertAnyToScalarExpr(it) })
+        )
+
+    operator fun invoke(v1: Any, v2: Any, exprs: Array<out Any>): ScalarExpr =
+        AlgebraicSummaryMatrixScalar(
+            this,
+            DataMatrix(exprs.size + 2, 1, (listOf(v1, v2) + exprs.toList()).map { convertAnyToScalarExpr(it) })
         )
 
     fun lookupStatistic(statistic: StreamingSamples): Double
@@ -198,7 +207,10 @@ interface AlgebraicSummaryFunction :
         else RetypeScalar(reduced, type)
     }
 
-    override fun reduceArithmetic(value: MatrixExpr) = reduceArithmetic(value.elements)
+    override fun reduceArithmetic(value: MatrixExpr): ScalarExpr? {
+        val elements = value.elements
+        return reduceArithmetic(elements)
+    }
 
     override fun reduceArithmetic(value: ScalarExpr): ScalarExpr = when (value) {
         is StreamingSampleStatisticExpr -> reduceArithmetic(value)

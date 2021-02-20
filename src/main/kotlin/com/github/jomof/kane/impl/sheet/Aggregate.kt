@@ -6,10 +6,11 @@ import com.github.jomof.kane.get
 import com.github.jomof.kane.NamedExpr
 import com.github.jomof.kane.impl.coordinate
 import com.github.jomof.kane.impl.toNamed
+import com.github.jomof.kane.impl.toSheet
 import com.github.jomof.kane.sheetOf
 
 internal class SheetRangeExprProvider(val sheet: Sheet) : RangeExprProvider {
-    override fun range(range: SheetRangeExpr): Expr = sheet["$range"]
+    override fun range(range: SheetRangeExpr): Expr = sheet["$range"].toSheet()
 }
 
 private fun GroupBy.buildAggregation(builder: SheetBuilderImpl): Sheet {

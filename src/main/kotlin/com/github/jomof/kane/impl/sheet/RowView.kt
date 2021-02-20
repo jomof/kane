@@ -4,17 +4,14 @@ import com.github.jomof.kane.Expr
 import com.github.jomof.kane.Row
 import com.github.jomof.kane.get
 import com.github.jomof.kane.impl.NamedColumnRangeRef
-import com.github.jomof.kane.impl.constant
 import com.github.jomof.kane.impl.coordinate
-import com.github.jomof.kane.impl.coordinateToCellName
 
 interface RangeExprProvider {
     fun range(range: SheetRangeExpr): Expr = range
 }
 
 class RowView(private val sheet: Sheet, private val row: Int) : Row, RangeExprProvider {
-    override val rowDescriptor: RowDescriptor
-        get() = sheet.rowDescriptors[row + 1] ?: RowDescriptor(listOf(constant(row + 1)))
+    override val rowDescriptor: RowDescriptor? get() = sheet.rowDescriptors[row + 1]
     override val sheetDescriptor: SheetDescriptor get() = sheet.sheetDescriptor
     override val columnCount: Int get() = sheet.columns
     override val columnDescriptors: Map<Int, ColumnDescriptor> = sheet.columnDescriptors
@@ -24,8 +21,8 @@ class RowView(private val sheet: Sheet, private val row: Int) : Row, RangeExprPr
 
     override fun get(column: String): String {
         val columnIndex = sheet.tryConvertToColumnIndex(column) ?: error("'$column' was not a recognized column")
-        val cell = coordinateToCellName(columnIndex, row)
-        return sheet[cell].toString()
+        val cell = coordinate(columnIndex, row)
+        return sheet.cells[cell].toString()
     }
 
     override fun range(range: SheetRangeExpr): Expr {
@@ -40,5 +37,5 @@ class RowView(private val sheet: Sheet, private val row: Int) : Row, RangeExprPr
         }
     }
 
-    override fun toString() = rowDescriptor.name.joinToString(" ")
+    override fun toString() = rowDescriptor?.name?.joinToString(" ") ?: "#${rowOrdinal}"
 }

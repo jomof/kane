@@ -16,3 +16,8 @@ fun MatrixExpr.toInt(): Int = toDouble().toInt()
  * Convert a [ScalarExpr] to [Int]
  */
 fun ScalarExpr.toInt(): Int = toDouble().toInt()
+
+/**
+ * Convert a row sequence to [Int]
+ */
+fun Sequence<Row>.toInt(): Int = toDouble().toInt()

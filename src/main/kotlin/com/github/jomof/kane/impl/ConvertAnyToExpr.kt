@@ -2,6 +2,7 @@ package com.github.jomof.kane.impl
 
 import com.github.jomof.kane.Expr
 import com.github.jomof.kane.NamedExpr
+import com.github.jomof.kane.ProvidesToSheet
 import com.github.jomof.kane.ScalarExpr
 import com.github.jomof.kane.impl.sheet.CoerceScalar
 import com.github.jomof.kane.impl.sheet.SheetRange
@@ -14,6 +15,7 @@ fun convertAnyToExpr(any: Any): Expr {
         is Number -> ConstantScalar(any.toDouble())
         is String -> analyzeDataType(any).parseToExpr(any)
         is Expr -> any
+        is ProvidesToSheet -> any.toSheet()
         else -> error("Unsupported type: ${any.javaClass}")
     }
 }

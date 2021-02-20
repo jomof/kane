@@ -3,6 +3,7 @@ package com.github.jomof.kane
 import com.github.jomof.kane.impl.canGetConstant
 import com.github.jomof.kane.impl.getConstant
 import com.github.jomof.kane.impl.sheet.Sheet
+import com.github.jomof.kane.impl.toSheet
 
 /**
  * Convert a single celled [Sheet] value to an [Double]
@@ -32,3 +33,8 @@ fun ScalarExpr.toDouble(): Double {
     if (canGetConstant()) return getConstant()
     return eval().getConstant()
 }
+
+/**
+ * Convert a row sequence to [Double]
+ */
+fun Sequence<Row>.toDouble() = toSheet().toDouble()

@@ -2,6 +2,7 @@ package com.github.jomof.kane
 
 import com.github.jomof.kane.impl.sheet.GroupBy
 import com.github.jomof.kane.impl.sheet.Sheet
+import com.github.jomof.kane.impl.toSheet
 
 
 /**
@@ -12,4 +13,4 @@ fun Sheet.columns(vararg columns: String) = get(*columns)
 /**
  * Get a subset of the columns from this [GroupBy].
  */
-fun GroupBy.columns(vararg columns: String) = copy(sheet = sheet.columns(*columns))
+fun GroupBy.columns(vararg columns: String) = copy(sheet = sheet.columns(*columns).toSheet())

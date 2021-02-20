@@ -4,6 +4,7 @@ import com.github.jomof.kane.impl.ConstantScalar
 import com.github.jomof.kane.impl.ValueExpr
 import com.github.jomof.kane.impl.sheet.Sheet
 import com.github.jomof.kane.impl.sheet.toCells
+import com.github.jomof.kane.impl.toSheet
 
 
 /**
@@ -29,9 +30,15 @@ fun Sheet.mapDoubles(translate: (Double) -> Double): Sheet {
 /**
  * Map elements that are coercible to double.
  */
-fun Expr.mapDoubles(translate: (Double) -> Double): Expr {
+fun Expr.mapDoubles(translate: (Double) -> Double): Sequence<Row> {
     return when (this) {
         is Sheet -> mapDoubles(translate)
         else -> error("Unsupported $javaClass")
     }
 }
+
+/**
+ * Map elements that are coercible to double.
+ */
+fun Sequence<Row>.mapDoubles(translate: (Double) -> Double): Sequence<Row> =
+    (toSheet() as Expr).mapDoubles(translate)

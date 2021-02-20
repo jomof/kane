@@ -95,6 +95,8 @@ class DocumentationTest {
 
     @Test
     fun `reading data section--dealing with large CSV files`() {
+        val prior = Kane.metrics.sheetInstatiations
+
         /**
          * When a CSV file is very large it can be useful to reduce it to a useful subset.
          * Let's look at a table of US COVID-19 hospital statistics (found at data.gov).
@@ -147,6 +149,8 @@ class DocumentationTest {
          * Finally, let's save this to a new .csv file so that we can use it for other demos.
          */
         covid.writeCsv("data/covid-slim.csv")
+
+        (Kane.metrics.sheetInstatiations - prior).assertString("0")
     }
 
     @Test

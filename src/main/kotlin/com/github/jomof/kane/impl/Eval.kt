@@ -248,7 +248,7 @@ private val reduceRetypeOfRetype = object : RewritingVisitor() {
 
 private val expandExogenousSheetCells = object : RewritingVisitor() {
     override fun rewrite(expr: ExogenousSheetScalar): Expr {
-        return expr.sheet.cells.getValue(expr.lookup)
+        return expr.rowSequence.toSheet().cells.getValue(expr.lookup)
     }
 }
 

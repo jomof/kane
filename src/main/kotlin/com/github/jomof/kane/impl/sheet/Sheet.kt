@@ -69,7 +69,7 @@ data class CellSheetRangeExpr(val rangeRef: CellRangeRef, override val name: Id 
 
 data class ExogenousSheetScalar(
     val lookup: Id,
-    val sheet: Sheet,
+    val rowSequence: Sequence<Row>,
     override val name: Id = anonymous
 ) : ScalarExpr, INameableScalar {
     override fun toNamed(name: Id): ScalarExpr {
@@ -79,10 +79,10 @@ data class ExogenousSheetScalar(
 
     override fun toUnnamed() = dup(name = anonymous)
 
-    override fun toString() = sheet.cells[lookup].toString()
+    override fun toString() = rowSequence.toSheet().cells[lookup].toString()
     fun dup(name: Id = this.name): ExogenousSheetScalar {
         if (name == this.name) return this
-        return ExogenousSheetScalar(lookup = lookup, sheet = sheet, name = name)
+        return ExogenousSheetScalar(lookup = lookup, rowSequence = rowSequence, name = name)
     }
 }
 

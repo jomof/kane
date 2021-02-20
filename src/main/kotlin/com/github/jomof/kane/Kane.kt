@@ -57,5 +57,17 @@ class Kane {
             step,
             negate
         ).map { it }
+
+        /**
+         * Internal metrics.
+         */
+        val metrics = KaneMetrics()
     }
 }
+
+class KaneMetrics(
+    /**
+     * Number of times Sequence<Row> was fully instantiated into a sheet.
+     */
+    var sheetInstatiations: Int = 0
+)

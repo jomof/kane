@@ -28,6 +28,8 @@ fun Sheet.describe(): Sheet {
         .showExcelColumnTags(false)
 }
 
+fun Sequence<Row>.describe(): Sheet = toSheet().describe()
+
 
 /**
  * Return a  sheet with data summarized into statistics

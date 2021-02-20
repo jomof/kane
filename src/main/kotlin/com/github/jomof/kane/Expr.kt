@@ -1,5 +1,6 @@
 package com.github.jomof.kane
 
+import com.github.jomof.kane.impl.Coordinate
 import com.github.jomof.kane.impl.Id
 import com.github.jomof.kane.impl.sheet.ColumnDescriptor
 import com.github.jomof.kane.impl.sheet.RowDescriptor
@@ -55,7 +56,7 @@ interface Row {
     val columnCount: Int
     val columnDescriptors: Map<Int, ColumnDescriptor>
     val rowOrdinal: Int
-    val rowDescriptor: RowDescriptor
+    val rowDescriptor: RowDescriptor?
     val sheetDescriptor: SheetDescriptor
     operator fun get(column: Int): Any?
     operator fun get(column: String): Any?
