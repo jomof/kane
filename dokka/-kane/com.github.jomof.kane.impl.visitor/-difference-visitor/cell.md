@@ -5,7 +5,7 @@
 # cell  
 [jvm]  
 Content  
-fun [cell](cell.md)(name: [Id](../../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-2059381145), e1: [Expr](../../com.github.jomof.kane/-expr/index.md), e2: [Expr](../../com.github.jomof.kane/-expr/index.md)): [Pair](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html)<[Id](../../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-2059381145), [Expr](../../com.github.jomof.kane/-expr/index.md)>  
+fun [cell](cell.md)(name: [Id](../../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-353478142), e1: [Expr](../../com.github.jomof.kane/-expr/index.md), e2: [Expr](../../com.github.jomof.kane/-expr/index.md)): [Pair](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html)<[Id](../../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-353478142), [Expr](../../com.github.jomof.kane/-expr/index.md)>  
 
 
 
