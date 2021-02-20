@@ -7,4 +7,4 @@ import com.github.jomof.kane.impl.sheet.ordinalRows
 
 
 fun Sequence<Row>.filter(predicate: (Row) -> Boolean) =
-    RowFilteringSequence(this, true, predicate)
+    RowFilteringSequence(this, true) { _, row -> predicate(row) }

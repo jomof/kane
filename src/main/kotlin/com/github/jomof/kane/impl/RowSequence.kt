@@ -4,6 +4,7 @@ import com.github.jomof.kane.*
 import com.github.jomof.kane.impl.sheet.*
 import kotlin.random.Random
 
+internal const val forceSheetInstantiation = false
 
 class ColumnFilteringSequence(
     private val sequence: Sequence<Row>,
@@ -11,6 +12,10 @@ class ColumnFilteringSequence(
 ) : Sequence<Row>, ProvidesToSheet, CountableColumns {
     private val sheet by lazy {
         toSheet(iterator())
+    }
+
+    init {
+        if (forceSheetInstantiation) sheet.rows
     }
 
     override fun toSheet(): Sheet = sheet
@@ -73,6 +78,10 @@ internal class RowSubSequence(
     override val columns: Int get() = sequence.columns
 
     init {
+        if (forceSheetInstantiation) sheet.rows
+    }
+
+    init {
         require(startIndex >= 0) { "startIndex should be non-negative, but is $startIndex" }
         require(endIndex >= 0) { "endIndex should be non-negative, but is $endIndex" }
         require(endIndex >= startIndex) { "endIndex should be not less than startIndex, but was $endIndex < $startIndex" }
@@ -125,6 +134,7 @@ internal class RowTakeSequence(
 
     init {
         require(count >= 0) { "count must be non-negative, but was $count." }
+        if (forceSheetInstantiation) sheet.rows
     }
 
     override fun drop(n: Int): Sequence<Row> = if (n >= count) emptySequence() else RowSubSequence(sequence, n, count)
@@ -158,6 +168,7 @@ internal class RowDropSequence(
 
     init {
         require(count >= 0) { "count must be non-negative, but was $count." }
+        if (forceSheetInstantiation) sheet.rows
     }
 
     override fun drop(n: Int): Sequence<Row> =
@@ -196,6 +207,10 @@ internal class RowShufflingSequence(
     private val sheet by lazy { doShuffle().toSheet() }
     override val columns: Int get() = sequence.columns
 
+    init {
+        if (forceSheetInstantiation) sheet.rows
+    }
+
     override fun iterator(): Iterator<Row> = sheet.iterator()
     override fun toSheet() = sheet
     override fun toString() = sheet.toString()
@@ -214,14 +229,18 @@ internal class RowShufflingSequence(
 class RowFilteringSequence(
     private val sequence: Sequence<Row>,
     private val sendWhen: Boolean = true,
-    private val predicate: (Row) -> Boolean
+    private val predicate: (Int, Row) -> Boolean
 ) : Sequence<Row>, ProvidesToSheet, CountableColumns {
     private val sheetDelegate = lazy { toSheet(iterator()) }
     private val sheet by sheetDelegate
     override val columns: Int get() = sequence.columns
 
-    fun filter(predicate: (Row) -> Boolean) = RowFilteringSequence(sequence, sendWhen) { row ->
-        this.predicate(row) && predicate(row)
+    init {
+        if (forceSheetInstantiation) sheet.rows
+    }
+
+    fun filter(predicate: (Row) -> Boolean) = RowFilteringSequence(sequence, sendWhen) { index, row ->
+        this.predicate(index, row) && predicate(row)
     }
 
     override fun iterator(): Iterator<Row> = run {
@@ -232,16 +251,17 @@ class RowFilteringSequence(
             val iterator = sequence.iterator()
             var nextState: Int = -1 // -1 for unknown, 0 for done, 1 for continue
             var nextItem: Row? = null
-            var rowOrdinal = 0
+            var index = 0
 
             private fun calcNext() {
                 while (iterator.hasNext()) {
                     val item = iterator.next()
-                    if (predicate(item) == sendWhen) {
+                    if (predicate(index++, item) == sendWhen) {
                         nextItem = item
                         nextState = 1
                         return
                     }
+
                 }
                 nextState = 0
             }
@@ -254,8 +274,6 @@ class RowFilteringSequence(
                 val result = nextItem
                 nextItem = null
                 nextState = -1
-                val thiz = this
-                thiz.rowOrdinal++
                 return result!!
             }
 

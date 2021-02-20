@@ -1,10 +1,16 @@
 package com.github.jomof.kane
 
+import com.github.jomof.kane.impl.forceSheetInstantiation
 import com.github.jomof.kane.impl.toSheet
 import org.junit.Test
 import kotlin.random.Random
 
 class SequenceTest {
+    @Test
+    fun `dont check in forceSheetInstantiation`() {
+        forceSheetInstantiation.assertString("false")
+    }
+
     @Test
     fun `filter true`() {
         val sheet = sheetOfCsv(
@@ -383,6 +389,93 @@ class SequenceTest {
 
     @Test
     fun `repro formula adjustment in filtering`() {
+        val sheet = {
+            sheetOfCsv(
+                """
+                weight,gender
+                157.500553,male
+                174.094104,female
+                177.540920,male
+                """
+            ).copy {
+                val bmi by column("weight") + 1.0
+                listOf(bmi)
+            }
+        }
+        val expected = """
+              weight [A] gender [B] bmi [C] 
+              ---------- ---------- ------- 
+            1  157.50055       male    A1+1 
+            3  177.54092       male    A2+1 
+        """.trimIndent()
+        sheet().filter { row -> row["gender"] == "male" }.assertString(expected)
+        sheet().toSheet().filter { row -> row["gender"] == "male" }.assertString(expected)
+        sheet().filter { row -> row["gender"] == "male" }.toSheet().assertString(expected)
+        val expected2 = """
+              weight [A] gender [B] bmi [C] 
+              ---------- ---------- ------- 
+            3  177.54092       male    A1+1 
+        """.trimIndent()
+        sheet().filter { row -> row["gender"] == "male" }.filterIndexed { index, row -> index == 1 }
+            .assertString(expected2)
+    }
+
+    @Test
+    fun `repro lost row name`() {
+        val sheet = {
+            sheetOfCsv(
+                """
+                weight,gender
+                157.500553,male
+                174.094104,female
+                177.540920,male
+                """
+            ).copy {
+                val bmi by column("weight") + 1.0
+                listOf(bmi)
+            }
+        }
+        val expected2 = """
+              weight [A] gender [B] bmi [C] 
+              ---------- ---------- ------- 
+            3  177.54092       male    A1+1 
+        """.trimIndent()
+        sheet().filter { row -> row["gender"] == "male" }.filterIndexed { index, row -> index == 1 }
+            .assertString(expected2)
+        sheet().toSheet().filter { row -> row["gender"] == "male" }.filterIndexed { index, row -> index == 1 }
+            .assertString(expected2)
+        sheet().filter { row -> row["gender"] == "male" }.toSheet().filterIndexed { index, row -> index == 1 }
+            .assertString(expected2)
+        sheet().filter { row -> row["gender"] == "male" }.filterIndexed { index, row -> index == 1 }.toSheet()
+            .assertString(expected2)
+    }
+
+    @Test
+    fun `support, filter row and ordinal toString`() {
+        val sheet = {
+            sheetOfCsv(
+                """
+                weight,gender
+                157.500553,male
+                174.094104,female
+                177.540920,male
+                """
+            )
+        }
+        val expected = """
+           weight [A] gender [B] 
+          ---------- ---------- 
+        1  157.50055       male 
+        3  177.54092       male            
+        """.trimIndent()
+        sheet().filter { row -> row["gender"] == "male" }.assertString(expected)
+        sheet().toSheet().filter { row -> row["gender"] == "male" }.assertString(expected)
+        sheet().filter { row -> row["gender"] == "male" }.toSheet().assertString(expected)
+
+    }
+
+    @Test
+    fun `repro formula adjustment in indexed filtering`() {
         val prior = Kane.metrics.sheetInstatiations
         val sheet = sheetOfCsv(
             """
@@ -395,7 +488,9 @@ class SequenceTest {
             val bmi by column("weight") + 1.0
             listOf(bmi)
         }
-        val filtered = sheet.filter { row -> row["gender"] == "male" }
+        val filtered = sheet.filterIndexed { index, _ ->
+            index != 1
+        }
         filtered.assertString(
             """
               weight [A] gender [B] bmi [C] 
@@ -408,7 +503,7 @@ class SequenceTest {
     }
 
     @Test
-    fun `support, filter row and ordinal`() {
+    fun `repro formula adjustment in chained indexed filtering`() {
         val prior = Kane.metrics.sheetInstatiations
         val sheet = sheetOfCsv(
             """
@@ -417,14 +512,20 @@ class SequenceTest {
                 174.094104,female
                 177.540920,male
                 """
-        )
-        val sb = StringBuilder()
-        sheet.filter { row ->
-            row["gender"] == "male"
-        }.forEach { row ->
-            sb.append("${row.rowOrdinal}->${row.rowDescriptor?.name},")
+        ).copy {
+            val bmi by column("weight") + 1.0
+            listOf(bmi)
         }
-        sb.assertString("0->null,2->null,")
-        (Kane.metrics.sheetInstatiations - prior).assertString("0")
+        val filtered = sheet
+            .filterIndexed { index, _ -> index != 0 }
+            .filterIndexed { index, _ -> index != 0 }
+        filtered.assertString(
+            """
+              weight [A] gender [B] bmi [C] 
+              ---------- ---------- ------- 
+            3  177.54092       male    A1+1 
+            """.trimIndent()
+        )
+        if (!forceSheetInstantiation) (Kane.metrics.sheetInstatiations - prior).assertString("1")
     }
 }
