@@ -30,7 +30,9 @@ internal class CsvStateMachine(
         LineFeed,
         InsideField,
         AfterEndQuote,
-        AfterDelimiter
+        AfterDelimiter,
+        EscapingInsideField,
+        EscapingInsideQuotedField
     }
 
     private var state: State = StartOfField
@@ -67,9 +69,23 @@ internal class CsvStateMachine(
                     Continue
                 }
             }
+            EscapingInsideField -> {
+                sb.append(ch)
+                state = InsideField
+                Continue
+            }
+            EscapingInsideQuotedField -> {
+                sb.append(ch)
+                state = InsideQuotedField
+                Continue
+            }
             InsideField -> when (ch) {
                 quoteChar -> {
                     // Odd case embedded quote character
+                    Continue
+                }
+                escapeChar -> {
+                    state = EscapingInsideField
                     Continue
                 }
                 delimiter -> {
@@ -93,7 +109,11 @@ internal class CsvStateMachine(
             InsideQuotedField -> when (ch) {
                 quoteChar -> {
                     state = AfterEndQuote
-                    Eofield
+                    Continue
+                }
+                escapeChar -> {
+                    state = EscapingInsideQuotedField
+                    Continue
                 }
                 else -> {
                     sb.append(ch)
@@ -104,30 +124,37 @@ internal class CsvStateMachine(
             AfterEndQuote -> when (ch) {
                 delimiter -> {
                     state = StartOfField
-                    Continue
+                    Eofield
                 }
                 '\n', '\u2028', '\u2029', '\u0085' -> {
                     state = StartOfField
-                    EolineContinue
+                    Eol
                 }
                 '\r' -> {
                     state = LineFeed
-                    EolineContinue
+                    Eol
+                }
+                quoteChar -> {
+                    // Double quote seen
+                    state = InsideQuotedField
+                    sb.append("\"")
+                    Continue
                 }
                 else -> Continue
             }
-            else ->
-                error("$state")
         }
     }
 
     fun flush(): ReadResult {
         return when (state) {
             StartOfField -> Continue
-            AfterEndQuote -> Continue
+            AfterEndQuote -> Eofield
             AfterDelimiter -> Eofield
             InsideField -> Eofield
-            else -> error("$state")
+            InsideQuotedField -> Eofield
+            LineFeed -> Continue
+            EscapingInsideField -> Continue
+            EscapingInsideQuotedField -> Continue
         }
     }
 }

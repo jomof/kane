@@ -123,9 +123,55 @@ class CsvStateMachineTest {
     }
 
     @Test
-    fun `cr-cr`() {
-        parse("a\r\rb") // Just check that it shouldn't crash
+    fun `undefined, just don't crash`() {
+        parse("a\r\rb")
+        parse("a\r")
+        parse("a\"")
+        parse("a\\\r")
+        parse("a\\")
+        parse("\"a\\")
     }
+
+    @Test
+    fun `double quote`() {
+        parse("\"\"\"").assertString("[[\"]]")
+    }
+
+    @Test
+    fun `json embedded`() {
+        parse("1,\"{\"\"type\"\": \"\"Point\"\", \"\"coordinates\"\": [102.0, 0.5]}\"").assertString(
+            """
+            [[1, {"type": "Point", "coordinates": [102.0, 0.5]}]]
+        """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `UTF-8`() {
+        parse(
+            """
+            a,b,c
+            1,2,3
+            4,5,ʤ
+            """.trimIndent()
+        ).assertString("[[a, b, c], [1, 2, 3], [4, 5, ʤ]]")
+    }
+
+    @Test
+    fun `quoted cr-lf`() {
+        parse(
+            """
+            "a
+             b"
+            """.trimIndent()
+        ).assertString(
+            """
+            [[a
+             b]]
+            """.trimIndent()
+        )
+    }
+
 
     @Test
     fun `space before quote`() {
@@ -148,8 +194,33 @@ class CsvStateMachineTest {
     }
 
     @Test
+    fun `comma in quotes`() {
+        parse("a b").assertString("[[a b]]")
+    }
+
+    @Test
     fun `space in quoted field`() {
         parse("\"a b\"").assertString("[[a b]]")
+    }
+
+    @Test
+    fun `escaped quote in unquoted field`() {
+        parse("a\\\"b").assertString("[[a\"b]]")
+    }
+
+    @Test
+    fun `escaped escape char in unquoted field`() {
+        parse("a\\\\b").assertString("[[a\\b]]")
+    }
+
+    @Test
+    fun `escaped quote in quoted field`() {
+        parse("\"a\\\"b\"").assertString("[[a\"b]]")
+    }
+
+    @Test
+    fun `escaped escape char in quoted field`() {
+        parse("\"a\\\\b\"").assertString("[[a\\b]]")
     }
 
     @Test
