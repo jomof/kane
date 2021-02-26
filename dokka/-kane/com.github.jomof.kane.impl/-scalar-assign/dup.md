@@ -5,7 +5,7 @@
 # dup  
 [jvm]  
 Content  
-fun [dup](dup.md)(left: [ScalarVariable](../-scalar-variable/index.md) = this.left, right: [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md) = this.right, name: [Id](../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-714195928) = this.name): [ScalarAssign](index.md)  
+fun [dup](dup.md)(left: [ScalarVariable](../-scalar-variable/index.md) = this.left, right: [ScalarExpr](../../com.github.jomof.kane/-scalar-expr/index.md) = this.right, name: [Id](../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-60763429) = this.name): [ScalarAssign](index.md)  
 
 
 

@@ -5,7 +5,7 @@
 # sample  
 [jvm]  
 Content  
-fun [Sheet](../com.github.jomof.kane.impl.sheet/-sheet/index.md).[sample](sample.md)(count: [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) = 5, random: [Random](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.random/-random/index.html) = Random(7)): [Sheet](../com.github.jomof.kane.impl.sheet/-sheet/index.md)  
+fun [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/-sequence/index.html)<[Row](-row/index.md)>.[sample](sample.md)(count: [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) = 5, random: [Random](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.random/-random/index.html) = Random(7)): [Sheet](../com.github.jomof.kane.impl.sheet/-sheet/index.md)  
 More info  
 
 

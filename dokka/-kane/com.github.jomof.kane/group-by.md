@@ -5,7 +5,7 @@
 # groupBy  
 [jvm]  
 Content  
-fun [Sheet](../com.github.jomof.kane.impl.sheet/-sheet/index.md).[groupBy](group-by.md)(vararg columns: [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)): [GroupBy](../com.github.jomof.kane.impl.sheet/-group-by/index.md)  
+fun [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/-sequence/index.html)<[Row](-row/index.md)>.[groupBy](group-by.md)(vararg columns: [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)): [GroupBy](../com.github.jomof.kane.impl.sheet/-group-by/index.md)  
 More info  
 
 

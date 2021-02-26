@@ -5,8 +5,7 @@
 # fillna  
 [jvm]  
 Content  
-fun [Sheet](../com.github.jomof.kane.impl.sheet/-sheet/index.md).[fillna](fillna.md)(value: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [Sheet](../com.github.jomof.kane.impl.sheet/-sheet/index.md)  
-fun [Expr](-expr/index.md).[fillna](fillna.md)(value: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [Expr](-expr/index.md)  
+fun [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/-sequence/index.html)<[Row](-row/index.md)>.[fillna](fillna.md)(value: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/-sequence/index.html)<[Row](-row/index.md)>  
 More info  
 
 
