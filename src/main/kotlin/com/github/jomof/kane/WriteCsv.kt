@@ -4,28 +4,30 @@ import com.github.jomof.kane.impl.Identifier
 import com.github.jomof.kane.impl.coordinate
 import com.github.jomof.kane.impl.indexToColumnName
 import com.github.jomof.kane.impl.sheet.Sheet
+import com.github.jomof.kane.impl.toSheet
 import java.io.File
 
 /**
  * Write Sheet to a file named [csv]
  */
-fun Sheet.writeCsv(csv: String) {
+fun Sequence<Row>.writeCsv(csv: String) {
     writeCsv(File(csv))
 }
 
 /**
  * Write Sheet to a file named [csv]
  */
-fun Sheet.writeCsv(csv: File) {
+fun Sequence<Row>.writeCsv(csv: File) {
+    val sheet = toSheet()
     csv.writeText("")
 
-    fun colName(column: Int) = columnDescriptors[column]?.name ?: indexToColumnName(column)
+    fun colName(column: Int) = sheet.columnDescriptors[column]?.name ?: indexToColumnName(column)
 
     // Column headers
-    (0..columns).forEach { column ->
+    (0..sheet.columns).forEach { column ->
         val columnName = colName(column)
         csv.appendText(Identifier.string(columnName))
-        if (column != columns - 1) csv.appendText(",")
+        if (column != sheet.columns - 1) csv.appendText(",")
 
     }
     csv.appendText("\n")
@@ -33,15 +35,15 @@ fun Sheet.writeCsv(csv: File) {
     // Data
     val sb = StringBuilder()
     for (row in 0 until rows) {
-        for (column in 0 until columns) {
+        for (column in 0 until sheet.columns) {
             val cell = coordinate(column, row)
-            val value = cells[cell]?.toString() ?: ""
+            val value = sheet.cells[cell]?.toString() ?: ""
             if (value.contains(" ")) {
                 sb.append("\"$value\"")
             } else {
                 sb.append(value)
             }
-            if (column != columns - 1) sb.append(",")
+            if (column != sheet.columns - 1) sb.append(",")
         }
         sb.append("\n")
         if (row % 100 == 0) {

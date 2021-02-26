@@ -2,7 +2,9 @@ package com.github.jomof.kane.impl.sheet
 
 import com.github.doyaaaaaken.kotlincsv.client.CsvReader
 import com.github.doyaaaaaken.kotlincsv.dsl.context.CsvReaderContext
+import com.github.jomof.kane.Row
 import com.github.jomof.kane.impl.coordinate
+import java.io.File
 import java.io.InputStream
 import java.nio.charset.Charset
 import kotlin.random.Random
@@ -21,7 +23,7 @@ internal fun parseCsv(
     escapeChar: Char = '"',
     skipEmptyLine: Boolean = false,
     skipMissMatchedRow: Boolean = false
-): Sheet = readCsv(
+): Sequence<Row> = readCsv(
     data.byteInputStream(Charset.forName(charset)),
     CsvParameters(
         names = names,
@@ -37,12 +39,36 @@ internal fun parseCsv(
         skipMissMatchedRow
     )
 )
+//
+//internal class ReadCsvWithHeader(
+//    private val csv: File,
+//    private val params: CsvParameters,
+//    private val context: CsvReaderContext
+//) : Sequence<Row> {
+//    private val bytes by lazy { csv.readBytes() }
+//    override fun iterator(): Iterator<Row> {
+//        val ips = bytes.inputStream()
+//        val reader = CsvReader(context).open(bytes.inputStream())
+////        val csvFileReader = reader.open(csv.inputStream())
+//        return object : Iterator<Row> {
+//            override fun hasNext(): Boolean {
+//                TODO("Not yet implemented")
+//            }
+//
+//            override fun next(): Row {
+//                TODO("Not yet implemented")
+//            }
+//
+//        }
+//    }
+//
+//}
 
 private fun readCsvWithHeader(
     csv: InputStream,
     params: CsvParameters,
     context: CsvReaderContext
-): Sheet {
+): Sequence<Row> {
     val sb = SheetBuilderImpl()
     val random = Random(7)
     val rows: MutableList<Map<String, String>> = mutableListOf()
@@ -81,7 +107,7 @@ private fun readCsvWithHeader(
     } else {
         println("Read ${rows.size} rows with ${info.columnInfos.size} columns")
     }
-    return sb.build()
+    return sb.build().limitOutputLines(10)
 }
 
 private fun readCsvWithoutHeader(
@@ -131,15 +157,26 @@ private fun readCsvWithoutHeader(
     return sb.build()
 }
 
+//internal fun readCsv(
+//    csv: File,
+//    params: CsvParameters,
+//    context: CsvReaderContext
+//): Sequence<Row> {
+//    val sheet =
+//        if (params.names.isEmpty()) ReadCsvWithHeader(csv, params, context)
+//        else error("")
+//    return sheet
+//}
+
 internal fun readCsv(
     csv: InputStream,
     params: CsvParameters,
     context: CsvReaderContext
-): Sheet {
+): Sequence<Row> {
     val sheet =
         if (params.names.isEmpty()) readCsvWithHeader(csv, params, context)
-        else readCsvWithoutHeader(csv, params, context)
-    return sheet.limitOutputLines(10)
+        else readCsvWithoutHeader(csv, params, context).limitOutputLines(10)
+    return sheet
 }
 
 internal data class CsvParameters(

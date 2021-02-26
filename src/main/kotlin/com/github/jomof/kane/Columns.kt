@@ -8,9 +8,9 @@ import com.github.jomof.kane.impl.toSheet
 /**
  * Get a subset of the columns from this [Sheet].
  */
-fun Sheet.columns(vararg columns: String) = get(*columns)
+fun Sequence<Row>.columns(vararg columns: String) = get(*columns)
 
 /**
  * Get a subset of the columns from this [GroupBy].
  */
-fun GroupBy.columns(vararg columns: String) = copy(sheet = sheet.columns(*columns).toSheet())
+fun GroupBy.columns(vararg columns: String) = copy(source = source.columns(*columns).toSheet())

@@ -20,7 +20,7 @@ fun readCsv(
     escapeChar: Char = '"',
     skipEmptyLine: Boolean = false,
     skipMissMatchedRow: Boolean = false
-): Sheet = readCsv(
+): Sequence<Row> = readCsv(
     File(csv).inputStream(),
     CsvParameters(
         names = names,

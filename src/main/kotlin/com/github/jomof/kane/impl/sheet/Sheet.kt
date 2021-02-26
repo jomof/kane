@@ -265,15 +265,6 @@ data class Sheet(
         return sb.build()
     }
 
-    /**
-     * Create a new sheet with cell values changed.
-     */
-    fun copy(init: SheetBuilderImpl.() -> List<Expr>): Sheet {
-        val sheet = toBuilder()
-        init(sheet).forEach { sheet.add(it) }
-        return sheet.build()
-    }
-
     override fun iterator() = object : Iterator<Row> {
         val sheet: Sheet = this@Sheet
         var row = 0
@@ -290,10 +281,11 @@ internal fun Sheet.limitOutputLines(limit: Int) = dup(sheetDescriptor = sheetDes
 /**
  * Whether to show Excel-like column tags in the column headers
  */
-internal fun Sheet.showExcelColumnTags(show: Boolean = true) =
-    dup(sheetDescriptor = sheetDescriptor.copy(showExcelColumnTags = show))
+internal fun Sequence<Row>.showExcelColumnTags(show: Boolean = true) =
+    toSheet().dup(sheetDescriptor = toSheet().sheetDescriptor.copy(showExcelColumnTags = show))
 
-internal fun GroupBy.showExcelColumnTags(show: Boolean = true) = copy(sheet = sheet.showExcelColumnTags(show))
+internal fun GroupBy.showExcelColumnTags(show: Boolean = true) =
+    copy(source = source.toSheet().showExcelColumnTags(show))
 
 /**
  * Whether to show Excel-like column tags in the column headers

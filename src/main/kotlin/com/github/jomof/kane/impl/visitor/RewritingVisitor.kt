@@ -63,9 +63,9 @@ internal open class RewritingVisitor(
         expr.dup(left = matrix(expr.left), right = scalar(expr.right))
 
     open fun rewrite(expr: GroupBy): Expr = with(expr) {
-        val rewritten = sheet(sheet)
-        return if (rewritten === sheet) this
-        else copy(sheet = rewritten)
+        val rewritten = sheet(source.toSheet())
+        return if (rewritten === source.toSheet()) this
+        else copy(source = rewritten)
     }
 
     open fun rewrite(expr: AlgebraicDeferredDataMatrix): Expr = with(expr) {

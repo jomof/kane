@@ -1,6 +1,5 @@
 package com.github.jomof.kane
 
-import com.github.jomof.kane.impl.sheet.Sheet
 import com.github.jomof.kane.impl.sheet.parseCsv
 
 /**
@@ -16,7 +15,7 @@ fun sheetOfCsv(
     escapeChar: Char = '"',
     skipEmptyLine: Boolean = false,
     skipMissMatchedRow: Boolean = false,
-): Sheet {
+): Sequence<Row> {
     return parseCsv(
         data = text.trimIndent().trim('\r', '\n'),
         names = names,

@@ -151,7 +151,7 @@ open class DifferenceVisitor {
     }
 
     fun visit(e1: GroupBy, e2: GroupBy): Expr {
-        val sheet = sheet(e1.sheet, e2.sheet)
+        val sheet = sheet(e1.source.toSheet(), e2.source.toSheet())
         val selector = (e1.keySelector zip e2.keySelector).map { (l, r) -> visit(l, r) }
         return GroupBy(sheet, selector)
     }
@@ -166,8 +166,7 @@ open class DifferenceVisitor {
                 break
             }
         }
-        if (allSame) error("")
-        error("")
+        if (!allSame) error("")
         val elements = (e1.elements zip e2.elements).map { (l, r) -> scalar(l, r) }
         return DataMatrix(e1.columns, e1.rows, elements)
     }

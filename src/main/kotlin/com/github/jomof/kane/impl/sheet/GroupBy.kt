@@ -9,9 +9,10 @@ import com.github.jomof.kane.impl.*
  * to build a key from a row.
  */
 data class GroupBy(
-    val sheet: Sheet,
+    val source: Sequence<Row>,
     val keySelector: List<Expr>
 ) : Expr {
+    private val sheet by lazy { source.toSheet() }
     private val groups by lazy { createGroups() }
 
     private fun createGroups(): Map<List<Expr>, Sheet> {
@@ -49,13 +50,13 @@ data class GroupBy(
     }
 }
 
-private fun Sheet.buildGrouping(builder: SheetBuilderImpl): GroupBy {
+private fun Sequence<Row>.buildGrouping(builder: SheetBuilderImpl): GroupBy {
     val immediate = builder.getImmediateNamedExprs()
     val names = immediate.cells.map { (name, expr) -> expr.toNamed(Identifier.string(name)) }
     return GroupBy(this, names)
 }
 
-fun Sheet.groupOf(selector: SheetBuilder.() -> List<Expr>): GroupBy {
+internal fun Sequence<Row>.groupOf(selector: SheetBuilder.() -> List<Expr>): GroupBy {
     val builder = SheetBuilderImpl()
     selector(builder as SheetBuilder).forEach {
         builder.add(it)
