@@ -345,8 +345,8 @@ val cos: AlgebraicUnaryFunction = cosFunc
  * cos function
  * [![](https://jomof.github.io/kane/figures/cos-profile.svg)]
  */
-fun cos(matrix : NamedMatrix) : MatrixExpr = cosFunc(matrix as MatrixExpr)
-fun cos(matrix : DataMatrix) : MatrixExpr = cosFunc(matrix as MatrixExpr)
+fun cos(matrix: NamedMatrix): MatrixExpr = cosFunc(matrix as MatrixExpr)
+fun cos(matrix: DataMatrix): MatrixExpr = cosFunc(matrix as MatrixExpr)
 fun cos(matrix : MatrixExpr) : MatrixExpr = cosFunc(matrix)
 fun cos(scalar : ScalarExpr) : ScalarExpr = cosFunc(scalar)
 fun cos(scalar : Double) : ScalarExpr = cosFunc(scalar)

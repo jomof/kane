@@ -5,12 +5,23 @@ import com.github.jomof.kane.impl.sheet.Sheet
 import com.github.jomof.kane.impl.sheet.possibleDataFormats
 import com.github.jomof.kane.impl.sheet.showExcelColumnTags
 import com.github.jomof.kane.impl.sheet.showRowAndColumnForSingleCell
+import java.io.File
 
 /**
  * Global metadata about the Kane system.
  */
 class Kane {
     companion object {
+        /**
+         * Folder used for caching intermediates. May be safely deleted.
+         */
+        val userCacheFolder: File
+            get() {
+                val result = File(System.getProperty("user.home")).resolve(".kane")
+                result.mkdirs()
+                return result
+            }
+
         /**
          * List of data formats supported by Kane.
          */

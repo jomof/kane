@@ -1,7 +1,6 @@
 package com.github.jomof.kane
 
-import com.github.jomof.kane.impl.csv.CsvParseField
-import com.github.jomof.kane.impl.csv.parseCsv
+import com.github.jomof.kane.impl.csv.*
 import org.junit.Test
 import java.io.*
 
@@ -155,20 +154,11 @@ class CsvStateMachineTest {
     }
 
     @Test
-    fun `read large file bytes`() {
-        repeat(1) {
-            val offsets = mutableListOf<Long>()
-            var lastWasEol = true
-            parseCsv(BufferedReader(FileReader("data/covid.csv"))) { field ->
-                when (field) {
-                    is CsvParseField.TextField -> if (lastWasEol) {
-                        lastWasEol = false
-                        offsets.add(field.startOffset)
-                    }
-                    is CsvParseField.EolineField -> lastWasEol = true
-                }
-            }
-            println(offsets.size)
+    fun `read csv cache x10`() {
+        val csv = File("data/covid.csv")
+        repeat(10) {
+            val md = CsvMetadata.computeIfAbsent(csv)
+            println(md)
         }
     }
 }

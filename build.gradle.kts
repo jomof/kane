@@ -1,7 +1,8 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.4.10"
+    kotlin("jvm") version "1.4.31"
+    kotlin("plugin.serialization") version "1.4.31"
     id("maven-publish")
     id("org.jetbrains.dokka") version ("1.4.20")
 }
@@ -19,6 +20,9 @@ dependencies {
     testImplementation(kotlin("test-junit"))
     implementation(kotlin("stdlib-jdk8"))
     implementation("com.github.doyaaaaaken:kotlin-csv-jvm:0.15.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.1.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:1.1.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-hocon:1.1.0")
     testImplementation("com.github.doyaaaaaken:kotlin-csv-jvm:0.15.0")
     testImplementation("org.ow2.asm:asm:9.0")
     testImplementation("org.jetbrains.lets-plot:lets-plot-common:1.5.6")

@@ -163,7 +163,7 @@ class StreamingSamples(
     }
 
     fun percentile(quantile : Double) : Double {
-        if (n == 0 || quantile < 0 || quantile > 1) Double.NaN
+        if (n == 0 || quantile < 0 || quantile > 1) return Double.NaN
         val wantedRank = floor(n * quantile).toInt()
         val tolerance = (epsilon * n)
         if (wantedRank > n - tolerance) return samples[samples.size-1].v

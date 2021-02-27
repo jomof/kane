@@ -1,7 +1,7 @@
 package com.github.jomof.kane.impl.csv
 
-import com.github.jomof.kane.impl.csv.CsvParseField.EolineField
-import com.github.jomof.kane.impl.csv.CsvParseField.TextField
+import com.github.jomof.kane.impl.csv.CsvParseField.*
+import com.github.jomof.kane.impl.csv.CsvStateMachine.ReadResult.*
 import java.io.Reader
 import java.io.StringReader
 
@@ -16,9 +16,14 @@ internal sealed class CsvParseField {
  */
 internal fun parseCsv(
     bufferedReader: Reader,
+    context: CsvParseContext = CsvParseContext(),
     receive: (field: CsvParseField) -> Unit
 ) {
-    val machine = CsvStateMachine()
+    val machine = CsvStateMachine(
+        quoteChar = context.quoteChar,
+        delimiter = context.delimiter,
+        escapeChar = context.escapeChar
+    )
     val sb = StringBuilder()
     var offset: Long = 0
     val field = TextField(0, sb)
@@ -28,19 +33,19 @@ internal fun parseCsv(
         ++offset
         val ch = ci.toChar()
         when (val result = machine.read(ch, sb)) {
-            CsvStateMachine.ReadResult.Continue -> {
+            Continue -> {
             }
-            CsvStateMachine.ReadResult.EolineContinue -> {
+            EolineContinue -> {
                 field.startOffset = offset
                 sb.clear()
                 receive(EolineField)
             }
-            CsvStateMachine.ReadResult.Eofield -> {
+            Eofield -> {
                 receive(field)
                 field.startOffset = offset
                 sb.clear()
             }
-            CsvStateMachine.ReadResult.Eol -> {
+            Eol -> {
                 receive(field)
                 field.startOffset = offset
                 sb.clear()
@@ -50,9 +55,9 @@ internal fun parseCsv(
         }
     }
     when (val result = machine.flush()) {
-        CsvStateMachine.ReadResult.Continue -> {
+        Continue -> {
         }
-        CsvStateMachine.ReadResult.Eofield -> receive(field)
+        Eofield -> receive(field)
         else -> error("$result")
     }
 
