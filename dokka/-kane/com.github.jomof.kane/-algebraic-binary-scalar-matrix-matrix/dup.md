@@ -5,7 +5,7 @@
 # dup  
 [jvm]  
 Content  
-fun [dup](dup.md)(op: [IAlgebraicBinaryScalarMatrixMatrixFunction](../-i-algebraic-binary-scalar-matrix-matrix-function/index.md) = this.op, left: [ScalarExpr](../-scalar-expr/index.md) = this.left, right: [MatrixExpr](../-matrix-expr/index.md) = this.right, name: [Id](../../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-225615094) = this.name): [AlgebraicBinaryScalarMatrixMatrix](index.md)  
+fun [dup](dup.md)(op: [IAlgebraicBinaryScalarMatrixMatrixFunction](../-i-algebraic-binary-scalar-matrix-matrix-function/index.md) = this.op, left: [ScalarExpr](../-scalar-expr/index.md) = this.left, right: [MatrixExpr](../-matrix-expr/index.md) = this.right, name: [Id](../../com.github.jomof.kane.impl/index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-458304138) = this.name): [AlgebraicBinaryScalarMatrixMatrix](index.md)  
 
 
 

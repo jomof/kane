@@ -5,8 +5,8 @@
 # copy  
 [jvm]  
 Content  
-fun [copy](copy.md)(matrix: [MatrixExpr](../../com.github.jomof.kane/-matrix-expr/index.md) = this.matrix, name: [Id](../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-225615094) = this.name)  
-fun [copy](copy.md)(name: [Id](../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-225615094), matrix: [MatrixExpr](../../com.github.jomof.kane/-matrix-expr/index.md)): [NamedMatrix](index.md)  
+fun [copy](copy.md)(matrix: [MatrixExpr](../../com.github.jomof.kane/-matrix-expr/index.md) = this.matrix, name: [Id](../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-458304138) = this.name)  
+fun [copy](copy.md)(name: [Id](../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-458304138), matrix: [MatrixExpr](../../com.github.jomof.kane/-matrix-expr/index.md)): [NamedMatrix](index.md)  
 
 
 
