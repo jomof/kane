@@ -1,6 +1,5 @@
 package com.github.jomof.kane
 
-import com.github.jomof.kane.impl.csv.readCsvRowSequence
 import com.github.jomof.kane.impl.toSheet
 import org.junit.Test
 import java.io.File
@@ -106,7 +105,7 @@ class DocumentationTest {
          * This data is pretty large, so let's first read a smale sample to see what's in
          * there.
          */
-        val peek = readCsvRowSequence(File("data/covid.csv"))
+        val peek = readCsv(File("data/covid.csv"))
             .sample(fraction = 0.001)
         peek.html
 
@@ -123,7 +122,7 @@ class DocumentationTest {
          *
          * Let's keep all of the rows, but filter down to just a few interesting columns.
          */
-        val filtered = readCsvRowSequence(File("data/covid.csv"))[
+        val filtered = readCsv(File("data/covid.csv"))[
                 "collection_week",
                 "hospital_name",
                 "all_adult_hospital_inpatient_bed_occupied_7_day_avg"].toSheet()

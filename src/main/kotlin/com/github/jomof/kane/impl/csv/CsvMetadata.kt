@@ -16,7 +16,7 @@ import java.io.Reader
 import kotlin.math.max
 import kotlin.math.min
 
-private const val SERIALIZATION_VERSION = "3"
+private const val SERIALIZATION_VERSION = "4"
 
 @Serializable
 internal data class CsvMetadata(
@@ -149,7 +149,7 @@ internal fun computeCsvMetadata(reader: Reader, context: CsvParseContext = CsvPa
     }
     return CsvMetadata(
         columns = columnInfos.size - 1,
-        rows = lineStartDeltas.size - 1,
+        rows = lineStartDeltas.size,
         parseParameters = context,
         columnInfos = columnInfos.mapIndexed { index, col ->
             val type = columnTypes[index].first()

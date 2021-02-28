@@ -166,7 +166,7 @@ class CsvStateMachineTest {
     @Test
     fun `read csv as row sequence`() {
         val csv = File("data/covid.csv")
-        println(readCsvRowSequence(csv).sample(10).toSheet())
+        println(readCsv(csv).sample(10).toSheet())
     }
 
     // All of these should be fast because they never instantiate
@@ -174,19 +174,29 @@ class CsvStateMachineTest {
     @Test
     fun `fast functional operations`() {
         val csv = File("data/covid.csv")
-        readCsvRowSequence(csv).sample(10).toList()
-        readCsvRowSequence(csv).head(10).toList()
-        readCsvRowSequence(csv).tail(10).toList()
-        readCsvRowSequence(csv).take(10).toList()
-        readCsvRowSequence(csv).drop(87369 - 10).toList()
+        readCsv(csv).sample(10).toList()
+        readCsv(csv).head(10).toList()
+        readCsv(csv).tail(10).toList()
+        readCsv(csv).take(10).toList()
+        readCsv(csv).drop(87369 - 10).toList()
     }
 
 //    @Test
 //    fun `distinctBy performance`() {
 //        val csv = File("data/covid.csv")
-//        val distinct = readCsvRowSequence(csv)
+//        val distinct = readCsv(csv)
 //            .filter { row -> row["state"]?.toString()?.length ?: 0 > 4 }
 //            .distinctBy { row -> row["state"] }.toSheet()
 //        println(distinct)
 //    }
+
+    @Test
+    fun `one-line repro`() {
+        val csv = File("data/zoo-one-row.csv")
+        val text = csv.readText()
+        parseCsv(text).assertString("[[animal, uniq_id, water_need], [elephant, 1001, 500]]")
+        val metadata = computeCsvMetadata(csv)
+        metadata.rows.assertString("1")
+        metadata.columns.assertString("3")
+    }
 }

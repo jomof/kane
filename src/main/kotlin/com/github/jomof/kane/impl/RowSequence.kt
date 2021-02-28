@@ -3,6 +3,7 @@ package com.github.jomof.kane.impl
 import com.github.jomof.kane.*
 import com.github.jomof.kane.impl.csv.CsvMetadata
 import com.github.jomof.kane.impl.csv.CsvParseContext
+import com.github.jomof.kane.impl.csv.parseCsv
 import com.github.jomof.kane.impl.sheet.*
 import com.github.jomof.kane.impl.types.AlgebraicType
 import com.github.jomof.kane.impl.types.KaneType
@@ -378,7 +379,7 @@ data class ReadCsvRowSequence(
                     private val lineStart = currentPosition
                     private val fields by lazy {
                         reader.seek(lineStart)
-                        com.github.jomof.kane.impl.csv.parseCsv(reader.readLine(), parseContext).singleOrNull()
+                        parseCsv(reader.readLine(), parseContext).singleOrNull()
                             ?: listOf()
                     }
                     override val columnCount get() = meta.columns
@@ -386,26 +387,8 @@ data class ReadCsvRowSequence(
                     override val rowOrdinal = currentRow
                     override val rowDescriptor: RowDescriptor? get() = null
                     override val sheetDescriptor: SheetDescriptor get() = sheetDescriptor
-                    override fun get(column: Int): Any? {
-                        val descriptor = columnDescriptors[column]!!
-                        val field = if (column < fields.size) fields[column] else ""
-                        return when (val parsed = descriptor.type!!.tryParse(field)) {
-                            null -> ValueExpr(
-                                value = field,
-                                type = StringKaneType.kaneType
-                            )
-                            is Double ->
-                                RetypeScalar(ConstantScalar(parsed), descriptor.type.type as AlgebraicType)
-                            is String -> ValueExpr(
-                                value = parsed,
-                                type = descriptor.type.type as KaneType<String>
-                            )
-                            is Date -> ValueExpr(
-                                value = parsed,
-                                type = descriptor.type.type as KaneType<Date>
-                            )
-                            else -> error("${parsed.javaClass}")
-                        }
+                    override fun get(column: Int): Any {
+                        return if (column < fields.size) fields[column] else ""
                     }
 
                     override fun get(column: String): Any? {
@@ -428,7 +411,11 @@ data class ReadCsvRowSequence(
     }
 
     override val columns: Int get() = meta.columns
-    override val rows: Int get() = meta.rows
+    override val rows: Int
+        get() {
+            val result = meta.rows
+            return result
+        }
 }
 
 internal fun toSheet(

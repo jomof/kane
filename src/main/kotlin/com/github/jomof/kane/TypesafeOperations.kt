@@ -389,13 +389,14 @@ val logit: AlgebraicUnaryFunction = logitFunc
  */
 fun logit(matrix: NamedMatrix): MatrixExpr = logitFunc(matrix as MatrixExpr)
 fun logit(matrix: DataMatrix): MatrixExpr = logitFunc(matrix as MatrixExpr)
-fun logit(matrix : MatrixExpr) : MatrixExpr = logitFunc(matrix)
-fun logit(scalar : ScalarExpr) : ScalarExpr = logitFunc(scalar)
-fun logit(scalar : Double) : ScalarExpr = logitFunc(scalar)
+fun logit(matrix: MatrixExpr): MatrixExpr = logitFunc(matrix)
+fun logit(scalar: ScalarExpr): ScalarExpr = logitFunc(scalar)
+fun logit(scalar: Double): ScalarExpr = logitFunc(scalar)
 
 // typesafe exp
 private val expFunc = ExpFunction()
-val exp : AlgebraicUnaryFunction = expFunc
+val exp: AlgebraicUnaryFunction = expFunc
+
 /**
  * exp function
  * [![](https://jomof.github.io/kane/figures/exp-profile.svg)]

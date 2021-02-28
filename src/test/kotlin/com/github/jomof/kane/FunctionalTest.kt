@@ -1,7 +1,9 @@
 package com.github.jomof.kane
 
+import com.github.jomof.kane.impl.sheet.limitOutputLines
 import com.github.jomof.kane.impl.sheet.ordinalRows
 import com.github.jomof.kane.impl.sheet.showExcelColumnTags
+import com.github.jomof.kane.impl.toSheet
 import org.junit.Test
 
 class FunctionalTest {
@@ -50,7 +52,6 @@ class FunctionalTest {
         val zoo = readCsv("data/zoo.csv").showExcelColumnTags(false)
         println(zoo)
         val tail = zoo.tail()
-        println(tail)
         tail.assertString("""
                 animal  uniq_id water_need 
                -------- ------- ---------- 
@@ -101,14 +102,25 @@ class FunctionalTest {
              8    tiger        310 
              9    zebra        200 
             10    zebra        220 
-            ...and 12 more rows
+            11    zebra        240 
+            12    zebra        230 
+            13    zebra        220 
+            14    zebra        100 
+            15    zebra         80 
+            16     lion        420 
+            17     lion        600 
+            18     lion        500 
+            19     lion        390 
+            20 kangaroo        410 
+            21 kangaroo        430 
+            22 kangaroo        410 
         """.trimIndent())
     }
 
     @Test
     fun `get columns by Excel-like name`() {
         val zoo = readCsv("data/zoo.csv").showExcelColumnTags(false)
-        val cols = zoo["B", "C"]
+        val cols = zoo["B", "C"].toSheet().limitOutputLines(10)
         println(cols)
         cols.assertString("""
                uniq_id water_need 
@@ -168,8 +180,15 @@ class FunctionalTest {
     }
 
     @Test
+    fun `statistics of column of one row`() {
+        val zoo = readCsv("data/zoo-one-row.csv")
+        zoo.rows.assertString("1")
+    }
+
+    @Test
     fun `statistics of column`() {
         val zoo = readCsv("data/zoo.csv")
+        zoo.rows.assertString("22")
         zoo["water_need"].describe().assertString(
             """
                      water_need 
