@@ -13,7 +13,6 @@ import java.nio.charset.Charset
 internal fun parseCsv(
     data: String,
     names: List<String> = listOf(),
-    keep: List<String> = listOf(), // List of columns to keep
     charset: String = "UTF-8",
     quoteChar: Char = '"',
     delimiter: Char = ',',
@@ -23,8 +22,7 @@ internal fun parseCsv(
 ): Sequence<Row> = readCsv(
     data.byteInputStream(Charset.forName(charset)),
     CsvParameters(
-        names = names,
-        keep = keep.toSet()
+        names = names
     ),
     csvReaderContext(
         charset,
@@ -35,34 +33,9 @@ internal fun parseCsv(
         skipMissMatchedRow
     )
 )
-//
-//internal class ReadCsvWithHeader(
-//    private val csv: File,
-//    private val params: CsvParameters,
-//    private val context: CsvReaderContext
-//) : Sequence<Row> {
-//    private val bytes by lazy { csv.readBytes() }
-//    override fun iterator(): Iterator<Row> {
-//        val ips = bytes.inputStream()
-//        val reader = CsvReader(context).open(bytes.inputStream())
-////        val csvFileReader = reader.open(csv.inputStream())
-//        return object : Iterator<Row> {
-//            override fun hasNext(): Boolean {
-//                TODO("Not yet implemented")
-//            }
-//
-//            override fun next(): Row {
-//                TODO("Not yet implemented")
-//            }
-//
-//        }
-//    }
-//
-//}
 
 private fun readCsvWithHeader(
     csv: InputStream,
-    params: CsvParameters,
     context: CsvReaderContext
 ): Sequence<Row> {
     val sb = SheetBuilderImpl()
@@ -72,7 +45,6 @@ private fun readCsvWithHeader(
         for (row in readAllWithHeaderAsSequence()) {
             ++totalRows
             rows += row
-                .filter { params.keep.isEmpty() || params.keep.contains(it.key) }
                 .map { it.key.trim().intern() to it.value.trim().intern() }
                 .toMap()
         }
@@ -105,9 +77,6 @@ private fun readCsvWithoutHeader(
 ): Sheet {
     val sb = SheetBuilderImpl()
     val rows: MutableList<List<String>> = mutableListOf()
-    if (params.keep.isNotEmpty()) {
-        error("keep='${params.keep.joinToString(",")}' not allowed for CSV without headers")
-    }
     var totalRows = 0
     CsvReader(context).open(csv) {
         ++totalRows
@@ -143,13 +112,12 @@ internal fun readCsv(
     params: CsvParameters,
     context: CsvReaderContext
 ): Sequence<Row> {
-    return if (params.names.isEmpty()) readCsvWithHeader(csv, params, context)
+    return if (params.names.isEmpty()) readCsvWithHeader(csv, context)
     else readCsvWithoutHeader(csv, params, context).limitOutputLines(10)
 }
 
 internal data class CsvParameters(
-    val names: List<String>,
-    val keep: Set<String>
+    val names: List<String>
 )
 
 internal fun csvReaderContext(

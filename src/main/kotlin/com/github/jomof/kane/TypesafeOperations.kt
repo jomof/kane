@@ -387,8 +387,8 @@ val logit: AlgebraicUnaryFunction = logitFunc
  * logit function
  * [![](https://jomof.github.io/kane/figures/logit-profile.svg)]
  */
-fun logit(matrix : NamedMatrix) : MatrixExpr = logitFunc(matrix as MatrixExpr)
-fun logit(matrix : DataMatrix) : MatrixExpr = logitFunc(matrix as MatrixExpr)
+fun logit(matrix: NamedMatrix): MatrixExpr = logitFunc(matrix as MatrixExpr)
+fun logit(matrix: DataMatrix): MatrixExpr = logitFunc(matrix as MatrixExpr)
 fun logit(matrix : MatrixExpr) : MatrixExpr = logitFunc(matrix)
 fun logit(scalar : ScalarExpr) : ScalarExpr = logitFunc(scalar)
 fun logit(scalar : Double) : ScalarExpr = logitFunc(scalar)
