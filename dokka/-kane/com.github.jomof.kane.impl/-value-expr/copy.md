@@ -5,7 +5,7 @@
 # copy  
 [jvm]  
 Content  
-fun [copy](copy.md)(value: [E](index.md), type: [KaneType](../../com.github.jomof.kane.impl.types/-kane-type/index.md)<[E](index.md)>, name: [Id](../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1908385470) = anonymous): [ValueExpr](index.md)<[E](index.md)>  
+fun [copy](copy.md)(value: [E](index.md), type: [KaneType](../../com.github.jomof.kane.impl.types/-kane-type/index.md)<[E](index.md)>, name: [Id](../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-912601781) = anonymous): [ValueExpr](index.md)<[E](index.md)>  
 
 
 
