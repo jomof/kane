@@ -361,13 +361,14 @@ val lrelu: AlgebraicUnaryFunction = lreluFunc
  */
 fun lrelu(matrix: NamedMatrix): MatrixExpr = lreluFunc(matrix as MatrixExpr)
 fun lrelu(matrix: DataMatrix): MatrixExpr = lreluFunc(matrix as MatrixExpr)
-fun lrelu(matrix : MatrixExpr) : MatrixExpr = lreluFunc(matrix)
-fun lrelu(scalar : ScalarExpr) : ScalarExpr = lreluFunc(scalar)
-fun lrelu(scalar : Double) : ScalarExpr = lreluFunc(scalar)
+fun lrelu(matrix: MatrixExpr): MatrixExpr = lreluFunc(matrix)
+fun lrelu(scalar: ScalarExpr): ScalarExpr = lreluFunc(scalar)
+fun lrelu(scalar: Double): ScalarExpr = lreluFunc(scalar)
 
 // typesafe lstep
 private val lstepFunc = LstepFunction()
-val lstep : AlgebraicUnaryFunction = lstepFunc
+val lstep: AlgebraicUnaryFunction = lstepFunc
+
 /**
  * lstep function
  * [![](https://jomof.github.io/kane/figures/lstep-profile.svg)]

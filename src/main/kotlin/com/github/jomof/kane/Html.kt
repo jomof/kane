@@ -7,6 +7,7 @@ import com.github.jomof.kane.impl.sheet.Sheet
 import com.github.jomof.kane.impl.sheet.SheetRangeExpr
 import com.github.jomof.kane.impl.sheet.columnName
 import com.github.jomof.kane.impl.sheet.rowName
+import com.github.jomof.kane.impl.toSheet
 
 
 /**
@@ -68,3 +69,8 @@ val Sheet.html: String
         }
         return sb.toString()
     }
+
+/**
+ * Render the sheet as HTML
+ */
+val Sequence<Row>.html: String get() = toSheet().html
