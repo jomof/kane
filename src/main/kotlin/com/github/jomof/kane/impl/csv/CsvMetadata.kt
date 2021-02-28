@@ -12,7 +12,6 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.FileReader
 import kotlinx.serialization.*
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
 import java.io.Reader
 import kotlin.math.max
@@ -185,7 +184,7 @@ internal fun computeCsvMetadata(reader: Reader, context: CsvParseContext = CsvPa
 internal fun getCsvMetadataCacheFile(csv: File, context: CsvParseContext = CsvParseContext()): File {
     val hashInputs = mutableListOf<Byte>()
     hashInputs.addAll(csv.absolutePath.toByteArray().toList())
-    hashInputs.addAll(Json.encodeToString(context).toByteArray().toList())
+    hashInputs.addAll(ProtoBuf.encodeToByteArray(context).toList())
     hashInputs.addAll(SERIALIZATION_VERSION.toByteArray().toList())
     val hash = encodeBase58(sha256(hashInputs.toByteArray()).sliceArray(0 until 8))
     val name = csv.name + ".$hash"

@@ -359,8 +359,8 @@ val lrelu: AlgebraicUnaryFunction = lreluFunc
  * lrelu function
  * [![](https://jomof.github.io/kane/figures/lrelu-profile.svg)]
  */
-fun lrelu(matrix : NamedMatrix) : MatrixExpr = lreluFunc(matrix as MatrixExpr)
-fun lrelu(matrix : DataMatrix) : MatrixExpr = lreluFunc(matrix as MatrixExpr)
+fun lrelu(matrix: NamedMatrix): MatrixExpr = lreluFunc(matrix as MatrixExpr)
+fun lrelu(matrix: DataMatrix): MatrixExpr = lreluFunc(matrix as MatrixExpr)
 fun lrelu(matrix : MatrixExpr) : MatrixExpr = lreluFunc(matrix)
 fun lrelu(scalar : ScalarExpr) : ScalarExpr = lreluFunc(scalar)
 fun lrelu(scalar : Double) : ScalarExpr = lreluFunc(scalar)
