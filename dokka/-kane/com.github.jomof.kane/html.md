@@ -6,6 +6,7 @@
 [jvm]  
 Content  
 val [Sheet](../com.github.jomof.kane.impl.sheet/-sheet/index.md).[html](html.md): [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)  
+val [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/-sequence/index.html)<[Row](-row/index.md)>.[html](html.md): [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)  
 More info  
 
 
