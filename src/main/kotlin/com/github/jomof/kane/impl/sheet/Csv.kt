@@ -4,10 +4,8 @@ import com.github.doyaaaaaken.kotlincsv.client.CsvReader
 import com.github.doyaaaaaken.kotlincsv.dsl.context.CsvReaderContext
 import com.github.jomof.kane.Row
 import com.github.jomof.kane.impl.coordinate
-import java.io.File
 import java.io.InputStream
 import java.nio.charset.Charset
-import kotlin.random.Random
 
 /**
  * Parse CSV from string in [data] parameter.
@@ -15,7 +13,6 @@ import kotlin.random.Random
 internal fun parseCsv(
     data: String,
     names: List<String> = listOf(),
-    sample: Double = 1.0,
     keep: List<String> = listOf(), // List of columns to keep
     charset: String = "UTF-8",
     quoteChar: Char = '"',
@@ -27,7 +24,6 @@ internal fun parseCsv(
     data.byteInputStream(Charset.forName(charset)),
     CsvParameters(
         names = names,
-        sample = sample,
         keep = keep.toSet()
     ),
     csvReaderContext(
@@ -70,18 +66,15 @@ private fun readCsvWithHeader(
     context: CsvReaderContext
 ): Sequence<Row> {
     val sb = SheetBuilderImpl()
-    val random = Random(7)
     val rows: MutableList<Map<String, String>> = mutableListOf()
     var totalRows = 0
     CsvReader(context).open(csv) {
         for (row in readAllWithHeaderAsSequence()) {
             ++totalRows
-            if (params.sample >= 1.0 || random.nextDouble(0.0, 1.0) < params.sample) {
-                rows += row
-                    .filter { params.keep.isEmpty() || params.keep.contains(it.key) }
-                    .map { it.key.trim().intern() to it.value.trim().intern() }
-                    .toMap()
-            }
+            rows += row
+                .filter { params.keep.isEmpty() || params.keep.contains(it.key) }
+                .map { it.key.trim().intern() to it.value.trim().intern() }
+                .toMap()
         }
     }
 
@@ -101,12 +94,7 @@ private fun readCsvWithHeader(
             }
         }
     }
-
-    if (params.sample < 1.0) {
-        println("Sampled ${rows.size} of $totalRows rows with ${info.columnInfos.size} columns")
-    } else {
-        println("Read ${rows.size} rows with ${info.columnInfos.size} columns")
-    }
+    println("Read ${rows.size} rows with ${info.columnInfos.size} columns")
     return sb.build().limitOutputLines(10)
 }
 
@@ -117,7 +105,6 @@ private fun readCsvWithoutHeader(
 ): Sheet {
     val sb = SheetBuilderImpl()
     val rows: MutableList<List<String>> = mutableListOf()
-    val random = Random(7)
     if (params.keep.isNotEmpty()) {
         error("keep='${params.keep.joinToString(",")}' not allowed for CSV without headers")
     }
@@ -125,9 +112,7 @@ private fun readCsvWithoutHeader(
     CsvReader(context).open(csv) {
         ++totalRows
         for (row in readAllAsSequence()) {
-            if (params.sample >= 1.0 || random.nextDouble(0.0, 1.0) < params.sample) {
-                rows += row.map { it.trim().intern() }
-            }
+            rows += row.map { it.trim().intern() }
         }
     }
 
@@ -148,41 +133,23 @@ private fun readCsvWithoutHeader(
         }
     }
 
-    if (params.sample < 1.0) {
-        println("Sampled ${rows.size} of $totalRows rows with ${info.columnInfos.size} columns")
-    } else {
-        println("Read ${rows.size} rows with ${info.columnInfos.size} columns")
-    }
+    println("Read ${rows.size} rows with ${info.columnInfos.size} columns")
 
     return sb.build()
 }
-
-//internal fun readCsv(
-//    csv: File,
-//    params: CsvParameters,
-//    context: CsvReaderContext
-//): Sequence<Row> {
-//    val sheet =
-//        if (params.names.isEmpty()) ReadCsvWithHeader(csv, params, context)
-//        else error("")
-//    return sheet
-//}
 
 internal fun readCsv(
     csv: InputStream,
     params: CsvParameters,
     context: CsvReaderContext
 ): Sequence<Row> {
-    val sheet =
-        if (params.names.isEmpty()) readCsvWithHeader(csv, params, context)
-        else readCsvWithoutHeader(csv, params, context).limitOutputLines(10)
-    return sheet
+    return if (params.names.isEmpty()) readCsvWithHeader(csv, params, context)
+    else readCsvWithoutHeader(csv, params, context).limitOutputLines(10)
 }
 
 internal data class CsvParameters(
     val names: List<String>,
-    val keep: Set<String>,
-    val sample: Double
+    val keep: Set<String>
 )
 
 internal fun csvReaderContext(

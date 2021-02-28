@@ -72,11 +72,11 @@ class FunctionalTest {
             """
            animal [A] uniq_id [B] water_need [C] 
            ---------- ----------- -------------- 
-         3   elephant        1003            550 
-         5      tiger        1005            320 
-         7      tiger        1007            290 
-        12      zebra        1012            230 
-        16       lion        1016            420 
+         4      tiger        1004            300 
+         6      tiger        1006            330 
+         8      tiger        1008            310 
+        13      zebra        1013            220 
+        17       lion        1017            600 
         """.trimIndent()
         )
     }

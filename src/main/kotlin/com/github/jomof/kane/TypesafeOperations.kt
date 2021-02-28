@@ -373,8 +373,8 @@ val lstep: AlgebraicUnaryFunction = lstepFunc
  * lstep function
  * [![](https://jomof.github.io/kane/figures/lstep-profile.svg)]
  */
-fun lstep(matrix : NamedMatrix) : MatrixExpr = lstepFunc(matrix as MatrixExpr)
-fun lstep(matrix : DataMatrix) : MatrixExpr = lstepFunc(matrix as MatrixExpr)
+fun lstep(matrix: NamedMatrix): MatrixExpr = lstepFunc(matrix as MatrixExpr)
+fun lstep(matrix: DataMatrix): MatrixExpr = lstepFunc(matrix as MatrixExpr)
 fun lstep(matrix : MatrixExpr) : MatrixExpr = lstepFunc(matrix)
 fun lstep(scalar : ScalarExpr) : ScalarExpr = lstepFunc(scalar)
 fun lstep(scalar : Double) : ScalarExpr = lstepFunc(scalar)

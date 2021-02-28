@@ -12,7 +12,6 @@ import java.io.File
 fun readCsv(
     csv: String,
     names: List<String> = listOf(),
-    sample: Double = 1.0,
     keep: List<String> = listOf(), // List of columns to keep
     charset: String = "UTF-8",
     quoteChar: Char = '"',
@@ -24,7 +23,6 @@ fun readCsv(
     File(csv).inputStream(),
     CsvParameters(
         names = names,
-        sample = sample,
         keep = keep.toSet()
     ),
     csvReaderContext(
@@ -44,7 +42,6 @@ fun readCsv(
 fun readCsv(
     csv: File,
     names: List<String> = listOf(),
-    sample: Double = 1.0,
     keep: List<String> = listOf(), // List of columns to keep
     charset: String = "UTF-8",
     quoteChar: Char = '"',
@@ -56,7 +53,6 @@ fun readCsv(
     csv.inputStream(),
     CsvParameters(
         names = names,
-        sample = sample,
         keep = keep.toSet()
     ),
     csvReaderContext(

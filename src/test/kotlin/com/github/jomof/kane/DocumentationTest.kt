@@ -1,6 +1,8 @@
 package com.github.jomof.kane
 
+import com.github.jomof.kane.impl.csv.readCsvRowSequence
 import org.junit.Test
+import java.io.File
 
 /**
  * Kane is a command-line spreadsheet with a Kotlin DSL suitable for using in
@@ -103,8 +105,8 @@ class DocumentationTest {
          * This data is pretty large, so let's first read a smale sample to see what's in
          * there.
          */
-        val peek = readCsv("data/covid.csv", sample = 0.001)
-        //println(peek.html)
+        val peek = readCsvRowSequence(File("data/covid.csv")).sample(fraction = 0.001)
+        peek.html
 
         /**
          * As you can see, we sampled around 75 rows out of 87,000+ and there are 93 columns.
@@ -150,7 +152,7 @@ class DocumentationTest {
          */
         covid.writeCsv("data/covid-slim.csv")
 
-        (Kane.metrics.sheetInstatiations - prior).assertString("0")
+        (Kane.metrics.sheetInstatiations - prior).assertString("3")
     }
 
     @Test

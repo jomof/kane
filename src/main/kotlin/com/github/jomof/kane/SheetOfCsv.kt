@@ -19,7 +19,6 @@ fun sheetOfCsv(
     return parseCsv(
         data = text.trimIndent().trim('\r', '\n'),
         names = names,
-        sample = sample,
         keep = keep,
         quoteChar = quoteChar,
         delimiter = delimiter,

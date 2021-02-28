@@ -55,7 +55,7 @@ interface INameableMatrix : MatrixExpr, INameable {
 abstract class Row {
     abstract val columnCount: Int
     abstract val columnDescriptors: Map<Int, ColumnDescriptor>
-    abstract val rowOrdinal: Int
+    abstract val rowOrdinal: Int // Zero relative
     abstract val rowDescriptor: RowDescriptor?
     abstract val sheetDescriptor: SheetDescriptor
     abstract operator fun get(column: Int): Any?

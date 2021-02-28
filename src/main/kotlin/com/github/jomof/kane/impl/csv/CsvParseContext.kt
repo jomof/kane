@@ -4,8 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class CsvParseContext(
-    val headerHasColumnNames: Boolean = true,
-    val columnNames: List<String> = listOf(),
+    val columnNames: List<String> = listOf(), // Otherwise, column names come from first line
     val linesForTypeAnalysis: Int = 100,
     val treatAsNaN: String? = null,
     val quoteChar: Char = '\"',

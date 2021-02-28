@@ -5,7 +5,6 @@ import com.github.jomof.kane.impl.StreamingSamples
 import com.github.jomof.kane.impl.csv.CsvParseField.TextField
 import com.github.jomof.kane.impl.hashing.encodeBase58
 import com.github.jomof.kane.impl.hashing.sha256
-import com.github.jomof.kane.impl.sheet.AdmissibleDataType
 import com.github.jomof.kane.impl.sheet.doubleAdmissibleDataType
 import com.github.jomof.kane.impl.sheet.possibleDataFormats
 import java.io.BufferedReader
@@ -17,7 +16,7 @@ import java.io.Reader
 import kotlin.math.max
 import kotlin.math.min
 
-private const val SERIALIZATION_VERSION = "2"
+private const val SERIALIZATION_VERSION = "3"
 
 @Serializable
 internal data class CsvMetadata(
@@ -83,10 +82,10 @@ internal fun computeCsvMetadata(reader: Reader, context: CsvParseContext = CsvPa
     var columnNumber = 0
     var dataRowNumber = 0
     var lastLineStart: Long = 0
-    var onColumnNamesLine = context.headerHasColumnNames
+    var onColumnNamesLine = context.columnNames.isEmpty()
     val columnInfos = context.columnNames.map { name -> CsvColumnInfo(name) }.toMutableList()
-    val columnTypes = mutableListOf<List<AdmissibleDataType<*>>>()
-    val columnStatistics = mutableListOf<StreamingSamples>()
+    val columnTypes = columnInfos.map { possibleDataFormats }.toMutableList()
+    val columnStatistics = columnInfos.map { StreamingSamples() }.toMutableList()
 
     fun onNewColumn(column: Int) {
         columnInfos.add(CsvColumnInfo())
