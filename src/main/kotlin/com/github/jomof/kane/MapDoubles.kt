@@ -1,6 +1,7 @@
 package com.github.jomof.kane
 
 import com.github.jomof.kane.impl.ConstantScalar
+import com.github.jomof.kane.impl.RetypeScalar
 import com.github.jomof.kane.impl.ValueExpr
 import com.github.jomof.kane.impl.sheet.Sheet
 import com.github.jomof.kane.impl.sheet.toCells
@@ -21,7 +22,15 @@ fun Sheet.mapDoubles(translate: (Double) -> Double): Sheet {
             }
             is ValueExpr<*> -> {
             }
-            else -> error("${expr.javaClass}")
+            is RetypeScalar -> when (expr.scalar) {
+                is ConstantScalar -> {
+                    val result = translate(expr.scalar.value)
+                    new[name] = expr.dup(scalar = expr.scalar.dup(value = result))
+                }
+                else -> error("${expr.scalar.javaClass}")
+            }
+            else ->
+                error("${expr.javaClass}")
         }
     }
     return dup(cells = new.toCells())

@@ -354,7 +354,7 @@ data class ReadCsvRowSequence(
     val file: File,
     val parseContext: CsvParseContext
 ) : Sequence<Row>, CountableRows, CountableColumns, ProvidesToSheet {
-    private val sheet by lazy { toSheet(iterator()) }
+    private val sheet by lazy { toSheet(iterator()).limitOutputLines(10) }
     override fun toSheet(): Sheet = sheet
     override fun toString() = sheet.toString()
     private val meta by lazy { CsvMetadata.computeIfAbsent(file, parseContext) }

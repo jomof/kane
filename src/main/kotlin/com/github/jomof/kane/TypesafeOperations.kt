@@ -375,13 +375,14 @@ val lstep: AlgebraicUnaryFunction = lstepFunc
  */
 fun lstep(matrix: NamedMatrix): MatrixExpr = lstepFunc(matrix as MatrixExpr)
 fun lstep(matrix: DataMatrix): MatrixExpr = lstepFunc(matrix as MatrixExpr)
-fun lstep(matrix : MatrixExpr) : MatrixExpr = lstepFunc(matrix)
-fun lstep(scalar : ScalarExpr) : ScalarExpr = lstepFunc(scalar)
-fun lstep(scalar : Double) : ScalarExpr = lstepFunc(scalar)
+fun lstep(matrix: MatrixExpr): MatrixExpr = lstepFunc(matrix)
+fun lstep(scalar: ScalarExpr): ScalarExpr = lstepFunc(scalar)
+fun lstep(scalar: Double): ScalarExpr = lstepFunc(scalar)
 
 // typesafe logit
 private val logitFunc = LogitFunction()
-val logit : AlgebraicUnaryFunction = logitFunc
+val logit: AlgebraicUnaryFunction = logitFunc
+
 /**
  * logit function
  * [![](https://jomof.github.io/kane/figures/logit-profile.svg)]
