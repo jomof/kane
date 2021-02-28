@@ -181,12 +181,12 @@ class CsvStateMachineTest {
         readCsvRowSequence(csv).drop(87369 - 10).toList()
     }
 
-    @Test
-    fun `distinctBy performance`() {
-        val csv = File("data/covid.csv")
-        val distinct = readCsvRowSequence(csv)
-            .filter { row -> row["state"]?.toString()?.length ?: 0 > 4 }
-            .distinctBy { row -> row["state"] }.toSheet()
-        println(distinct)
-    }
+//    @Test
+//    fun `distinctBy performance`() {
+//        val csv = File("data/covid.csv")
+//        val distinct = readCsvRowSequence(csv)
+//            .filter { row -> row["state"]?.toString()?.length ?: 0 > 4 }
+//            .distinctBy { row -> row["state"] }.toSheet()
+//        println(distinct)
+//    }
 }
