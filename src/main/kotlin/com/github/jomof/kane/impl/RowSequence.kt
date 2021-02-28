@@ -250,7 +250,7 @@ internal class RowShufflingSequence(
     override fun toSheet() = sheet
     override fun toString() = sheet.toString()
 
-    private fun doShuffle(): Sequence<Row> = sequence<Row> {
+    private fun doShuffle(): Sequence<Row> = sequence {
         val buffer = sequence.toMutableList()
         while (buffer.isNotEmpty()) {
             val j = random.nextInt(buffer.size)

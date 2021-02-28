@@ -45,7 +45,7 @@ internal data class CsvMetadata(
         fun computeIfAbsent(csv: File, parseContext: CsvParseContext = CsvParseContext()): CsvMetadata {
             val metadataFile = getCsvMetadataCacheFile(csv)
             if (metadataFile.exists() && metadataFile.lastModified() >= csv.lastModified()) {
-                return CsvMetadata.read(metadataFile)
+                return read(metadataFile)
             }
             val metadata = computeCsvMetadata(csv, parseContext)
             metadata.write(metadataFile)
@@ -150,8 +150,8 @@ internal fun computeCsvMetadata(reader: Reader, context: CsvParseContext = CsvPa
         }
     }
     return CsvMetadata(
-        columns = columnInfos.size,
-        rows = lineStartDeltas.size,
+        columns = columnInfos.size - 1,
+        rows = lineStartDeltas.size - 1,
         parseParameters = context,
         columnInfos = columnInfos.mapIndexed { index, col ->
             val type = columnTypes[index].first()

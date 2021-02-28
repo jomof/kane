@@ -1,6 +1,7 @@
 package com.github.jomof.kane
 
 import com.github.jomof.kane.impl.csv.*
+import com.github.jomof.kane.impl.toSheet
 import org.junit.Test
 import java.io.*
 
@@ -160,5 +161,32 @@ class CsvStateMachineTest {
             val md = CsvMetadata.computeIfAbsent(csv)
             println(md)
         }
+    }
+
+    @Test
+    fun `read csv as row sequence`() {
+        val csv = File("data/covid.csv")
+        println(readCsvRowSequence(csv).sample(10).toSheet())
+    }
+
+    // All of these should be fast because they never instantiate
+    // the full sheet.
+    @Test
+    fun `fast functional operations`() {
+        val csv = File("data/covid.csv")
+        readCsvRowSequence(csv).sample(10).toList()
+        readCsvRowSequence(csv).head(10).toList()
+        readCsvRowSequence(csv).tail(10).toList()
+        readCsvRowSequence(csv).take(10).toList()
+        readCsvRowSequence(csv).drop(87369 - 10).toList()
+    }
+
+    @Test
+    fun `distinctBy performance`() {
+        val csv = File("data/covid.csv")
+        val distinct = readCsvRowSequence(csv)
+            .filter { row -> row["state"]?.toString()?.length ?: 0 > 4 }
+            .distinctBy { row -> row["state"] }.toSheet()
+        println(distinct)
     }
 }

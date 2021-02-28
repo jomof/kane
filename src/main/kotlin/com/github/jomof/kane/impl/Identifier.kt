@@ -42,7 +42,8 @@ class Identifier {
         fun string(value: Id): String = when (value) {
             is String -> value
             is Coordinate -> coordinateToCellName(value)
-            else -> error("${value.javaClass}")
+            else ->
+                error("${value.javaClass}")
         }
 
         fun width(value: String): Int = error("Already static string")

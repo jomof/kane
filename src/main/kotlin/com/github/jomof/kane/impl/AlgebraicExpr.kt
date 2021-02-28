@@ -53,7 +53,12 @@ data class ConstantScalar(
     val value: Double,
     override val name: Id = anonymous
 ) : ScalarExpr, INameableScalar {
+    init {
+        Identifier.validate(name)
+    }
+
     override fun toNamed(name: Id): ScalarExpr {
+
         if (this.name === anonymous) return dup(name = name)
         return NamedScalar(name, this)
     }

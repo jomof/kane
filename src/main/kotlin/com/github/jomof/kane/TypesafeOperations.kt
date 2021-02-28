@@ -347,13 +347,14 @@ val cos: AlgebraicUnaryFunction = cosFunc
  */
 fun cos(matrix: NamedMatrix): MatrixExpr = cosFunc(matrix as MatrixExpr)
 fun cos(matrix: DataMatrix): MatrixExpr = cosFunc(matrix as MatrixExpr)
-fun cos(matrix : MatrixExpr) : MatrixExpr = cosFunc(matrix)
-fun cos(scalar : ScalarExpr) : ScalarExpr = cosFunc(scalar)
-fun cos(scalar : Double) : ScalarExpr = cosFunc(scalar)
+fun cos(matrix: MatrixExpr): MatrixExpr = cosFunc(matrix)
+fun cos(scalar: ScalarExpr): ScalarExpr = cosFunc(scalar)
+fun cos(scalar: Double): ScalarExpr = cosFunc(scalar)
 
 // typesafe lrelu
 private val lreluFunc = LreluFunction()
-val lrelu : AlgebraicUnaryFunction = lreluFunc
+val lrelu: AlgebraicUnaryFunction = lreluFunc
+
 /**
  * lrelu function
  * [![](https://jomof.github.io/kane/figures/lrelu-profile.svg)]

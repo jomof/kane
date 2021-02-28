@@ -66,10 +66,13 @@ internal fun parseCsv(
 /**
  * Parse a [String] in CSV format.
  */
-internal fun parseCsv(text: String): List<List<String>> {
+internal fun parseCsv(
+    text: String,
+    context: CsvParseContext = CsvParseContext()
+): List<List<String>> {
     val allLines = mutableListOf<List<String>>()
     val currentLine = mutableListOf<String>()
-    parseCsv(StringReader(text)) { field ->
+    parseCsv(StringReader(text), context) { field ->
         when (field) {
             is TextField -> currentLine.add(field.content.trim().toString())
             is EolineField -> {

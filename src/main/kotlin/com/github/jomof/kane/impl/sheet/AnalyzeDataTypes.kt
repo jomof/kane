@@ -107,6 +107,9 @@ internal val possibleDataFormats = listOf<AdmissibleDataType<*>>(
     StringAdmissibleDataType()
 )
 
+fun typeNameToAdmissibleType(name: String) =
+    possibleDataFormats.first { it.toString() == name }
+
 fun analyzeDataType(value: String): AdmissibleDataType<*> {
     return possibleDataFormats.first { it.tryParse(value) != null }
 }
