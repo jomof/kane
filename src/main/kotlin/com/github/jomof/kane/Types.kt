@@ -17,7 +17,7 @@ val Sequence<Row>.types: Sheet
         val descriptors = when (this) {
             is ProvidesColumnDescriptors -> {
                 val max = columnDescriptors.map { it.key }.maxOrNull() ?: 0
-                (0 until max).map {
+                (0..max).map {
                     columnDescriptors[it] ?: ColumnDescriptor("column #$it", stringAdmissibleDataType)
                 }
             }

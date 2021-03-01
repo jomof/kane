@@ -16,7 +16,7 @@ import java.io.Reader
 import kotlin.math.max
 import kotlin.math.min
 
-private const val SERIALIZATION_VERSION = "4"
+private const val SERIALIZATION_VERSION = "5"
 
 @Serializable
 internal data class CsvMetadata(

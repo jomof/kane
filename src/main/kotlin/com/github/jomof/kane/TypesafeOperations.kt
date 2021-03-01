@@ -429,8 +429,8 @@ val tanh: AlgebraicUnaryFunction = tanhFunc
  * tanh function
  * [![](https://jomof.github.io/kane/figures/tanh-profile.svg)]
  */
-fun tanh(matrix : NamedMatrix) : MatrixExpr = tanhFunc(matrix as MatrixExpr)
-fun tanh(matrix : DataMatrix) : MatrixExpr = tanhFunc(matrix as MatrixExpr)
+fun tanh(matrix: NamedMatrix): MatrixExpr = tanhFunc(matrix as MatrixExpr)
+fun tanh(matrix: DataMatrix): MatrixExpr = tanhFunc(matrix as MatrixExpr)
 fun tanh(matrix : MatrixExpr) : MatrixExpr = tanhFunc(matrix)
 fun tanh(scalar : ScalarExpr) : ScalarExpr = tanhFunc(scalar)
 fun tanh(scalar : Double) : ScalarExpr = tanhFunc(scalar)

@@ -233,6 +233,11 @@ class FunctionalTest {
     @Test
     fun `column types`() {
         val sheet = readCsv("./src/test/kotlin/com/github/jomof/kane/SP500toGDP.csv")
+        sheet.columnDescriptors.assertString(
+            """
+            {0=ColumnDescriptor(name=DateTime, type=yyyy-MM-dd HH:mm:ss), 1=ColumnDescriptor(name=SP500/GDP, type=double)}
+        """.trimIndent()
+        )
         sheet.types.assertString(
             """
                  name    type         format       
