@@ -8,7 +8,9 @@ import com.github.jomof.kane.impl.RowDropTakeSequence
  * Returns a sequence containing all elements except first [n] elements.
  */
 fun Sequence<Row>.drop(n: Int): Sequence<Row> {
-    require(n >= 0) { "Requested element count $n is less than zero." }
+    require(n >= 0) {
+        "Requested element count $n is less than zero."
+    }
     return when {
         n == 0 -> this
         this is RowDropTakeSequence -> this.drop(n)

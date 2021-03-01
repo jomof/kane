@@ -7,7 +7,7 @@ import com.github.jomof.kane.impl.sheet.showExcelColumnTags
 import org.junit.Test
 
 class GroupByTest {
-    private val measurements = sheetOfCsv(
+    private val measurements = parseCsv(
         """
         date,height,weight,gender
         2000-01-01,42.849980,157.500553,male
@@ -23,7 +23,7 @@ class GroupByTest {
         """
     )
 
-    private val animals = sheetOfCsv(
+    private val animals = parseCsv(
         """
         type,class,order,max_speed
         falcon,bird,Falconiformes,389.0
@@ -36,7 +36,7 @@ class GroupByTest {
 
     @Test
     fun basic() {
-        val check = sheetOfCsv(
+        val check = parseCsv(
             """
             cats, dogs, lions
             1,2,5
@@ -61,7 +61,7 @@ class GroupByTest {
 
     @Test
     fun `group by column name`() {
-        val check = sheetOfCsv(
+        val check = parseCsv(
             """
                 cats, dogs, lions
                 1,2,5
@@ -292,7 +292,7 @@ class GroupByTest {
 
     @Test
     fun `repro aggregate formulas`() {
-        val measurements = sheetOfCsv(
+        val measurements = parseCsv(
             """
             height,gender
             183,male

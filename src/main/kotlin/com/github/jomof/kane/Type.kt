@@ -1,9 +1,9 @@
 package com.github.jomof.kane
 
+import com.github.jomof.kane.impl.getColumnDescriptors
 import com.github.jomof.kane.impl.sheet.Sheet
 import com.github.jomof.kane.impl.sheet.SheetRangeExpr
 import com.github.jomof.kane.impl.sheet.columnType
-import com.github.jomof.kane.impl.toSheet
 import com.github.jomof.kane.impl.types.KaneType
 import com.github.jomof.kane.impl.types.algebraicType
 import com.github.jomof.kane.impl.types.kaneType
@@ -20,4 +20,4 @@ val Expr.type: KaneType<*>
     }
 
 val Sequence<Row>.type: KaneType<*>
-    get() = (toSheet() as Expr).type
+    get() = getColumnDescriptors().toList().single().second.type?.type!!

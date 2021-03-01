@@ -177,14 +177,20 @@ fun List<Pair<Id, Expr>>.toCells() = Cells(toMap())
 fun Map<Id, Expr>.toCells() = Cells(this)
 
 data class Sheet(
-    val columnDescriptors: Map<Int, ColumnDescriptor>,
+    override val columnDescriptors: Map<Int, ColumnDescriptor>,
     val rowDescriptors: Map<Int, RowDescriptor>,
     val cells: Cells,
     val sheetDescriptor: SheetDescriptor,
     override val columns: Int,
     override val rows: Int,
     override val name: Id = anonymous
-) : Expr, INameable, Sequence<Row>, CountableColumns, CountableRows, ProvidesToSheet {
+) : Expr,
+    INameable,
+    Sequence<Row>,
+    CountableColumns,
+    CountableRows,
+    ProvidesToSheet,
+    ProvidesColumnDescriptors {
     override fun toNamed(name: Id) = dup(name = name)
     override fun toUnnamed() = dup(name = anonymous)
     override fun toSheet() = this

@@ -25,6 +25,7 @@ internal class CsvStateMachine(
     }
 
     private enum class State {
+        StartOfFile,
         StartOfField,
         InsideQuotedField,
         LineFeed,
@@ -35,13 +36,23 @@ internal class CsvStateMachine(
         EscapingInsideQuotedField
     }
 
-    private var state: State = StartOfField
+    private var state: State = StartOfFile
 
     /**
      * Reads the next character
      */
     fun read(ch: Char, sb: StringBuilder): ReadResult {
+        when (state) {
+            StartOfFile -> {
+                if (Character.isWhitespace(ch)) return Continue
+                when (ch) {
+                    '\r', '\n', '\u2028', '\u2029', '\u0085' -> return Continue
+                    else -> state = StartOfField
+                }
+            }
+        }
         return when (state) {
+            StartOfFile,
             LineFeed,
             AfterDelimiter,
             StartOfField -> when (ch) {
@@ -56,12 +67,18 @@ internal class CsvStateMachine(
                     Eofield
                 }
                 '\n', '\u2028', '\u2029', '\u0085' -> {
-                    state = StartOfField
-                    Eol
+                    if (state == StartOfFile) Continue
+                    else {
+                        state = StartOfField
+                        Eol
+                    }
                 }
                 '\r' -> {
-                    state = LineFeed
-                    Continue
+                    if (state == StartOfFile) Continue
+                    else {
+                        state = LineFeed
+                        Continue
+                    }
                 }
                 else -> {
                     sb.append(ch)
@@ -147,6 +164,7 @@ internal class CsvStateMachine(
 
     fun flush(): ReadResult {
         return when (state) {
+            StartOfFile -> Continue
             StartOfField -> Continue
             AfterEndQuote -> Eofield
             AfterDelimiter -> Eofield

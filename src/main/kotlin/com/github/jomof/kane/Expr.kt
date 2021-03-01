@@ -93,6 +93,10 @@ interface ProvidesToSheet {
     fun toSheet(): Sheet
 }
 
+interface ProvidesColumnDescriptors {
+    val columnDescriptors: Map<Int, ColumnDescriptor>
+}
+
 internal const val anonymous = "<anon>"
 
 

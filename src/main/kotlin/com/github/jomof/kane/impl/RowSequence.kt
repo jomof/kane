@@ -3,14 +3,10 @@ package com.github.jomof.kane.impl
 import com.github.jomof.kane.*
 import com.github.jomof.kane.impl.csv.CsvMetadata
 import com.github.jomof.kane.impl.csv.CsvParseContext
-import com.github.jomof.kane.impl.csv.parseCsv
+import com.github.jomof.kane.impl.csv.parseCsvText
 import com.github.jomof.kane.impl.sheet.*
-import com.github.jomof.kane.impl.types.AlgebraicType
-import com.github.jomof.kane.impl.types.KaneType
-import com.github.jomof.kane.impl.types.StringKaneType
 import java.io.File
 import java.io.RandomAccessFile
-import java.util.*
 import kotlin.NoSuchElementException
 import kotlin.collections.HashSet
 import kotlin.random.Random
@@ -18,7 +14,7 @@ import kotlin.random.Random
 internal const val forceSheetInstantiation = false
 
 class RowDistinctSequence<K>(
-    private val sequence: Sequence<Row>,
+    val source: Sequence<Row>,
     private val selector: (Row) -> K
 ) : Sequence<Row>, ProvidesToSheet, CountableColumns {
     private val sheet by lazy { toSheet(iterator()) }
@@ -27,7 +23,7 @@ class RowDistinctSequence<K>(
         if (forceSheetInstantiation) sheet.rows
     }
 
-    override fun iterator(): Iterator<Row> = RowDistinctIterator(sequence.iterator(), selector)
+    override fun iterator(): Iterator<Row> = RowDistinctIterator(source.iterator(), selector)
     override val columns: Int get() = sheet.columns
     override fun toString() = sheet.toString()
     override fun toSheet(): Sheet = sheet
@@ -53,56 +49,51 @@ private class RowDistinctIterator<T, K>(private val source: Iterator<T>, private
 }
 
 class ColumnFilteringSequence(
-    private val sequence: Sequence<Row>,
-    private val predicate: (Int, ColumnDescriptor?) -> Boolean
-) : Sequence<Row>, ProvidesToSheet, CountableColumns {
+    val source: Sequence<Row>,
+    val predicate: (Int, ColumnDescriptor?) -> Boolean
+) : Sequence<Row>,
+    ProvidesToSheet,
+    CountableColumns,
+    ProvidesColumnDescriptors {
     private val sheet by lazy {
         toSheet(iterator())
     }
+    override val columnDescriptors: Map<Int, ColumnDescriptor>
+    private val newToOldColumnMap: Map<Int, Int>
+    private val columnNameToNewColumnIndex: Map<Id, Int>
 
     init {
         if (forceSheetInstantiation) sheet.rows
+        val mapping = source.getColumnDescriptors()
+            .toList()
+            .filter { predicate(it.first, it.second) }
+            .mapIndexed { newIndex, (oldIndex, value) -> Triple(oldIndex, newIndex, value) }
+        columnDescriptors = mapping.map { (_, new, value) -> new to value }.toMap()
+        newToOldColumnMap = mapping.map { (old, new, _) -> new to old }.toMap()
+        columnNameToNewColumnIndex = mapping.map { (_, new, value) -> value.name to new }.toMap()
     }
 
     override fun toSheet(): Sheet = sheet
-    override val columns: Int get() = sheet.columns
+    override val columns: Int get() = columnDescriptors.size
 
     override fun toString() = sheet.toString()
-    override fun iterator(): Iterator<Row> = object : Iterator<Row> {
+    override fun iterator(): Iterator<Row> = run {
+        val thiz = this
+        object : Iterator<Row> {
+            val iterator = source.iterator()
+            override fun hasNext(): Boolean = iterator.hasNext()
 
-        val iterator = sequence.iterator()
-        val columnDescriptors = mutableMapOf<Int, ColumnDescriptor>()
-        val newToOldColumnMap = mutableMapOf<Int, Int>()
-        val columnNameToNewColumnIndex = mutableMapOf<Id, Int>()
-        var columnCount = 0
-        var initialized = false
-
-        override fun hasNext(): Boolean = iterator.hasNext()
-
-        override fun next(): Row {
-            val oldRow = iterator.next()
-            if (!initialized) {
-                initialized = true
-                for (columnOrdinal in 0 until oldRow.columnCount) {
-                    val descriptor = oldRow.columnDescriptors[columnOrdinal]
-                    if (!predicate(columnOrdinal, descriptor)) continue
-                    newToOldColumnMap[columnCount] = columnOrdinal
-                    if (descriptor != null) {
-                        columnNameToNewColumnIndex[descriptor.name] = columnOrdinal
-                        columnDescriptors[columnCount] = descriptor
-                    }
-                    columnCount++
+            override fun next(): Row {
+                val oldRow = iterator.next()
+                return object : Row() {
+                    override val columnCount get() = thiz.columnDescriptors.size
+                    override val columnDescriptors get() = thiz.columnDescriptors
+                    override val rowOrdinal get() = oldRow.rowOrdinal
+                    override val rowDescriptor get() = oldRow.rowDescriptor
+                    override val sheetDescriptor get() = oldRow.sheetDescriptor
+                    override fun get(column: Int) = oldRow[thiz.newToOldColumnMap.getValue(column)]
+                    override fun get(column: String) = oldRow[thiz.columnNameToNewColumnIndex.getValue(column)]
                 }
-            }
-            val thiz = this
-            return object : Row() {
-                override val columnCount get() = thiz.columnCount
-                override val columnDescriptors get() = thiz.columnDescriptors
-                override val rowOrdinal get() = oldRow.rowOrdinal
-                override val rowDescriptor get() = oldRow.rowDescriptor
-                override val sheetDescriptor get() = oldRow.sheetDescriptor
-                override fun get(column: Int) = oldRow[newToOldColumnMap.getValue(column)]
-                override fun get(column: String) = oldRow[columnNameToNewColumnIndex.getValue(column)]
             }
         }
     }
@@ -114,14 +105,14 @@ internal interface RowDropTakeSequence : Sequence<Row> {
 }
 
 internal class RowSubSequence(
-    private val sequence: Sequence<Row>,
+    val source: Sequence<Row>,
     private val startIndex: Int,
     private val endIndex: Int
 ) : Sequence<Row>, RowDropTakeSequence, ProvidesToSheet, CountableColumns {
     private val sheet by lazy { toSheet(iterator()) }
     override fun toSheet(): Sheet = sheet
     override fun toString() = sheet.toString()
-    override val columns: Int get() = sequence.columns
+    override val columns: Int get() = source.columns
 
     init {
         if (forceSheetInstantiation) sheet.rows
@@ -136,14 +127,14 @@ internal class RowSubSequence(
     private val count: Int get() = endIndex - startIndex
 
     override fun drop(n: Int): Sequence<Row> =
-        if (n >= count) emptySequence() else RowSubSequence(sequence, startIndex + n, endIndex)
+        if (n >= count) emptySequence() else RowSubSequence(source, startIndex + n, endIndex)
 
     override fun take(n: Int): Sequence<Row> =
-        if (n >= count) this else RowSubSequence(sequence, startIndex, startIndex + n)
+        if (n >= count) this else RowSubSequence(source, startIndex, startIndex + n)
 
     override fun iterator() = object : Iterator<Row> {
 
-        val iterator = sequence.iterator()
+        val iterator = source.iterator()
         var position = 0
 
         // Shouldn't be called from constructor to avoid premature iteration
@@ -170,25 +161,25 @@ internal class RowSubSequence(
 }
 
 internal class RowTakeSequence(
-    private val sequence: Sequence<Row>,
+    val source: Sequence<Row>,
     private val count: Int
 ) : Sequence<Row>, RowDropTakeSequence, ProvidesToSheet, CountableColumns {
     private val sheet by lazy { toSheet(iterator()) }
     override fun toSheet(): Sheet = sheet
     override fun toString() = sheet.toString()
-    override val columns: Int get() = sequence.columns
+    override val columns: Int get() = source.columns
 
     init {
         require(count >= 0) { "count must be non-negative, but was $count." }
         if (forceSheetInstantiation) sheet.rows
     }
 
-    override fun drop(n: Int): Sequence<Row> = if (n >= count) emptySequence() else RowSubSequence(sequence, n, count)
-    override fun take(n: Int): Sequence<Row> = if (n >= count) this else RowTakeSequence(sequence, n)
+    override fun drop(n: Int): Sequence<Row> = if (n >= count) emptySequence() else RowSubSequence(source, n, count)
+    override fun take(n: Int): Sequence<Row> = if (n >= count) this else RowTakeSequence(source, n)
 
     override fun iterator(): Iterator<Row> = object : Iterator<Row> {
         var left = count
-        val iterator = sequence.iterator()
+        val iterator = source.iterator()
 
         override fun next(): Row {
             if (left == 0)
@@ -204,13 +195,13 @@ internal class RowTakeSequence(
 }
 
 internal class RowDropSequence(
-    private val sequence: Sequence<Row>,
+    val source: Sequence<Row>,
     private val count: Int
 ) : Sequence<Row>, RowDropTakeSequence, ProvidesToSheet, CountableColumns {
     private val sheet by lazy { toSheet(iterator()) }
     override fun toSheet(): Sheet = sheet
     override fun toString() = sheet.toString()
-    override val columns: Int get() = sequence.columns
+    override val columns: Int get() = source.columns
 
     init {
         require(count >= 0) { "count must be non-negative, but was $count." }
@@ -218,13 +209,13 @@ internal class RowDropSequence(
     }
 
     override fun drop(n: Int): Sequence<Row> =
-        (count + n).let { n1 -> if (n1 < 0) RowDropSequence(this, n) else RowDropSequence(sequence, n1) }
+        (count + n).let { n1 -> if (n1 < 0) RowDropSequence(this, n) else RowDropSequence(source, n1) }
 
     override fun take(n: Int): Sequence<Row> =
-        (count + n).let { n1 -> if (n1 < 0) RowTakeSequence(this, n) else RowSubSequence(sequence, count, n1) }
+        (count + n).let { n1 -> if (n1 < 0) RowTakeSequence(this, n) else RowSubSequence(source, count, n1) }
 
     override fun iterator(): Iterator<Row> = object : Iterator<Row> {
-        val iterator = sequence.iterator()
+        val iterator = source.iterator()
         var left = count
 
         private fun drop() {
@@ -247,11 +238,11 @@ internal class RowDropSequence(
 }
 
 internal class RowShufflingSequence(
-    private val sequence: Sequence<Row>,
+    val source: Sequence<Row>,
     private val random: Random
 ) : Sequence<Row>, ProvidesToSheet, CountableColumns {
     private val sheet by lazy { doShuffle().toSheet() }
-    override val columns: Int get() = sequence.columns
+    override val columns: Int get() = source.columns
 
     init {
         if (forceSheetInstantiation) sheet.rows
@@ -262,7 +253,7 @@ internal class RowShufflingSequence(
     override fun toString() = sheet.toString()
 
     private fun doShuffle(): Sequence<Row> = sequence {
-        val buffer = sequence.toMutableList()
+        val buffer = source.toMutableList()
         while (buffer.isNotEmpty()) {
             val j = random.nextInt(buffer.size)
             val last = buffer.removeLast()
@@ -273,19 +264,19 @@ internal class RowShufflingSequence(
 }
 
 class RowFilteringSequence(
-    private val sequence: Sequence<Row>,
+    val source: Sequence<Row>,
     private val sendWhen: Boolean = true,
     private val predicate: (Int, Row) -> Boolean
 ) : Sequence<Row>, ProvidesToSheet, CountableColumns {
     private val sheetDelegate = lazy { toSheet(iterator()) }
     private val sheet by sheetDelegate
-    override val columns: Int get() = sequence.columns
+    override val columns: Int get() = source.columns
 
     init {
         if (forceSheetInstantiation) sheet.rows
     }
 
-    fun filter(predicate: (Row) -> Boolean) = RowFilteringSequence(sequence, sendWhen) { index, row ->
+    fun filter(predicate: (Row) -> Boolean) = RowFilteringSequence(source, sendWhen) { index, row ->
         this.predicate(index, row) && predicate(row)
     }
 
@@ -294,7 +285,7 @@ class RowFilteringSequence(
         if (sheetDelegate.isInitialized()) sheet.iterator()
         // Otherwise, iterate without fully instantiating
         else object : Iterator<Row> {
-            val iterator = sequence.iterator()
+            val iterator = source.iterator()
             var nextState: Int = -1 // -1 for unknown, 0 for done, 1 for continue
             var nextItem: Row? = null
             var index = 0
@@ -351,19 +342,25 @@ fun Sequence<Row>.toSheet(): Sheet = when (this) {
 
 fun Sequence<Row>.eval(): Sheet = ((toSheet() as Expr).eval() as Sheet).showExcelColumnTags(false)
 
-data class ReadCsvRowSequence(
+data class ReadCsvFileRowSequence(
     val file: File,
     val parseContext: CsvParseContext
-) : Sequence<Row>, CountableRows, CountableColumns, ProvidesToSheet {
+) : Sequence<Row>,
+    CountableRows,
+    CountableColumns,
+    ProvidesToSheet,
+    ProvidesColumnDescriptors {
+    override val columns: Int get() = meta.columns
+    override val rows: Int get() = meta.rows
     private val sheet by lazy { toSheet(iterator()).limitOutputLines(10) }
-    override fun toSheet(): Sheet = sheet
-    override fun toString() = sheet.toString()
-    private val meta by lazy { CsvMetadata.computeIfAbsent(file, parseContext) }
-    private val columnDescriptors by lazy {
+    private val meta = CsvMetadata.computeIfAbsent(file, parseContext)
+    override val columnDescriptors =
         meta.columnInfos.mapIndexed { index, info ->
             index to ColumnDescriptor(info.name, typeNameToAdmissibleType(info.type))
         }.toMap()
-    }
+
+    override fun toSheet(): Sheet = sheet
+    override fun toString() = sheet.toString()
 
     override fun iterator(): Iterator<Row> {
         var currentRow = 0
@@ -379,7 +376,7 @@ data class ReadCsvRowSequence(
                     private val lineStart = currentPosition
                     private val fields by lazy {
                         reader.seek(lineStart)
-                        parseCsv(reader.readLine(), parseContext).singleOrNull()
+                        parseCsvText(reader.readLine(), parseContext).singleOrNull()
                             ?: listOf()
                     }
                     override val columnCount get() = meta.columns
@@ -392,10 +389,10 @@ data class ReadCsvRowSequence(
                     }
 
                     override fun get(column: String): Any? {
-                        val (index, descriptor) = columnDescriptors
+                        val index = columnDescriptors
                             .filter { it.value.name == column }
                             .toList()
-                            .singleOrNull() ?: error("Column '$column' is unknown")
+                            .singleOrNull()?.first ?: error("Column '$column' is unknown")
                         return this[index]
                     }
 
@@ -409,13 +406,60 @@ data class ReadCsvRowSequence(
 
         }
     }
+}
 
+internal class ParseCsvRowSequence(
+    val data: List<List<String>>,
+    val meta: CsvMetadata
+) : Sequence<Row>,
+    CountableRows,
+    CountableColumns,
+    ProvidesToSheet,
+    ProvidesColumnDescriptors {
     override val columns: Int get() = meta.columns
-    override val rows: Int
-        get() {
-            val result = meta.rows
-            return result
+    override val rows: Int get() = meta.rows
+    private val sheet by lazy { toSheet(iterator()).limitOutputLines(10) }
+    override fun toSheet(): Sheet = sheet
+    override fun toString() = sheet.toString()
+    override val columnDescriptors by lazy {
+        meta.columnInfos.mapIndexed { index, info ->
+            index to ColumnDescriptor(info.name, typeNameToAdmissibleType(info.type))
+        }.toMap()
+    }
+
+    override fun iterator(): Iterator<Row> {
+        val firstIsHeader = meta.parseParameters.columnNames.isEmpty()
+        var currentRow = 0
+        val sequence = this
+        val sheetDescriptor = SheetDescriptor()
+        return object : Iterator<Row> {
+            override fun hasNext() = currentRow < meta.rows
+            override fun next(): Row {
+                val result = object : Row() {
+                    private val fields = if (firstIsHeader) data[currentRow + 1] else data[currentRow]
+                    override val columnCount get() = meta.columns
+                    override val columnDescriptors get() = sequence.columnDescriptors
+                    override val rowOrdinal = currentRow
+                    override val rowDescriptor: RowDescriptor? get() = null
+                    override val sheetDescriptor: SheetDescriptor get() = sheetDescriptor
+                    override fun get(column: Int): Any {
+                        return if (column < fields.size) fields[column] else ""
+                    }
+
+                    override fun get(column: String): Any {
+                        val index = columnDescriptors
+                            .filter { it.value.name == column }
+                            .toList()
+                            .singleOrNull()?.first ?: error("Column '$column' is unknown")
+                        return this[index]
+                    }
+                }
+                ++currentRow
+                return result
+            }
         }
+    }
+
 }
 
 internal fun toSheet(

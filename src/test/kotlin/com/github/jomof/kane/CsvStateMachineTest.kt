@@ -9,68 +9,68 @@ class CsvStateMachineTest {
 
     @Test
     fun basics() {
-        parseCsv("").assertString("[]")
-        parseCsv("a").assertString("[[a]]")
-        parseCsv("a,b").assertString("[[a, b]]")
-        parseCsv("a\nb").assertString("[[a], [b]]")
-        parseCsv("a,b\nc,d").assertString("[[a, b], [c, d]]")
-        parseCsv("\"a\",b\nc,d").assertString("[[a, b], [c, d]]")
-        parseCsv("\"a,b\"\nc,d").assertString("[[a,b], [c, d]]")
+        parseCsvText("").assertString("[]")
+        parseCsvText("a").assertString("[[a]]")
+        parseCsvText("a,b").assertString("[[a, b]]")
+        parseCsvText("a\nb").assertString("[[a], [b]]")
+        parseCsvText("a,b\nc,d").assertString("[[a, b], [c, d]]")
+        parseCsvText("\"a\",b\nc,d").assertString("[[a, b], [c, d]]")
+        parseCsvText("\"a,b\"\nc,d").assertString("[[a,b], [c, d]]")
     }
 
     @Test
     fun `simple quote`() {
-        parseCsv("\"a\",b").assertString("[[a, b]]")
+        parseCsvText("\"a\",b").assertString("[[a, b]]")
     }
 
     @Test
     fun `delimiter in quote`() {
-        parseCsv("\"a,b\"").assertString("[[a,b]]")
+        parseCsvText("\"a,b\"").assertString("[[a,b]]")
     }
 
     @Test
     fun `quote then another empty line`() {
-        parseCsv("\"a\"\n").assertString("[[a]]")
+        parseCsvText("\"a\"\n").assertString("[[a]]")
     }
 
     @Test
     fun `quote then another line`() {
-        parseCsv("\"a\"\nb").assertString("[[a], [b]]")
+        parseCsvText("\"a\"\nb").assertString("[[a], [b]]")
     }
 
     @Test
     fun `just a comma`() {
-        parseCsv(",").assertString("[[, ]]")
+        parseCsvText(",").assertString("[[, ]]")
     }
 
     @Test
     fun `a comma, a line, and another comma`() {
-        parseCsv(",\n,").assertString("[[, ], [, ]]")
+        parseCsvText(",\n,").assertString("[[, ], [, ]]")
     }
 
     @Test
     fun `cr-lf`() {
-        parseCsv("a\r\nb").assertString("[[a], [b]]")
+        parseCsvText("a\r\nb").assertString("[[a], [b]]")
     }
 
     @Test
     fun `undefined, just don't crash`() {
-        parseCsv("a\r\rb")
-        parseCsv("a\r")
-        parseCsv("a\"")
-        parseCsv("a\\\r")
-        parseCsv("a\\")
-        parseCsv("\"a\\")
+        parseCsvText("a\r\rb")
+        parseCsvText("a\r")
+        parseCsvText("a\"")
+        parseCsvText("a\\\r")
+        parseCsvText("a\\")
+        parseCsvText("\"a\\")
     }
 
     @Test
     fun `double quote`() {
-        parseCsv("\"\"\"").assertString("[[\"]]")
+        parseCsvText("\"\"\"").assertString("[[\"]]")
     }
 
     @Test
     fun `json embedded`() {
-        parseCsv("1,\"{\"\"type\"\": \"\"Point\"\", \"\"coordinates\"\": [102.0, 0.5]}\"").assertString(
+        parseCsvText("1,\"{\"\"type\"\": \"\"Point\"\", \"\"coordinates\"\": [102.0, 0.5]}\"").assertString(
             """
             [[1, {"type": "Point", "coordinates": [102.0, 0.5]}]]
         """.trimIndent()
@@ -79,7 +79,7 @@ class CsvStateMachineTest {
 
     @Test
     fun `UTF-8`() {
-        parseCsv(
+        parseCsvText(
             """
             a,b,c
             1,2,3
@@ -90,7 +90,7 @@ class CsvStateMachineTest {
 
     @Test
     fun `quoted cr-lf`() {
-        parseCsv(
+        parseCsvText(
             """
             "a
              b"
@@ -103,55 +103,54 @@ class CsvStateMachineTest {
         )
     }
 
-
     @Test
     fun `space before quote`() {
-        parseCsv(" \"a\"").assertString("[[a]]")
+        parseCsvText(" \"a\"").assertString("[[a]]")
     }
 
     @Test
     fun `space before unquoted`() {
-        parseCsv(" a").assertString("[[a]]")
+        parseCsvText(" a").assertString("[[a]]")
     }
 
     @Test
     fun `space after unquoted`() {
-        parseCsv("a ").assertString("[[a]]")
+        parseCsvText("a ").assertString("[[a]]")
     }
 
     @Test
     fun `space in unquoted field`() {
-        parseCsv("a b").assertString("[[a b]]")
+        parseCsvText("a b").assertString("[[a b]]")
     }
 
     @Test
     fun `comma in quotes`() {
-        parseCsv("a b").assertString("[[a b]]")
+        parseCsvText("a b").assertString("[[a b]]")
     }
 
     @Test
     fun `space in quoted field`() {
-        parseCsv("\"a b\"").assertString("[[a b]]")
+        parseCsvText("\"a b\"").assertString("[[a b]]")
     }
 
     @Test
     fun `escaped quote in unquoted field`() {
-        parseCsv("a\\\"b").assertString("[[a\"b]]")
+        parseCsvText("a\\\"b").assertString("[[a\"b]]")
     }
 
     @Test
     fun `escaped escape char in unquoted field`() {
-        parseCsv("a\\\\b").assertString("[[a\\b]]")
+        parseCsvText("a\\\\b").assertString("[[a\\b]]")
     }
 
     @Test
     fun `escaped quote in quoted field`() {
-        parseCsv("\"a\\\"b\"").assertString("[[a\"b]]")
+        parseCsvText("\"a\\\"b\"").assertString("[[a\"b]]")
     }
 
     @Test
     fun `escaped escape char in quoted field`() {
-        parseCsv("\"a\\\\b\"").assertString("[[a\\b]]")
+        parseCsvText("\"a\\\\b\"").assertString("[[a\\b]]")
     }
 
     @Test
@@ -194,7 +193,7 @@ class CsvStateMachineTest {
     fun `one-line repro`() {
         val csv = File("data/zoo-one-row.csv")
         val text = csv.readText()
-        parseCsv(text).assertString("[[animal, uniq_id, water_need], [elephant, 1001, 500]]")
+        parseCsvText(text).assertString("[[animal, uniq_id, water_need], [elephant, 1001, 500]]")
         val metadata = computeCsvMetadata(csv)
         metadata.rows.assertString("1")
         metadata.columns.assertString("3")

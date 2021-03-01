@@ -98,13 +98,14 @@ private class DateTimeAdmissibleDataType(val formatting : String) : AdmissibleDa
 }
 
 internal val doubleAdmissibleDataType = DoubleAdmissibleDataType()
+internal val stringAdmissibleDataType: AdmissibleDataType<*> = StringAdmissibleDataType()
 internal val possibleDataFormats = listOf<AdmissibleDataType<*>>(
     doubleAdmissibleDataType,
     DollarsAdmissibleDataType(),
     DollarsAndCentsAdmissibleDataType(),
     DateTimeAdmissibleDataType("yyyy-MM-dd HH:mm:ss"),
     DateTimeAdmissibleDataType("yyyy-MM-dd"),
-    StringAdmissibleDataType()
+    stringAdmissibleDataType
 )
 
 fun typeNameToAdmissibleType(name: String) =
@@ -173,7 +174,10 @@ fun analyzeDataTypes(
 
 fun <T : Any> AdmissibleDataType<T>.parseToExpr(value: String): Expr {
     return when (val parsed = tryParse(value)!!) {
-        is Double -> RetypeScalar(ConstantScalar(parsed), type as AlgebraicType)
+        is Double -> when (type) {
+            kaneDouble -> ConstantScalar(parsed)
+            else -> RetypeScalar(ConstantScalar(parsed), type as AlgebraicType)
+        }
         else -> ValueExpr(parsed, type as KaneType<Any>)
     }
 }

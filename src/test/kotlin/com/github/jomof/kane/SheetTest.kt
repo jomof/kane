@@ -1,6 +1,5 @@
 package com.github.jomof.kane
 
-import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
 import com.github.jomof.kane.impl.*
 import com.github.jomof.kane.impl.functions.*
 import com.github.jomof.kane.impl.sheet.Sheet
@@ -11,8 +10,6 @@ import org.junit.Test
 import java.io.File
 import java.util.*
 import kotlin.math.abs
-import kotlin.math.min
-import kotlin.math.round
 
 
 class SheetTest {
@@ -172,7 +169,7 @@ class SheetTest {
 
     @Test
     fun `add formula to csv`() {
-        val sheet = sheetOfCsv(
+        val sheet = parseCsv(
             """
             A,B
             1.0,-0.4
@@ -194,7 +191,7 @@ class SheetTest {
 
     @Test
     fun `range expanssion doesn't reduce arithmetic`() {
-        val sheet = sheetOfCsv(
+        val sheet = parseCsv(
             """
             A
             1.0
@@ -222,7 +219,7 @@ class SheetTest {
 
     @Test
     fun `range expanssion doesn't reduce arithmetic with anonymous range`() {
-        val sheet = sheetOfCsv(
+        val sheet = parseCsv(
             """
             A
             1.0
@@ -248,7 +245,7 @@ class SheetTest {
 
     @Test
     fun `names of ranged expressions get expanded to columns`() {
-        val sheet = sheetOfCsv(
+        val sheet = parseCsv(
             """
             A
             1.0
@@ -275,7 +272,7 @@ class SheetTest {
 
     @Test
     fun `names of ranged expressions get expanded to columns in order`() {
-        val sheet = sheetOfCsv(
+        val sheet = parseCsv(
             """
             A
             1.0
@@ -303,7 +300,7 @@ class SheetTest {
 
     @Test
     fun `statistic summary function over range`() {
-        val sheet = sheetOfCsv(
+        val sheet = parseCsv(
             """
             A
             1.0
@@ -490,7 +487,7 @@ class SheetTest {
 
     @Test
     fun `access column by name`() {
-        val retire = sheetOfCsv(
+        val retire = parseCsv(
             """
                 cats,dogs
                 1,2
@@ -514,7 +511,7 @@ class SheetTest {
 
     @Test
     fun `column of two ranges added`() {
-        val retire = sheetOfCsv(
+        val retire = parseCsv(
             """
                 A,B
                 1,2
@@ -538,7 +535,7 @@ class SheetTest {
 
     @Test
     fun `column of two ranges added anonymous`() {
-        val retire = sheetOfCsv(
+        val retire = parseCsv(
             """
                 A,B
                 1,2
@@ -562,7 +559,7 @@ class SheetTest {
 
     @Test
     fun `statistic of block range`() {
-        val check = sheetOfCsv(
+        val check = parseCsv(
             """
                 A,B
                 1,2
@@ -663,16 +660,6 @@ class SheetTest {
         sheet["B3"].assertString("sum(B1:B2)")
         println(sheet.eval())
         sheet.eval()["B3"].assertString("5")
-    }
-
-    @Test
-    fun `read and clean csv`() {
-        val csv = File("./src/test/kotlin/com/github/jomof/kane/SP500toGDP.csv").absoluteFile
-        val rows: List<Map<String, String>> = csvReader().readAllWithHeader(csv)
-        assert(csv.isFile)
-        println(analyzeDataTypes(rows))
-        val sheet = readCsv(csv)
-        println(sheet)
     }
 
     @Test
@@ -875,7 +862,7 @@ class SheetTest {
 
     @Test
     fun `statistics of dog weights`() {
-        val sheet = sheetOfCsv(
+        val sheet = parseCsv(
             """
                 weight
                 600

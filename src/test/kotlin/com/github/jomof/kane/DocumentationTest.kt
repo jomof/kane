@@ -97,8 +97,6 @@ class DocumentationTest {
 
     @Test
     fun `reading data section--dealing with large CSV files`() {
-        val prior = Kane.metrics.sheetInstatiations
-
         /**
          * When a CSV file is very large it can be useful to reduce it to a useful subset.
          * Let's look at a table of US COVID-19 hospital statistics (found at data.gov).
@@ -152,8 +150,6 @@ class DocumentationTest {
          * Finally, let's save this to a new .csv file so that we can use it for other demos.
          */
         covid.writeCsv("data/covid-slim.csv")
-
-        (Kane.metrics.sheetInstatiations - prior).assertString("5")
     }
 
     @Test
@@ -236,11 +232,11 @@ class DocumentationTest {
          * This walk-through will show a very simple case of using minimize(...).
          *
          * Topics covered:
-         * - Using sheetOfCsv(...) to construct a sheet from a string in CSV format.
+         * - Using parseCsv(...) to construct a sheet from a string in CSV format.
          * - Adding rows, columns, and cells to an existing sheet.
          * - Using minimize(...) to seek a goal
          */
-        var sheet = sheetOfCsv(
+        var sheet = parseCsv(
             """
             A,B
             1.0,-0.5
@@ -356,6 +352,20 @@ class DocumentationTest {
          * Print the types for all columns.
          */
         println(sheet.types)
+        sheet.types.assertString(
+            """
+                 name    type  format 
+              --------- ------ ------ 
+            1 record_id double double 
+            2     month double double 
+            3       day double double 
+            4      year double double 
+            5      plot double double 
+            6   species String string 
+            7       sex String string 
+            8       wgt double double 
+        """.trimIndent()
+        )
 
         /**
          * Print the mean of a column.
@@ -416,7 +426,7 @@ class DocumentationTest {
 
     @Test
     fun `grouping by columns and expressions`() {
-        val measurements = sheetOfCsv(
+        val measurements = parseCsv(
             """
             date,height,weight,gender
             2000-01-01,183,77,male
@@ -431,6 +441,7 @@ class DocumentationTest {
             2000-01-10,181,78,male
             """
         )
+        println(measurements)
 
         val group = measurements.groupBy("gender")
 

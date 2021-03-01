@@ -5,7 +5,7 @@ import org.junit.Test
 class SheetOfCsvTest {
     @Test
     fun basic() {
-        val sheet = sheetOfCsv(
+        val sheet = parseCsv(
             """
             a,b
             1,2

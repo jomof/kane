@@ -5,10 +5,7 @@ package com.github.jomof.kane.impl
 import com.github.jomof.kane.*
 import com.github.jomof.kane.impl.functions.*
 import com.github.jomof.kane.impl.sheet.*
-import com.github.jomof.kane.impl.types.AlgebraicType
-import com.github.jomof.kane.impl.types.KaneType
-import com.github.jomof.kane.impl.types.StringKaneType
-import com.github.jomof.kane.impl.types.kaneDouble
+import com.github.jomof.kane.impl.types.*
 import kotlin.reflect.KProperty
 
 
@@ -216,6 +213,10 @@ data class RetypeScalar(
     val type: AlgebraicType,
     override val name: Id = anonymous
 ) : ScalarExpr, INameableScalar {
+    init {
+        assert(type != kaneDouble)
+    }
+
     override fun toString() = render()
     override fun toNamed(name: Id): ScalarExpr {
         if (this.name === anonymous) return dup(name = name)

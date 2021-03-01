@@ -401,8 +401,8 @@ val exp: AlgebraicUnaryFunction = expFunc
  * exp function
  * [![](https://jomof.github.io/kane/figures/exp-profile.svg)]
  */
-fun exp(matrix : NamedMatrix) : MatrixExpr = expFunc(matrix as MatrixExpr)
-fun exp(matrix : DataMatrix) : MatrixExpr = expFunc(matrix as MatrixExpr)
+fun exp(matrix: NamedMatrix): MatrixExpr = expFunc(matrix as MatrixExpr)
+fun exp(matrix: DataMatrix): MatrixExpr = expFunc(matrix as MatrixExpr)
 fun exp(matrix : MatrixExpr) : MatrixExpr = expFunc(matrix)
 fun exp(scalar : ScalarExpr) : ScalarExpr = expFunc(scalar)
 fun exp(scalar : Double) : ScalarExpr = expFunc(scalar)

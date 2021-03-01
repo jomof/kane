@@ -6,7 +6,7 @@ Under the covers, Kane uses gradient descent to try to reach the goal so the for
 This walk-through will show a very simple case of using minimize(...).
 
 Topics covered:
-- Using sheetOfCsv(...) to construct a sheet from a string in CSV format.
+- Using parseCsv(...) to construct a sheet from a string in CSV format.
 - Adding rows, columns, and cells to an existing sheet.
 - Using minimize(...) to seek a goal
 
@@ -19,7 +19,7 @@ import com.github.jomof.kane.*
 
 
 ```kotlin
-val raw = sheetOfCsv(
+val raw = parseCsv(
     """
     A,B
     1.0,-0.5

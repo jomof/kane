@@ -14,7 +14,7 @@ internal sealed class CsvParseField {
  * This is the low level of the CSV parser.
  * It just receives "field" or "EOL".
  */
-internal fun parseCsv(
+internal fun parseCsvReader(
     bufferedReader: Reader,
     context: CsvParseContext = CsvParseContext(),
     receive: (field: CsvParseField) -> Unit
@@ -66,13 +66,13 @@ internal fun parseCsv(
 /**
  * Parse a [String] in CSV format.
  */
-internal fun parseCsv(
+internal fun parseCsvText(
     text: String,
     context: CsvParseContext = CsvParseContext()
 ): List<List<String>> {
     val allLines = mutableListOf<List<String>>()
     val currentLine = mutableListOf<String>()
-    parseCsv(StringReader(text), context) { field ->
+    parseCsvReader(StringReader(text.trim(' ', '\r', '\n')), context) { field ->
         when (field) {
             is TextField -> currentLine.add(field.content.trim().toString())
             is EolineField -> {

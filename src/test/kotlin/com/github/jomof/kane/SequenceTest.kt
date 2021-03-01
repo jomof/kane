@@ -6,6 +6,39 @@ import org.junit.Test
 import kotlin.random.Random
 
 class SequenceTest {
+    private val singleColumnCsv = parseCsv(
+        """
+        column
+        1
+        2
+        3
+    """.trimIndent()
+    )
+    private val origin = listOf(
+        singleColumnCsv,
+        readCsv("data/single-column.csv"),
+        readCsv("data/single-column-dollars.csv"),
+    )
+
+    private val Sequence<Row>.variations: List<Sequence<Row>>
+        get() = listOf(
+            this,
+            drop(1),
+            take(1),
+            drop(1).take(2),
+            take(2).drop(1),
+            shuffled(),
+            sample(n = 2),
+            sample(fraction = 0.8),
+            head(1),
+            tail(1),
+            distinct(),
+            filter { row -> row.rowOrdinal == 1 },
+            this["column"],
+            groupBy("column").iterator().next().value
+        )
+    private val variousSingleColumnSequences = origin.flatMap { it.variations }
+
     @Test
     fun `dont check in forceSheetInstantiation`() {
         forceSheetInstantiation.assertString("false")
@@ -13,7 +46,7 @@ class SequenceTest {
 
     @Test
     fun `filter true`() {
-        val sheet = sheetOfCsv(
+        val sheet = parseCsv(
             """
             a,b
             1,2
@@ -35,7 +68,7 @@ class SequenceTest {
 
     @Test
     fun `filter false`() {
-        val sheet = sheetOfCsv(
+        val sheet = parseCsv(
             """
             a,b
             1,2
@@ -50,7 +83,7 @@ class SequenceTest {
 
     @Test
     fun `filter twice coalesce`() {
-        val sheet = sheetOfCsv(
+        val sheet = parseCsv(
             """
             a,b
             1,2
@@ -73,7 +106,7 @@ class SequenceTest {
 
     @Test
     fun `filter but keep row names`() {
-        val csv = sheetOfCsv(
+        val csv = parseCsv(
             """
             a,b
             1,2
@@ -131,7 +164,7 @@ class SequenceTest {
 
     @Test
     fun shuffled() {
-        val shuffled = sheetOfCsv(
+        val shuffled = parseCsv(
             """
             a,b
             1,2
@@ -153,7 +186,7 @@ class SequenceTest {
 
     @Test
     fun drop() {
-        val sheet = sheetOfCsv(
+        val sheet = parseCsv(
             """
             a,b
             1,2
@@ -171,7 +204,7 @@ class SequenceTest {
 
     @Test
     fun take() {
-        val sheet = sheetOfCsv(
+        val sheet = parseCsv(
             """
             a,b
             1,2
@@ -189,7 +222,7 @@ class SequenceTest {
 
     @Test
     fun `drop take`() {
-        val sheet = sheetOfCsv(
+        val sheet = parseCsv(
             """
             a,b
             1,2
@@ -208,7 +241,7 @@ class SequenceTest {
 
     @Test
     fun `index by column name`() {
-        val sheet = sheetOfCsv(
+        val sheet = parseCsv(
             """
             c1,c2,c3
             1,2,7
@@ -229,7 +262,7 @@ class SequenceTest {
 
     @Test
     fun `index by cell`() {
-        val sheet = sheetOfCsv(
+        val sheet = parseCsv(
             """
             c1,c2,c3
             1,2,7
@@ -242,7 +275,7 @@ class SequenceTest {
 
     @Test
     fun `index into sheet`() {
-        val sheet = sheetOfCsv(
+        val sheet = parseCsv(
             """
             c1,c2,c3
             1,2,7
@@ -257,7 +290,7 @@ class SequenceTest {
 
     @Test
     fun `summary of column`() {
-        val sheet = sheetOfCsv(
+        val sheet = parseCsv(
             """
             c1,c2,c3
             1,2,7
@@ -344,7 +377,7 @@ class SequenceTest {
     @Test
     fun `repro case Excel-like column names`() {
         val prior = Kane.metrics.sheetInstatiations
-        val sheet = sheetOfCsv(
+        val sheet = parseCsv(
             """
             c1,c2,c3
             1,2,7
@@ -366,8 +399,7 @@ class SequenceTest {
 
     @Test
     fun `repro case`() {
-        val prior = Kane.metrics.sheetInstatiations
-        val sheet = sheetOfCsv(
+        val sheet = parseCsv(
             """
             height
             45.306120
@@ -384,13 +416,12 @@ class SequenceTest {
             1   45.30612      A1*1 
             """.trimIndent()
         )
-        (Kane.metrics.sheetInstatiations - prior).assertString("1")
     }
 
     @Test
     fun `repro formula adjustment in filtering`() {
         val sheet = {
-            sheetOfCsv(
+            parseCsv(
                 """
                 weight,gender
                 157.500553,male
@@ -424,7 +455,7 @@ class SequenceTest {
     @Test
     fun `check parition`() {
         val sheet = {
-            sheetOfCsv(
+            parseCsv(
                 """
                 weight,gender
                 157.500553,male
@@ -457,7 +488,7 @@ class SequenceTest {
     @Test
     fun `check distinct`() {
         val sheet = {
-            sheetOfCsv(
+            parseCsv(
                 """
                 weight,gender
                 157.500553,male
@@ -483,7 +514,7 @@ class SequenceTest {
     @Test
     fun `repro lost row name`() {
         val sheet = {
-            sheetOfCsv(
+            parseCsv(
                 """
                 weight,gender
                 157.500553,male
@@ -513,7 +544,7 @@ class SequenceTest {
     @Test
     fun `support, filter row and ordinal toString`() {
         val sheet = {
-            sheetOfCsv(
+            parseCsv(
                 """
                 weight,gender
                 157.500553,male
@@ -536,8 +567,7 @@ class SequenceTest {
 
     @Test
     fun `repro formula adjustment in indexed filtering`() {
-        val prior = Kane.metrics.sheetInstatiations
-        val sheet = sheetOfCsv(
+        val sheet = parseCsv(
             """
                 weight,gender
                 157.500553,male
@@ -559,13 +589,11 @@ class SequenceTest {
             3  177.54092       male    A2+1 
             """.trimIndent()
         )
-        (Kane.metrics.sheetInstatiations - prior).assertString("1")
     }
 
     @Test
     fun `repro formula adjustment in chained indexed filtering`() {
-        val prior = Kane.metrics.sheetInstatiations
-        val sheet = sheetOfCsv(
+        val sheet = parseCsv(
             """
                 weight,gender
                 157.500553,male
@@ -586,6 +614,15 @@ class SequenceTest {
             3  177.54092       male    A1+1 
             """.trimIndent()
         )
-        if (!forceSheetInstantiation) (Kane.metrics.sheetInstatiations - prior).assertString("1")
+    }
+
+    @Test
+    fun `type of various single column sequences`() {
+        variousSingleColumnSequences.forEach { seq -> seq.type }
+    }
+
+    @Test
+    fun `iterate various single column sequences`() {
+        variousSingleColumnSequences.forEach { seq -> seq.forEach { } }
     }
 }

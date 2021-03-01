@@ -9,7 +9,7 @@ import com.github.jomof.kane.impl.randomOf
 import org.junit.Test
 
 class GradualEvaluatorTest {
-    private val measurements = sheetOfCsv(
+    private val measurements = parseCsv(
         """
         date,height,weight,gender
         2000-01-01,42.849980,157.500553,male
@@ -193,7 +193,7 @@ class GradualEvaluatorTest {
 
     @Test
     fun `repro NamedMatrix issue`() {
-        val sheet = sheetOfCsv(
+        val sheet = parseCsv(
             """
             A,B
             1.0,-0.5
@@ -208,7 +208,7 @@ class GradualEvaluatorTest {
 
     @Test
     fun `binary of sheet ranges`() {
-        val sheet = sheetOfCsv(
+        val sheet = parseCsv(
             """
             A,B
             1.0,-0.5

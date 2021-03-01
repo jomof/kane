@@ -121,12 +121,12 @@ internal fun computeCsvMetadata(reader: Reader, context: CsvParseContext = CsvPa
         lastLineStart = field.startOffset
     }
 
-    parseCsv(reader, context) { field ->
-        if (columnInfos.size < columnNumber + 1) {
-            onNewColumn(columnNumber)
-        }
+    parseCsvReader(reader, context) { field ->
         when (field) {
             is TextField -> {
+                if (columnInfos.size <= columnNumber) {
+                    onNewColumn(columnNumber)
+                }
                 if (onColumnNamesLine) {
                     onFieldOfColumnNamesLine(columnNumber, field)
                 }
@@ -148,7 +148,7 @@ internal fun computeCsvMetadata(reader: Reader, context: CsvParseContext = CsvPa
         }
     }
     return CsvMetadata(
-        columns = columnInfos.size - 1,
+        columns = columnInfos.size,
         rows = lineStartDeltas.size,
         parseParameters = context,
         columnInfos = columnInfos.mapIndexed { index, col ->
