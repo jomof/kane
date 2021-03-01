@@ -2,12 +2,12 @@ package com.github.jomof.kane
 
 fun Any?.assertString(expected : String) {
     if (this == null) return "null".assertString(expected)
-    val actual = toString().trim('\n', ' ')
-    val expectedTrimmed = expected.trim('\n', ' ')
+    val actual = toString().trim('\r', '\n', ' ')
+    val expectedTrimmed = expected.trim('\r', '\n', ' ')
     if (actual != expectedTrimmed) {
         println(this)
-        val actualSplit = actual.split('\n')
-        val expectedSplit = expectedTrimmed.split('\n')
+        val actualSplit = actual.split('\n').map { it.trim('\r', '\n', ' ') }
+        val expectedSplit = expectedTrimmed.split('\n').map { it.trim('\r', '\n', ' ') }
         (actualSplit zip expectedSplit).withIndex().forEach {
             val (actualLine, expectedLine) = it.value
             if (actualLine != expectedLine) {
@@ -18,9 +18,6 @@ fun Any?.assertString(expected : String) {
                 println("expected: '$expectedLine'")
                 error("unexpected on line ${it.index}")
             }
-        }
-        assert(actual == expectedTrimmed) {
-            "actual:   [$actual]\nexpected: [$expectedTrimmed]"
         }
     }
 }
