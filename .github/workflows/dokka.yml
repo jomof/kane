@@ -21,7 +21,7 @@ jobs:
       with:
         java-version: '11'
     - name: Build Documentation
-      run: ./gradlew dokkaGfm :test
+      run: ./gradlew --info dokkaGfm :test
     - name: Publish Documentation
       uses: peaceiris/actions-gh-pages@v3
       with:
