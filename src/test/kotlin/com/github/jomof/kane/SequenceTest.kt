@@ -625,4 +625,19 @@ class SequenceTest {
     fun `iterate various single column sequences`() {
         variousSingleColumnSequences.forEach { seq -> seq.forEach { } }
     }
+
+    @Test
+    fun `mean various single column sequences`() {
+        variousSingleColumnSequences.forEach { seq -> mean(seq) }
+    }
+
+    @Test
+    fun `html various single column sequences`() {
+        variousSingleColumnSequences.forEach { seq -> seq.html }
+    }
+
+    @Test
+    fun `describe various single column sequences`() {
+        variousSingleColumnSequences.forEach { seq -> seq.describe() }
+    }
 }
