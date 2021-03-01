@@ -417,13 +417,14 @@ val relu: AlgebraicUnaryFunction = reluFunc
  */
 fun relu(matrix: NamedMatrix): MatrixExpr = reluFunc(matrix as MatrixExpr)
 fun relu(matrix: DataMatrix): MatrixExpr = reluFunc(matrix as MatrixExpr)
-fun relu(matrix : MatrixExpr) : MatrixExpr = reluFunc(matrix)
-fun relu(scalar : ScalarExpr) : ScalarExpr = reluFunc(scalar)
-fun relu(scalar : Double) : ScalarExpr = reluFunc(scalar)
+fun relu(matrix: MatrixExpr): MatrixExpr = reluFunc(matrix)
+fun relu(scalar: ScalarExpr): ScalarExpr = reluFunc(scalar)
+fun relu(scalar: Double): ScalarExpr = reluFunc(scalar)
 
 // typesafe tanh
 private val tanhFunc = TanhFunction()
-val tanh : AlgebraicUnaryFunction = tanhFunc
+val tanh: AlgebraicUnaryFunction = tanhFunc
+
 /**
  * tanh function
  * [![](https://jomof.github.io/kane/figures/tanh-profile.svg)]

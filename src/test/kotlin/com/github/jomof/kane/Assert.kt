@@ -12,7 +12,9 @@ fun Any?.assertString(expected : String) {
             val (actualLine, expectedLine) = it.value
             if (actualLine != expectedLine) {
                 val updownArrow = String(Character.toChars(0x2195))
-                val firstDifference = Math.max(0, (actualLine zip expectedLine).indexOfFirst { (ac, ec) -> ac != ec })
+                val firstDifference = Math.max(
+                    Math.max(actualLine.length, expectedLine.length),
+                    (actualLine zip expectedLine).indexOfFirst { (ac, ec) -> ac != ec })
                 println("actual:   '$actualLine'")
                 println(updownArrow.padStart(firstDifference + 12))
                 println("expected: '$expectedLine'")
