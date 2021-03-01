@@ -1,4 +1,4 @@
-//[Kane](../../index.md)/[com.github.jomof.kane.impl](../index.md)/[ReadCsvRowSequence](index.md)/[component2](component2.md)
+//[Kane](../../index.md)/[com.github.jomof.kane.impl](../index.md)/[ReadCsvFileRowSequence](index.md)/[component2](component2.md)
 
 
 

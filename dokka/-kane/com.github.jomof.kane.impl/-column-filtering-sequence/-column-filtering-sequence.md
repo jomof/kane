@@ -5,7 +5,7 @@
 # ColumnFilteringSequence  
 [jvm]  
 Content  
-fun [ColumnFilteringSequence](-column-filtering-sequence.md)(sequence: [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/-sequence/index.html)<[Row](../../com.github.jomof.kane/-row/index.md)>, predicate: ([Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html), [ColumnDescriptor](../../com.github.jomof.kane.impl.sheet/-column-descriptor/index.md)?) -> [Boolean](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html))  
+fun [ColumnFilteringSequence](-column-filtering-sequence.md)(source: [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/-sequence/index.html)<[Row](../../com.github.jomof.kane/-row/index.md)>, predicate: ([Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html), [ColumnDescriptor](../../com.github.jomof.kane.impl.sheet/-column-descriptor/index.md)?) -> [Boolean](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html))  
 
 
 

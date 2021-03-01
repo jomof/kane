@@ -6,7 +6,7 @@
 [jvm]  
 Content  
 fun [normalizeUserInput](normalize-user-input.md)(value: [Coordinate](../../-coordinate/index.md))  
-fun [normalizeUserInput](normalize-user-input.md)(value: [Id](../../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1682792303)): [Id](../../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1682792303)  
+fun [normalizeUserInput](normalize-user-input.md)(value: [Id](../../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-274594955)): [Id](../../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-274594955)  
 
 
 
