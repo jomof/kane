@@ -70,8 +70,12 @@ class ArrowBasicsTest {
 
     @Test
     fun read() {
+        val file = File("data/data.arrow")
+        if (!file.exists()) {
+            write()
+        }
         repeat(10) {
-            val file = File("data/data.arrow")
+
             val fileInputStream = FileInputStream(file)
             val seekableReadChannel = SeekableReadChannel(fileInputStream.channel)
             val arrowFileReader = ArrowFileReader(
