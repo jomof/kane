@@ -431,13 +431,14 @@ val tanh: AlgebraicUnaryFunction = tanhFunc
  */
 fun tanh(matrix: NamedMatrix): MatrixExpr = tanhFunc(matrix as MatrixExpr)
 fun tanh(matrix: DataMatrix): MatrixExpr = tanhFunc(matrix as MatrixExpr)
-fun tanh(matrix : MatrixExpr) : MatrixExpr = tanhFunc(matrix)
-fun tanh(scalar : ScalarExpr) : ScalarExpr = tanhFunc(scalar)
-fun tanh(scalar : Double) : ScalarExpr = tanhFunc(scalar)
+fun tanh(matrix: MatrixExpr): MatrixExpr = tanhFunc(matrix)
+fun tanh(scalar: ScalarExpr): ScalarExpr = tanhFunc(scalar)
+fun tanh(scalar: Double): ScalarExpr = tanhFunc(scalar)
 
 // typesafe step
 private val stepFunc = StepFunction()
-val step : AlgebraicUnaryFunction = stepFunc
+val step: AlgebraicUnaryFunction = stepFunc
+
 /**
  * step function
  * [![](https://jomof.github.io/kane/figures/step-profile.svg)]
