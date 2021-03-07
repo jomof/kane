@@ -7,7 +7,7 @@ import com.github.jomof.kane.impl.csv.parseCsvText
 import java.io.StringReader
 
 /**
- * Parse csv from text
+ * Parse csv from text and produce a Sequence<Row>.
  */
 fun parseCsv(
     text: String,
