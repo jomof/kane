@@ -1,6 +1,7 @@
 package com.github.jomof.kane.impl.sheet
 
 import com.github.jomof.kane.*
+import com.github.jomof.kane.api.Row
 import com.github.jomof.kane.impl.*
 
 /**

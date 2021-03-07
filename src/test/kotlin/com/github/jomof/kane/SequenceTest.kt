@@ -1,5 +1,6 @@
 package com.github.jomof.kane
 
+import com.github.jomof.kane.api.Row
 import com.github.jomof.kane.impl.forceSheetInstantiation
 import com.github.jomof.kane.impl.toSheet
 import org.junit.Test

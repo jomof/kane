@@ -1,6 +1,7 @@
 package com.github.jomof.kane.impl
 
 import com.github.jomof.kane.*
+import com.github.jomof.kane.api.Row
 import com.github.jomof.kane.impl.csv.CsvMetadata
 import com.github.jomof.kane.impl.csv.CsvParseContext
 import com.github.jomof.kane.impl.csv.parseCsvText
@@ -85,7 +86,7 @@ class ColumnFilteringSequence(
 
             override fun next(): Row {
                 val oldRow = iterator.next()
-                return object : Row() {
+                return object : RowBase() {
                     override val columnCount get() = thiz.columnDescriptors.size
                     override val columnDescriptors get() = thiz.columnDescriptors
                     override val rowOrdinal get() = oldRow.rowOrdinal
@@ -372,7 +373,7 @@ data class ReadCsvFileRowSequence(
         return object : Iterator<Row> {
             override fun hasNext() = currentRow < meta.rows
             override fun next(): Row {
-                val result = object : Row() {
+                val result = object : RowBase() {
                     private val lineStart = currentPosition
                     private val fields by lazy {
                         reader.seek(lineStart)
@@ -435,7 +436,7 @@ internal class ParseCsvRowSequence(
         return object : Iterator<Row> {
             override fun hasNext() = currentRow < meta.rows
             override fun next(): Row {
-                val result = object : Row() {
+                val result = object : RowBase() {
                     private val fields = if (firstIsHeader) data[currentRow + 1] else data[currentRow]
                     override val columnCount get() = meta.columns
                     override val columnDescriptors get() = sequence.columnDescriptors

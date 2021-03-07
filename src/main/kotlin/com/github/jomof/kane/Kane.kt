@@ -1,5 +1,6 @@
 package com.github.jomof.kane
 
+import com.github.jomof.kane.csv.CsvRowIoProvider
 import com.github.jomof.kane.impl.functions.AlgebraicSummaryFunction
 import com.github.jomof.kane.impl.sheet.Sheet
 import com.github.jomof.kane.impl.sheet.possibleDataFormats
@@ -74,6 +75,13 @@ class Kane {
          */
         val metrics = KaneMetrics()
     }
+
+    /**
+     * IO providers.
+     */
+    val ioProviders = listOf(
+        CsvRowIoProvider()
+    )
 }
 
 class KaneMetrics(

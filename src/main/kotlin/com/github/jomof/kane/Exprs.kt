@@ -1,5 +1,6 @@
 package com.github.jomof.kane
 
+import com.github.jomof.kane.api.*
 import com.github.jomof.kane.impl.*
 import com.github.jomof.kane.impl.sheet.*
 import com.github.jomof.kane.impl.types.*

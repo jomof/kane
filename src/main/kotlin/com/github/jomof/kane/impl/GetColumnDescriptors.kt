@@ -1,7 +1,7 @@
 package com.github.jomof.kane.impl
 
 import com.github.jomof.kane.ProvidesColumnDescriptors
-import com.github.jomof.kane.Row
+import com.github.jomof.kane.api.Row
 import com.github.jomof.kane.impl.sheet.ColumnDescriptor
 
 fun Sequence<Row>.getColumnDescriptors(): Map<Int, ColumnDescriptor> =

@@ -1,5 +1,7 @@
 package com.github.jomof.kane
 
+import com.github.jomof.kane.api.Row
+
 
 /**
  * Returns a row sequence containing only distinct elements from the given sequence.

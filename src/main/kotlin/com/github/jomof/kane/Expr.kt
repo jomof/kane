@@ -1,5 +1,6 @@
 package com.github.jomof.kane
 
+import com.github.jomof.kane.api.Row
 import com.github.jomof.kane.impl.Coordinate
 import com.github.jomof.kane.impl.Id
 import com.github.jomof.kane.impl.sheet.ColumnDescriptor
@@ -52,14 +53,7 @@ interface INameableMatrix : MatrixExpr, INameable {
     override fun getValue(thisRef: Any?, property: KProperty<*>) = toNamed(property.name)
 }
 
-abstract class Row {
-    abstract val columnCount: Int
-    abstract val columnDescriptors: Map<Int, ColumnDescriptor>
-    abstract val rowOrdinal: Int // Zero relative
-    abstract val rowDescriptor: RowDescriptor?
-    abstract val sheetDescriptor: SheetDescriptor
-    abstract operator fun get(column: Int): Any?
-    abstract operator fun get(column: String): Any?
+abstract class RowBase : Row {
     override fun toString() = rowDescriptor?.name?.joinToString(" ") ?: "#${rowOrdinal}"
     override fun equals(other: Any?): Boolean {
         if (other !is Row) return false

@@ -1,6 +1,6 @@
 package com.github.jomof.kane
 
-import com.github.jomof.kane.impl.sheet.Sheet
+import com.github.jomof.kane.api.Row
 
 /**
  * Replaces all double values with [value].

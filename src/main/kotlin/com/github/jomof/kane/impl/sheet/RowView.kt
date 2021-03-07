@@ -1,7 +1,7 @@
 package com.github.jomof.kane.impl.sheet
 
 import com.github.jomof.kane.Expr
-import com.github.jomof.kane.Row
+import com.github.jomof.kane.RowBase
 import com.github.jomof.kane.get
 import com.github.jomof.kane.impl.NamedColumnRangeRef
 import com.github.jomof.kane.impl.coordinate
@@ -10,7 +10,7 @@ interface RangeExprProvider {
     fun range(range: SheetRangeExpr): Expr = range
 }
 
-class RowView(private val sheet: Sheet, private val row: Int) : Row(), RangeExprProvider {
+class RowView(private val sheet: Sheet, private val row: Int) : RowBase(), RangeExprProvider {
     override val rowDescriptor: RowDescriptor? get() = sheet.rowDescriptors[row + 1]
     override val sheetDescriptor: SheetDescriptor get() = sheet.sheetDescriptor
     override val columnCount: Int get() = sheet.columns
