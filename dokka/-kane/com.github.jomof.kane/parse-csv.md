@@ -9,7 +9,7 @@ fun [parseCsv](parse-csv.md)(text: [String](https://kotlinlang.org/api/latest/jv
 More info  
 
 
-Parse csv from text
+Parse csv from text and produce a Sequence<Row>.
 
   
 
