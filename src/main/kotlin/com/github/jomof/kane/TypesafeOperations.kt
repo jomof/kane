@@ -3,6 +3,7 @@ package com.github.jomof.kane
 import com.github.jomof.kane.impl.functions.*
 import com.github.jomof.kane.impl.functions.*
 import com.github.jomof.kane.impl.sheet.*
+import com.github.jomof.kane.api.*
 import com.github.jomof.kane.impl.*
 
 // plus typesafe infix operators

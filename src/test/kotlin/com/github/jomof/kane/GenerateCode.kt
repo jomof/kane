@@ -211,6 +211,7 @@ class GenerateCode {
             import com.github.jomof.kane.impl.functions.*
             import com.github.jomof.kane.impl.functions.*
             import com.github.jomof.kane.impl.sheet.*
+            import com.github.jomof.kane.api.*
             import com.github.jomof.kane.impl.*
             """.trimIndent()
         )
