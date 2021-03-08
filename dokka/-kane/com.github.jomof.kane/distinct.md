@@ -5,7 +5,7 @@
 # distinct  
 [jvm]  
 Content  
-fun [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/-sequence/index.html)<[Row](-row/index.md)>.[distinct](distinct.md)(): [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/-sequence/index.html)<[Row](-row/index.md)>  
+fun [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/-sequence/index.html)<[Row](../com.github.jomof.kane.api/-row/index.md)>.[distinct](distinct.md)(): [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/-sequence/index.html)<[Row](../com.github.jomof.kane.api/-row/index.md)>  
 More info  
 
 

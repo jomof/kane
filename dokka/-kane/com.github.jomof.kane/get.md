@@ -22,7 +22,7 @@ operator fun [MatrixExpr](-matrix-expr/index.md).[get](get.md)(column: [Int](htt
 
 [jvm]  
 Content  
-operator fun [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/-sequence/index.html)<[Row](-row/index.md)>.[get](get.md)(vararg ranges: [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)): [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/-sequence/index.html)<[Row](-row/index.md)>  
+operator fun [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/-sequence/index.html)<[Row](../com.github.jomof.kane.api/-row/index.md)>.[get](get.md)(vararg ranges: [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)): [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/-sequence/index.html)<[Row](../com.github.jomof.kane.api/-row/index.md)>  
 More info  
 
 

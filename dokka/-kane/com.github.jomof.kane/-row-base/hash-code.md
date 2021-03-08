@@ -1,4 +1,4 @@
-//[Kane](../../index.md)/[com.github.jomof.kane](../index.md)/[Row](index.md)/[hashCode](hash-code.md)
+//[Kane](../../index.md)/[com.github.jomof.kane](../index.md)/[RowBase](index.md)/[hashCode](hash-code.md)
 
 
 

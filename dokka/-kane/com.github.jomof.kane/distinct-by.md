@@ -5,7 +5,7 @@
 # distinctBy  
 [jvm]  
 Content  
-fun <[K](distinct-by.md)> [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/-sequence/index.html)<[Row](-row/index.md)>.[distinctBy](distinct-by.md)(selector: ([Row](-row/index.md)) -> [K](distinct-by.md)): [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/-sequence/index.html)<[Row](-row/index.md)>  
+fun <[K](distinct-by.md)> [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/-sequence/index.html)<[Row](../com.github.jomof.kane.api/-row/index.md)>.[distinctBy](distinct-by.md)(selector: ([Row](../com.github.jomof.kane.api/-row/index.md)) -> [K](distinct-by.md)): [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/-sequence/index.html)<[Row](../com.github.jomof.kane.api/-row/index.md)>  
 More info  
 
 

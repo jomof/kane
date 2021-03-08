@@ -5,7 +5,7 @@
 # RowDistinctSequence  
 [jvm]  
 Content  
-fun <[K](index.md)> [RowDistinctSequence](-row-distinct-sequence.md)(source: [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/-sequence/index.html)<[Row](../../com.github.jomof.kane/-row/index.md)>, selector: ([Row](../../com.github.jomof.kane/-row/index.md)) -> [K](index.md))  
+fun <[K](index.md)> [RowDistinctSequence](-row-distinct-sequence.md)(source: [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/-sequence/index.html)<[Row](../../com.github.jomof.kane.api/-row/index.md)>, selector: ([Row](../../com.github.jomof.kane.api/-row/index.md)) -> [K](index.md))  
 
 
 

@@ -1,4 +1,4 @@
-//[Kane](../../index.md)/[com.github.jomof.kane](../index.md)/[Row](index.md)/[equals](equals.md)
+//[Kane](../../index.md)/[com.github.jomof.kane](../index.md)/[RowBase](index.md)/[equals](equals.md)
 
 
 

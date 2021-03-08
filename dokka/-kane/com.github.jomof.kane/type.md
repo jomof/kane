@@ -16,7 +16,7 @@ Get the type of an expression.
 
 [jvm]  
 Content  
-val [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/-sequence/index.html)<[Row](-row/index.md)>.[type](type.md): [KaneType](../com.github.jomof.kane.impl.types/-kane-type/index.md)<*>  
+val [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/-sequence/index.html)<[Row](../com.github.jomof.kane.api/-row/index.md)>.[type](type.md): [KaneType](../com.github.jomof.kane.impl.types/-kane-type/index.md)<*>  
 
 
 

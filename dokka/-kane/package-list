@@ -2,6 +2,8 @@ $dokka.format:gfm-v1
 $dokka.linkExtension:md
 
 com.github.jomof.kane
+com.github.jomof.kane.api
+com.github.jomof.kane.csv
 com.github.jomof.kane.impl
 com.github.jomof.kane.impl.csv
 com.github.jomof.kane.impl.functions

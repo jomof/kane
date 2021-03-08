@@ -5,7 +5,7 @@
 # parseCsv  
 [jvm]  
 Content  
-fun [parseCsv](parse-csv.md)(text: [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html), parseContext: [CsvParseContext](../com.github.jomof.kane.impl.csv/-csv-parse-context/index.md) = CsvParseContext()): [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/-sequence/index.html)<[Row](-row/index.md)>  
+fun [parseCsv](parse-csv.md)(text: [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html), parseContext: [CsvParseContext](../com.github.jomof.kane.impl.csv/-csv-parse-context/index.md) = CsvParseContext()): [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/-sequence/index.html)<[Row](../com.github.jomof.kane.api/-row/index.md)>  
 More info  
 
 
