@@ -5,7 +5,7 @@
 # dup  
 [jvm]  
 Content  
-fun [dup](dup.md)(name: [Id](../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-1422180844) = this.name, statistic: [StreamingSamples](../-streaming-samples/index.md) = this.statistic): [StreamingSampleStatisticExpr](index.md)  
+fun [dup](dup.md)(name: [Id](../index.md#%5Bcom.github.jomof.kane.impl%2FId%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F-608357587) = this.name, statistic: [StreamingSamples](../-streaming-samples/index.md) = this.statistic): [StreamingSampleStatisticExpr](index.md)  
 
 
 
