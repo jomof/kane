@@ -131,7 +131,9 @@ data class CoerceScalar(
     }
 }
 
-data class ColumnDescriptor(val name: String, val type: AdmissibleDataType<*>?)
+data class ColumnDescriptor(
+    val name: String,
+    val type: AdmissibleDataType<*>?)
 
 data class Cells(private val map: Map<Id, Expr>) {
     init {
