@@ -2,6 +2,8 @@ package com.github.jomof.kane.impl
 
 import com.github.jomof.kane.*
 import com.github.jomof.kane.api.Row
+import com.github.jomof.kane.api.RowDescriptor
+import com.github.jomof.kane.api.SheetDescriptor
 import com.github.jomof.kane.impl.csv.CsvMetadata
 import com.github.jomof.kane.impl.csv.CsvParseContext
 import com.github.jomof.kane.impl.csv.parseCsvText
@@ -478,7 +480,7 @@ internal fun toSheet(
         if (rowDescriptor != null) {
             rowDescriptors[rowNumber + 1] = rowDescriptor
         } else if (row.rowOrdinal != rowNumber) {
-            rowDescriptors[rowNumber + 1] = RowDescriptor(listOf(constant(row.rowOrdinal + 1)))
+            rowDescriptors[rowNumber + 1] = RowDescriptor(listOf("${row.rowOrdinal + 1}"))
         }
         (0 until row.columnCount).forEach { column ->
             if (!columnDescriptors.containsKey(column) && row.columnDescriptors.containsKey(column)) {

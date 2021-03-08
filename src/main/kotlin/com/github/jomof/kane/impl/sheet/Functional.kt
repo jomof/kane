@@ -1,6 +1,7 @@
 package com.github.jomof.kane.impl.sheet
 
 import com.github.jomof.kane.ScalarExpr
+import com.github.jomof.kane.api.RowDescriptor
 import com.github.jomof.kane.impl.*
 
 /**
@@ -14,7 +15,7 @@ import com.github.jomof.kane.impl.*
 fun Sheet.ordinalRows(elements : List<Int>) : Sheet {
     val oldOrdinalToNewOrdinal = elements.indices.map { elements[it] to it+1 }.toMap()
     val rowDescriptors : Map<Int, RowDescriptor> = oldOrdinalToNewOrdinal.map { (old, new) ->
-        val descriptor: RowDescriptor = rowDescriptors[old] ?: RowDescriptor(name = listOf(constant(old)))
+        val descriptor: RowDescriptor = rowDescriptors[old] ?: RowDescriptor(name = listOf("$old"))
         new to descriptor
     }.toMap()
     val cells = cells.mapNotNull { (name,expr) ->

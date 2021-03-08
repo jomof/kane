@@ -2,6 +2,8 @@ package com.github.jomof.kane.impl.sheet
 
 import com.github.jomof.kane.Expr
 import com.github.jomof.kane.RowBase
+import com.github.jomof.kane.api.RowDescriptor
+import com.github.jomof.kane.api.SheetDescriptor
 import com.github.jomof.kane.get
 import com.github.jomof.kane.impl.NamedColumnRangeRef
 import com.github.jomof.kane.impl.coordinate

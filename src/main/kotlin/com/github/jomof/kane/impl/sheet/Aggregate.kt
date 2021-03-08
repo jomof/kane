@@ -4,10 +4,7 @@ import com.github.jomof.kane.Expr
 import com.github.jomof.kane.eval
 import com.github.jomof.kane.get
 import com.github.jomof.kane.NamedExpr
-import com.github.jomof.kane.impl.Identifier
-import com.github.jomof.kane.impl.coordinate
-import com.github.jomof.kane.impl.toNamed
-import com.github.jomof.kane.impl.toSheet
+import com.github.jomof.kane.impl.*
 import com.github.jomof.kane.sheetOf
 
 internal class SheetRangeExprProvider(val sheet: Sheet) : RangeExprProvider {
@@ -21,7 +18,8 @@ private fun GroupBy.buildAggregation(builder: SheetBuilderImpl): Sheet {
     return sheetOf {
         var row = 1
         for ((key, _) in groupBy) {
-            nameRow(row++, key)
+            nameRow(row++, key.map { "$it" })
+            //nameRow(row++, key)
         }
         val result = mutableListOf<Expr>()
         for ((name, expr) in immediate.cells) {

@@ -1,8 +1,6 @@
 package com.github.jomof.kane.api
 
 import com.github.jomof.kane.impl.sheet.ColumnDescriptor
-import com.github.jomof.kane.impl.sheet.RowDescriptor
-import com.github.jomof.kane.impl.sheet.SheetDescriptor
 
 interface Row {
     val columnCount: Int

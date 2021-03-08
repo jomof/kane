@@ -27,8 +27,8 @@ interface SheetBuilder {
     }
 
     fun nameColumn(column: Int, name: String)
-    fun nameRow(row: Int, name: Id)
-    fun nameRow(row: Int, name: List<Expr>)
+    fun nameRow(row: Int, name: String)
+    fun nameRow(row: Int, name: List<String>)
 
     fun up(offset: Int) = CellSheetRangeExpr(CellRangeRef.relative(column = 0, row = -offset))
     fun down(offset: Int) = CellSheetRangeExpr(CellRangeRef.relative(column = 0, row = offset))

@@ -3,6 +3,8 @@ package com.github.jomof.kane.impl.sheet
 
 import com.github.jomof.kane.*
 import com.github.jomof.kane.api.Row
+import com.github.jomof.kane.api.RowDescriptor
+import com.github.jomof.kane.api.SheetDescriptor
 import com.github.jomof.kane.impl.*
 import com.github.jomof.kane.impl.types.KaneType
 import com.github.jomof.kane.impl.visitor.SheetRewritingVisitor
@@ -130,12 +132,6 @@ data class CoerceScalar(
 }
 
 data class ColumnDescriptor(val name: String, val type: AdmissibleDataType<*>?)
-data class RowDescriptor(val name: List<Expr>)
-data class SheetDescriptor(
-    val limitOutputLines: Int = Int.MAX_VALUE,
-    val showExcelColumnTags: Boolean = true,
-    val showRowAndColumnForSingleCell: Boolean = false
-)
 
 data class Cells(private val map: Map<Id, Expr>) {
     init {
@@ -361,11 +357,11 @@ class SheetBuilderImpl(
         columnDescriptors[column] = ColumnDescriptor(name, null)
     }
 
-    override fun nameRow(row: Int, name: Id) {
-        rowDescriptors[row] = RowDescriptor(listOf(constant(Identifier.string(name))))
+    override fun nameRow(row: Int, name: String) {
+        rowDescriptors[row] = RowDescriptor(listOf(name))
     }
 
-    override fun nameRow(row: Int, name: List<Expr>) {
+    override fun nameRow(row: Int, name: List<String>) {
         rowDescriptors[row] = RowDescriptor(name)
     }
 }

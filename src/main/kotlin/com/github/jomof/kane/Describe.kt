@@ -1,6 +1,8 @@
 package com.github.jomof.kane
 
 import com.github.jomof.kane.api.Row
+import com.github.jomof.kane.api.RowDescriptor
+import com.github.jomof.kane.api.SheetDescriptor
 import com.github.jomof.kane.impl.*
 import com.github.jomof.kane.impl.sheet.*
 
@@ -11,7 +13,7 @@ fun Sheet.describe(): Sheet {
     val statistics = columnStatistics()
     val cells = mutableMapOf<Id, Expr>()
     val rowDescriptors = Kane.unaryStatisticsFunctions
-        .mapIndexed { index, func -> index + 1 to RowDescriptor(listOf(constant(func.meta.op))) }.toMap()
+        .mapIndexed { index, func -> index + 1 to RowDescriptor(listOf(func.meta.op)) }.toMap()
     val relevantColumns = mutableListOf<Int>()
     for (column in 0 until columns) {
         val columnInfo = fullColumnDescriptor(column)
@@ -69,7 +71,7 @@ fun DataMatrix.describe(name: String = "matrix"): Sheet {
         0 to ColumnDescriptor(name = name, DoubleAdmissibleDataType())
     )
     val rowDescriptors = Kane.unaryStatisticsFunctions
-        .mapIndexed { index, func -> index + 1 to RowDescriptor(listOf(constant(func.meta.op))) }.toMap()
+        .mapIndexed { index, func -> index + 1 to RowDescriptor(listOf(func.meta.op)) }.toMap()
     val cells = mutableMapOf<Id, Expr>()
     for (row in Kane.unaryStatisticsFunctions.indices) {
         val result = Kane.unaryStatisticsFunctions[row].lookupStatistic(statistic)

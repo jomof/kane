@@ -1,12 +1,9 @@
 package com.github.jomof.kane
 
 import com.github.jomof.kane.api.Row
-import com.github.jomof.kane.impl.Coordinate
 import com.github.jomof.kane.impl.Id
 import com.github.jomof.kane.impl.sheet.ColumnDescriptor
-import com.github.jomof.kane.impl.sheet.RowDescriptor
 import com.github.jomof.kane.impl.sheet.Sheet
-import com.github.jomof.kane.impl.sheet.SheetDescriptor
 import com.github.jomof.kane.impl.toNamed
 import com.github.jomof.kane.impl.types.KaneType
 import kotlin.reflect.KProperty

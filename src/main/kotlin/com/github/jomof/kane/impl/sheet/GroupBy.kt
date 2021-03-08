@@ -33,7 +33,7 @@ data class GroupBy(
         return sheetOf {
             nameColumn(0, "key selector")
             keySelector.forEachIndexed { index, expr ->
-                nameRow(index + 1, expr.name)
+                nameRow(index + 1, Identifier.string(expr.name))
             }
             val a1 by keySelector.map { "${it.toUnnamed()}" }
             listOf(a1)
