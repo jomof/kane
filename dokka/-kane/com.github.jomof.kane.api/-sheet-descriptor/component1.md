@@ -1,4 +1,4 @@
-//[Kane](../../index.md)/[com.github.jomof.kane.impl.sheet](../index.md)/[SheetDescriptor](index.md)/[component1](component1.md)
+//[Kane](../../index.md)/[com.github.jomof.kane.api](../index.md)/[SheetDescriptor](index.md)/[component1](component1.md)
 
 
 

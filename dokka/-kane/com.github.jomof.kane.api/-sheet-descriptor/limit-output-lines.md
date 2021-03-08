@@ -1,4 +1,4 @@
-//[Kane](../../index.md)/[com.github.jomof.kane.impl.sheet](../index.md)/[SheetDescriptor](index.md)/[limitOutputLines](limit-output-lines.md)
+//[Kane](../../index.md)/[com.github.jomof.kane.api](../index.md)/[SheetDescriptor](index.md)/[limitOutputLines](limit-output-lines.md)
 
 
 

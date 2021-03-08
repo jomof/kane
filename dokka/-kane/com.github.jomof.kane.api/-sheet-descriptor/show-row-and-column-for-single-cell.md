@@ -1,4 +1,4 @@
-//[Kane](../../index.md)/[com.github.jomof.kane.impl.sheet](../index.md)/[SheetDescriptor](index.md)/[showRowAndColumnForSingleCell](show-row-and-column-for-single-cell.md)
+//[Kane](../../index.md)/[com.github.jomof.kane.api](../index.md)/[SheetDescriptor](index.md)/[showRowAndColumnForSingleCell](show-row-and-column-for-single-cell.md)
 
 
 

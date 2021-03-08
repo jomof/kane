@@ -5,7 +5,7 @@
 # component4  
 [jvm]  
 Content  
-operator fun [component4](component4.md)(): [SheetDescriptor](../-sheet-descriptor/index.md)  
+operator fun [component4](component4.md)(): [SheetDescriptor](../../com.github.jomof.kane.api/-sheet-descriptor/index.md)  
 
 
 

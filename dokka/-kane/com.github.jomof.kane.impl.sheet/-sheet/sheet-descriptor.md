@@ -5,7 +5,7 @@
 # sheetDescriptor  
 [jvm]  
 Content  
-val [sheetDescriptor](sheet-descriptor.md): [SheetDescriptor](../-sheet-descriptor/index.md)  
+val [sheetDescriptor](sheet-descriptor.md): [SheetDescriptor](../../com.github.jomof.kane.api/-sheet-descriptor/index.md)  
 
 
 
