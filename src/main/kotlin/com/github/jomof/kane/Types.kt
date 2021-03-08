@@ -31,7 +31,7 @@ val Sequence<Row>.types: Sheet
             nameColumn(0, "name")
             nameColumn(1, "type")
             nameColumn(2, "format")
-            val a1 by descriptors.map { Identifier.string(it.name) }
+            val a1 by descriptors.map { it.name }
             val b1 by descriptors.map { it.type!!.type.simpleName }
             val c1 by descriptors.map { it.type.toString() }
             listOf(a1, b1, c1)

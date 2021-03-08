@@ -21,7 +21,7 @@ private class LiftEmbeddedNamedExpressionsToCells : SheetRewritingVisitor() {
 
 private class NameExplicitlyReferencedColumns : SheetRewritingVisitor() {
     override fun cell(name: Id, expr: Expr): Pair<Id, Expr> {
-        if (name is Coordinate) return name to expr
+        if (name !is String) return name to expr
         when (expr) {
             is CoerceMatrix -> when (val matrix = expr.value) {
                 is SheetRangeExpr -> when (val range = matrix.rangeRef) {

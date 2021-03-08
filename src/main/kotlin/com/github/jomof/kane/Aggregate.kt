@@ -22,7 +22,7 @@ fun GroupBy.aggregate(vararg aggregatables: AggregatableFunction): Sheet {
             val columnInfo = sheet.fullColumnDescriptor(column)
             if (columnInfo.type!!.type.java != Double::class.java) continue
             for (function in functions) {
-                result += function.invoke(range(Identifier.string(columnInfo.name)))
+                result += function.invoke(range(columnInfo.name))
                     .toNamed(function.meta.op + " " + columnInfo.name)
             }
         }

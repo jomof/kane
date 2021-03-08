@@ -27,7 +27,7 @@ fun Sequence<Row>.writeCsv(csv: File) {
     // Column headers
     (0..sheet.columns).forEach { column ->
         val columnName = colName(column)
-        csv.appendText(Identifier.string(columnName))
+        csv.appendText(columnName)
         if (column != sheet.columns - 1) csv.appendText(",")
 
     }

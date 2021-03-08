@@ -26,7 +26,7 @@ interface SheetBuilder {
         return CoerceMatrix(SheetRangeExpr(parsed))
     }
 
-    fun nameColumn(column: Int, name: Id)
+    fun nameColumn(column: Int, name: String)
     fun nameRow(row: Int, name: Id)
     fun nameRow(row: Int, name: List<Expr>)
 

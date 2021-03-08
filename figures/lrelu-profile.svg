@@ -198,9 +198,9 @@ text {
         <line x1="0.0" y1="0.0" x2="0.0" y2="260.3333333333333" stroke-width="1.0" stroke="rgb(0,0,0)" stroke-opacity="1.0">
         </line>
       </g>
-      <g transform="translate(15.7 0.0 ) " clip-path="url(#Kef1th)" clip-bounds-jfx="[rect (0.0, 0.0), (339.22700000000003, 260.3333333333333)]">
+      <g transform="translate(15.7 0.0 ) " clip-path="url(#PoMIKt)" clip-bounds-jfx="[rect (0.0, 0.0), (339.22700000000003, 260.3333333333333)]">
         <defs>
-          <clipPath id="Kef1th">
+          <clipPath id="PoMIKt">
             <rect x="0.0" y="0.0" width="339.22700000000003" height="260.3333333333333">
             </rect>
           </clipPath>

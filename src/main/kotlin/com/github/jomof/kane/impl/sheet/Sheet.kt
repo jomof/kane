@@ -129,7 +129,7 @@ data class CoerceScalar(
     }
 }
 
-data class ColumnDescriptor(val name: Id, val type: AdmissibleDataType<*>?)
+data class ColumnDescriptor(val name: String, val type: AdmissibleDataType<*>?)
 data class RowDescriptor(val name: List<Expr>)
 data class SheetDescriptor(
     val limitOutputLines: Int = Int.MAX_VALUE,
@@ -353,11 +353,11 @@ class SheetBuilderImpl(
         )
     }
 
-    fun column(index: Int, name: Id, type: AdmissibleDataType<*>? = null) {
+    fun column(index: Int, name: String, type: AdmissibleDataType<*>? = null) {
         columnDescriptors[index] = ColumnDescriptor(name, type)
     }
 
-    override fun nameColumn(column: Int, name: Id) {
+    override fun nameColumn(column: Int, name: String) {
         columnDescriptors[column] = ColumnDescriptor(name, null)
     }
 
@@ -406,7 +406,7 @@ fun Sheet.columnName(column: Int): String {
         namedColumnOrNull == null -> excelColumnName
         namedColumnOrNull is String && namedColumnOrNull.toUpperCase() == excelColumnName -> namedColumnOrNull
         namedColumnOrNull is String && sheetDescriptor.showExcelColumnTags -> "$namedColumnOrNull [$excelColumnName]"
-        else -> Identifier.string(namedColumnOrNull)
+        else -> namedColumnOrNull
     }
 }
 
@@ -420,8 +420,7 @@ fun Sheet.render(): String {
     val widths = Array(columns + 1) {
         if (it > 0) {
             val name = columnDescriptors[it - 1]?.name
-            if (name == null) 0
-            else Identifier.width(name)
+            name?.length ?: 0
         } else 0
     }
 
